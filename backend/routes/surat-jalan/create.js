@@ -10,11 +10,11 @@ const router = express.Router();
 router.post("/", async (req, res) => {
   const NoSuratJalan = String(req.body.NoSuratJalan || "").trim();
   const NoPO = String(req.body.NoPO || "").trim();
-  const tanggal = parseDate(req.body.tanggal);
+  const tanggal = parseDate(req.body.Tanggal);
   const IdCustomer = String(req.body.IdCustomer || "").trim();
-  const barang = normalizeBarangList(req.body.barang);
-  const kendaraan = String(req.body.kendaraan || "").trim();
-  const tipe = String(req.body.tipe || "")
+  const barang = normalizeBarangList(req.body.Barang);
+  const kendaraan = String(req.body.Kendaraan || "").trim();
+  const tipe = String(req.body.Tipe || "")
     .trim()
     .toLowerCase();
 
@@ -30,13 +30,13 @@ router.post("/", async (req, res) => {
   if (!NoSuratJalan || !NoPO || !tanggal || !IdCustomer || !barang || !kendaraan || !tipe) {
     return res.status(400).json({
       message:
-        "NoSuratJalan, NoPO, tanggal, IdCustomer, barang, kendaraan, dan tipe wajib diisi",
+        "NoSuratJalan, NoPO, Tanggal, IdCustomer, Barang, Kendaraan, dan Tipe wajib diisi",
     });
   }
 
   if (!["partial", "non partial"].includes(tipe)) {
     return res.status(400).json({
-      message: "tipe harus partial atau non partial",
+      message: "Tipe harus partial atau non partial",
     });
   }
 
@@ -53,17 +53,17 @@ router.post("/", async (req, res) => {
     const suratJalan = await SuratJalan.create({
       NoSuratJalan,
       NoPO,
-      tanggal,
+      Tanggal: tanggal,
       IdCustomer,
-      barang,
-      kendaraan,
-      tipe,
+      Barang: barang,
+      Kendaraan: kendaraan,
+      Tipe: tipe,
       SudahSelesai,
     });
 
     return res.status(201).json({
       message: "surat jalan created",
-      suratJalan: sanitizeSuratJalan(suratJalan),
+      SuratJalan: sanitizeSuratJalan(suratJalan),
     });
   } catch (_error) {
     return res.status(500).json({ message: "failed to create surat jalan" });

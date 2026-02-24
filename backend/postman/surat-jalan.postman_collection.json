@@ -18,7 +18,7 @@
                 "exec": [
                   "if (pm.response.code >= 200 && pm.response.code < 300) {",
                   "  const data = pm.response.json();",
-                  "  if (data.accessToken) pm.collectionVariables.set('access_token', data.accessToken);",
+                  "  if (data.AccessToken) pm.collectionVariables.set('access_token', data.AccessToken);",
                   "}"
                 ]
               }
@@ -34,7 +34,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}",
+              "raw": "{\n  \"Username\": \"{{username}}\",\n  \"Password\": \"{{password}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -59,7 +59,7 @@
                 "exec": [
                   "if (pm.response.code >= 200 && pm.response.code < 300) {",
                   "  const data = pm.response.json();",
-                  "  if (data.customer && data.customer.id) pm.collectionVariables.set('customer_id', data.customer.id);",
+                  "  if (data.Customer && data.Customer.id) pm.collectionVariables.set('customer_id', data.Customer.id);",
                   "}"
                 ]
               }
@@ -85,7 +85,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nama\": \"{{customer_nama}}\",\n  \"alamat\": \"{{customer_alamat}}\",\n  \"atasNama\": \"{{customer_atas_nama}}\"\n}",
+              "raw": "{\n  \"Nama\": \"{{customer_nama}}\",\n  \"Alamat\": \"{{customer_alamat}}\",\n  \"AtasNama\": \"{{customer_atas_nama}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -110,7 +110,7 @@
                 "exec": [
                   "if (pm.response.code >= 200 && pm.response.code < 300) {",
                   "  const data = pm.response.json();",
-                  "  if (data.suratJalan && data.suratJalan.id) pm.collectionVariables.set('surat_jalan_id', data.suratJalan.id);",
+                  "  if (data.SuratJalan && data.SuratJalan.id) pm.collectionVariables.set('surat_jalan_id', data.SuratJalan.id);",
                   "}"
                 ]
               }
@@ -136,7 +136,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"NoSuratJalan\": \"{{no_surat_jalan}}\",\n  \"NoPO\": \"{{no_po}}\",\n  \"tanggal\": \"{{tanggal}}\",\n  \"IdCustomer\": \"{{customer_id}}\",\n  \"barang\": [\n    {\n      \"nama\": \"{{barang_1_nama}}\",\n      \"jumlah\": {{barang_1_jumlah}}\n    },\n    {\n      \"nama\": \"{{barang_2_nama}}\",\n      \"jumlah\": {{barang_2_jumlah}}\n    }\n  ],\n  \"kendaraan\": \"{{kendaraan}}\",\n  \"tipe\": \"{{tipe}}\",\n  \"SudahSelesai\": {{sudah_selesai}}\n}",
+              "raw": "{\n  \"NoSuratJalan\": \"{{no_surat_jalan}}\",\n  \"NoPO\": \"{{no_po}}\",\n  \"Tanggal\": \"{{tanggal}}\",\n  \"IdCustomer\": \"{{customer_id}}\",\n  \"Barang\": [\n    {\n      \"Nama\": \"{{barang_1_nama}}\",\n      \"Jumlah\": {{barang_1_jumlah}}\n    },\n    {\n      \"Nama\": \"{{barang_2_nama}}\",\n      \"Jumlah\": {{barang_2_jumlah}}\n    }\n  ],\n  \"Kendaraan\": \"{{kendaraan}}\",\n  \"Tipe\": \"{{tipe}}\",\n  \"SudahSelesai\": {{sudah_selesai}}\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -204,7 +204,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"NoSuratJalan\": \"{{no_surat_jalan_update}}\",\n  \"NoPO\": \"{{no_po_update}}\",\n  \"tanggal\": \"{{tanggal_update}}\",\n  \"IdCustomer\": \"{{customer_id}}\",\n  \"barang\": [\n    {\n      \"nama\": \"{{barang_update_nama}}\",\n      \"jumlah\": {{barang_update_jumlah}}\n    }\n  ],\n  \"kendaraan\": \"{{kendaraan_update}}\",\n  \"tipe\": \"{{tipe_update}}\",\n  \"SudahSelesai\": {{sudah_selesai_update}}\n}",
+              "raw": "{\n  \"NoSuratJalan\": \"{{no_surat_jalan_update}}\",\n  \"NoPO\": \"{{no_po_update}}\",\n  \"Tanggal\": \"{{tanggal_update}}\",\n  \"IdCustomer\": \"{{customer_id}}\",\n  \"Barang\": [\n    {\n      \"Nama\": \"{{barang_update_nama}}\",\n      \"Jumlah\": {{barang_update_jumlah}}\n    }\n  ],\n  \"Kendaraan\": \"{{kendaraan_update}}\",\n  \"Tipe\": \"{{tipe_update}}\",\n  \"SudahSelesai\": {{sudah_selesai_update}}\n}",
               "options": {
                 "raw": {
                   "language": "json"

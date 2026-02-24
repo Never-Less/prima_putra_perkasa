@@ -1,8 +1,8 @@
 function sanitizeUser(user) {
   return {
     id: user._id,
-    username: user.username,
-    role: user.role,
+    Username: user.Username,
+    Role: user.Role,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   };

@@ -24,12 +24,12 @@ router.put("/:id", async (req, res) => {
     updates.NoPO = String(req.body.NoPO || "").trim();
   }
 
-  if (req.body.tanggal !== undefined) {
-    const tanggal = parseDate(req.body.tanggal);
+  if (req.body.Tanggal !== undefined) {
+    const tanggal = parseDate(req.body.Tanggal);
     if (!tanggal) {
-      return res.status(400).json({ message: "tanggal tidak valid" });
+      return res.status(400).json({ message: "Tanggal tidak valid" });
     }
-    updates.tanggal = tanggal;
+    updates.Tanggal = tanggal;
   }
 
   if (req.body.IdCustomer !== undefined) {
@@ -42,30 +42,30 @@ router.put("/:id", async (req, res) => {
     updates.IdCustomer = IdCustomer;
   }
 
-  if (req.body.barang !== undefined) {
-    const barang = normalizeBarangList(req.body.barang);
+  if (req.body.Barang !== undefined) {
+    const barang = normalizeBarangList(req.body.Barang);
     if (!barang) {
       return res.status(400).json({
-        message: "barang harus array minimal 1 item (nama, jumlah)",
+        message: "Barang harus array minimal 1 item (Nama, Jumlah)",
       });
     }
-    updates.barang = barang;
+    updates.Barang = barang;
   }
 
-  if (req.body.kendaraan !== undefined) {
-    updates.kendaraan = String(req.body.kendaraan || "").trim();
+  if (req.body.Kendaraan !== undefined) {
+    updates.Kendaraan = String(req.body.Kendaraan || "").trim();
   }
 
-  if (req.body.tipe !== undefined) {
-    const tipe = String(req.body.tipe || "")
+  if (req.body.Tipe !== undefined) {
+    const tipe = String(req.body.Tipe || "")
       .trim()
       .toLowerCase();
 
     if (!["partial", "non partial"].includes(tipe)) {
-      return res.status(400).json({ message: "tipe harus partial atau non partial" });
+      return res.status(400).json({ message: "Tipe harus partial atau non partial" });
     }
 
-    updates.tipe = tipe;
+    updates.Tipe = tipe;
   }
 
   if (req.body.SudahSelesai !== undefined) {
@@ -81,17 +81,17 @@ router.put("/:id", async (req, res) => {
   if (Object.keys(updates).length === 0) {
     return res.status(400).json({
       message:
-        "minimal kirim salah satu field: NoSuratJalan, NoPO, tanggal, IdCustomer, barang, kendaraan, tipe, SudahSelesai",
+        "minimal kirim salah satu field: NoSuratJalan, NoPO, Tanggal, IdCustomer, Barang, Kendaraan, Tipe, SudahSelesai",
     });
   }
 
   if (
     (updates.NoSuratJalan !== undefined && !updates.NoSuratJalan) ||
     (updates.NoPO !== undefined && !updates.NoPO) ||
-    (updates.kendaraan !== undefined && !updates.kendaraan)
+    (updates.Kendaraan !== undefined && !updates.Kendaraan)
   ) {
     return res.status(400).json({
-      message: "NoSuratJalan, NoPO, dan kendaraan tidak boleh kosong",
+      message: "NoSuratJalan, NoPO, dan Kendaraan tidak boleh kosong",
     });
   }
 
@@ -114,7 +114,7 @@ router.put("/:id", async (req, res) => {
 
     return res.json({
       message: "surat jalan updated",
-      suratJalan: sanitizeSuratJalan(suratJalan),
+      SuratJalan: sanitizeSuratJalan(suratJalan),
     });
   } catch (_error) {
     return res.status(500).json({ message: "failed to update surat jalan" });

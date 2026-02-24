@@ -18,7 +18,7 @@
                 "exec": [
                   "if (pm.response.code >= 200 && pm.response.code < 300) {",
                   "  const data = pm.response.json();",
-                  "  if (data.accessToken) pm.collectionVariables.set('access_token', data.accessToken);",
+                  "  if (data.AccessToken) pm.collectionVariables.set('access_token', data.AccessToken);",
                   "}"
                 ]
               }
@@ -34,7 +34,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}",
+              "raw": "{\n  \"Username\": \"{{username}}\",\n  \"Password\": \"{{password}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -59,8 +59,8 @@
                 "exec": [
                   "if (pm.response.code >= 200 && pm.response.code < 300) {",
                   "  const data = pm.response.json();",
-                  "  if (data.customer && data.customer.id) {",
-                  "    pm.collectionVariables.set('customer_id', data.customer.id);",
+                  "  if (data.Customer && data.Customer.id) {",
+                  "    pm.collectionVariables.set('customer_id', data.Customer.id);",
                   "  }",
                   "}"
                 ]
@@ -87,7 +87,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nama\": \"{{customer_nama}}\",\n  \"alamat\": \"{{customer_alamat}}\",\n  \"atasNama\": \"{{customer_atas_nama}}\"\n}",
+              "raw": "{\n  \"Nama\": \"{{customer_nama}}\",\n  \"Alamat\": \"{{customer_alamat}}\",\n  \"AtasNama\": \"{{customer_atas_nama}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -155,7 +155,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nama\": \"{{customer_nama_update}}\",\n  \"alamat\": \"{{customer_alamat_update}}\",\n  \"atasNama\": \"{{customer_atas_nama_update}}\"\n}",
+              "raw": "{\n  \"Nama\": \"{{customer_nama_update}}\",\n  \"Alamat\": \"{{customer_alamat_update}}\",\n  \"AtasNama\": \"{{customer_atas_nama_update}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"

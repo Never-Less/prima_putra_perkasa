@@ -30,7 +30,7 @@ function requireRole(...roles) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    if (!roles.includes(req.user.role)) {
+    if (!roles.includes(req.user.Role)) {
       return res.status(403).json({ message: "Forbidden" });
     }
 

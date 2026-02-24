@@ -15,31 +15,31 @@ router.put("/:id", async (req, res) => {
 
   const updates = {};
 
-  if (req.body.nama !== undefined) {
-    updates.nama = String(req.body.nama || "").trim();
+  if (req.body.Nama !== undefined) {
+    updates.Nama = String(req.body.Nama || "").trim();
   }
 
-  if (req.body.alamat !== undefined) {
-    updates.alamat = String(req.body.alamat || "").trim();
+  if (req.body.Alamat !== undefined) {
+    updates.Alamat = String(req.body.Alamat || "").trim();
   }
 
-  if (req.body.atasNama !== undefined) {
-    updates.atasNama = String(req.body.atasNama || "").trim();
+  if (req.body.AtasNama !== undefined) {
+    updates.AtasNama = String(req.body.AtasNama || "").trim();
   }
 
   if (Object.keys(updates).length === 0) {
     return res.status(400).json({
-      message: "minimal kirim salah satu field: nama, alamat, atasNama",
+      message: "minimal kirim salah satu field: Nama, Alamat, AtasNama",
     });
   }
 
   if (
-    (updates.nama !== undefined && !updates.nama) ||
-    (updates.alamat !== undefined && !updates.alamat) ||
-    (updates.atasNama !== undefined && !updates.atasNama)
+    (updates.Nama !== undefined && !updates.Nama) ||
+    (updates.Alamat !== undefined && !updates.Alamat) ||
+    (updates.AtasNama !== undefined && !updates.AtasNama)
   ) {
     return res.status(400).json({
-      message: "nama, alamat, dan atasNama tidak boleh kosong",
+      message: "Nama, Alamat, dan AtasNama tidak boleh kosong",
     });
   }
 
@@ -55,7 +55,7 @@ router.put("/:id", async (req, res) => {
 
     return res.json({
       message: "customer updated",
-      customer: sanitizeCustomer(customer),
+      Customer: sanitizeCustomer(customer),
     });
   } catch (_error) {
     return res.status(500).json({ message: "failed to update customer" });

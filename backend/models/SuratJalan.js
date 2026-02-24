@@ -2,13 +2,13 @@ const mongoose = require("mongoose");
 
 const barangSchema = new mongoose.Schema(
   {
-    nama: {
+    Nama: {
       type: String,
       required: true,
       trim: true,
       maxlength: 120,
     },
-    jumlah: {
+    Jumlah: {
       type: Number,
       required: true,
       min: 1,
@@ -31,7 +31,7 @@ const suratJalanSchema = new mongoose.Schema(
       trim: true,
       maxlength: 100,
     },
-    tanggal: {
+    Tanggal: {
       type: Date,
       required: true,
     },
@@ -41,23 +41,23 @@ const suratJalanSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
-    barang: {
+    Barang: {
       type: [barangSchema],
       required: true,
       validate: {
         validator(value) {
           return Array.isArray(value) && value.length > 0;
         },
-        message: "barang minimal 1 item",
+        message: "Barang minimal 1 item",
       },
     },
-    kendaraan: {
+    Kendaraan: {
       type: String,
       required: true,
       trim: true,
       maxlength: 100,
     },
-    tipe: {
+    Tipe: {
       type: String,
       required: true,
       enum: ["partial", "non partial"],

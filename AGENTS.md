@@ -28,6 +28,7 @@ Panduan untuk agent yang bekerja di repository `prima_putra_perkasa`.
 - Auth menggunakan Bearer Token (JWT), bukan cookie session.
 - Password harus di-hash dengan `bcryptjs`.
 - Terapkan middleware auth pada endpoint privat.
+- Gunakan PascalCase untuk penamaan field domain/bisnis pada schema, payload request, dan response API (contoh: `NoInvoice`, `IdCustomer`, `GrandTotal`).
 - Struktur route harus rapi dan terpisah per domain:
   - Gunakan folder per domain, contoh: `backend/routes/auth/`.
   - Pisahkan endpoint ke file masing-masing (contoh: `login.js`, `register.js`, `me.js`).

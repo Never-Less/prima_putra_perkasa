@@ -11,6 +11,7 @@ const {
 } = require("./middlewares/csrf");
 const authRoutes = require("./routes/auth");
 const customerRoutes = require("./routes/customer");
+const invoiceRoutes = require("./routes/invoice");
 const suratJalanRoutes = require("./routes/surat-jalan");
 
 const app = express();
@@ -42,6 +43,7 @@ app.get("/api/health", (_req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/customers", customerRoutes);
+app.use("/api/invoices", invoiceRoutes);
 app.use("/api/surat-jalan", suratJalanRoutes);
 
 app.use((error, _req, res, next) => {

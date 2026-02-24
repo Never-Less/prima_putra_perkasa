@@ -68,19 +68,19 @@ Body register/login:
 
 ```json
 {
-  "username": "admin",
-  "password": "passwordku123"
+  "Username": "admin",
+  "Password": "passwordku123"
 }
 ```
 
 Catatan: role default user baru adalah `staff`.
-Response `register`, `login`, dan `refresh` mengembalikan `accessToken` dan `refreshToken`.
+Response `register`, `login`, dan `refresh` mengembalikan `AccessToken` dan `RefreshToken`.
 
 Body refresh/logout:
 
 ```json
 {
-  "refreshToken": "isi_refresh_token_di_sini"
+  "RefreshToken": "isi_refresh_token_di_sini"
 }
 ```
 
@@ -98,9 +98,9 @@ Body create/update:
 
 ```json
 {
-  "nama": "PT Contoh",
-  "alamat": "Jl. Contoh No. 123",
-  "atasNama": "Budi Santoso"
+  "Nama": "PT Contoh",
+  "Alamat": "Jl. Contoh No. 123",
+  "AtasNama": "Budi Santoso"
 }
 ```
 

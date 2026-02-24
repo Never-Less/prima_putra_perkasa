@@ -21,22 +21,22 @@ async function createOrUpdateAdmin() {
     throw new Error("Password minimal 8 karakter.");
   }
 
-  let adminUser = await User.findOne({ username }).select("+password");
+  let adminUser = await User.findOne({ Username: username }).select("+Password");
 
   if (!adminUser) {
     adminUser = new User({
-      username,
-      password,
-      role: "admin",
+      Username: username,
+      Password: password,
+      Role: "admin",
     });
   } else {
-    adminUser.password = password;
-    adminUser.role = "admin";
+    adminUser.Password = password;
+    adminUser.Role = "admin";
   }
 
   await adminUser.save();
 
-  console.log(`Admin user siap: ${adminUser.username}`);
+  console.log(`Admin user siap: ${adminUser.Username}`);
 }
 
 async function run() {

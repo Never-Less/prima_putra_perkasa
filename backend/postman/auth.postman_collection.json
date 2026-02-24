@@ -18,8 +18,8 @@
                 "exec": [
                   "if (pm.response.code >= 200 && pm.response.code < 300) {",
                   "  const data = pm.response.json();",
-                  "  if (data.accessToken) pm.collectionVariables.set('access_token', data.accessToken);",
-                  "  if (data.refreshToken) pm.collectionVariables.set('refresh_token', data.refreshToken);",
+                  "  if (data.AccessToken) pm.collectionVariables.set('access_token', data.AccessToken);",
+                  "  if (data.RefreshToken) pm.collectionVariables.set('refresh_token', data.RefreshToken);",
                   "}"
                 ]
               }
@@ -35,7 +35,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}",
+              "raw": "{\n  \"Username\": \"{{username}}\",\n  \"Password\": \"{{password}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -55,8 +55,8 @@
                 "exec": [
                   "if (pm.response.code >= 200 && pm.response.code < 300) {",
                   "  const data = pm.response.json();",
-                  "  if (data.accessToken) pm.collectionVariables.set('access_token', data.accessToken);",
-                  "  if (data.refreshToken) pm.collectionVariables.set('refresh_token', data.refreshToken);",
+                  "  if (data.AccessToken) pm.collectionVariables.set('access_token', data.AccessToken);",
+                  "  if (data.RefreshToken) pm.collectionVariables.set('refresh_token', data.RefreshToken);",
                   "}"
                 ]
               }
@@ -72,7 +72,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}",
+              "raw": "{\n  \"Username\": \"{{username}}\",\n  \"Password\": \"{{password}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -110,8 +110,8 @@
                 "exec": [
                   "if (pm.response.code >= 200 && pm.response.code < 300) {",
                   "  const data = pm.response.json();",
-                  "  if (data.accessToken) pm.collectionVariables.set('access_token', data.accessToken);",
-                  "  if (data.refreshToken) pm.collectionVariables.set('refresh_token', data.refreshToken);",
+                  "  if (data.AccessToken) pm.collectionVariables.set('access_token', data.AccessToken);",
+                  "  if (data.RefreshToken) pm.collectionVariables.set('refresh_token', data.RefreshToken);",
                   "}"
                 ]
               }
@@ -127,7 +127,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}",
+              "raw": "{\n  \"RefreshToken\": \"{{refresh_token}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -163,7 +163,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}",
+              "raw": "{\n  \"RefreshToken\": \"{{refresh_token}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
