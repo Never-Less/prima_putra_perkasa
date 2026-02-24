@@ -104,6 +104,33 @@ Body create/update:
 }
 ```
 
+## Pembelian API
+
+Semua endpoint pembelian butuh bearer token:
+
+- `POST /api/pembelian`
+- `GET /api/pembelian`
+- `GET /api/pembelian/:id`
+- `PUT /api/pembelian/:id`
+- `DELETE /api/pembelian/:id`
+
+Body create/update:
+
+```json
+{
+  "TanggalNota": "2026-02-24",
+  "NamaSupplier": "PT Supplier Utama",
+  "NoNpwp": "01.234.567.8-901.000",
+  "IdInvoice": "65f1234567890abcde123456",
+  "Hutang": true,
+  "Ppn": true,
+  "LamaHutang": 30,
+  "NilaiNota": 15000000,
+  "TanggalJatuhTempo": "2026-03-26",
+  "TanggalBayar": null
+}
+```
+
 ## CSRF Setup (Bearer Token)
 
 Backend menggunakan bearer token (tanpa cookie/session), jadi CSRF token klasik tidak dipakai.
