@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "nodemon index.js",
     "start": "node index.js",
+    "create:admin": "node scripts/create-admin.js",
     "test": "echo \"No tests configured\""
   },
   "keywords": [],
