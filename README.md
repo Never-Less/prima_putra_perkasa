@@ -84,6 +84,26 @@ Body refresh/logout:
 }
 ```
 
+## Customer API
+
+Semua endpoint customer butuh bearer token:
+
+- `POST /api/customers`
+- `GET /api/customers`
+- `GET /api/customers/:id`
+- `PUT /api/customers/:id`
+- `DELETE /api/customers/:id`
+
+Body create/update:
+
+```json
+{
+  "nama": "PT Contoh",
+  "alamat": "Jl. Contoh No. 123",
+  "atasNama": "Budi Santoso"
+}
+```
+
 ## CSRF Setup (Bearer Token)
 
 Backend menggunakan bearer token (tanpa cookie/session), jadi CSRF token klasik tidak dipakai.
