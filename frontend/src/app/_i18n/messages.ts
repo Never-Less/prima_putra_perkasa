@@ -14,6 +14,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "nav.customer": "Customer",
     "nav.suratJalan": "Surat Jalan",
     "nav.invoice": "Invoice",
+    "nav.pembelian": "Pembelian",
     "nav.sidebar.subtitle": "Dashboard Surat Jalan",
     "nav.language": "Bahasa",
     "nav.language.id": "Indonesia",
@@ -21,7 +22,7 @@ export const messages: Record<Locale, MessageDictionary> = {
 
     "home.title": "Frontend Surat Jalan",
     "home.description":
-      "Pilih halaman yang ingin digunakan: Surat Jalan, Invoice, atau Customer.",
+      "Pilih halaman yang ingin digunakan: Surat Jalan, Invoice, Pembelian, atau Customer.",
     "home.route.customer.title": "Customer",
     "home.route.customer.description":
       "Halaman customer dengan tabel, filter field, serta form dan preview sesuai schema backend.",
@@ -34,6 +35,10 @@ export const messages: Record<Locale, MessageDictionary> = {
     "home.route.invoice.description":
       "Halaman invoice dengan field sesuai schema backend, termasuk Barang, PPN, dan kalkulasi total.",
     "home.route.invoice.cta": "Buka Invoice",
+    "home.route.pembelian.title": "Pembelian",
+    "home.route.pembelian.description":
+      "Halaman pembelian dengan tabel, filter field, serta form dan preview sesuai schema backend.",
+    "home.route.pembelian.cta": "Buka Pembelian",
     "common.resetFilter": "Reset Filter",
     "common.filterByField": "Filter Berdasarkan Field",
     "common.action": "Aksi",
@@ -58,7 +63,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "customer.preview.title": "Preview Customer",
 
     "invoice.page.description":
-      "Page invoice disesuaikan dengan field schema backend: Tanggal, NoInvoice, NoPO, NoSuratJalan, IdCustomer, Barang, IsPpn, PpnRate, Subtotal, PpnAmount, dan GrandTotal.",
+      "Page invoice disesuaikan dengan field schema backend: Tanggal, NoInvoice, NoPO, NoSuratJalan, NamaCustomer, Barang, IsPpn, PpnRate, Subtotal, PpnAmount, dan GrandTotal.",
     "invoice.table.title": "Tabel Invoice",
     "invoice.form.title": "Form Edit + Preview Invoice",
     "invoice.form.description":
@@ -73,7 +78,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "invoice.preview.title": "Preview Invoice",
 
     "suratJalan.page.description":
-      "Page surat jalan disesuaikan dengan field schema backend: NoSuratJalan, NoPO, Tanggal, IdCustomer, Barang, Kendaraan, Tipe, dan SudahSelesai.",
+      "Page surat jalan disesuaikan dengan field schema backend: NoSuratJalan, NoPO, Tanggal, NamaCustomer, Barang, Kendaraan, Tipe, dan SudahSelesai.",
     "suratJalan.table.title": "Tabel Surat Jalan",
     "suratJalan.form.title": "Form Edit + Preview",
     "suratJalan.form.description":
@@ -84,6 +89,15 @@ export const messages: Record<Locale, MessageDictionary> = {
     "suratJalan.form.items.placeholder.qty": "Jumlah",
     "suratJalan.preview.title": "Preview Surat Jalan",
 
+    "pembelian.page.description":
+      "Page pembelian disesuaikan dengan field schema backend: TanggalNota, NamaSupplier, NoNpwp, NoInvoice, Hutang, Ppn, LamaHutang, NilaiNota, TanggalJatuhTempo, dan TanggalBayar.",
+    "pembelian.table.title": "Tabel Pembelian",
+    "pembelian.form.title": "Form Edit + Preview Pembelian",
+    "pembelian.form.description":
+      "Field disesuaikan dengan schema backend pembelian. LamaHutang dan TanggalJatuhTempo wajib saat Hutang bernilai true.",
+    "pembelian.lamaHutang.note": "Dalam hitungan hari",
+    "pembelian.preview.title": "Preview Pembelian",
+
     "field.Nama": "Nama",
     "field.Alamat": "Alamat",
     "field.AtasNama": "AtasNama",
@@ -92,6 +106,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "field.NoPO": "NoPO",
     "field.NoSuratJalan": "NoSuratJalan",
     "field.IdCustomer": "IdCustomer",
+    "field.NamaCustomer": "Nama Customer",
     "field.Subtotal": "Subtotal",
     "field.PpnAmount": "PpnAmount",
     "field.GrandTotal": "GrandTotal",
@@ -103,6 +118,20 @@ export const messages: Record<Locale, MessageDictionary> = {
     "field.SudahSelesai": "SudahSelesai",
     "field.Barang": "Barang",
     "field.PpnRate": "PpnRate",
+    "field.TanggalNota": "TanggalNota",
+    "field.NamaSupplier": "NamaSupplier",
+    "field.NoNpwp": "NoNpwp",
+    "field.IdInvoice": "IdInvoice",
+    "field.Hutang": "Hutang",
+    "field.Ppn": "Ppn",
+    "field.LamaHutang": "LamaHutang",
+    "field.NilaiNota": "NilaiNota",
+    "field.TanggalJatuhTempo": "TanggalJatuhTempo",
+    "field.TanggalBayar": "TanggalBayar",
+    "field.NilaiNotaMin": "NilaiNota Min",
+    "field.NilaiNotaMax": "NilaiNota Max",
+    "field.TanggalBayarDari": "TanggalBayar Dari",
+    "field.TanggalBayarSampai": "TanggalBayar Sampai",
   },
   en: {
     "brand.name": "PRIMA PUTRA PERKASA",
@@ -110,6 +139,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "nav.customer": "Customer",
     "nav.suratJalan": "Delivery Note",
     "nav.invoice": "Invoice",
+    "nav.pembelian": "Purchase",
     "nav.sidebar.subtitle": "Delivery Dashboard",
     "nav.language": "Language",
     "nav.language.id": "Indonesia",
@@ -117,7 +147,7 @@ export const messages: Record<Locale, MessageDictionary> = {
 
     "home.title": "Delivery Frontend",
     "home.description":
-      "Choose a page to use: Delivery Note, Invoice, or Customer.",
+      "Choose a page to use: Delivery Note, Invoice, Purchase, or Customer.",
     "home.route.customer.title": "Customer",
     "home.route.customer.description":
       "Customer page with table, field filters, and form plus preview based on backend schema.",
@@ -130,6 +160,10 @@ export const messages: Record<Locale, MessageDictionary> = {
     "home.route.invoice.description":
       "Invoice page with backend schema fields, including Items, VAT, and total calculation.",
     "home.route.invoice.cta": "Open Invoice",
+    "home.route.pembelian.title": "Purchase",
+    "home.route.pembelian.description":
+      "Purchase page with table, field filters, and form plus preview based on backend schema.",
+    "home.route.pembelian.cta": "Open Purchase",
     "common.resetFilter": "Reset Filter",
     "common.filterByField": "Filter by Field",
     "common.action": "Action",
@@ -154,7 +188,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "customer.preview.title": "Customer Preview",
 
     "invoice.page.description":
-      "Invoice page aligned with backend schema fields: Tanggal, NoInvoice, NoPO, NoSuratJalan, IdCustomer, Barang, IsPpn, PpnRate, Subtotal, PpnAmount, and GrandTotal.",
+      "Invoice page aligned with backend schema fields: Tanggal, NoInvoice, NoPO, NoSuratJalan, CustomerName, Barang, IsPpn, PpnRate, Subtotal, PpnAmount, and GrandTotal.",
     "invoice.table.title": "Invoice Table",
     "invoice.form.title": "Edit Form + Invoice Preview",
     "invoice.form.description":
@@ -168,7 +202,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "invoice.preview.title": "Invoice Preview",
 
     "suratJalan.page.description":
-      "Delivery Note page aligned with backend schema fields: NoSuratJalan, NoPO, Tanggal, IdCustomer, Barang, Kendaraan, Tipe, and SudahSelesai.",
+      "Delivery Note page aligned with backend schema fields: NoSuratJalan, NoPO, Tanggal, CustomerName, Barang, Kendaraan, Tipe, and SudahSelesai.",
     "suratJalan.table.title": "Delivery Note Table",
     "suratJalan.form.title": "Edit Form + Preview",
     "suratJalan.form.description":
@@ -180,6 +214,15 @@ export const messages: Record<Locale, MessageDictionary> = {
     "suratJalan.form.items.placeholder.qty": "Quantity",
     "suratJalan.preview.title": "Delivery Note Preview",
 
+    "pembelian.page.description":
+      "Purchase page aligned with backend schema fields: TanggalNota, NamaSupplier, NoNpwp, NoInvoice, Hutang, Ppn, LamaHutang, NilaiNota, TanggalJatuhTempo, and TanggalBayar.",
+    "pembelian.table.title": "Purchase Table",
+    "pembelian.form.title": "Edit Form + Purchase Preview",
+    "pembelian.form.description":
+      "Fields are aligned with purchase backend schema. LamaHutang and TanggalJatuhTempo are required when Hutang is true.",
+    "pembelian.lamaHutang.note": "Measured in days",
+    "pembelian.preview.title": "Purchase Preview",
+
     "field.Nama": "Name",
     "field.Alamat": "Address",
     "field.AtasNama": "Attention Name",
@@ -188,6 +231,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "field.NoPO": "NoPO",
     "field.NoSuratJalan": "NoSuratJalan",
     "field.IdCustomer": "IdCustomer",
+    "field.NamaCustomer": "Customer Name",
     "field.Subtotal": "Subtotal",
     "field.PpnAmount": "PpnAmount",
     "field.GrandTotal": "GrandTotal",
@@ -199,6 +243,20 @@ export const messages: Record<Locale, MessageDictionary> = {
     "field.SudahSelesai": "SudahSelesai",
     "field.Barang": "Items",
     "field.PpnRate": "PpnRate",
+    "field.TanggalNota": "TanggalNota",
+    "field.NamaSupplier": "NamaSupplier",
+    "field.NoNpwp": "NoNpwp",
+    "field.IdInvoice": "IdInvoice",
+    "field.Hutang": "Hutang",
+    "field.Ppn": "Ppn",
+    "field.LamaHutang": "LamaHutang",
+    "field.NilaiNota": "NilaiNota",
+    "field.TanggalJatuhTempo": "TanggalJatuhTempo",
+    "field.TanggalBayar": "TanggalBayar",
+    "field.NilaiNotaMin": "Min NilaiNota",
+    "field.NilaiNotaMax": "Max NilaiNota",
+    "field.TanggalBayarDari": "TanggalBayar From",
+    "field.TanggalBayarSampai": "TanggalBayar To",
   },
 };
 

@@ -22,6 +22,7 @@ export function AppNavbar() {
     { href: "/customer", label: t("nav.customer") },
     { href: "/suratJalan", label: t("nav.suratJalan") },
     { href: "/invoice", label: t("nav.invoice") },
+    { href: "/pembelian", label: t("nav.pembelian") },
   ];
 
   return (

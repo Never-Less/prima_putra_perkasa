@@ -60,6 +60,8 @@ export const sampleCustomerRows: CustomerItem[] = [
   },
 ];
 
+export const sampleCustomerNameOptions = sampleCustomerRows.map((customer) => customer.Nama);
+
 function normalize(value: string) {
   return value.trim().toLowerCase();
 }

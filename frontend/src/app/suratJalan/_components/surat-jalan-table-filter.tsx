@@ -140,7 +140,7 @@ export function SuratJalanTableFilter({
           </label>
 
           <label className="text-sm text-slate-700">
-            {t("field.IdCustomer")}
+            {t("field.NamaCustomer")}
             <input
               value={filters.IdCustomer}
               onChange={(event) => setFilters((prev) => ({ ...prev, IdCustomer: event.target.value }))}
@@ -231,7 +231,7 @@ export function SuratJalanTableFilter({
                   <tr>
                     <th className={`${cellPadding} font-medium`}>{t("field.NoSuratJalan")}</th>
                     <th className={`${cellPadding} font-medium`}>{t("field.Tanggal")}</th>
-                    <th className={`${cellPadding} font-medium`}>{t("field.IdCustomer")}</th>
+                    <th className={`${cellPadding} font-medium`}>{t("field.NamaCustomer")}</th>
                     <th className={`${cellPadding} font-medium`}>{t("field.Barang")}</th>
                     <th className={`${cellPadding} font-medium`}>{t("field.Kendaraan")}</th>
                     <th className={`${cellPadding} font-medium`}>{t("field.Tipe")}</th>

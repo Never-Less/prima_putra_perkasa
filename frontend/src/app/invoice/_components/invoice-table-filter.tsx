@@ -67,7 +67,7 @@ export function InvoiceTableFilter({ rows, selectedId, onSelectRow }: InvoiceTab
           </label>
 
           <label className="text-sm text-slate-700">
-            {t("field.IdCustomer")}
+            {t("field.NamaCustomer")}
             <input
               value={filter.IdCustomer}
               onChange={(event) => setFilter((prev) => ({ ...prev, IdCustomer: event.target.value }))}
@@ -120,7 +120,7 @@ export function InvoiceTableFilter({ rows, selectedId, onSelectRow }: InvoiceTab
               <th className="px-3 py-2 font-medium">{t("field.Tanggal")}</th>
               <th className="px-3 py-2 font-medium">{t("field.NoPO")}</th>
               <th className="px-3 py-2 font-medium">{t("field.NoSuratJalan")}</th>
-              <th className="px-3 py-2 font-medium">{t("field.IdCustomer")}</th>
+              <th className="px-3 py-2 font-medium">{t("field.NamaCustomer")}</th>
               <th className="px-3 py-2 font-medium">{t("field.Subtotal")}</th>
               <th className="px-3 py-2 font-medium">{t("field.PpnAmount")}</th>
               <th className="px-3 py-2 font-medium">{t("field.GrandTotal")}</th>

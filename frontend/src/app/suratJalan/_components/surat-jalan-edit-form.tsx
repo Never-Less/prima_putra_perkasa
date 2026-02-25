@@ -10,6 +10,7 @@ import {
   type SuratJalanFormState,
   type SuratJalanItem,
 } from "../_lib/surat-jalan";
+import { sampleCustomerNameOptions } from "../../customer/_lib/customer";
 import { useI18n } from "../../_i18n/provider";
 
 type ColorTone = "slate" | "sky" | "emerald";
@@ -179,12 +180,18 @@ export function SuratJalanEditForm({
             </label>
 
             <label className={`text-sm sm:col-span-2 ${tone.label}`}>
-              {t("field.IdCustomer")}
-              <input
+              {t("field.NamaCustomer")}
+              <select
                 value={form.IdCustomer}
                 onChange={(event) => setForm((prev) => ({ ...prev, IdCustomer: event.target.value }))}
                 className={inputClassName}
-              />
+              >
+                {sampleCustomerNameOptions.map((customerName) => (
+                  <option key={customerName} value={customerName}>
+                    {customerName}
+                  </option>
+                ))}
+              </select>
             </label>
 
             <label className={`text-sm ${tone.label}`}>
@@ -275,7 +282,7 @@ export function SuratJalanEditForm({
                 <span className="text-slate-500">{t("field.Tanggal")}:</span> {formatTanggal(form.Tanggal, locale)}
               </p>
               <p>
-                <span className="text-slate-500">{t("field.IdCustomer")}:</span> {form.IdCustomer || "-"}
+                <span className="text-slate-500">{t("field.NamaCustomer")}:</span> {form.IdCustomer || "-"}
               </p>
               <p>
                 <span className="text-slate-500">{t("field.Kendaraan")}:</span> {form.Kendaraan || "-"}

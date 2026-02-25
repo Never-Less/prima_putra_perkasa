@@ -66,7 +66,7 @@ export const sampleInvoiceRows: InvoiceItem[] = [
     NoInvoice: "INV-260301",
     NoPO: "PO-90011",
     NoSuratJalan: ["SJ-260311", "SJ-260312"],
-    IdCustomer: "65f1234567890abcde123411",
+    IdCustomer: "PT Nusantara Bangun",
     Barang: [
       {
         Kuantitas: 120,
@@ -93,7 +93,7 @@ export const sampleInvoiceRows: InvoiceItem[] = [
     NoInvoice: "INV-260302",
     NoPO: "PO-90012",
     NoSuratJalan: ["SJ-260320"],
-    IdCustomer: "65f1234567890abcde123422",
+    IdCustomer: "CV Pilar Teknik",
     Barang: [
       {
         Kuantitas: 80,
@@ -114,7 +114,7 @@ export const sampleInvoiceRows: InvoiceItem[] = [
     NoInvoice: "INV-260303",
     NoPO: "PO-90013",
     NoSuratJalan: ["SJ-260313", "SJ-260314", "SJ-260315"],
-    IdCustomer: "65f1234567890abcde123433",
+    IdCustomer: "PT Sinar Baja Utama",
     Barang: [
       {
         Kuantitas: 24,

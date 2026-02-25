@@ -14,6 +14,7 @@ import {
   type InvoiceFormState,
   type InvoiceItem,
 } from "../_lib/invoice";
+import { sampleCustomerNameOptions } from "../../customer/_lib/customer";
 import { useI18n } from "../../_i18n/provider";
 
 type InvoiceEditFormProps = {
@@ -115,12 +116,18 @@ export function InvoiceEditForm({ item }: InvoiceEditFormProps) {
             </label>
 
             <label className="text-sm text-slate-700 sm:col-span-2">
-              {t("field.IdCustomer")}
-              <input
+              {t("field.NamaCustomer")}
+              <select
                 value={form.IdCustomer}
                 onChange={(event) => setForm((prev) => ({ ...prev, IdCustomer: event.target.value }))}
                 className="mt-1 w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm shadow-sm"
-              />
+              >
+                {sampleCustomerNameOptions.map((customerName) => (
+                  <option key={customerName} value={customerName}>
+                    {customerName}
+                  </option>
+                ))}
+              </select>
             </label>
 
             <label className="text-sm text-slate-700">
@@ -231,7 +238,7 @@ export function InvoiceEditForm({ item }: InvoiceEditFormProps) {
               {invoiceNoSuratJalanListLabel(noSuratJalanList)}
             </p>
             <p>
-              <span className="text-slate-500">{t("field.IdCustomer")}:</span> {form.IdCustomer || "-"}
+              <span className="text-slate-500">{t("field.NamaCustomer")}:</span> {form.IdCustomer || "-"}
             </p>
             <p>
               <span className="text-slate-500">{t("field.IsPpn")}:</span> {String(form.IsPpn)}
