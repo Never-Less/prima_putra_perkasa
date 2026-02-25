@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 const navItems = [
   { href: "/", label: "Beranda" },
   { href: "/suratJalan", label: "Surat Jalan" },
+  { href: "/invoice", label: "Invoice" },
 ];
 
 function isActivePath(pathname: string, href: string) {
