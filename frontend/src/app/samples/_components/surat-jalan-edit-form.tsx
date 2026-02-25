@@ -10,6 +10,7 @@ import {
   type SuratJalanFormState,
   type SuratJalanItem,
 } from "../_lib/surat-jalan";
+import { useI18n } from "../../_i18n/provider";
 
 type ColorTone = "slate" | "sky" | "emerald";
 type FormStyle = "default" | "outlined" | "soft";
@@ -97,6 +98,7 @@ export function SuratJalanEditForm({
   colorTone = "slate",
   formStyle = "default",
 }: SuratJalanEditFormProps) {
+  const { locale, t } = useI18n();
   const [form, setForm] = useState<SuratJalanFormState>(() => toFormState(item));
   const tone = toneStyles[colorTone];
   const style = formStyles[formStyle];
@@ -140,7 +142,7 @@ export function SuratJalanEditForm({
         <div className={style.formCard}>
           <div className="grid gap-3 sm:grid-cols-2">
             <label className={`text-sm ${tone.label}`}>
-              NoSuratJalan
+              {t("field.NoSuratJalan")}
               <input
                 value={form.NoSuratJalan}
                 onChange={(event) => setForm((prev) => ({ ...prev, NoSuratJalan: event.target.value }))}
@@ -149,7 +151,7 @@ export function SuratJalanEditForm({
             </label>
 
             <label className={`text-sm ${tone.label}`}>
-              NoPO
+              {t("field.NoPO")}
               <input
                 value={form.NoPO}
                 onChange={(event) => setForm((prev) => ({ ...prev, NoPO: event.target.value }))}
@@ -158,7 +160,7 @@ export function SuratJalanEditForm({
             </label>
 
             <label className={`text-sm ${tone.label}`}>
-              Tanggal
+              {t("field.Tanggal")}
               <input
                 type="date"
                 value={form.Tanggal}
@@ -168,7 +170,7 @@ export function SuratJalanEditForm({
             </label>
 
             <label className={`text-sm ${tone.label}`}>
-              Kendaraan
+              {t("field.Kendaraan")}
               <input
                 value={form.Kendaraan}
                 onChange={(event) => setForm((prev) => ({ ...prev, Kendaraan: event.target.value }))}
@@ -177,7 +179,7 @@ export function SuratJalanEditForm({
             </label>
 
             <label className={`text-sm sm:col-span-2 ${tone.label}`}>
-              IdCustomer
+              {t("field.IdCustomer")}
               <input
                 value={form.IdCustomer}
                 onChange={(event) => setForm((prev) => ({ ...prev, IdCustomer: event.target.value }))}
@@ -186,7 +188,7 @@ export function SuratJalanEditForm({
             </label>
 
             <label className={`text-sm ${tone.label}`}>
-              Tipe
+              {t("field.Tipe")}
               <select
                 value={form.Tipe}
                 onChange={(event) =>
@@ -203,7 +205,7 @@ export function SuratJalanEditForm({
             </label>
 
             <label className={`text-sm ${tone.label}`}>
-              SudahSelesai
+              {t("field.SudahSelesai")}
               <select
                 value={String(form.SudahSelesai)}
                 onChange={(event) =>
@@ -214,21 +216,21 @@ export function SuratJalanEditForm({
                 }
                 className={inputClassName}
               >
-                <option value="true">true</option>
-                <option value="false">false</option>
+                <option value="true">{t("common.true")}</option>
+                <option value="false">{t("common.false")}</option>
               </select>
             </label>
 
             <div className={`text-sm sm:col-span-2 ${tone.label}`}>
-              <p>Barang</p>
-              <p className="text-xs text-slate-500">Isi nama dan jumlah. Baris kosong baru akan muncul otomatis.</p>
+              <p>{t("suratJalan.form.items.title")}</p>
+              <p className="text-xs text-slate-500">{t("suratJalan.form.items.hint")}</p>
               <div className="mt-2 space-y-2">
                 {form.BarangRows.map((row, index) => (
                   <div key={`barang-row-${index}`} className="grid gap-2 sm:grid-cols-[1.4fr_1fr]">
                     <input
                       type="text"
                       value={row.Nama}
-                      placeholder="Nama barang"
+                      placeholder={t("suratJalan.form.items.placeholder.name")}
                       onChange={(event) => updateBarangRow(index, "Nama", event.target.value)}
                       className={barangInputClassName}
                     />
@@ -236,7 +238,7 @@ export function SuratJalanEditForm({
                       type="number"
                       min={0}
                       value={row.Jumlah}
-                      placeholder="Jumlah"
+                      placeholder={t("suratJalan.form.items.placeholder.qty")}
                       onChange={(event) => updateBarangRow(index, "Jumlah", event.target.value)}
                       className={barangInputClassName}
                     />
@@ -248,47 +250,47 @@ export function SuratJalanEditForm({
 
           <div className="mt-3 flex flex-wrap gap-2">
             <button className={`rounded-lg px-4 py-2 text-sm font-medium ${tone.primaryButton}`}>
-              Simpan Perubahan
+              {t("common.saveChanges")}
             </button>
             <button
               onClick={() => setForm(toFormState(item))}
               className={`rounded-lg px-4 py-2 text-sm ${tone.resetButton}`}
             >
-              Reset Form
+              {t("common.resetForm")}
             </button>
           </div>
         </div>
 
         {showPreview ? (
           <div className={style.previewCard}>
-            <p className="text-sm font-semibold text-slate-900">Preview Surat Jalan</p>
+            <p className="text-sm font-semibold text-slate-900">{t("suratJalan.preview.title")}</p>
             <div className="mt-3 space-y-1 text-sm text-slate-700">
               <p>
-                <span className="text-slate-500">NoSuratJalan:</span> {form.NoSuratJalan || "-"}
+                <span className="text-slate-500">{t("field.NoSuratJalan")}:</span> {form.NoSuratJalan || "-"}
               </p>
               <p>
-                <span className="text-slate-500">NoPO:</span> {form.NoPO || "-"}
+                <span className="text-slate-500">{t("field.NoPO")}:</span> {form.NoPO || "-"}
               </p>
               <p>
-                <span className="text-slate-500">Tanggal:</span> {formatTanggal(form.Tanggal)}
+                <span className="text-slate-500">{t("field.Tanggal")}:</span> {formatTanggal(form.Tanggal, locale)}
               </p>
               <p>
-                <span className="text-slate-500">IdCustomer:</span> {form.IdCustomer || "-"}
+                <span className="text-slate-500">{t("field.IdCustomer")}:</span> {form.IdCustomer || "-"}
               </p>
               <p>
-                <span className="text-slate-500">Kendaraan:</span> {form.Kendaraan || "-"}
+                <span className="text-slate-500">{t("field.Kendaraan")}:</span> {form.Kendaraan || "-"}
               </p>
               <p>
-                <span className="text-slate-500">Tipe:</span> {form.Tipe}
+                <span className="text-slate-500">{t("field.Tipe")}:</span> {form.Tipe}
               </p>
               <p>
-                <span className="text-slate-500">SudahSelesai:</span> {String(form.SudahSelesai)}
+                <span className="text-slate-500">{t("field.SudahSelesai")}:</span> {String(form.SudahSelesai)}
               </p>
             </div>
 
             <div className={`mt-3 ${style.previewBarangBox}`}>
               <p className="mb-2 text-xs font-semibold uppercase tracking-[0.15em] text-slate-500">
-                Barang
+                {t("field.Barang")}
               </p>
               {previewBarang.length > 0 ? (
                 <ul className="space-y-1 text-sm text-slate-700">
@@ -297,7 +299,7 @@ export function SuratJalanEditForm({
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-slate-500">Belum ada barang.</p>
+                <p className="text-sm text-slate-500">{t("common.noItems")}</p>
               )}
             </div>
           </div>

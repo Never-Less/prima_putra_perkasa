@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AppNavbar } from "./_components/app-navbar";
+import { I18nProvider } from "./_i18n/provider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -14,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Prima Putra Perkasa | Sample UI Surat Jalan",
-  description: "Sample frontend sederhana dan user friendly untuk aplikasi Surat Jalan.",
+  title: "Prima Putra Perkasa | Frontend",
+  description: "Frontend Prima Putra Perkasa.",
 };
 
 export default function RootLayout({
@@ -28,8 +29,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AppNavbar />
-        <div className="lg:pl-64">{children}</div>
+        <I18nProvider>
+          <AppNavbar />
+          <div className="lg:pl-64">{children}</div>
+        </I18nProvider>
       </body>
     </html>
   );

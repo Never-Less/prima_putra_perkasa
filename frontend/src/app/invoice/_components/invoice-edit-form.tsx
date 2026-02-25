@@ -12,12 +12,14 @@ import {
   type InvoiceFormState,
   type InvoiceItem,
 } from "../_lib/invoice";
+import { useI18n } from "../../_i18n/provider";
 
 type InvoiceEditFormProps = {
   item: InvoiceItem;
 };
 
 export function InvoiceEditForm({ item }: InvoiceEditFormProps) {
+  const { locale, t } = useI18n();
   const [form, setForm] = useState<InvoiceFormState>(() => toInvoiceFormState(item));
 
   useEffect(() => {
@@ -56,9 +58,9 @@ export function InvoiceEditForm({ item }: InvoiceEditFormProps) {
   return (
     <section className="rounded-2xl border border-sky-200 bg-sky-50/40 p-5 shadow-sm">
       <div className="mb-3">
-        <h2 className="text-lg font-semibold text-sky-900">Form Edit + Preview Invoice</h2>
+        <h2 className="text-lg font-semibold text-sky-900">{t("invoice.form.title")}</h2>
         <p className="text-sm text-sky-800">
-          Field disesuaikan dengan schema backend invoice. Nilai Subtotal, PpnAmount, dan GrandTotal dihitung otomatis.
+          {t("invoice.form.description")}
         </p>
       </div>
 
@@ -66,7 +68,7 @@ export function InvoiceEditForm({ item }: InvoiceEditFormProps) {
         <div className="rounded-xl border border-transparent bg-slate-100/80 p-4">
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="text-sm text-slate-700">
-              Tanggal
+              {t("field.Tanggal")}
               <input
                 type="date"
                 value={form.Tanggal}
@@ -76,7 +78,7 @@ export function InvoiceEditForm({ item }: InvoiceEditFormProps) {
             </label>
 
             <label className="text-sm text-slate-700">
-              NoInvoice
+              {t("field.NoInvoice")}
               <input
                 value={form.NoInvoice}
                 onChange={(event) => setForm((prev) => ({ ...prev, NoInvoice: event.target.value }))}
@@ -85,7 +87,7 @@ export function InvoiceEditForm({ item }: InvoiceEditFormProps) {
             </label>
 
             <label className="text-sm text-slate-700">
-              NoPO
+              {t("field.NoPO")}
               <input
                 value={form.NoPO}
                 onChange={(event) => setForm((prev) => ({ ...prev, NoPO: event.target.value }))}
@@ -94,7 +96,7 @@ export function InvoiceEditForm({ item }: InvoiceEditFormProps) {
             </label>
 
             <label className="text-sm text-slate-700">
-              NoSuratJalan
+              {t("field.NoSuratJalan")}
               <input
                 value={form.NoSuratJalan}
                 onChange={(event) => setForm((prev) => ({ ...prev, NoSuratJalan: event.target.value }))}
@@ -103,7 +105,7 @@ export function InvoiceEditForm({ item }: InvoiceEditFormProps) {
             </label>
 
             <label className="text-sm text-slate-700 sm:col-span-2">
-              IdCustomer
+              {t("field.IdCustomer")}
               <input
                 value={form.IdCustomer}
                 onChange={(event) => setForm((prev) => ({ ...prev, IdCustomer: event.target.value }))}
@@ -112,7 +114,7 @@ export function InvoiceEditForm({ item }: InvoiceEditFormProps) {
             </label>
 
             <label className="text-sm text-slate-700">
-              IsPpn
+              {t("field.IsPpn")}
               <select
                 value={String(form.IsPpn)}
                 onChange={(event) =>
@@ -123,13 +125,13 @@ export function InvoiceEditForm({ item }: InvoiceEditFormProps) {
                 }
                 className="mt-1 w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm shadow-sm"
               >
-                <option value="true">true</option>
-                <option value="false">false</option>
+                <option value="true">{t("common.true")}</option>
+                <option value="false">{t("common.false")}</option>
               </select>
             </label>
 
             <label className="text-sm text-slate-700">
-              PpnRate
+              {t("field.PpnRate")}
               <input
                 type="number"
                 min={0}
@@ -141,8 +143,8 @@ export function InvoiceEditForm({ item }: InvoiceEditFormProps) {
             </label>
 
             <div className="text-sm text-slate-700 sm:col-span-2">
-              <p>Barang (Kuantitas, Unit, HargaSatuan)</p>
-              <p className="text-xs text-slate-500">Baris kosong baru akan muncul otomatis saat baris terakhir mulai diisi.</p>
+              <p>{t("invoice.form.items.title")}</p>
+              <p className="text-xs text-slate-500">{t("invoice.form.items.hint")}</p>
               <div className="mt-2 space-y-2">
                 {form.BarangRows.map((row, index) => {
                   const kuantitas = Number(row.Kuantitas || "0");
@@ -157,14 +159,14 @@ export function InvoiceEditForm({ item }: InvoiceEditFormProps) {
                         type="number"
                         min={0}
                         value={row.Kuantitas}
-                        placeholder="Kuantitas"
+                        placeholder={t("invoice.form.items.placeholder.qty")}
                         onChange={(event) => updateBarangRow(index, "Kuantitas", event.target.value)}
                         className="w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm shadow-sm"
                       />
                       <input
                         type="text"
                         value={row.Unit}
-                        placeholder="Unit"
+                        placeholder={t("invoice.form.items.placeholder.unit")}
                         onChange={(event) => updateBarangRow(index, "Unit", event.target.value)}
                         className="w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm shadow-sm"
                       />
@@ -172,13 +174,13 @@ export function InvoiceEditForm({ item }: InvoiceEditFormProps) {
                         type="number"
                         min={0}
                         value={row.HargaSatuan}
-                        placeholder="HargaSatuan"
+                        placeholder={t("invoice.form.items.placeholder.price")}
                         onChange={(event) => updateBarangRow(index, "HargaSatuan", event.target.value)}
                         className="w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm shadow-sm"
                       />
                       <input
                         type="text"
-                        value={Number.isFinite(jumlah) ? formatRupiah(jumlah) : formatRupiah(0)}
+                        value={Number.isFinite(jumlah) ? formatRupiah(jumlah, locale) : formatRupiah(0, locale)}
                         readOnly
                         className="w-full rounded-lg border border-transparent bg-slate-100 px-3 py-2 text-sm text-slate-600"
                       />
@@ -191,69 +193,70 @@ export function InvoiceEditForm({ item }: InvoiceEditFormProps) {
 
           <div className="mt-3 flex flex-wrap gap-2">
             <button className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600">
-              Simpan Perubahan
+              {t("common.saveChanges")}
             </button>
             <button
               onClick={() => setForm(toInvoiceFormState(item))}
               className="rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm text-sky-700 hover:bg-sky-50"
             >
-              Reset Form
+              {t("common.resetForm")}
             </button>
           </div>
         </div>
 
         <div className="rounded-xl border border-transparent bg-slate-100/70 p-4">
-          <p className="text-sm font-semibold text-slate-900">Preview Invoice</p>
+          <p className="text-sm font-semibold text-slate-900">{t("invoice.preview.title")}</p>
           <div className="mt-3 space-y-1 text-sm text-slate-700">
             <p>
-              <span className="text-slate-500">Tanggal:</span> {formatTanggal(form.Tanggal)}
+              <span className="text-slate-500">{t("field.Tanggal")}:</span> {formatTanggal(form.Tanggal, locale)}
             </p>
             <p>
-              <span className="text-slate-500">NoInvoice:</span> {form.NoInvoice || "-"}
+              <span className="text-slate-500">{t("field.NoInvoice")}:</span> {form.NoInvoice || "-"}
             </p>
             <p>
-              <span className="text-slate-500">NoPO:</span> {form.NoPO || "-"}
+              <span className="text-slate-500">{t("field.NoPO")}:</span> {form.NoPO || "-"}
             </p>
             <p>
-              <span className="text-slate-500">NoSuratJalan:</span> {form.NoSuratJalan || "-"}
+              <span className="text-slate-500">{t("field.NoSuratJalan")}:</span> {form.NoSuratJalan || "-"}
             </p>
             <p>
-              <span className="text-slate-500">IdCustomer:</span> {form.IdCustomer || "-"}
+              <span className="text-slate-500">{t("field.IdCustomer")}:</span> {form.IdCustomer || "-"}
             </p>
             <p>
-              <span className="text-slate-500">IsPpn:</span> {String(form.IsPpn)}
+              <span className="text-slate-500">{t("field.IsPpn")}:</span> {String(form.IsPpn)}
             </p>
             <p>
-              <span className="text-slate-500">PpnRate:</span> {form.PpnRate || "0"}%
+              <span className="text-slate-500">{t("field.PpnRate")}:</span> {form.PpnRate || "0"}%
             </p>
           </div>
 
           <div className="mt-3 rounded-lg border border-transparent bg-white p-3 shadow-sm">
             <p className="mb-2 text-xs font-semibold uppercase tracking-[0.15em] text-slate-500">
-              Barang
+              {t("field.Barang")}
             </p>
             {barangList.length > 0 ? (
               <ul className="space-y-1 text-sm text-slate-700">
                 {barangList.map((barang, index) => (
                   <li key={`preview-barang-${index}`}>
-                    {barang.Kuantitas} {barang.Unit} x {formatRupiah(barang.HargaSatuan)} = {formatRupiah(barang.Jumlah)}
+                    {barang.Kuantitas} {barang.Unit} x {formatRupiah(barang.HargaSatuan, locale)} ={" "}
+                    {formatRupiah(barang.Jumlah, locale)}
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-slate-500">Belum ada barang.</p>
+              <p className="text-sm text-slate-500">{t("common.noItems")}</p>
             )}
           </div>
 
           <div className="mt-3 rounded-lg border border-dashed border-slate-300 bg-white p-3">
             <p className="text-sm text-slate-700">
-              <span className="text-slate-500">Subtotal:</span> {formatRupiah(summary.Subtotal)}
+              <span className="text-slate-500">{t("field.Subtotal")}:</span> {formatRupiah(summary.Subtotal, locale)}
             </p>
             <p className="text-sm text-slate-700">
-              <span className="text-slate-500">PpnAmount:</span> {formatRupiah(summary.PpnAmount)}
+              <span className="text-slate-500">{t("field.PpnAmount")}:</span> {formatRupiah(summary.PpnAmount, locale)}
             </p>
             <p className="text-sm font-semibold text-slate-900">
-              <span className="text-slate-500">GrandTotal:</span> {formatRupiah(summary.GrandTotal)}
+              <span className="text-slate-500">{t("field.GrandTotal")}:</span> {formatRupiah(summary.GrandTotal, locale)}
             </p>
           </div>
         </div>

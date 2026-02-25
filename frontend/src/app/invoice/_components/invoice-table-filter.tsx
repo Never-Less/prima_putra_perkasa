@@ -9,6 +9,7 @@ import {
   type InvoiceFilter,
   type InvoiceItem,
 } from "../_lib/invoice";
+import { useI18n } from "../../_i18n/provider";
 
 type InvoiceTableFilterProps = {
   rows: InvoiceItem[];
@@ -17,6 +18,7 @@ type InvoiceTableFilterProps = {
 };
 
 export function InvoiceTableFilter({ rows, selectedId, onSelectRow }: InvoiceTableFilterProps) {
+  const { locale, t } = useI18n();
   const [filter, setFilter] = useState<InvoiceFilter>(defaultInvoiceFilter);
 
   const filteredRows = useMemo(() => filterInvoiceRows(rows, filter), [filter, rows]);
@@ -24,20 +26,20 @@ export function InvoiceTableFilter({ rows, selectedId, onSelectRow }: InvoiceTab
   return (
     <section className="space-y-4 rounded-2xl border border-sky-200 bg-sky-50/40 p-5 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-lg font-semibold text-sky-900">Tabel Invoice</h2>
+        <h2 className="text-lg font-semibold text-sky-900">{t("invoice.table.title")}</h2>
         <button
           onClick={() => setFilter(defaultInvoiceFilter)}
           className="rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-sky-700 hover:bg-sky-50"
         >
-          Reset Filter
+          {t("common.resetFilter")}
         </button>
       </div>
 
       <div>
-        <p className="mb-2 text-sm font-medium text-sky-800">Filter Berdasarkan Field</p>
+        <p className="mb-2 text-sm font-medium text-sky-800">{t("common.filterByField")}</p>
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           <label className="text-sm text-slate-700">
-            NoInvoice
+            {t("field.NoInvoice")}
             <input
               value={filter.NoInvoice}
               onChange={(event) => setFilter((prev) => ({ ...prev, NoInvoice: event.target.value }))}
@@ -46,7 +48,7 @@ export function InvoiceTableFilter({ rows, selectedId, onSelectRow }: InvoiceTab
           </label>
 
           <label className="text-sm text-slate-700">
-            NoPO
+            {t("field.NoPO")}
             <input
               value={filter.NoPO}
               onChange={(event) => setFilter((prev) => ({ ...prev, NoPO: event.target.value }))}
@@ -55,7 +57,7 @@ export function InvoiceTableFilter({ rows, selectedId, onSelectRow }: InvoiceTab
           </label>
 
           <label className="text-sm text-slate-700">
-            NoSuratJalan
+            {t("field.NoSuratJalan")}
             <input
               value={filter.NoSuratJalan}
               onChange={(event) => setFilter((prev) => ({ ...prev, NoSuratJalan: event.target.value }))}
@@ -64,7 +66,7 @@ export function InvoiceTableFilter({ rows, selectedId, onSelectRow }: InvoiceTab
           </label>
 
           <label className="text-sm text-slate-700">
-            IdCustomer
+            {t("field.IdCustomer")}
             <input
               value={filter.IdCustomer}
               onChange={(event) => setFilter((prev) => ({ ...prev, IdCustomer: event.target.value }))}
@@ -73,7 +75,7 @@ export function InvoiceTableFilter({ rows, selectedId, onSelectRow }: InvoiceTab
           </label>
 
           <label className="text-sm text-slate-700">
-            IsPpn
+            {t("field.IsPpn")}
             <select
               value={filter.IsPpn}
               onChange={(event) =>
@@ -81,14 +83,14 @@ export function InvoiceTableFilter({ rows, selectedId, onSelectRow }: InvoiceTab
               }
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             >
-              <option value="">Semua</option>
-              <option value="true">true</option>
-              <option value="false">false</option>
+              <option value="">{t("common.all")}</option>
+              <option value="true">{t("common.true")}</option>
+              <option value="false">{t("common.false")}</option>
             </select>
           </label>
 
           <label className="text-sm text-slate-700">
-            Tanggal Dari
+            {t("field.TanggalDari")}
             <input
               type="date"
               value={filter.TanggalDari}
@@ -98,7 +100,7 @@ export function InvoiceTableFilter({ rows, selectedId, onSelectRow }: InvoiceTab
           </label>
 
           <label className="text-sm text-slate-700">
-            Tanggal Sampai
+            {t("field.TanggalSampai")}
             <input
               type="date"
               value={filter.TanggalSampai}
@@ -113,15 +115,15 @@ export function InvoiceTableFilter({ rows, selectedId, onSelectRow }: InvoiceTab
         <table className="min-w-full text-sm">
           <thead className="bg-sky-100 text-left text-sky-800">
             <tr>
-              <th className="px-3 py-2 font-medium">NoInvoice</th>
-              <th className="px-3 py-2 font-medium">Tanggal</th>
-              <th className="px-3 py-2 font-medium">NoPO</th>
-              <th className="px-3 py-2 font-medium">NoSuratJalan</th>
-              <th className="px-3 py-2 font-medium">IdCustomer</th>
-              <th className="px-3 py-2 font-medium">Subtotal</th>
-              <th className="px-3 py-2 font-medium">PpnAmount</th>
-              <th className="px-3 py-2 font-medium">GrandTotal</th>
-              <th className="px-3 py-2 font-medium">Aksi</th>
+              <th className="px-3 py-2 font-medium">{t("field.NoInvoice")}</th>
+              <th className="px-3 py-2 font-medium">{t("field.Tanggal")}</th>
+              <th className="px-3 py-2 font-medium">{t("field.NoPO")}</th>
+              <th className="px-3 py-2 font-medium">{t("field.NoSuratJalan")}</th>
+              <th className="px-3 py-2 font-medium">{t("field.IdCustomer")}</th>
+              <th className="px-3 py-2 font-medium">{t("field.Subtotal")}</th>
+              <th className="px-3 py-2 font-medium">{t("field.PpnAmount")}</th>
+              <th className="px-3 py-2 font-medium">{t("field.GrandTotal")}</th>
+              <th className="px-3 py-2 font-medium">{t("common.action")}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200 bg-white">
@@ -131,13 +133,13 @@ export function InvoiceTableFilter({ rows, selectedId, onSelectRow }: InvoiceTab
               return (
                 <tr key={row.id} className={isSelected ? "bg-sky-100" : index % 2 ? "bg-sky-50/70" : undefined}>
                   <td className="whitespace-nowrap px-3 py-2 font-medium text-slate-800">{row.NoInvoice}</td>
-                  <td className="whitespace-nowrap px-3 py-2 text-slate-600">{formatTanggal(row.Tanggal)}</td>
+                  <td className="whitespace-nowrap px-3 py-2 text-slate-600">{formatTanggal(row.Tanggal, locale)}</td>
                   <td className="whitespace-nowrap px-3 py-2 text-slate-600">{row.NoPO}</td>
                   <td className="whitespace-nowrap px-3 py-2 text-slate-600">{row.NoSuratJalan}</td>
                   <td className="whitespace-nowrap px-3 py-2 text-slate-600">{row.IdCustomer}</td>
-                  <td className="whitespace-nowrap px-3 py-2 text-slate-600">{formatRupiah(row.Subtotal)}</td>
-                  <td className="whitespace-nowrap px-3 py-2 text-slate-600">{formatRupiah(row.PpnAmount)}</td>
-                  <td className="whitespace-nowrap px-3 py-2 font-medium text-slate-800">{formatRupiah(row.GrandTotal)}</td>
+                  <td className="whitespace-nowrap px-3 py-2 text-slate-600">{formatRupiah(row.Subtotal, locale)}</td>
+                  <td className="whitespace-nowrap px-3 py-2 text-slate-600">{formatRupiah(row.PpnAmount, locale)}</td>
+                  <td className="whitespace-nowrap px-3 py-2 font-medium text-slate-800">{formatRupiah(row.GrandTotal, locale)}</td>
                   <td className="whitespace-nowrap px-3 py-2">
                     <button
                       onClick={() => onSelectRow?.(row)}
@@ -147,7 +149,7 @@ export function InvoiceTableFilter({ rows, selectedId, onSelectRow }: InvoiceTab
                           : "border border-sky-200 bg-white text-sky-700 hover:bg-sky-50"
                       }`}
                     >
-                      {isSelected ? "Terpilih" : "Pilih Row"}
+                      {isSelected ? t("common.selected") : t("common.selectRow")}
                     </button>
                   </td>
                 </tr>
@@ -157,7 +159,7 @@ export function InvoiceTableFilter({ rows, selectedId, onSelectRow }: InvoiceTab
         </table>
       </div>
 
-      <p className="text-sm text-slate-500">Hasil filter: {filteredRows.length} data</p>
+      <p className="text-sm text-slate-500">{t("common.filterResult", { count: filteredRows.length })}</p>
     </section>
   );
 }

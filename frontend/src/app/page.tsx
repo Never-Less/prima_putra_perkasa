@@ -1,42 +1,51 @@
-import Link from "next/link";
+"use client";
 
-const routes = [
-  {
-    href: "/suratJalan",
-    title: "Surat Jalan",
-    description:
-      "Halaman Surat Jalan dengan tabel, filter field, serta form dan preview dalam satu halaman.",
-    cta: "Buka Surat Jalan",
-  },
-  {
-    href: "/invoice",
-    title: "Invoice",
-    description:
-      "Halaman invoice dengan field sesuai schema backend, termasuk Barang, PPN, dan kalkulasi total.",
-    cta: "Buka Invoice",
-  },
-  {
-    href: "/surat-jalan",
-    title: "Aplikasi Surat Jalan (API Backend)",
-    description: "Tabel Surat Jalan dari backend dengan fitur filter berdasarkan field.",
-    cta: "Buka Aplikasi",
-  },
-];
+import Link from "next/link";
+import { useI18n } from "./_i18n/provider";
 
 export default function HomePage() {
+  const { t } = useI18n();
+
+  const routes = [
+    {
+      href: "/customer",
+      title: t("home.route.customer.title"),
+      description: t("home.route.customer.description"),
+      cta: t("home.route.customer.cta"),
+    },
+    {
+      href: "/suratJalan",
+      title: t("home.route.suratJalan.title"),
+      description: t("home.route.suratJalan.description"),
+      cta: t("home.route.suratJalan.cta"),
+    },
+    {
+      href: "/invoice",
+      title: t("home.route.invoice.title"),
+      description: t("home.route.invoice.description"),
+      cta: t("home.route.invoice.cta"),
+    },
+    {
+      href: "/surat-jalan",
+      title: t("home.route.suratJalanApi.title"),
+      description: t("home.route.suratJalanApi.description"),
+      cta: t("home.route.suratJalanApi.cta"),
+    },
+  ];
+
   return (
-    <main className="mx-auto min-h-screen w-full max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+    <main className="mx-auto min-h-screen w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <section className="rounded-2xl border border-white/60 bg-white/70 p-6 shadow-sm backdrop-blur-sm">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-          Prima Putra Perkasa
+          {t("brand.name")}
         </p>
-        <h1 className="mt-2 text-3xl font-semibold text-slate-900">Frontend Surat Jalan</h1>
+        <h1 className="mt-2 text-3xl font-semibold text-slate-900">{t("home.title")}</h1>
         <p className="mt-2 text-sm text-slate-600 sm:text-base">
-          Pilih halaman yang ingin digunakan: Surat Jalan, Invoice, atau halaman API backend.
+          {t("home.description")}
         </p>
       </section>
 
-      <section className="mt-6 grid gap-4 md:grid-cols-3">
+      <section className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {routes.map((route) => (
           <Link
             key={route.href}

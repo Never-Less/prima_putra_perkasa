@@ -9,6 +9,7 @@ import {
   type SuratJalanFilter,
   type SuratJalanItem,
 } from "../_lib/surat-jalan";
+import { useI18n } from "../../_i18n/provider";
 
 type ColorTone = "slate" | "sky" | "emerald";
 type TableStyle = "default" | "striped" | "compact";
@@ -77,6 +78,7 @@ export function SuratJalanTableFilter({
   colorTone = "slate",
   tableStyle = "default",
 }: SuratJalanTableFilterProps) {
+  const { locale, t } = useI18n();
   const [filters, setFilters] = useState<SuratJalanFilter>(defaultSuratJalanFilter);
   const tone = toneStyles[colorTone];
   const cellPadding = tableStyle === "compact" ? "px-2 py-1.5" : "px-3 py-2";
@@ -87,20 +89,20 @@ export function SuratJalanTableFilter({
   return (
     <section className={`space-y-4 rounded-2xl border p-5 shadow-sm ${tone.section}`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className={`text-lg font-semibold ${tone.title}`}>Tabel Surat Jalan</h2>
+        <h2 className={`text-lg font-semibold ${tone.title}`}>{t("suratJalan.table.title")}</h2>
         <button
           onClick={() => setFilters(defaultSuratJalanFilter)}
           className={`rounded-lg px-3 py-2 text-sm ${tone.resetButton}`}
         >
-          Reset Filter
+          {t("common.resetFilter")}
         </button>
       </div>
 
       <div>
-        <p className={`mb-2 text-sm font-medium ${tone.subtitle}`}>Filter Berdasarkan Field</p>
+        <p className={`mb-2 text-sm font-medium ${tone.subtitle}`}>{t("common.filterByField")}</p>
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           <label className="text-sm text-slate-700">
-            NoSuratJalan
+            {t("field.NoSuratJalan")}
             <input
               value={filters.NoSuratJalan}
               onChange={(event) => setFilters((prev) => ({ ...prev, NoSuratJalan: event.target.value }))}
@@ -109,7 +111,7 @@ export function SuratJalanTableFilter({
           </label>
 
           <label className="text-sm text-slate-700">
-            NoPO
+            {t("field.NoPO")}
             <input
               value={filters.NoPO}
               onChange={(event) => setFilters((prev) => ({ ...prev, NoPO: event.target.value }))}
@@ -118,7 +120,7 @@ export function SuratJalanTableFilter({
           </label>
 
           <label className="text-sm text-slate-700">
-            IdCustomer
+            {t("field.IdCustomer")}
             <input
               value={filters.IdCustomer}
               onChange={(event) => setFilters((prev) => ({ ...prev, IdCustomer: event.target.value }))}
@@ -127,7 +129,7 @@ export function SuratJalanTableFilter({
           </label>
 
           <label className="text-sm text-slate-700">
-            Kendaraan
+            {t("field.Kendaraan")}
             <input
               value={filters.Kendaraan}
               onChange={(event) => setFilters((prev) => ({ ...prev, Kendaraan: event.target.value }))}
@@ -136,7 +138,7 @@ export function SuratJalanTableFilter({
           </label>
 
           <label className="text-sm text-slate-700">
-            Tipe
+            {t("field.Tipe")}
             <select
               value={filters.Tipe}
               onChange={(event) =>
@@ -147,14 +149,14 @@ export function SuratJalanTableFilter({
               }
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             >
-              <option value="">Semua</option>
+              <option value="">{t("common.all")}</option>
               <option value="partial">partial</option>
               <option value="non partial">non partial</option>
             </select>
           </label>
 
           <label className="text-sm text-slate-700">
-            SudahSelesai
+            {t("field.SudahSelesai")}
             <select
               value={filters.SudahSelesai}
               onChange={(event) =>
@@ -165,14 +167,14 @@ export function SuratJalanTableFilter({
               }
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             >
-              <option value="">Semua</option>
-              <option value="true">true</option>
-              <option value="false">false</option>
+              <option value="">{t("common.all")}</option>
+              <option value="true">{t("common.true")}</option>
+              <option value="false">{t("common.false")}</option>
             </select>
           </label>
 
           <label className="text-sm text-slate-700">
-            Tanggal Dari
+            {t("field.TanggalDari")}
             <input
               type="date"
               value={filters.TanggalDari}
@@ -182,7 +184,7 @@ export function SuratJalanTableFilter({
           </label>
 
           <label className="text-sm text-slate-700">
-            Tanggal Sampai
+            {t("field.TanggalSampai")}
             <input
               type="date"
               value={filters.TanggalSampai}
@@ -197,15 +199,15 @@ export function SuratJalanTableFilter({
         <table className={`min-w-full ${tableText}`}>
           <thead className={`${tone.header} text-left`}>
             <tr>
-              <th className={`${cellPadding} font-medium`}>NoSuratJalan</th>
-              <th className={`${cellPadding} font-medium`}>NoPO</th>
-              <th className={`${cellPadding} font-medium`}>Tanggal</th>
-              <th className={`${cellPadding} font-medium`}>IdCustomer</th>
-              <th className={`${cellPadding} font-medium`}>Barang</th>
-              <th className={`${cellPadding} font-medium`}>Kendaraan</th>
-              <th className={`${cellPadding} font-medium`}>Tipe</th>
-              <th className={`${cellPadding} font-medium`}>SudahSelesai</th>
-              <th className={`${cellPadding} font-medium`}>Aksi</th>
+              <th className={`${cellPadding} font-medium`}>{t("field.NoSuratJalan")}</th>
+              <th className={`${cellPadding} font-medium`}>{t("field.NoPO")}</th>
+              <th className={`${cellPadding} font-medium`}>{t("field.Tanggal")}</th>
+              <th className={`${cellPadding} font-medium`}>{t("field.IdCustomer")}</th>
+              <th className={`${cellPadding} font-medium`}>{t("field.Barang")}</th>
+              <th className={`${cellPadding} font-medium`}>{t("field.Kendaraan")}</th>
+              <th className={`${cellPadding} font-medium`}>{t("field.Tipe")}</th>
+              <th className={`${cellPadding} font-medium`}>{t("field.SudahSelesai")}</th>
+              <th className={`${cellPadding} font-medium`}>{t("common.action")}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200 bg-white">
@@ -225,7 +227,7 @@ export function SuratJalanTableFilter({
                   </td>
                   <td className={`whitespace-nowrap ${cellPadding} text-slate-600`}>{row.NoPO}</td>
                   <td className={`whitespace-nowrap ${cellPadding} text-slate-600`}>
-                    {formatTanggal(row.Tanggal)}
+                    {formatTanggal(row.Tanggal, locale)}
                   </td>
                   <td className={`whitespace-nowrap ${cellPadding} text-slate-600`}>{row.IdCustomer}</td>
                   <td className={`${cellPadding} text-slate-600`}>{barangLabel(row.Barang)}</td>
@@ -237,7 +239,7 @@ export function SuratJalanTableFilter({
                         row.SudahSelesai ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
                       }`}
                     >
-                      {row.SudahSelesai ? "true" : "false"}
+                      {row.SudahSelesai ? t("common.true") : t("common.false")}
                     </span>
                   </td>
                   <td className={`whitespace-nowrap ${cellPadding}`}>
@@ -247,7 +249,7 @@ export function SuratJalanTableFilter({
                         isSelected ? tone.actionActive : tone.actionInactive
                       }`}
                     >
-                      {isSelected ? "Terpilih" : "Pilih Row"}
+                      {isSelected ? t("common.selected") : t("common.selectRow")}
                     </button>
                   </td>
                 </tr>
@@ -257,7 +259,7 @@ export function SuratJalanTableFilter({
         </table>
       </div>
 
-      <p className="text-sm text-slate-500">Hasil filter: {filteredRows.length} data</p>
+      <p className="text-sm text-slate-500">{t("common.filterResult", { count: filteredRows.length })}</p>
     </section>
   );
 }

@@ -5,6 +5,8 @@ export type InvoiceBarang = {
   Jumlah: number;
 };
 
+type Locale = "id" | "en";
+
 export type InvoiceItem = {
   id: string;
   Tanggal: string;
@@ -147,22 +149,26 @@ function roundCurrency(value: number) {
   return Number(value.toFixed(2));
 }
 
-export function formatTanggal(value: string) {
+export function formatTanggal(value: string, locale: Locale = "id") {
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
     return "-";
   }
 
-  return date.toLocaleDateString("id-ID", {
+  const dateLocale = locale === "en" ? "en-US" : "id-ID";
+
+  return date.toLocaleDateString(dateLocale, {
     day: "2-digit",
     month: "short",
     year: "numeric",
   });
 }
 
-export function formatRupiah(value: number) {
-  return new Intl.NumberFormat("id-ID", {
+export function formatRupiah(value: number, locale: Locale = "id") {
+  const numberLocale = locale === "en" ? "en-US" : "id-ID";
+
+  return new Intl.NumberFormat(numberLocale, {
     style: "currency",
     currency: "IDR",
     maximumFractionDigits: 0,

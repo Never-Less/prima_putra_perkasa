@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { useI18n } from "../_i18n/provider";
 
 type SuratJalanBarang = {
   Nama: string;
@@ -48,19 +49,22 @@ const defaultFilters: FilterState = {
 };
 
 const defaultApiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
+type Locale = "id" | "en";
 
 function normalize(value: string) {
   return value.trim().toLowerCase();
 }
 
-function formatTanggal(value: string) {
+function formatTanggal(value: string, locale: Locale) {
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
     return "-";
   }
 
-  return date.toLocaleDateString("id-ID", {
+  const dateLocale = locale === "en" ? "en-US" : "id-ID";
+
+  return date.toLocaleDateString(dateLocale, {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -76,6 +80,7 @@ function barangLabel(items: SuratJalanBarang[]) {
 }
 
 export default function SuratJalanPage() {
+  const { locale, t } = useI18n();
   const [apiBaseUrl, setApiBaseUrl] = useState(defaultApiBaseUrl);
   const [accessToken, setAccessToken] = useState("");
   const [rows, setRows] = useState<SuratJalanItem[]>([]);
@@ -126,7 +131,7 @@ export default function SuratJalanPage() {
     setError("");
 
     if (!accessToken.trim()) {
-      setError("Access token wajib diisi karena endpoint Surat Jalan bersifat privat.");
+      setError(t("suratJalanApi.error.tokenRequired"));
       return;
     }
 
@@ -144,7 +149,7 @@ export default function SuratJalanPage() {
       const payload = (await response.json()) as SuratJalanResponse;
 
       if (!response.ok) {
-        throw new Error(payload.message || "Gagal mengambil data Surat Jalan");
+        throw new Error(payload.message || t("suratJalanApi.error.fetchFailed"));
       }
 
       setRows(Array.isArray(payload.SuratJalan) ? payload.SuratJalan : []);
@@ -152,7 +157,7 @@ export default function SuratJalanPage() {
       if (fetchError instanceof Error) {
         setError(fetchError.message);
       } else {
-        setError("Terjadi error saat mengambil data Surat Jalan");
+        setError(t("suratJalanApi.error.unknown"));
       }
     } finally {
       setLoading(false);
@@ -165,13 +170,13 @@ export default function SuratJalanPage() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-              Prima Putra Perkasa
+              {t("brand.name")}
             </p>
             <h1 className="mt-2 text-2xl font-semibold text-slate-900 sm:text-3xl">
-              Aplikasi Surat Jalan
+              {t("nav.suratJalan")}
             </h1>
             <p className="mt-2 text-sm text-slate-600 sm:text-base">
-              Menampilkan tabel Surat Jalan dari backend dengan filter berdasarkan field.
+              {t("suratJalanApi.header.description")}
             </p>
           </div>
           <div className="flex flex-wrap gap-2 text-sm">
@@ -179,23 +184,23 @@ export default function SuratJalanPage() {
               href="/"
               className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-700 hover:bg-slate-50"
             >
-              Beranda
+              {t("nav.home")}
             </Link>
             <Link
               href="/suratJalan"
               className="rounded-lg border border-slate-900 bg-slate-900 px-3 py-2 text-white hover:bg-slate-700"
             >
-              Lihat Surat Jalan
+              {t("suratJalanApi.nav.viewSuratJalan")}
             </Link>
           </div>
         </div>
       </section>
 
       <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-900">Koneksi API</h2>
+        <h2 className="text-lg font-semibold text-slate-900">{t("suratJalanApi.connection.title")}</h2>
         <div className="mt-3 grid gap-3 md:grid-cols-2">
           <label className="text-sm text-slate-700">
-            API Base URL
+            {t("suratJalanApi.connection.apiBaseUrl")}
             <input
               value={apiBaseUrl}
               onChange={(event) => setApiBaseUrl(event.target.value)}
@@ -204,12 +209,12 @@ export default function SuratJalanPage() {
             />
           </label>
           <label className="text-sm text-slate-700">
-            Access Token (Bearer)
+            {t("suratJalanApi.connection.accessToken")}
             <input
               value={accessToken}
               onChange={(event) => setAccessToken(event.target.value)}
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-              placeholder="Masukkan access token"
+              placeholder={t("suratJalanApi.connection.accessTokenPlaceholder")}
             />
           </label>
         </div>
@@ -219,27 +224,27 @@ export default function SuratJalanPage() {
             disabled={loading}
             className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-60"
           >
-            {loading ? "Memuat..." : "Muat Data Surat Jalan"}
+            {loading ? t("common.loading") : t("suratJalanApi.connection.loadButton")}
           </button>
-          <span className="text-sm text-slate-600">Total data: {rows.length}</span>
+          <span className="text-sm text-slate-600">{t("common.totalData", { count: rows.length })}</span>
         </div>
         {error ? <p className="mt-3 text-sm text-rose-600">{error}</p> : null}
       </section>
 
       <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-lg font-semibold text-slate-900">Filter Berdasarkan Field</h2>
+          <h2 className="text-lg font-semibold text-slate-900">{t("common.filterByField")}</h2>
           <button
             onClick={() => setFilters(defaultFilters)}
             className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
           >
-            Reset Filter
+            {t("common.resetFilter")}
           </button>
         </div>
 
         <div className="mt-3 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           <label className="text-sm text-slate-700">
-            NoSuratJalan
+            {t("field.NoSuratJalan")}
             <input
               value={filters.NoSuratJalan}
               onChange={(event) => setFilters((prev) => ({ ...prev, NoSuratJalan: event.target.value }))}
@@ -248,7 +253,7 @@ export default function SuratJalanPage() {
           </label>
 
           <label className="text-sm text-slate-700">
-            NoPO
+            {t("field.NoPO")}
             <input
               value={filters.NoPO}
               onChange={(event) => setFilters((prev) => ({ ...prev, NoPO: event.target.value }))}
@@ -257,7 +262,7 @@ export default function SuratJalanPage() {
           </label>
 
           <label className="text-sm text-slate-700">
-            IdCustomer
+            {t("field.IdCustomer")}
             <input
               value={filters.IdCustomer}
               onChange={(event) => setFilters((prev) => ({ ...prev, IdCustomer: event.target.value }))}
@@ -266,7 +271,7 @@ export default function SuratJalanPage() {
           </label>
 
           <label className="text-sm text-slate-700">
-            Kendaraan
+            {t("field.Kendaraan")}
             <input
               value={filters.Kendaraan}
               onChange={(event) => setFilters((prev) => ({ ...prev, Kendaraan: event.target.value }))}
@@ -275,7 +280,7 @@ export default function SuratJalanPage() {
           </label>
 
           <label className="text-sm text-slate-700">
-            Tipe
+            {t("field.Tipe")}
             <select
               value={filters.Tipe}
               onChange={(event) =>
@@ -286,14 +291,14 @@ export default function SuratJalanPage() {
               }
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             >
-              <option value="">Semua</option>
+              <option value="">{t("common.all")}</option>
               <option value="partial">partial</option>
               <option value="non partial">non partial</option>
             </select>
           </label>
 
           <label className="text-sm text-slate-700">
-            SudahSelesai
+            {t("field.SudahSelesai")}
             <select
               value={filters.SudahSelesai}
               onChange={(event) =>
@@ -304,14 +309,14 @@ export default function SuratJalanPage() {
               }
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             >
-              <option value="">Semua</option>
-              <option value="true">true</option>
-              <option value="false">false</option>
+              <option value="">{t("common.all")}</option>
+              <option value="true">{t("common.true")}</option>
+              <option value="false">{t("common.false")}</option>
             </select>
           </label>
 
           <label className="text-sm text-slate-700">
-            Tanggal Dari
+            {t("field.TanggalDari")}
             <input
               type="date"
               value={filters.TanggalDari}
@@ -321,7 +326,7 @@ export default function SuratJalanPage() {
           </label>
 
           <label className="text-sm text-slate-700">
-            Tanggal Sampai
+            {t("field.TanggalSampai")}
             <input
               type="date"
               value={filters.TanggalSampai}
@@ -334,22 +339,22 @@ export default function SuratJalanPage() {
 
       <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="mb-3 flex items-center justify-between gap-2">
-          <h2 className="text-lg font-semibold text-slate-900">Tabel Surat Jalan</h2>
-          <span className="text-sm text-slate-600">Hasil filter: {filteredRows.length}</span>
+          <h2 className="text-lg font-semibold text-slate-900">{t("suratJalan.table.title")}</h2>
+          <span className="text-sm text-slate-600">{t("common.filterResult", { count: filteredRows.length })}</span>
         </div>
 
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead className="bg-slate-100 text-left text-slate-600">
               <tr>
-                <th className="px-3 py-2 font-medium">NoSuratJalan</th>
-                <th className="px-3 py-2 font-medium">NoPO</th>
-                <th className="px-3 py-2 font-medium">Tanggal</th>
-                <th className="px-3 py-2 font-medium">IdCustomer</th>
-                <th className="px-3 py-2 font-medium">Barang</th>
-                <th className="px-3 py-2 font-medium">Kendaraan</th>
-                <th className="px-3 py-2 font-medium">Tipe</th>
-                <th className="px-3 py-2 font-medium">SudahSelesai</th>
+                <th className="px-3 py-2 font-medium">{t("field.NoSuratJalan")}</th>
+                <th className="px-3 py-2 font-medium">{t("field.NoPO")}</th>
+                <th className="px-3 py-2 font-medium">{t("field.Tanggal")}</th>
+                <th className="px-3 py-2 font-medium">{t("field.IdCustomer")}</th>
+                <th className="px-3 py-2 font-medium">{t("field.Barang")}</th>
+                <th className="px-3 py-2 font-medium">{t("field.Kendaraan")}</th>
+                <th className="px-3 py-2 font-medium">{t("field.Tipe")}</th>
+                <th className="px-3 py-2 font-medium">{t("field.SudahSelesai")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 bg-white">
@@ -357,7 +362,7 @@ export default function SuratJalanPage() {
                 <tr key={row.id}>
                   <td className="whitespace-nowrap px-3 py-2 font-medium text-slate-800">{row.NoSuratJalan}</td>
                   <td className="whitespace-nowrap px-3 py-2 text-slate-600">{row.NoPO}</td>
-                  <td className="whitespace-nowrap px-3 py-2 text-slate-600">{formatTanggal(row.Tanggal)}</td>
+                  <td className="whitespace-nowrap px-3 py-2 text-slate-600">{formatTanggal(row.Tanggal, locale)}</td>
                   <td className="whitespace-nowrap px-3 py-2 text-slate-600">{row.IdCustomer}</td>
                   <td className="px-3 py-2 text-slate-600">{barangLabel(row.Barang)}</td>
                   <td className="whitespace-nowrap px-3 py-2 text-slate-600">{row.Kendaraan}</td>
@@ -368,7 +373,7 @@ export default function SuratJalanPage() {
                         row.SudahSelesai ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
                       }`}
                     >
-                      {row.SudahSelesai ? "true" : "false"}
+                      {row.SudahSelesai ? t("common.true") : t("common.false")}
                     </span>
                   </td>
                 </tr>
@@ -379,7 +384,7 @@ export default function SuratJalanPage() {
 
         {!loading && filteredRows.length === 0 ? (
           <p className="mt-3 text-sm text-slate-500">
-            Belum ada data ditampilkan. Klik tombol Muat Data Surat Jalan atau sesuaikan filter.
+            {t("suratJalanApi.emptyState")}
           </p>
         ) : null}
       </section>

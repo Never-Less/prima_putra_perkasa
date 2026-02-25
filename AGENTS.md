@@ -50,6 +50,11 @@ Panduan untuk agent yang bekerja di repository `prima_putra_perkasa`.
   - `Style Table`
   - `Style Form`
 - Hindari membuat style alternatif baru yang tidak dipakai. Jika ada style lama tidak terpakai, hapus agar codebase tetap bersih.
+- Gunakan i18n untuk text UI dan copy aplikasi.
+  - Default bahasa: `id` (Bahasa Indonesia).
+  - Bahasa tambahan saat ini: `en` (English).
+  - Tambahan/ubah text UI harus melalui dictionary i18n, bukan hardcoded string langsung di komponen.
+  - Pertahankan fallback aman ke bahasa default (`id`) jika key tidak ditemukan.
 
 ## Validasi Setelah Perubahan
 

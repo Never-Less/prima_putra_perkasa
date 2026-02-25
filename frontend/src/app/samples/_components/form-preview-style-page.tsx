@@ -4,8 +4,10 @@ import { useMemo, useState } from "react";
 import { sampleSuratJalanRows } from "../_lib/surat-jalan";
 import { SuratJalanEditForm } from "./surat-jalan-edit-form";
 import { SuratJalanTableFilter } from "./surat-jalan-table-filter";
+import { useI18n } from "../../_i18n/provider";
 
 export function FormPreviewStylePage() {
+  const { t } = useI18n();
   const [selectedId, setSelectedId] = useState(sampleSuratJalanRows[0]?.id || "");
 
   const selectedRow = useMemo(() => {
@@ -26,8 +28,8 @@ export function FormPreviewStylePage() {
         <SuratJalanEditForm
           key={selectedRow.id}
           item={selectedRow}
-          title="Form Edit + Preview"
-          description="Klik baris pada tabel untuk mengisi form dan melihat preview."
+          title={t("suratJalan.form.title")}
+          description={t("suratJalan.form.description")}
           showPreview={true}
           colorTone="sky"
           formStyle="soft"

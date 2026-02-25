@@ -1,4 +1,5 @@
 export type SuratJalanTipe = "partial" | "non partial";
+type Locale = "id" | "en";
 
 export type SuratJalanBarang = {
   Nama: string;
@@ -126,14 +127,16 @@ function normalize(value: string) {
   return value.trim().toLowerCase();
 }
 
-export function formatTanggal(value: string) {
+export function formatTanggal(value: string, locale: Locale = "id") {
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
     return "-";
   }
 
-  return date.toLocaleDateString("id-ID", {
+  const dateLocale = locale === "en" ? "en-US" : "id-ID";
+
+  return date.toLocaleDateString(dateLocale, {
     day: "2-digit",
     month: "short",
     year: "numeric",
