@@ -38,6 +38,19 @@ Panduan untuk agent yang bekerja di repository `prima_putra_perkasa`.
   - Validasi `Origin/Referer` untuk method mutasi (`POST`, `PUT`, `PATCH`, `DELETE`).
 - Jangan expose field sensitif (`password`) di response API.
 
+## Frontend Standards
+
+- Gunakan **Style A** sebagai baseline UI aplikasi Surat Jalan untuk development berikutnya.
+- Struktur utama halaman sample/frontend:
+  - Page awal menampilkan **table Surat Jalan + filter berdasarkan field**.
+  - Klik row membuka **form + preview pada halaman yang sama**.
+- Pertahankan opsi konfigurasi tampilan berikut di Style A:
+  - `Tipe Positioning`
+  - `Warna`
+  - `Style Table`
+  - `Style Form`
+- Hindari membuat style alternatif baru yang tidak dipakai. Jika ada style lama tidak terpakai, hapus agar codebase tetap bersih.
+
 ## Validasi Setelah Perubahan
 
 - Untuk backend, minimal jalankan pengecekan syntax:
