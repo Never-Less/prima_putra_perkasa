@@ -21,7 +21,7 @@ export const messages: Record<Locale, MessageDictionary> = {
 
     "home.title": "Frontend Surat Jalan",
     "home.description":
-      "Pilih halaman yang ingin digunakan: Surat Jalan, Invoice, Customer, atau halaman API backend.",
+      "Pilih halaman yang ingin digunakan: Surat Jalan, Invoice, atau Customer.",
     "home.route.customer.title": "Customer",
     "home.route.customer.description":
       "Halaman customer dengan tabel, filter field, serta form dan preview sesuai schema backend.",
@@ -34,11 +34,6 @@ export const messages: Record<Locale, MessageDictionary> = {
     "home.route.invoice.description":
       "Halaman invoice dengan field sesuai schema backend, termasuk Barang, PPN, dan kalkulasi total.",
     "home.route.invoice.cta": "Buka Invoice",
-    "home.route.suratJalanApi.title": "Surat Jalan (API Backend)",
-    "home.route.suratJalanApi.description":
-      "Tabel Surat Jalan dari backend dengan fitur filter berdasarkan field.",
-    "home.route.suratJalanApi.cta": "Buka API Backend",
-
     "common.resetFilter": "Reset Filter",
     "common.filterByField": "Filter Berdasarkan Field",
     "common.action": "Aksi",
@@ -68,6 +63,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "invoice.form.title": "Form Edit + Preview Invoice",
     "invoice.form.description":
       "Field disesuaikan dengan schema backend invoice. Nilai Subtotal, PpnAmount, dan GrandTotal dihitung otomatis.",
+    "invoice.form.noSuratJalanHint": "Isi 1 NoSuratJalan per baris.",
     "invoice.form.items.title": "Barang (Kuantitas, Unit, HargaSatuan)",
     "invoice.form.items.hint":
       "Baris kosong baru akan muncul otomatis saat baris terakhir mulai diisi.",
@@ -87,21 +83,6 @@ export const messages: Record<Locale, MessageDictionary> = {
     "suratJalan.form.items.placeholder.name": "Nama barang",
     "suratJalan.form.items.placeholder.qty": "Jumlah",
     "suratJalan.preview.title": "Preview Surat Jalan",
-
-    "suratJalanApi.header.description":
-      "Menampilkan tabel Surat Jalan dari backend dengan filter berdasarkan field.",
-    "suratJalanApi.nav.viewSuratJalan": "Lihat Surat Jalan",
-    "suratJalanApi.connection.title": "Koneksi API",
-    "suratJalanApi.connection.apiBaseUrl": "API Base URL",
-    "suratJalanApi.connection.accessToken": "Access Token (Bearer)",
-    "suratJalanApi.connection.accessTokenPlaceholder": "Masukkan access token",
-    "suratJalanApi.connection.loadButton": "Muat Data Surat Jalan",
-    "suratJalanApi.error.tokenRequired":
-      "Access token wajib diisi karena endpoint Surat Jalan bersifat privat.",
-    "suratJalanApi.error.fetchFailed": "Gagal mengambil data Surat Jalan",
-    "suratJalanApi.error.unknown": "Terjadi error saat mengambil data Surat Jalan",
-    "suratJalanApi.emptyState":
-      "Belum ada data ditampilkan. Klik tombol Muat Data Surat Jalan atau sesuaikan filter.",
 
     "field.Nama": "Nama",
     "field.Alamat": "Alamat",
@@ -136,7 +117,7 @@ export const messages: Record<Locale, MessageDictionary> = {
 
     "home.title": "Delivery Frontend",
     "home.description":
-      "Choose a page to use: Delivery Note, Invoice, Customer, or the backend API page.",
+      "Choose a page to use: Delivery Note, Invoice, or Customer.",
     "home.route.customer.title": "Customer",
     "home.route.customer.description":
       "Customer page with table, field filters, and form plus preview based on backend schema.",
@@ -149,11 +130,6 @@ export const messages: Record<Locale, MessageDictionary> = {
     "home.route.invoice.description":
       "Invoice page with backend schema fields, including Items, VAT, and total calculation.",
     "home.route.invoice.cta": "Open Invoice",
-    "home.route.suratJalanApi.title": "Delivery Note (Backend API)",
-    "home.route.suratJalanApi.description":
-      "Delivery Note table from backend with field-based filtering.",
-    "home.route.suratJalanApi.cta": "Open Backend API",
-
     "common.resetFilter": "Reset Filter",
     "common.filterByField": "Filter by Field",
     "common.action": "Action",
@@ -183,6 +159,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "invoice.form.title": "Edit Form + Invoice Preview",
     "invoice.form.description":
       "Fields are aligned with invoice backend schema. Subtotal, PpnAmount, and GrandTotal are auto-calculated.",
+    "invoice.form.noSuratJalanHint": "Enter one NoSuratJalan per line.",
     "invoice.form.items.title": "Items (Quantity, Unit, UnitPrice)",
     "invoice.form.items.hint": "A new empty row is added when the last row starts being filled.",
     "invoice.form.items.placeholder.qty": "Quantity",
@@ -202,21 +179,6 @@ export const messages: Record<Locale, MessageDictionary> = {
     "suratJalan.form.items.placeholder.name": "Item name",
     "suratJalan.form.items.placeholder.qty": "Quantity",
     "suratJalan.preview.title": "Delivery Note Preview",
-
-    "suratJalanApi.header.description":
-      "Shows backend Delivery Note table with field-based filtering.",
-    "suratJalanApi.nav.viewSuratJalan": "View Delivery Note",
-    "suratJalanApi.connection.title": "API Connection",
-    "suratJalanApi.connection.apiBaseUrl": "API Base URL",
-    "suratJalanApi.connection.accessToken": "Access Token (Bearer)",
-    "suratJalanApi.connection.accessTokenPlaceholder": "Enter access token",
-    "suratJalanApi.connection.loadButton": "Load Delivery Note Data",
-    "suratJalanApi.error.tokenRequired":
-      "Access token is required because Delivery Note endpoint is private.",
-    "suratJalanApi.error.fetchFailed": "Failed to fetch Delivery Note data",
-    "suratJalanApi.error.unknown": "An error occurred while fetching Delivery Note data",
-    "suratJalanApi.emptyState":
-      "No data shown yet. Click Load Delivery Note Data or adjust the filters.",
 
     "field.Nama": "Name",
     "field.Alamat": "Address",

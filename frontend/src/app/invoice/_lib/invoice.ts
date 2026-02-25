@@ -12,7 +12,7 @@ export type InvoiceItem = {
   Tanggal: string;
   NoInvoice: string;
   NoPO: string;
-  NoSuratJalan: string;
+  NoSuratJalan: string[];
   IdCustomer: string;
   Barang: InvoiceBarang[];
   IsPpn: boolean;
@@ -32,7 +32,7 @@ export type InvoiceFormState = {
   Tanggal: string;
   NoInvoice: string;
   NoPO: string;
-  NoSuratJalan: string;
+  NoSuratJalanText: string;
   IdCustomer: string;
   IsPpn: boolean;
   PpnRate: string;
@@ -65,7 +65,7 @@ export const sampleInvoiceRows: InvoiceItem[] = [
     Tanggal: "2026-03-01",
     NoInvoice: "INV-260301",
     NoPO: "PO-90011",
-    NoSuratJalan: "SJ-260311",
+    NoSuratJalan: ["SJ-260311", "SJ-260312"],
     IdCustomer: "65f1234567890abcde123411",
     Barang: [
       {
@@ -92,7 +92,7 @@ export const sampleInvoiceRows: InvoiceItem[] = [
     Tanggal: "2026-03-02",
     NoInvoice: "INV-260302",
     NoPO: "PO-90012",
-    NoSuratJalan: "SJ-260312",
+    NoSuratJalan: ["SJ-260320"],
     IdCustomer: "65f1234567890abcde123422",
     Barang: [
       {
@@ -113,7 +113,7 @@ export const sampleInvoiceRows: InvoiceItem[] = [
     Tanggal: "2026-03-03",
     NoInvoice: "INV-260303",
     NoPO: "PO-90013",
-    NoSuratJalan: "SJ-260313",
+    NoSuratJalan: ["SJ-260313", "SJ-260314", "SJ-260315"],
     IdCustomer: "65f1234567890abcde123433",
     Barang: [
       {
@@ -133,6 +133,18 @@ export const sampleInvoiceRows: InvoiceItem[] = [
 
 function normalize(value: string) {
   return value.trim().toLowerCase();
+}
+
+function normalizeNoSuratJalanList(value: unknown) {
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => String(item || "").trim())
+      .filter(Boolean);
+  }
+
+  const singleValue = String(value || "").trim();
+
+  return singleValue ? [singleValue] : [];
 }
 
 function parseNumber(value: string) {
@@ -173,6 +185,27 @@ export function formatRupiah(value: number, locale: Locale = "id") {
     currency: "IDR",
     maximumFractionDigits: 0,
   }).format(value);
+}
+
+export function invoiceNoSuratJalanListToText(noSuratJalan: string[]) {
+  return normalizeNoSuratJalanList(noSuratJalan).join("\n");
+}
+
+export function invoiceNoSuratJalanTextToList(value: string) {
+  return value
+    .split(/\r?\n/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+export function invoiceNoSuratJalanListLabel(noSuratJalan: string[]) {
+  const normalized = normalizeNoSuratJalanList(noSuratJalan);
+
+  if (normalized.length === 0) {
+    return "-";
+  }
+
+  return normalized.join(", ");
 }
 
 export function toInputDate(value: string) {
@@ -260,7 +293,7 @@ export function toInvoiceFormState(item: InvoiceItem): InvoiceFormState {
     Tanggal: toInputDate(item.Tanggal),
     NoInvoice: item.NoInvoice,
     NoPO: item.NoPO,
-    NoSuratJalan: item.NoSuratJalan,
+    NoSuratJalanText: invoiceNoSuratJalanListToText(item.NoSuratJalan),
     IdCustomer: item.IdCustomer,
     IsPpn: item.IsPpn,
     PpnRate: String(item.PpnRate),
@@ -285,7 +318,9 @@ export function filterInvoiceRows(rows: InvoiceItem[], filter: InvoiceFilter) {
   return rows.filter((row) => {
     const matchNoInvoice = normalize(row.NoInvoice).includes(normalize(filter.NoInvoice));
     const matchNoPO = normalize(row.NoPO).includes(normalize(filter.NoPO));
-    const matchNoSuratJalan = normalize(row.NoSuratJalan).includes(normalize(filter.NoSuratJalan));
+    const matchNoSuratJalan = normalize(invoiceNoSuratJalanListLabel(row.NoSuratJalan)).includes(
+      normalize(filter.NoSuratJalan)
+    );
     const matchIdCustomer = normalize(row.IdCustomer).includes(normalize(filter.IdCustomer));
 
     const matchPpn =

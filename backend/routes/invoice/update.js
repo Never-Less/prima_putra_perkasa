@@ -9,6 +9,7 @@ const {
   calculateSubtotal,
   isValidId,
   normalizeBarangList,
+  normalizeStringList,
   parseBoolean,
   parseDate,
   parseNumber,
@@ -42,7 +43,17 @@ router.put("/:id", async (req, res) => {
   }
 
   if (req.body.NoSuratJalan !== undefined) {
-    updates.NoSuratJalan = String(req.body.NoSuratJalan || "").trim();
+    const noSuratJalan = normalizeStringList(req.body.NoSuratJalan, {
+      maxLength: 100,
+    });
+
+    if (!noSuratJalan) {
+      return res.status(400).json({
+        message: "NoSuratJalan harus array minimal 1 item string",
+      });
+    }
+
+    updates.NoSuratJalan = noSuratJalan;
   }
 
   if (req.body.IdCustomer !== undefined) {
@@ -95,11 +106,10 @@ router.put("/:id", async (req, res) => {
 
   if (
     (updates.NoInvoice !== undefined && !updates.NoInvoice) ||
-    (updates.NoPO !== undefined && !updates.NoPO) ||
-    (updates.NoSuratJalan !== undefined && !updates.NoSuratJalan)
+    (updates.NoPO !== undefined && !updates.NoPO)
   ) {
     return res.status(400).json({
-      message: "NoInvoice, NoPO, dan NoSuratJalan tidak boleh kosong",
+      message: "NoInvoice dan NoPO tidak boleh kosong",
     });
   }
 

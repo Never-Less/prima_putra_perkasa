@@ -9,6 +9,7 @@ const {
   calculateSubtotal,
   isValidId,
   normalizeBarangList,
+  normalizeStringList,
   parseBoolean,
   parseDate,
   parseNumber,
@@ -20,7 +21,9 @@ router.post("/", async (req, res) => {
   const tanggal = parseDate(req.body.Tanggal);
   const noinvoice = String(req.body.NoInvoice || "").trim();
   const nopo = String(req.body.NoPO || "").trim();
-  const nosuratjalan = String(req.body.NoSuratJalan || "").trim();
+  const nosuratjalan = normalizeStringList(req.body.NoSuratJalan, {
+    maxLength: 100,
+  });
   const idcustomer = String(req.body.IdCustomer || "").trim();
   const barang = normalizeBarangList(req.body.Barang);
   const parsedIsPpn =

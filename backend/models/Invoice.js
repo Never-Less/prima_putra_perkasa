@@ -46,10 +46,26 @@ const invoiceSchema = new mongoose.Schema(
       maxlength: 100,
     },
     NoSuratJalan: {
-      type: String,
+      type: [
+        {
+          type: String,
+          trim: true,
+          maxlength: 100,
+        },
+      ],
       required: true,
-      trim: true,
-      maxlength: 100,
+      validate: {
+        validator(value) {
+          return (
+            Array.isArray(value) &&
+            value.length > 0 &&
+            value.every(
+              (item) => typeof item === "string" && item.trim().length > 0
+            )
+          );
+        },
+        message: "NoSuratJalan minimal 1 item",
+      },
     },
     IdCustomer: {
       type: mongoose.Schema.Types.ObjectId,

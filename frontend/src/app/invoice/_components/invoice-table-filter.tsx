@@ -6,6 +6,7 @@ import {
   filterInvoiceRows,
   formatRupiah,
   formatTanggal,
+  invoiceNoSuratJalanListLabel,
   type InvoiceFilter,
   type InvoiceItem,
 } from "../_lib/invoice";
@@ -135,7 +136,7 @@ export function InvoiceTableFilter({ rows, selectedId, onSelectRow }: InvoiceTab
                   <td className="whitespace-nowrap px-3 py-2 font-medium text-slate-800">{row.NoInvoice}</td>
                   <td className="whitespace-nowrap px-3 py-2 text-slate-600">{formatTanggal(row.Tanggal, locale)}</td>
                   <td className="whitespace-nowrap px-3 py-2 text-slate-600">{row.NoPO}</td>
-                  <td className="whitespace-nowrap px-3 py-2 text-slate-600">{row.NoSuratJalan}</td>
+                  <td className="px-3 py-2 text-slate-600">{invoiceNoSuratJalanListLabel(row.NoSuratJalan)}</td>
                   <td className="whitespace-nowrap px-3 py-2 text-slate-600">{row.IdCustomer}</td>
                   <td className="whitespace-nowrap px-3 py-2 text-slate-600">{formatRupiah(row.Subtotal, locale)}</td>
                   <td className="whitespace-nowrap px-3 py-2 text-slate-600">{formatRupiah(row.PpnAmount, locale)}</td>

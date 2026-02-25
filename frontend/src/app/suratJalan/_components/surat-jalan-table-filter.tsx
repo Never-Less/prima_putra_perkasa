@@ -85,6 +85,26 @@ export function SuratJalanTableFilter({
   const tableText = tableStyle === "compact" ? "text-xs" : "text-sm";
 
   const filteredRows = useMemo(() => filterSuratJalanRows(rows, filters), [filters, rows]);
+  const groupedRows = useMemo(() => {
+    const groupMap = new Map<string, SuratJalanItem[]>();
+
+    filteredRows.forEach((row) => {
+      const key = row.NoPO || "-";
+      const existingRows = groupMap.get(key);
+
+      if (existingRows) {
+        existingRows.push(row);
+        return;
+      }
+
+      groupMap.set(key, [row]);
+    });
+
+    return Array.from(groupMap.entries()).map(([NoPO, items]) => ({
+      NoPO,
+      items,
+    }));
+  }, [filteredRows]);
 
   return (
     <section className={`space-y-4 rounded-2xl border p-5 shadow-sm ${tone.section}`}>
@@ -195,68 +215,79 @@ export function SuratJalanTableFilter({
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className={`min-w-full ${tableText}`}>
-          <thead className={`${tone.header} text-left`}>
-            <tr>
-              <th className={`${cellPadding} font-medium`}>{t("field.NoSuratJalan")}</th>
-              <th className={`${cellPadding} font-medium`}>{t("field.NoPO")}</th>
-              <th className={`${cellPadding} font-medium`}>{t("field.Tanggal")}</th>
-              <th className={`${cellPadding} font-medium`}>{t("field.IdCustomer")}</th>
-              <th className={`${cellPadding} font-medium`}>{t("field.Barang")}</th>
-              <th className={`${cellPadding} font-medium`}>{t("field.Kendaraan")}</th>
-              <th className={`${cellPadding} font-medium`}>{t("field.Tipe")}</th>
-              <th className={`${cellPadding} font-medium`}>{t("field.SudahSelesai")}</th>
-              <th className={`${cellPadding} font-medium`}>{t("common.action")}</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 bg-white">
-            {filteredRows.map((row, index) => {
-              const isSelected = selectedId === row.id;
-              const useStripedRow = tableStyle === "striped" && index % 2 === 1;
-              const rowClassName = isSelected
-                ? tone.selectedRow
-                : useStripedRow
-                  ? tone.stripedRow
-                  : undefined;
+      <div className="space-y-4">
+        {groupedRows.map((group) => (
+          <div key={group.NoPO} className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-slate-50 px-3 py-2">
+              <p className="text-sm font-semibold text-slate-800">
+                {t("field.NoPO")}: {group.NoPO}
+              </p>
+              <span className="text-xs text-slate-500">{t("common.totalData", { count: group.items.length })}</span>
+            </div>
 
-              return (
-                <tr key={row.id} className={rowClassName}>
-                  <td className={`whitespace-nowrap ${cellPadding} font-medium text-slate-800`}>
-                    {row.NoSuratJalan}
-                  </td>
-                  <td className={`whitespace-nowrap ${cellPadding} text-slate-600`}>{row.NoPO}</td>
-                  <td className={`whitespace-nowrap ${cellPadding} text-slate-600`}>
-                    {formatTanggal(row.Tanggal, locale)}
-                  </td>
-                  <td className={`whitespace-nowrap ${cellPadding} text-slate-600`}>{row.IdCustomer}</td>
-                  <td className={`${cellPadding} text-slate-600`}>{barangLabel(row.Barang)}</td>
-                  <td className={`whitespace-nowrap ${cellPadding} text-slate-600`}>{row.Kendaraan}</td>
-                  <td className={`whitespace-nowrap ${cellPadding} text-slate-600`}>{row.Tipe}</td>
-                  <td className={`whitespace-nowrap ${cellPadding}`}>
-                    <span
-                      className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
-                        row.SudahSelesai ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
-                      }`}
-                    >
-                      {row.SudahSelesai ? t("common.true") : t("common.false")}
-                    </span>
-                  </td>
-                  <td className={`whitespace-nowrap ${cellPadding}`}>
-                    <button
-                      onClick={() => onSelectRow?.(row)}
-                      className={`rounded-lg px-3 py-1.5 text-xs font-medium ${
-                        isSelected ? tone.actionActive : tone.actionInactive
-                      }`}
-                    >
-                      {isSelected ? t("common.selected") : t("common.selectRow")}
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+            <div className="overflow-x-auto">
+              <table className={`min-w-full ${tableText}`}>
+                <thead className={`${tone.header} text-left`}>
+                  <tr>
+                    <th className={`${cellPadding} font-medium`}>{t("field.NoSuratJalan")}</th>
+                    <th className={`${cellPadding} font-medium`}>{t("field.Tanggal")}</th>
+                    <th className={`${cellPadding} font-medium`}>{t("field.IdCustomer")}</th>
+                    <th className={`${cellPadding} font-medium`}>{t("field.Barang")}</th>
+                    <th className={`${cellPadding} font-medium`}>{t("field.Kendaraan")}</th>
+                    <th className={`${cellPadding} font-medium`}>{t("field.Tipe")}</th>
+                    <th className={`${cellPadding} font-medium`}>{t("field.SudahSelesai")}</th>
+                    <th className={`${cellPadding} font-medium`}>{t("common.action")}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200 bg-white">
+                  {group.items.map((row, index) => {
+                    const isSelected = selectedId === row.id;
+                    const useStripedRow = tableStyle === "striped" && index % 2 === 1;
+                    const rowClassName = isSelected
+                      ? tone.selectedRow
+                      : useStripedRow
+                        ? tone.stripedRow
+                        : undefined;
+
+                    return (
+                      <tr key={row.id} className={rowClassName}>
+                        <td className={`whitespace-nowrap ${cellPadding} font-medium text-slate-800`}>
+                          {row.NoSuratJalan}
+                        </td>
+                        <td className={`whitespace-nowrap ${cellPadding} text-slate-600`}>
+                          {formatTanggal(row.Tanggal, locale)}
+                        </td>
+                        <td className={`whitespace-nowrap ${cellPadding} text-slate-600`}>{row.IdCustomer}</td>
+                        <td className={`${cellPadding} text-slate-600`}>{barangLabel(row.Barang)}</td>
+                        <td className={`whitespace-nowrap ${cellPadding} text-slate-600`}>{row.Kendaraan}</td>
+                        <td className={`whitespace-nowrap ${cellPadding} text-slate-600`}>{row.Tipe}</td>
+                        <td className={`whitespace-nowrap ${cellPadding}`}>
+                          <span
+                            className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
+                              row.SudahSelesai ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
+                            }`}
+                          >
+                            {row.SudahSelesai ? t("common.true") : t("common.false")}
+                          </span>
+                        </td>
+                        <td className={`whitespace-nowrap ${cellPadding}`}>
+                          <button
+                            onClick={() => onSelectRow?.(row)}
+                            className={`rounded-lg px-3 py-1.5 text-xs font-medium ${
+                              isSelected ? tone.actionActive : tone.actionInactive
+                            }`}
+                          >
+                            {isSelected ? t("common.selected") : t("common.selectRow")}
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ))}
       </div>
 
       <p className="text-sm text-slate-500">{t("common.filterResult", { count: filteredRows.length })}</p>

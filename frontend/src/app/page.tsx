@@ -25,12 +25,6 @@ export default function HomePage() {
       description: t("home.route.invoice.description"),
       cta: t("home.route.invoice.cta"),
     },
-    {
-      href: "/surat-jalan",
-      title: t("home.route.suratJalanApi.title"),
-      description: t("home.route.suratJalanApi.description"),
-      cta: t("home.route.suratJalanApi.cta"),
-    },
   ];
 
   return (
@@ -45,7 +39,7 @@ export default function HomePage() {
         </p>
       </section>
 
-      <section className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {routes.map((route) => (
           <Link
             key={route.href}

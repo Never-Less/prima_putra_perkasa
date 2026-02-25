@@ -74,7 +74,7 @@ export const sampleSuratJalanRows: SuratJalanItem[] = [
   {
     id: "sj-260312",
     NoSuratJalan: "SJ-260312",
-    NoPO: "PO-90012",
+    NoPO: "PO-90011",
     Tanggal: "2026-03-12",
     IdCustomer: "65f1234567890abcde123422",
     Barang: [
@@ -99,7 +99,7 @@ export const sampleSuratJalanRows: SuratJalanItem[] = [
   {
     id: "sj-260314",
     NoSuratJalan: "SJ-260314",
-    NoPO: "PO-90014",
+    NoPO: "PO-90013",
     Tanggal: "2026-03-14",
     IdCustomer: "65f1234567890abcde123444",
     Barang: [

@@ -1,6 +1,6 @@
 "use client";
 
-import { FormPreviewStylePage } from "../samples/_components/form-preview-style-page";
+import { FormPreviewStylePage } from "./_components/form-preview-style-page";
 import { useI18n } from "../_i18n/provider";
 
 export default function SuratJalanPage() {

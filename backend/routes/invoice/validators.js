@@ -78,6 +78,27 @@ function normalizeBarangList(barangInput) {
   return normalized;
 }
 
+function normalizeStringList(value, options = {}) {
+  const { maxLength = 100 } = options;
+
+  const source = Array.isArray(value) ? value : [value];
+  const normalized = source
+    .map((item) => String(item || "").trim())
+    .filter(Boolean);
+
+  if (normalized.length === 0) {
+    return null;
+  }
+
+  for (const item of normalized) {
+    if (item.length > maxLength) {
+      return null;
+    }
+  }
+
+  return normalized;
+}
+
 function calculateSubtotal(barang) {
   return barang.reduce((total, item) => total + item.Jumlah, 0);
 }
@@ -104,6 +125,7 @@ module.exports = {
   calculateSubtotal,
   isValidId,
   normalizeBarangList,
+  normalizeStringList,
   parseBoolean,
   parseDate,
   parseNumber,

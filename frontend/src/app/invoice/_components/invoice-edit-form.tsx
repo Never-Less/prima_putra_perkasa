@@ -6,6 +6,8 @@ import {
   ensureTrailingEmptyInvoiceBarangRow,
   formatRupiah,
   formatTanggal,
+  invoiceNoSuratJalanListLabel,
+  invoiceNoSuratJalanTextToList,
   invoiceBarangRowsToList,
   toInvoiceFormState,
   type InvoiceBarangFormRow,
@@ -27,6 +29,10 @@ export function InvoiceEditForm({ item }: InvoiceEditFormProps) {
   }, [item]);
 
   const barangList = useMemo(() => invoiceBarangRowsToList(form.BarangRows), [form.BarangRows]);
+  const noSuratJalanList = useMemo(
+    () => invoiceNoSuratJalanTextToList(form.NoSuratJalanText),
+    [form.NoSuratJalanText]
+  );
 
   const summary = useMemo(() => {
     const ppnRateNumber = Number(form.PpnRate || "0");
@@ -97,9 +103,13 @@ export function InvoiceEditForm({ item }: InvoiceEditFormProps) {
 
             <label className="text-sm text-slate-700">
               {t("field.NoSuratJalan")}
-              <input
-                value={form.NoSuratJalan}
-                onChange={(event) => setForm((prev) => ({ ...prev, NoSuratJalan: event.target.value }))}
+              <p className="mt-1 text-xs text-slate-500">{t("invoice.form.noSuratJalanHint")}</p>
+              <textarea
+                rows={3}
+                value={form.NoSuratJalanText}
+                onChange={(event) =>
+                  setForm((prev) => ({ ...prev, NoSuratJalanText: event.target.value }))
+                }
                 className="mt-1 w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm shadow-sm"
               />
             </label>
@@ -217,7 +227,8 @@ export function InvoiceEditForm({ item }: InvoiceEditFormProps) {
               <span className="text-slate-500">{t("field.NoPO")}:</span> {form.NoPO || "-"}
             </p>
             <p>
-              <span className="text-slate-500">{t("field.NoSuratJalan")}:</span> {form.NoSuratJalan || "-"}
+              <span className="text-slate-500">{t("field.NoSuratJalan")}:</span>{" "}
+              {invoiceNoSuratJalanListLabel(noSuratJalanList)}
             </p>
             <p>
               <span className="text-slate-500">{t("field.IdCustomer")}:</span> {form.IdCustomer || "-"}
