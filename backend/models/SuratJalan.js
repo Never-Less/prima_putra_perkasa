@@ -64,10 +64,6 @@ const suratJalanSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
-    sudahSelesai: {
-      type: Boolean,
-      default: false,
-    },
   },
   { timestamps: true }
 );

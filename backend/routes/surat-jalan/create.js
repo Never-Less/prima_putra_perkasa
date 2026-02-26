@@ -3,7 +3,7 @@ const express = require("express");
 const { Customer } = require("../../models/Customer");
 const { SuratJalan } = require("../../models/SuratJalan");
 const { sanitizeSuratJalan } = require("./sanitize-surat-jalan");
-const { isValidId, normalizeBarangList, parseBoolean, parseDate } = require("./validators");
+const { isValidId, normalizeBarangList, parseDate } = require("./validators");
 
 const router = express.Router();
 
@@ -17,15 +17,6 @@ router.post("/", async (req, res) => {
   const tipe = String(req.body.tipe || "")
     .trim()
     .toLowerCase();
-
-  let sudahSelesai = false;
-  if (req.body.sudahSelesai !== undefined) {
-    const parsed = parseBoolean(req.body.sudahSelesai);
-    if (parsed === null) {
-      return res.status(400).json({ message: "sudahSelesai harus boolean" });
-    }
-    sudahSelesai = parsed;
-  }
 
   if (!noSuratJalan || !noPo || !tanggal || !idCustomer || !barang || !kendaraan || !tipe) {
     return res.status(400).json({
@@ -58,8 +49,16 @@ router.post("/", async (req, res) => {
       barang: barang,
       kendaraan: kendaraan,
       tipe: tipe,
-      sudahSelesai,
     });
+
+    await SuratJalan.updateMany(
+      { noPo: noPo },
+      {
+        $set: {
+          tipe: tipe,
+        },
+      }
+    );
 
     return res.status(201).json({
       message: "surat jalan created",

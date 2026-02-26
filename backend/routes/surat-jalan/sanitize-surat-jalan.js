@@ -8,7 +8,6 @@ function sanitizeSuratJalan(suratJalan) {
     barang: suratJalan.barang,
     kendaraan: suratJalan.kendaraan,
     tipe: suratJalan.tipe,
-    sudahSelesai: suratJalan.sudahSelesai,
     createdAt: suratJalan.createdAt,
     updatedAt: suratJalan.updatedAt,
   };

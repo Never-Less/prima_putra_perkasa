@@ -3,7 +3,7 @@ const express = require("express");
 const { Customer } = require("../../models/Customer");
 const { SuratJalan } = require("../../models/SuratJalan");
 const { sanitizeSuratJalan } = require("./sanitize-surat-jalan");
-const { isValidId, normalizeBarangList, parseBoolean, parseDate } = require("./validators");
+const { isValidId, normalizeBarangList, parseDate } = require("./validators");
 
 const router = express.Router();
 
@@ -68,20 +68,10 @@ router.put("/:id", async (req, res) => {
     updates.tipe = tipe;
   }
 
-  if (req.body.sudahSelesai !== undefined) {
-    const parsed = parseBoolean(req.body.sudahSelesai);
-
-    if (parsed === null) {
-      return res.status(400).json({ message: "sudahSelesai harus boolean" });
-    }
-
-    updates.sudahSelesai = parsed;
-  }
-
   if (Object.keys(updates).length === 0) {
     return res.status(400).json({
       message:
-        "minimal kirim salah satu field: noSuratJalan, noPo, tanggal, idCustomer, barang, kendaraan, tipe, sudahSelesai",
+        "minimal kirim salah satu field: noSuratJalan, noPo, tanggal, idCustomer, barang, kendaraan, tipe",
     });
   }
 

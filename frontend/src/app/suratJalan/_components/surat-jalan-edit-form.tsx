@@ -11,7 +11,7 @@ import {
   type SuratJalanFormState,
   type SuratJalanItem,
 } from "../_lib/surat-jalan";
-import { customerNameOptions } from "../../customer/_lib/customer";
+import { AutocompleteModal } from "../../_components/autocomplete-modal";
 import { useI18n } from "../../_i18n/provider";
 
 type ColorTone = "slate" | "sky" | "emerald";
@@ -20,6 +20,13 @@ type FormStyle = "default" | "outlined" | "soft";
 type SuratJalanEditFormProps = {
   item?: SuratJalanItem;
   onNewData?: () => void;
+  customerOptions?: Array<{ id: string; nama: string }>;
+  noPoOptions?: string[];
+  isSaving?: boolean;
+  isDeleting?: boolean;
+  actionErrorMessage?: string;
+  onSave?: (form: SuratJalanFormState, selectedItem?: SuratJalanItem) => Promise<void> | void;
+  onDelete?: (selectedItem: SuratJalanItem) => Promise<void> | void;
   title: string;
   description: string;
   showPreview: boolean;
@@ -101,7 +108,6 @@ function createEmptySuratJalanFormState(): SuratJalanFormState {
     idCustomer: "",
     kendaraan: "",
     tipe: "partial",
-    sudahSelesai: false,
     barangRows: ensureTrailingEmptyBarangRow([createEmptyBarangRow()]),
   };
 }
@@ -109,6 +115,13 @@ function createEmptySuratJalanFormState(): SuratJalanFormState {
 export function SuratJalanEditForm({
   item,
   onNewData,
+  customerOptions = [],
+  noPoOptions = [],
+  isSaving = false,
+  isDeleting = false,
+  actionErrorMessage = "",
+  onSave,
+  onDelete,
   title,
   description,
   showPreview,
@@ -116,6 +129,8 @@ export function SuratJalanEditForm({
   formStyle = "default",
 }: SuratJalanEditFormProps) {
   const { locale, t } = useI18n();
+  const [isNoPoModalOpen, setIsNoPoModalOpen] = useState(false);
+  const [noPoAutocompleteQuery, setNoPoAutocompleteQuery] = useState("");
   const [form, setForm] = useState<SuratJalanFormState>(() =>
     item ? toFormState(item) : createEmptySuratJalanFormState()
   );
@@ -125,15 +140,52 @@ export function SuratJalanEditForm({
   const barangInputClassName = `w-full rounded-lg px-3 py-2 text-sm ${style.input}`;
 
   const previewBarang = useMemo(() => barangRowsToList(form.barangRows), [form.barangRows]);
-  const customerOptions = useMemo(() => {
-    const options = customerNameOptions.filter(Boolean);
+  const normalizedNoPoOptions = useMemo(() => {
+    const noPoSet = new Set<string>();
 
-    if (form.idCustomer && !options.includes(form.idCustomer)) {
-      return [form.idCustomer, ...options];
+    noPoOptions.forEach((option) => {
+      const normalizedOption = String(option || "").trim();
+
+      if (!normalizedOption) {
+        return;
+      }
+
+      noPoSet.add(normalizedOption);
+    });
+
+    if (form.noPo) {
+      noPoSet.add(form.noPo);
     }
 
-    return options;
-  }, [form.idCustomer]);
+    return Array.from(noPoSet.values());
+  }, [form.noPo, noPoOptions]);
+  const normalizedCustomerOptions = useMemo(() => {
+    const customerMap = new Map<string, string>();
+
+    customerOptions.forEach((customer) => {
+      const id = String(customer.id || "").trim();
+      const nama = String(customer.nama || "").trim();
+
+      if (!id) {
+        return;
+      }
+
+      customerMap.set(id, nama || id);
+    });
+
+    if (form.idCustomer && !customerMap.has(form.idCustomer)) {
+      customerMap.set(form.idCustomer, form.idCustomer);
+    }
+
+    return Array.from(customerMap.entries()).map(([id, nama]) => ({
+      id,
+      nama,
+    }));
+  }, [customerOptions, form.idCustomer]);
+  const customerLabelMap = useMemo(() => {
+    return new Map(normalizedCustomerOptions.map((customer) => [customer.id, customer.nama]));
+  }, [normalizedCustomerOptions]);
+  const previewCustomerLabel = customerLabelMap.get(form.idCustomer) || form.idCustomer || "-";
 
   function updateBarangRow(index: number, field: keyof SuratJalanBarangFormRow, value: string) {
     setForm((prev) => {
@@ -156,7 +208,8 @@ export function SuratJalanEditForm({
   }
 
   return (
-    <section className={`rounded-2xl border p-5 shadow-sm ${tone.section}`}>
+    <>
+      <section className={`rounded-2xl border p-5 shadow-sm ${tone.section}`}>
       <div className="mb-3">
         <h2 className={`text-lg font-semibold ${tone.title}`}>{title}</h2>
         <p className={`text-sm ${tone.subtitle}`}>{description}</p>
@@ -176,11 +229,23 @@ export function SuratJalanEditForm({
 
             <label className={`text-sm ${tone.label}`}>
               {t("field.noPo")}
+              <p className="mt-1 text-xs text-slate-500">{t("suratJalan.form.noPoHint")}</p>
               <input
                 value={form.noPo}
                 onChange={(event) => setForm((prev) => ({ ...prev, noPo: event.target.value }))}
                 className={inputClassName}
               />
+              <button
+                type="button"
+                disabled={isSaving || isDeleting}
+                onClick={() => {
+                  setNoPoAutocompleteQuery(form.noPo);
+                  setIsNoPoModalOpen(true);
+                }}
+                className="mt-2 rounded-lg border border-sky-300 bg-white px-3 py-2 text-xs text-sky-700 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {t("suratJalan.form.noPoModalButton")}
+              </button>
             </label>
 
             <label className={`text-sm ${tone.label}`}>
@@ -210,9 +275,9 @@ export function SuratJalanEditForm({
                 className={inputClassName}
               >
                 <option value="">-</option>
-                {customerOptions.map((customerName) => (
-                  <option key={customerName} value={customerName}>
-                    {customerName}
+                {normalizedCustomerOptions.map((customer) => (
+                  <option key={customer.id} value={customer.id}>
+                    {customer.nama}
                   </option>
                 ))}
               </select>
@@ -232,23 +297,6 @@ export function SuratJalanEditForm({
               >
                 <option value="partial">partial</option>
                 <option value="non partial">non partial</option>
-              </select>
-            </label>
-
-            <label className={`text-sm ${tone.label}`}>
-              {t("field.sudahSelesai")}
-              <select
-                value={String(form.sudahSelesai)}
-                onChange={(event) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    sudahSelesai: event.target.value === "true",
-                  }))
-                }
-                className={inputClassName}
-              >
-                <option value="true">{t("common.true")}</option>
-                <option value="false">{t("common.false")}</option>
               </select>
             </label>
 
@@ -280,25 +328,49 @@ export function SuratJalanEditForm({
           </div>
 
           <div className="mt-3 flex flex-wrap gap-2">
-            <button className={`rounded-lg px-4 py-2 text-sm font-medium ${tone.primaryButton}`}>
-              {t("common.saveChanges")}
+            <button
+              type="button"
+              onClick={() => void onSave?.(form, item)}
+              disabled={isSaving || isDeleting}
+              className={`rounded-lg px-4 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-60 ${tone.primaryButton}`}
+            >
+              {isSaving ? t("common.loading") : t("common.saveChanges")}
             </button>
             <button
+              type="button"
+              disabled={isSaving || isDeleting}
               onClick={() => {
                 onNewData?.();
                 setForm(createEmptySuratJalanFormState());
               }}
-              className={`rounded-lg px-4 py-2 text-sm ${tone.resetButton}`}
+              className={`rounded-lg px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60 ${tone.resetButton}`}
             >
               {t("common.newData")}
             </button>
             <button
+              type="button"
+              disabled={isSaving || isDeleting}
               onClick={() => setForm(item ? toFormState(item) : createEmptySuratJalanFormState())}
-              className={`rounded-lg px-4 py-2 text-sm ${tone.resetButton}`}
+              className={`rounded-lg px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60 ${tone.resetButton}`}
             >
               {t("common.resetForm")}
             </button>
+            {item ? (
+              <button
+                type="button"
+                onClick={() => void onDelete?.(item)}
+                disabled={isSaving || isDeleting}
+                className="rounded-lg border border-red-300 bg-white px-4 py-2 text-sm text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isDeleting ? t("common.loading") : t("common.delete")}
+              </button>
+            ) : null}
           </div>
+          {actionErrorMessage ? (
+            <p className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              {actionErrorMessage}
+            </p>
+          ) : null}
         </div>
 
         {showPreview ? (
@@ -315,16 +387,13 @@ export function SuratJalanEditForm({
                 <span className="text-slate-500">{t("field.tanggal")}:</span> {formatTanggal(form.tanggal, locale)}
               </p>
               <p>
-                <span className="text-slate-500">{t("field.namaCustomer")}:</span> {form.idCustomer || "-"}
+                <span className="text-slate-500">{t("field.namaCustomer")}:</span> {previewCustomerLabel}
               </p>
               <p>
                 <span className="text-slate-500">{t("field.kendaraan")}:</span> {form.kendaraan || "-"}
               </p>
               <p>
                 <span className="text-slate-500">{t("field.tipe")}:</span> {form.tipe}
-              </p>
-              <p>
-                <span className="text-slate-500">{t("field.sudahSelesai")}:</span> {String(form.sudahSelesai)}
               </p>
             </div>
 
@@ -345,6 +414,31 @@ export function SuratJalanEditForm({
           </div>
         ) : null}
       </div>
-    </section>
+      </section>
+
+      <AutocompleteModal
+        isOpen={isNoPoModalOpen}
+        title={t("suratJalan.form.noPoModalTitle")}
+        placeholder={t("suratJalan.form.noPoModalPlaceholder")}
+        query={noPoAutocompleteQuery}
+        options={normalizedNoPoOptions}
+        selectedValue={form.noPo}
+        useTypedLabel={t("suratJalan.form.noPoModalUseTyped", {
+          value: noPoAutocompleteQuery.trim(),
+        })}
+        emptyLabel={t("suratJalan.form.noPoModalEmpty")}
+        closeLabel={t("common.close")}
+        onQueryChange={(value) => setNoPoAutocompleteQuery(value)}
+        onSelect={(value) => {
+          setForm((prev) => ({
+            ...prev,
+            noPo: value,
+          }));
+          setNoPoAutocompleteQuery(value);
+          setIsNoPoModalOpen(false);
+        }}
+        onClose={() => setIsNoPoModalOpen(false)}
+      />
+    </>
   );
 }

@@ -105,16 +105,37 @@ export const messages: Record<Locale, MessageDictionary> = {
     "invoice.preview.title": "Preview Invoice",
 
     "suratJalan.page.description":
-      "Page surat jalan disesuaikan dengan field schema backend: noSuratJalan, noPo, tanggal, namaCustomer, barang, kendaraan, tipe, dan sudahSelesai.",
+      "Page surat jalan disesuaikan dengan field schema backend: noSuratJalan, noPo, tanggal, namaCustomer, barang, kendaraan, dan tipe.",
     "suratJalan.table.title": "Tabel Surat Jalan",
     "suratJalan.form.title": "Form Edit + Preview",
     "suratJalan.form.description":
       "Klik baris pada tabel untuk mengisi form dan melihat preview.",
+    "suratJalan.form.noPoHint": "Pilih NoPO yang sudah ada atau ketik NoPO baru.",
+    "suratJalan.form.noPoModalButton": "Cari NoPO",
+    "suratJalan.form.noPoModalTitle": "Pilih atau Buat NoPO",
+    "suratJalan.form.noPoModalPlaceholder": "Cari NoPO...",
+    "suratJalan.form.noPoModalUseTyped": "Gunakan \"{{value}}\" sebagai NoPO baru",
+    "suratJalan.form.noPoModalEmpty": "Belum ada NoPO yang cocok.",
     "suratJalan.form.items.title": "barang",
     "suratJalan.form.items.hint": "Isi nama dan jumlah. Baris kosong baru akan muncul otomatis.",
     "suratJalan.form.items.placeholder.name": "nama barang",
     "suratJalan.form.items.placeholder.qty": "jumlah",
     "suratJalan.preview.title": "Preview Surat Jalan",
+    "suratJalan.apiLoadError": "Gagal memuat data surat jalan dari backend.",
+    "suratJalan.customerLoadError": "Gagal memuat pilihan customer untuk surat jalan.",
+    "suratJalan.mutationError": "Gagal memproses perubahan surat jalan.",
+    "suratJalan.confirmUpdateTitle": "Konfirmasi Ubah Surat Jalan",
+    "suratJalan.confirmUpdateDescription":
+      "Simpan perubahan untuk surat jalan \"{{noSuratJalan}}\"?",
+    "suratJalan.confirmDeleteTitle": "Konfirmasi Hapus Surat Jalan",
+    "suratJalan.confirmDeleteDescription":
+      "Surat jalan \"{{noSuratJalan}}\" akan dihapus permanen. Lanjutkan?",
+    "suratJalan.toast.createSuccess":
+      "Surat jalan \"{{noSuratJalan}}\" berhasil ditambahkan.",
+    "suratJalan.toast.updateSuccess":
+      "Surat jalan \"{{noSuratJalan}}\" berhasil diperbarui.",
+    "suratJalan.toast.deleteSuccess":
+      "Surat jalan \"{{noSuratJalan}}\" berhasil dihapus.",
 
     "pembelian.page.description":
       "Page pembelian disesuaikan dengan field schema backend: tanggalNota, namaSupplier, noNpwp, noInvoice, hutang, ppn, lamaHutang, nilaiNota, tanggalJatuhTempo, dan tanggalBayar.",
@@ -144,7 +165,6 @@ export const messages: Record<Locale, MessageDictionary> = {
     "field.tanggalSampai": "tanggal Sampai",
     "field.kendaraan": "kendaraan",
     "field.tipe": "tipe",
-    "field.sudahSelesai": "sudahSelesai",
     "field.barang": "barang",
     "field.namaBarang": "namaBarang",
     "field.ppnRate": "ppnRate",
@@ -259,17 +279,40 @@ export const messages: Record<Locale, MessageDictionary> = {
     "invoice.preview.title": "Invoice Preview",
 
     "suratJalan.page.description":
-      "Delivery Note page aligned with backend schema fields: noSuratJalan, noPo, tanggal, customerName, barang, kendaraan, tipe, and sudahSelesai.",
+      "Delivery Note page aligned with backend schema fields: noSuratJalan, noPo, tanggal, customerName, barang, kendaraan, and tipe.",
     "suratJalan.table.title": "Delivery Note Table",
     "suratJalan.form.title": "Edit Form + Preview",
     "suratJalan.form.description":
       "Click a table row to fill the form and see the preview.",
+    "suratJalan.form.noPoHint":
+      "Select an existing noPo or type a new noPo value.",
+    "suratJalan.form.noPoModalButton": "Find noPo",
+    "suratJalan.form.noPoModalTitle": "Select or Create noPo",
+    "suratJalan.form.noPoModalPlaceholder": "Search noPo...",
+    "suratJalan.form.noPoModalUseTyped": "Use \"{{value}}\" as a new noPo",
+    "suratJalan.form.noPoModalEmpty": "No matching noPo found.",
     "suratJalan.form.items.title": "Items",
     "suratJalan.form.items.hint":
       "Fill in item name and quantity. A new empty row will appear automatically.",
     "suratJalan.form.items.placeholder.name": "Item name",
     "suratJalan.form.items.placeholder.qty": "Quantity",
     "suratJalan.preview.title": "Delivery Note Preview",
+    "suratJalan.apiLoadError": "Failed to load delivery note data from backend.",
+    "suratJalan.customerLoadError":
+      "Failed to load customer options for delivery note.",
+    "suratJalan.mutationError": "Failed to process delivery note changes.",
+    "suratJalan.confirmUpdateTitle": "Confirm Delivery Note Update",
+    "suratJalan.confirmUpdateDescription":
+      "Save changes for delivery note \"{{noSuratJalan}}\"?",
+    "suratJalan.confirmDeleteTitle": "Confirm Delivery Note Deletion",
+    "suratJalan.confirmDeleteDescription":
+      "Delivery note \"{{noSuratJalan}}\" will be deleted permanently. Continue?",
+    "suratJalan.toast.createSuccess":
+      "Delivery note \"{{noSuratJalan}}\" has been added successfully.",
+    "suratJalan.toast.updateSuccess":
+      "Delivery note \"{{noSuratJalan}}\" has been updated successfully.",
+    "suratJalan.toast.deleteSuccess":
+      "Delivery note \"{{noSuratJalan}}\" has been deleted successfully.",
 
     "pembelian.page.description":
       "Purchase page aligned with backend schema fields: tanggalNota, namaSupplier, noNpwp, noInvoice, hutang, ppn, lamaHutang, nilaiNota, tanggalJatuhTempo, and tanggalBayar.",
@@ -299,7 +342,6 @@ export const messages: Record<Locale, MessageDictionary> = {
     "field.tanggalSampai": "Date To",
     "field.kendaraan": "Vehicle",
     "field.tipe": "Type",
-    "field.sudahSelesai": "sudahSelesai",
     "field.barang": "Items",
     "field.namaBarang": "ItemName",
     "field.ppnRate": "ppnRate",

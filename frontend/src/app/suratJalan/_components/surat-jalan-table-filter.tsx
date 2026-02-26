@@ -18,6 +18,7 @@ type SuratJalanTableFilterProps = {
   rows: SuratJalanItem[];
   selectedId?: string;
   onSelectRow?: (row: SuratJalanItem) => void;
+  resolveCustomerLabel?: (customerId: string) => string;
   colorTone?: ColorTone;
   tableStyle?: TableStyle;
 };
@@ -75,6 +76,7 @@ export function SuratJalanTableFilter({
   rows,
   selectedId,
   onSelectRow,
+  resolveCustomerLabel,
   colorTone = "slate",
   tableStyle = "default",
 }: SuratJalanTableFilterProps) {
@@ -84,7 +86,10 @@ export function SuratJalanTableFilter({
   const cellPadding = tableStyle === "compact" ? "px-2 py-1.5" : "px-3 py-2";
   const tableText = tableStyle === "compact" ? "text-xs" : "text-sm";
 
-  const filteredRows = useMemo(() => filterSuratJalanRows(rows, filters), [filters, rows]);
+  const filteredRows = useMemo(
+    () => filterSuratJalanRows(rows, filters, resolveCustomerLabel),
+    [filters, resolveCustomerLabel, rows]
+  );
   const groupedRows = useMemo(() => {
     const groupMap = new Map<string, SuratJalanItem[]>();
 
@@ -176,24 +181,6 @@ export function SuratJalanTableFilter({
           </label>
 
           <label className="text-sm text-slate-700">
-            {t("field.sudahSelesai")}
-            <select
-              value={filters.sudahSelesai}
-              onChange={(event) =>
-                setFilters((prev) => ({
-                  ...prev,
-                  sudahSelesai: event.target.value as SuratJalanFilter["sudahSelesai"],
-                }))
-              }
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-            >
-              <option value="">{t("common.all")}</option>
-              <option value="true">{t("common.true")}</option>
-              <option value="false">{t("common.false")}</option>
-            </select>
-          </label>
-
-          <label className="text-sm text-slate-700">
             {t("field.tanggalDari")}
             <input
               type="date"
@@ -235,7 +222,6 @@ export function SuratJalanTableFilter({
                     <th className={`${cellPadding} font-medium`}>{t("field.barang")}</th>
                     <th className={`${cellPadding} font-medium`}>{t("field.kendaraan")}</th>
                     <th className={`${cellPadding} font-medium`}>{t("field.tipe")}</th>
-                    <th className={`${cellPadding} font-medium`}>{t("field.sudahSelesai")}</th>
                     <th className={`${cellPadding} font-medium`}>{t("common.action")}</th>
                   </tr>
                 </thead>
@@ -243,6 +229,7 @@ export function SuratJalanTableFilter({
                   {group.items.map((row, index) => {
                     const isSelected = selectedId === row.id;
                     const useStripedRow = tableStyle === "striped" && index % 2 === 1;
+                    const customerLabel = resolveCustomerLabel?.(row.idCustomer) || row.idCustomer || "-";
                     const rowClassName = isSelected
                       ? tone.selectedRow
                       : useStripedRow
@@ -257,19 +244,10 @@ export function SuratJalanTableFilter({
                         <td className={`whitespace-nowrap ${cellPadding} text-slate-600`}>
                           {formatTanggal(row.tanggal, locale)}
                         </td>
-                        <td className={`whitespace-nowrap ${cellPadding} text-slate-600`}>{row.idCustomer}</td>
+                        <td className={`whitespace-nowrap ${cellPadding} text-slate-600`}>{customerLabel}</td>
                         <td className={`${cellPadding} text-slate-600`}>{barangLabel(row.barang)}</td>
                         <td className={`whitespace-nowrap ${cellPadding} text-slate-600`}>{row.kendaraan}</td>
                         <td className={`whitespace-nowrap ${cellPadding} text-slate-600`}>{row.tipe}</td>
-                        <td className={`whitespace-nowrap ${cellPadding}`}>
-                          <span
-                            className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
-                              row.sudahSelesai ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
-                            }`}
-                          >
-                            {row.sudahSelesai ? t("common.true") : t("common.false")}
-                          </span>
-                        </td>
                         <td className={`whitespace-nowrap ${cellPadding}`}>
                           <button
                             onClick={() => onSelectRow?.(row)}
