@@ -10,7 +10,7 @@ router.get("/", async (_req, res) => {
     const suratJalanList = await SuratJalan.find().sort({ createdAt: -1 });
 
     return res.json({
-      SuratJalan: suratJalanList.map(sanitizeSuratJalan),
+      suratJalan: suratJalanList.map(sanitizeSuratJalan),
     });
   } catch (_error) {
     return res.status(500).json({ message: "failed to get surat jalan" });

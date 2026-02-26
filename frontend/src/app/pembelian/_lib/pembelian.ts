@@ -2,119 +2,119 @@ type Locale = "id" | "en";
 
 export type PembelianItem = {
   id: string;
-  TanggalNota: string;
-  NamaSupplier: string;
-  NoNpwp: string;
-  NoInvoice: string | null;
-  Hutang: boolean;
-  Ppn: boolean;
-  LamaHutang: number;
-  NilaiNota: number;
-  TanggalJatuhTempo: string | null;
-  TanggalBayar: string | null;
+  tanggalNota: string;
+  namaSupplier: string;
+  noNpwp: string;
+  noInvoice: string | null;
+  hutang: boolean;
+  ppn: boolean;
+  lamaHutang: number;
+  nilaiNota: number;
+  tanggalJatuhTempo: string | null;
+  tanggalBayar: string | null;
   createdAt: string;
   updatedAt: string;
 };
 
 export type PembelianFilter = {
-  NamaSupplier: string;
-  NoNpwp: string;
-  NoInvoice: string;
-  Hutang: "" | "true" | "false";
-  Ppn: "" | "true" | "false";
-  TanggalNotaDari: string;
-  TanggalNotaSampai: string;
-  TanggalBayarDari: string;
-  TanggalBayarSampai: string;
-  NilaiNotaMin: string;
-  NilaiNotaMax: string;
+  namaSupplier: string;
+  noNpwp: string;
+  noInvoice: string;
+  hutang: "" | "true" | "false";
+  ppn: "" | "true" | "false";
+  tanggalNotaDari: string;
+  tanggalNotaSampai: string;
+  tanggalBayarDari: string;
+  tanggalBayarSampai: string;
+  nilaiNotaMin: string;
+  nilaiNotaMax: string;
 };
 
 export type PembelianFormState = {
-  TanggalNota: string;
-  NamaSupplier: string;
-  NoNpwp: string;
-  NoInvoice: string;
-  Hutang: boolean;
-  Ppn: boolean;
-  LamaHutang: string;
-  NilaiNota: string;
-  TanggalJatuhTempo: string;
-  TanggalBayar: string;
+  tanggalNota: string;
+  namaSupplier: string;
+  noNpwp: string;
+  noInvoice: string;
+  hutang: boolean;
+  ppn: boolean;
+  lamaHutang: string;
+  nilaiNota: string;
+  tanggalJatuhTempo: string;
+  tanggalBayar: string;
 };
 
 export const defaultPembelianFilter: PembelianFilter = {
-  NamaSupplier: "",
-  NoNpwp: "",
-  NoInvoice: "",
-  Hutang: "",
-  Ppn: "",
-  TanggalNotaDari: "",
-  TanggalNotaSampai: "",
-  TanggalBayarDari: "",
-  TanggalBayarSampai: "",
-  NilaiNotaMin: "",
-  NilaiNotaMax: "",
+  namaSupplier: "",
+  noNpwp: "",
+  noInvoice: "",
+  hutang: "",
+  ppn: "",
+  tanggalNotaDari: "",
+  tanggalNotaSampai: "",
+  tanggalBayarDari: "",
+  tanggalBayarSampai: "",
+  nilaiNotaMin: "",
+  nilaiNotaMax: "",
 };
 
 export const samplePembelianRows: PembelianItem[] = [
   {
     id: "pembelian-260401",
-    TanggalNota: "2026-04-01",
-    NamaSupplier: "PT Bahan Bangunan Utama",
-    NoNpwp: "01.234.567.8-999.000",
-    NoInvoice: "INV-260301",
-    Hutang: true,
-    Ppn: true,
-    LamaHutang: 30,
-    NilaiNota: 27500000,
-    TanggalJatuhTempo: "2026-05-01",
-    TanggalBayar: null,
+    tanggalNota: "2026-04-01",
+    namaSupplier: "PT Bahan Bangunan Utama",
+    noNpwp: "01.234.567.8-999.000",
+    noInvoice: "INV-260301",
+    hutang: true,
+    ppn: true,
+    lamaHutang: 30,
+    nilaiNota: 27500000,
+    tanggalJatuhTempo: "2026-05-01",
+    tanggalBayar: null,
     createdAt: "2026-04-01T09:10:00.000Z",
     updatedAt: "2026-04-01T09:10:00.000Z",
   },
   {
     id: "pembelian-260402",
-    TanggalNota: "2026-04-03",
-    NamaSupplier: "CV Beton Jaya",
-    NoNpwp: "",
-    NoInvoice: "INV-260302",
-    Hutang: false,
-    Ppn: false,
-    LamaHutang: 0,
-    NilaiNota: 6800000,
-    TanggalJatuhTempo: null,
-    TanggalBayar: "2026-04-03",
+    tanggalNota: "2026-04-03",
+    namaSupplier: "CV Beton Jaya",
+    noNpwp: "",
+    noInvoice: "INV-260302",
+    hutang: false,
+    ppn: false,
+    lamaHutang: 0,
+    nilaiNota: 6800000,
+    tanggalJatuhTempo: null,
+    tanggalBayar: "2026-04-03",
     createdAt: "2026-04-03T11:00:00.000Z",
     updatedAt: "2026-04-03T11:00:00.000Z",
   },
   {
     id: "pembelian-260403",
-    TanggalNota: "2026-04-05",
-    NamaSupplier: "PT Cat Nusantara",
-    NoNpwp: "02.987.654.3-111.000",
-    NoInvoice: "INV-260303",
-    Hutang: true,
-    Ppn: true,
-    LamaHutang: 14,
-    NilaiNota: 12950000,
-    TanggalJatuhTempo: "2026-04-19",
-    TanggalBayar: "2026-04-18",
+    tanggalNota: "2026-04-05",
+    namaSupplier: "PT Cat Nusantara",
+    noNpwp: "02.987.654.3-111.000",
+    noInvoice: "INV-260303",
+    hutang: true,
+    ppn: true,
+    lamaHutang: 14,
+    nilaiNota: 12950000,
+    tanggalJatuhTempo: "2026-04-19",
+    tanggalBayar: "2026-04-18",
     createdAt: "2026-04-05T10:20:00.000Z",
     updatedAt: "2026-04-18T09:30:00.000Z",
   },
   {
     id: "pembelian-260404",
-    TanggalNota: "2026-04-07",
-    NamaSupplier: "PT Logam Perkasa",
-    NoNpwp: "03.456.789.0-222.000",
-    NoInvoice: "INV-260302",
-    Hutang: false,
-    Ppn: true,
-    LamaHutang: 0,
-    NilaiNota: 45000000,
-    TanggalJatuhTempo: null,
-    TanggalBayar: "2026-04-09",
+    tanggalNota: "2026-04-07",
+    namaSupplier: "PT Logam Perkasa",
+    noNpwp: "03.456.789.0-222.000",
+    noInvoice: "INV-260302",
+    hutang: false,
+    ppn: true,
+    lamaHutang: 0,
+    nilaiNota: 45000000,
+    tanggalJatuhTempo: null,
+    tanggalBayar: "2026-04-09",
     createdAt: "2026-04-07T13:45:00.000Z",
     updatedAt: "2026-04-09T09:00:00.000Z",
   },
@@ -229,47 +229,47 @@ export function toInputDate(value: string | null) {
 
 export function toPembelianFormState(item: PembelianItem): PembelianFormState {
   return {
-    TanggalNota: toInputDate(item.TanggalNota),
-    NamaSupplier: item.NamaSupplier,
-    NoNpwp: item.NoNpwp,
-    NoInvoice: item.NoInvoice || "",
-    Hutang: item.Hutang,
-    Ppn: item.Ppn,
-    LamaHutang: String(item.LamaHutang),
-    NilaiNota: String(item.NilaiNota),
-    TanggalJatuhTempo: toInputDate(item.TanggalJatuhTempo),
-    TanggalBayar: toInputDate(item.TanggalBayar),
+    tanggalNota: toInputDate(item.tanggalNota),
+    namaSupplier: item.namaSupplier,
+    noNpwp: item.noNpwp,
+    noInvoice: item.noInvoice || "",
+    hutang: item.hutang,
+    ppn: item.ppn,
+    lamaHutang: String(item.lamaHutang),
+    nilaiNota: String(item.nilaiNota),
+    tanggalJatuhTempo: toInputDate(item.tanggalJatuhTempo),
+    tanggalBayar: toInputDate(item.tanggalBayar),
   };
 }
 
 export function filterPembelianRows(rows: PembelianItem[], filter: PembelianFilter) {
-  const tanggalNotaDari = parseDateRangeStart(filter.TanggalNotaDari);
-  const tanggalNotaSampai = parseDateRangeEnd(filter.TanggalNotaSampai);
-  const tanggalBayarDari = parseDateRangeStart(filter.TanggalBayarDari);
-  const tanggalBayarSampai = parseDateRangeEnd(filter.TanggalBayarSampai);
-  const nilaiNotaMin = parseFilterNumber(filter.NilaiNotaMin);
-  const nilaiNotaMax = parseFilterNumber(filter.NilaiNotaMax);
+  const tanggalNotaDari = parseDateRangeStart(filter.tanggalNotaDari);
+  const tanggalNotaSampai = parseDateRangeEnd(filter.tanggalNotaSampai);
+  const tanggalBayarDari = parseDateRangeStart(filter.tanggalBayarDari);
+  const tanggalBayarSampai = parseDateRangeEnd(filter.tanggalBayarSampai);
+  const nilaiNotaMin = parseFilterNumber(filter.nilaiNotaMin);
+  const nilaiNotaMax = parseFilterNumber(filter.nilaiNotaMax);
 
   return rows.filter((row) => {
-    const matchNamaSupplier = normalize(row.NamaSupplier).includes(normalize(filter.NamaSupplier));
-    const matchNoNpwp = normalize(row.NoNpwp || "").includes(normalize(filter.NoNpwp));
-    const matchNoInvoice = normalize(row.NoInvoice || "").includes(normalize(filter.NoInvoice));
+    const matchNamaSupplier = normalize(row.namaSupplier).includes(normalize(filter.namaSupplier));
+    const matchNoNpwp = normalize(row.noNpwp || "").includes(normalize(filter.noNpwp));
+    const matchNoInvoice = normalize(row.noInvoice || "").includes(normalize(filter.noInvoice));
 
     const matchHutang =
-      !filter.Hutang ||
-      (filter.Hutang === "true" && row.Hutang) ||
-      (filter.Hutang === "false" && !row.Hutang);
+      !filter.hutang ||
+      (filter.hutang === "true" && row.hutang) ||
+      (filter.hutang === "false" && !row.hutang);
 
     const matchPpn =
-      !filter.Ppn ||
-      (filter.Ppn === "true" && row.Ppn) ||
-      (filter.Ppn === "false" && !row.Ppn);
+      !filter.ppn ||
+      (filter.ppn === "true" && row.ppn) ||
+      (filter.ppn === "false" && !row.ppn);
 
-    const matchTanggalNota = isDateWithinRange(row.TanggalNota, tanggalNotaDari, tanggalNotaSampai);
-    const matchTanggalBayar = isDateWithinRange(row.TanggalBayar, tanggalBayarDari, tanggalBayarSampai);
+    const matchTanggalNota = isDateWithinRange(row.tanggalNota, tanggalNotaDari, tanggalNotaSampai);
+    const matchTanggalBayar = isDateWithinRange(row.tanggalBayar, tanggalBayarDari, tanggalBayarSampai);
 
-    const matchNilaiNotaMin = nilaiNotaMin === null || row.NilaiNota >= nilaiNotaMin;
-    const matchNilaiNotaMax = nilaiNotaMax === null || row.NilaiNota <= nilaiNotaMax;
+    const matchNilaiNotaMin = nilaiNotaMin === null || row.nilaiNota >= nilaiNotaMin;
+    const matchNilaiNotaMax = nilaiNotaMax === null || row.nilaiNota <= nilaiNotaMax;
 
     return (
       matchNamaSupplier &&

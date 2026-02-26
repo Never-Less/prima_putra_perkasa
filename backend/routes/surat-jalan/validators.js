@@ -41,16 +41,16 @@ function normalizeBarangList(barangInput) {
   const normalized = [];
 
   for (const item of barangInput) {
-    const nama = String(item?.Nama || "").trim();
-    const jumlah = Number(item?.Jumlah);
+    const nama = String(item?.nama || "").trim();
+    const jumlah = Number(item?.jumlah);
 
     if (!nama || !Number.isFinite(jumlah) || jumlah <= 0) {
       return null;
     }
 
     normalized.push({
-      Nama: nama,
-      Jumlah: jumlah,
+      nama: nama,
+      jumlah: jumlah,
     });
   }
 

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { AppNavbar } from "./_components/app-navbar";
+import { AppShell } from "./_components/app-shell";
 import { I18nProvider } from "./_i18n/provider";
 import "./globals.css";
 
@@ -30,8 +30,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <I18nProvider>
-          <AppNavbar />
-          <div className="lg:pl-64">{children}</div>
+          <AppShell>{children}</AppShell>
         </I18nProvider>
       </body>
     </html>

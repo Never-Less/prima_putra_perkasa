@@ -1,14 +1,14 @@
 function sanitizeSuratJalan(suratJalan) {
   return {
     id: suratJalan._id,
-    NoSuratJalan: suratJalan.NoSuratJalan,
-    NoPO: suratJalan.NoPO,
-    Tanggal: suratJalan.Tanggal,
-    IdCustomer: suratJalan.IdCustomer,
-    Barang: suratJalan.Barang,
-    Kendaraan: suratJalan.Kendaraan,
-    Tipe: suratJalan.Tipe,
-    SudahSelesai: suratJalan.SudahSelesai,
+    noSuratJalan: suratJalan.noSuratJalan,
+    noPo: suratJalan.noPo,
+    tanggal: suratJalan.tanggal,
+    idCustomer: suratJalan.idCustomer,
+    barang: suratJalan.barang,
+    kendaraan: suratJalan.kendaraan,
+    tipe: suratJalan.tipe,
+    sudahSelesai: suratJalan.sudahSelesai,
     createdAt: suratJalan.createdAt,
     updatedAt: suratJalan.updatedAt,
   };

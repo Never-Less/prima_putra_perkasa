@@ -37,28 +37,28 @@ export function CustomerTableFilter({ rows, selectedId, onSelectRow }: CustomerT
         <p className="mb-2 text-sm font-medium text-sky-800">{t("common.filterByField")}</p>
         <div className="grid gap-3 md:grid-cols-3">
           <label className="text-sm text-slate-700">
-            {t("field.Nama")}
+            {t("field.nama")}
             <input
-              value={filter.Nama}
-              onChange={(event) => setFilter((prev) => ({ ...prev, Nama: event.target.value }))}
+              value={filter.nama}
+              onChange={(event) => setFilter((prev) => ({ ...prev, nama: event.target.value }))}
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             />
           </label>
 
           <label className="text-sm text-slate-700">
-            {t("field.Alamat")}
+            {t("field.alamat")}
             <input
-              value={filter.Alamat}
-              onChange={(event) => setFilter((prev) => ({ ...prev, Alamat: event.target.value }))}
+              value={filter.alamat}
+              onChange={(event) => setFilter((prev) => ({ ...prev, alamat: event.target.value }))}
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             />
           </label>
 
           <label className="text-sm text-slate-700">
-            {t("field.AtasNama")}
+            {t("field.atasNama")}
             <input
-              value={filter.AtasNama}
-              onChange={(event) => setFilter((prev) => ({ ...prev, AtasNama: event.target.value }))}
+              value={filter.atasNama}
+              onChange={(event) => setFilter((prev) => ({ ...prev, atasNama: event.target.value }))}
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             />
           </label>
@@ -69,36 +69,44 @@ export function CustomerTableFilter({ rows, selectedId, onSelectRow }: CustomerT
         <table className="min-w-full text-sm">
           <thead className="bg-sky-100 text-left text-sky-800">
             <tr>
-              <th className="px-3 py-2 font-medium">{t("field.Nama")}</th>
-              <th className="px-3 py-2 font-medium">{t("field.Alamat")}</th>
-              <th className="px-3 py-2 font-medium">{t("field.AtasNama")}</th>
+              <th className="px-3 py-2 font-medium">{t("field.nama")}</th>
+              <th className="px-3 py-2 font-medium">{t("field.alamat")}</th>
+              <th className="px-3 py-2 font-medium">{t("field.atasNama")}</th>
               <th className="px-3 py-2 font-medium">{t("common.action")}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200 bg-white">
-            {filteredRows.map((row, index) => {
-              const isSelected = selectedId === row.id;
+            {filteredRows.length === 0 ? (
+              <tr>
+                <td colSpan={4} className="px-3 py-4 text-center text-slate-500">
+                  {t("common.noData")}
+                </td>
+              </tr>
+            ) : (
+              filteredRows.map((row, index) => {
+                const isSelected = selectedId === row.id;
 
-              return (
-                <tr key={row.id} className={isSelected ? "bg-sky-100" : index % 2 ? "bg-sky-50/70" : undefined}>
-                  <td className="whitespace-nowrap px-3 py-2 font-medium text-slate-800">{row.Nama}</td>
-                  <td className="px-3 py-2 text-slate-600">{row.Alamat}</td>
-                  <td className="whitespace-nowrap px-3 py-2 text-slate-600">{row.AtasNama}</td>
-                  <td className="whitespace-nowrap px-3 py-2">
-                    <button
-                      onClick={() => onSelectRow?.(row)}
-                      className={`rounded-lg px-3 py-1.5 text-xs font-medium ${
-                        isSelected
-                          ? "bg-sky-700 text-white"
-                          : "border border-sky-200 bg-white text-sky-700 hover:bg-sky-50"
-                      }`}
-                    >
-                      {isSelected ? t("common.selected") : t("common.selectRow")}
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
+                return (
+                  <tr key={row.id} className={isSelected ? "bg-sky-100" : index % 2 ? "bg-sky-50/70" : undefined}>
+                    <td className="whitespace-nowrap px-3 py-2 font-medium text-slate-800">{row.nama}</td>
+                    <td className="px-3 py-2 text-slate-600">{row.alamat}</td>
+                    <td className="whitespace-nowrap px-3 py-2 text-slate-600">{row.atasNama}</td>
+                    <td className="whitespace-nowrap px-3 py-2">
+                      <button
+                        onClick={() => onSelectRow?.(row)}
+                        className={`rounded-lg px-3 py-1.5 text-xs font-medium ${
+                          isSelected
+                            ? "bg-sky-700 text-white"
+                            : "border border-sky-200 bg-white text-sky-700 hover:bg-sky-50"
+                        }`}
+                      >
+                        {isSelected ? t("common.selected") : t("common.selectRow")}
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </div>

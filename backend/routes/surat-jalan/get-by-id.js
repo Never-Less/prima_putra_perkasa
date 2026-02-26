@@ -21,7 +21,7 @@ router.get("/:id", async (req, res) => {
     }
 
     return res.json({
-      SuratJalan: sanitizeSuratJalan(suratJalan),
+      suratJalan: sanitizeSuratJalan(suratJalan),
     });
   } catch (_error) {
     return res.status(500).json({ message: "failed to get surat jalan" });

@@ -7,7 +7,7 @@ const router = express.Router();
 
 router.get("/me", requireAuth, (req, res) => {
   return res.json({
-    User: sanitizeUser(req.user),
+    user: sanitizeUser(req.user),
   });
 });
 

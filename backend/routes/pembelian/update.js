@@ -23,115 +23,115 @@ router.put("/:id", async (req, res) => {
 
     const updates = {};
 
-    if (req.body.TanggalNota !== undefined) {
-      const tanggalNota = parseDate(req.body.TanggalNota);
+    if (req.body.tanggalNota !== undefined) {
+      const tanggalNota = parseDate(req.body.tanggalNota);
       if (!tanggalNota) {
-        return res.status(400).json({ message: "TanggalNota tidak valid" });
+        return res.status(400).json({ message: "tanggalNota tidak valid" });
       }
-      updates.TanggalNota = tanggalNota;
+      updates.tanggalNota = tanggalNota;
     }
 
-    if (req.body.NamaSupplier !== undefined) {
-      updates.NamaSupplier = String(req.body.NamaSupplier || "").trim();
+    if (req.body.namaSupplier !== undefined) {
+      updates.namaSupplier = String(req.body.namaSupplier || "").trim();
     }
 
-    if (req.body.NoNpwp !== undefined) {
-      updates.NoNpwp = String(req.body.NoNpwp || "").trim();
+    if (req.body.noNpwp !== undefined) {
+      updates.noNpwp = String(req.body.noNpwp || "").trim();
     }
 
-    if (req.body.IdInvoice !== undefined) {
-      if (req.body.IdInvoice === null) {
-        updates.IdInvoice = null;
+    if (req.body.idInvoice !== undefined) {
+      if (req.body.idInvoice === null) {
+        updates.idInvoice = null;
       } else {
-        const idInvoice = String(req.body.IdInvoice || "").trim();
+        const idInvoice = String(req.body.idInvoice || "").trim();
 
         if (!isValidId(idInvoice)) {
-          return res.status(400).json({ message: "IdInvoice tidak valid" });
+          return res.status(400).json({ message: "idInvoice tidak valid" });
         }
 
-        updates.IdInvoice = idInvoice;
+        updates.idInvoice = idInvoice;
       }
     }
 
-    if (req.body.Hutang !== undefined) {
-      const hutang = parseBoolean(req.body.Hutang);
+    if (req.body.hutang !== undefined) {
+      const hutang = parseBoolean(req.body.hutang);
       if (hutang === null) {
-        return res.status(400).json({ message: "Hutang harus boolean" });
+        return res.status(400).json({ message: "hutang harus boolean" });
       }
-      updates.Hutang = hutang;
+      updates.hutang = hutang;
     }
 
-    if (req.body.Ppn !== undefined) {
-      const ppn = parseBoolean(req.body.Ppn);
+    if (req.body.ppn !== undefined) {
+      const ppn = parseBoolean(req.body.ppn);
       if (ppn === null) {
-        return res.status(400).json({ message: "Ppn harus boolean" });
+        return res.status(400).json({ message: "ppn harus boolean" });
       }
-      updates.Ppn = ppn;
+      updates.ppn = ppn;
     }
 
-    if (req.body.LamaHutang !== undefined) {
-      const lamaHutang = parseNumber(req.body.LamaHutang);
+    if (req.body.lamaHutang !== undefined) {
+      const lamaHutang = parseNumber(req.body.lamaHutang);
       if (lamaHutang === null) {
-        return res.status(400).json({ message: "LamaHutang harus angka" });
+        return res.status(400).json({ message: "lamaHutang harus angka" });
       }
-      updates.LamaHutang = lamaHutang;
+      updates.lamaHutang = lamaHutang;
     }
 
-    if (req.body.NilaiNota !== undefined) {
-      const nilaiNota = parseNumber(req.body.NilaiNota);
+    if (req.body.nilaiNota !== undefined) {
+      const nilaiNota = parseNumber(req.body.nilaiNota);
       if (nilaiNota === null || nilaiNota < 0) {
-        return res.status(400).json({ message: "NilaiNota harus angka >= 0" });
+        return res.status(400).json({ message: "nilaiNota harus angka >= 0" });
       }
-      updates.NilaiNota = nilaiNota;
+      updates.nilaiNota = nilaiNota;
     }
 
-    if (req.body.TanggalJatuhTempo !== undefined) {
-      if (req.body.TanggalJatuhTempo === null) {
-        updates.TanggalJatuhTempo = null;
+    if (req.body.tanggalJatuhTempo !== undefined) {
+      if (req.body.tanggalJatuhTempo === null) {
+        updates.tanggalJatuhTempo = null;
       } else {
-        const tanggalJatuhTempo = parseDate(req.body.TanggalJatuhTempo);
+        const tanggalJatuhTempo = parseDate(req.body.tanggalJatuhTempo);
         if (!tanggalJatuhTempo) {
-          return res.status(400).json({ message: "TanggalJatuhTempo tidak valid" });
+          return res.status(400).json({ message: "tanggalJatuhTempo tidak valid" });
         }
-        updates.TanggalJatuhTempo = tanggalJatuhTempo;
+        updates.tanggalJatuhTempo = tanggalJatuhTempo;
       }
     }
 
-    if (req.body.TanggalBayar !== undefined) {
-      if (req.body.TanggalBayar === null) {
-        updates.TanggalBayar = null;
+    if (req.body.tanggalBayar !== undefined) {
+      if (req.body.tanggalBayar === null) {
+        updates.tanggalBayar = null;
       } else {
-        const tanggalBayar = parseDate(req.body.TanggalBayar);
+        const tanggalBayar = parseDate(req.body.tanggalBayar);
         if (!tanggalBayar) {
-          return res.status(400).json({ message: "TanggalBayar tidak valid" });
+          return res.status(400).json({ message: "tanggalBayar tidak valid" });
         }
-        updates.TanggalBayar = tanggalBayar;
+        updates.tanggalBayar = tanggalBayar;
       }
     }
 
     if (Object.keys(updates).length === 0) {
       return res.status(400).json({
         message:
-          "minimal kirim salah satu field: TanggalNota, NamaSupplier, NoNpwp, IdInvoice, Hutang, Ppn, LamaHutang, NilaiNota, TanggalJatuhTempo, TanggalBayar",
+          "minimal kirim salah satu field: tanggalNota, namaSupplier, noNpwp, idInvoice, hutang, ppn, lamaHutang, nilaiNota, tanggalJatuhTempo, tanggalBayar",
       });
     }
 
-    if (updates.NamaSupplier !== undefined && !updates.NamaSupplier) {
-      return res.status(400).json({ message: "NamaSupplier tidak boleh kosong" });
+    if (updates.namaSupplier !== undefined && !updates.namaSupplier) {
+      return res.status(400).json({ message: "namaSupplier tidak boleh kosong" });
     }
 
-    const effectiveTanggalNota = updates.TanggalNota ?? existingPembelian.TanggalNota;
-    const effectiveHutang = updates.Hutang ?? existingPembelian.Hutang;
-    const effectiveLamaHutang = updates.LamaHutang ?? existingPembelian.LamaHutang;
+    const effectiveTanggalNota = updates.tanggalNota ?? existingPembelian.tanggalNota;
+    const effectiveHutang = updates.hutang ?? existingPembelian.hutang;
+    const effectiveLamaHutang = updates.lamaHutang ?? existingPembelian.lamaHutang;
     const effectiveTanggalJatuhTempo =
-      updates.TanggalJatuhTempo !== undefined
-        ? updates.TanggalJatuhTempo
-        : existingPembelian.TanggalJatuhTempo;
+      updates.tanggalJatuhTempo !== undefined
+        ? updates.tanggalJatuhTempo
+        : existingPembelian.tanggalJatuhTempo;
     const effectiveTanggalBayar =
-      updates.TanggalBayar !== undefined ? updates.TanggalBayar : existingPembelian.TanggalBayar;
+      updates.tanggalBayar !== undefined ? updates.tanggalBayar : existingPembelian.tanggalBayar;
 
-    if (updates.IdInvoice) {
-      const invoice = await Invoice.findById(updates.IdInvoice);
+    if (updates.idInvoice) {
+      const invoice = await Invoice.findById(updates.idInvoice);
       if (!invoice) {
         return res.status(404).json({ message: "invoice tidak ditemukan" });
       }
@@ -140,23 +140,23 @@ router.put("/:id", async (req, res) => {
     if (effectiveHutang) {
       if (!effectiveTanggalJatuhTempo) {
         return res.status(400).json({
-          message: "TanggalJatuhTempo wajib diisi saat Hutang bernilai true",
+          message: "tanggalJatuhTempo wajib diisi saat hutang bernilai true",
         });
       }
 
       if (!Number.isFinite(effectiveLamaHutang) || effectiveLamaHutang <= 0) {
         return res.status(400).json({
-          message: "LamaHutang wajib lebih dari 0 saat Hutang bernilai true",
+          message: "lamaHutang wajib lebih dari 0 saat hutang bernilai true",
         });
       }
     } else {
-      updates.LamaHutang = 0;
-      updates.TanggalJatuhTempo = null;
+      updates.lamaHutang = 0;
+      updates.tanggalJatuhTempo = null;
     }
 
     if (effectiveTanggalBayar && effectiveTanggalBayar < effectiveTanggalNota) {
       return res.status(400).json({
-        message: "TanggalBayar tidak boleh lebih kecil dari TanggalNota",
+        message: "tanggalBayar tidak boleh lebih kecil dari tanggalNota",
       });
     }
 
@@ -171,7 +171,7 @@ router.put("/:id", async (req, res) => {
 
     return res.json({
       message: "pembelian updated",
-      Pembelian: sanitizePembelian(pembelian),
+      pembelian: sanitizePembelian(pembelian),
     });
   } catch (_error) {
     return res.status(500).json({ message: "failed to update pembelian" });

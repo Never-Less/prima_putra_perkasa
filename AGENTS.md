@@ -26,13 +26,15 @@ Panduan untuk agent yang bekerja di repository `prima_putra_perkasa`.
 ## Backend Standards
 
 - Auth menggunakan Bearer Token (JWT), bukan cookie session.
-- Password harus di-hash dengan `bcryptjs`.
+- password harus di-hash dengan `bcryptjs`.
 - Terapkan middleware auth pada endpoint privat.
-- Gunakan PascalCase untuk penamaan field domain/bisnis pada schema, payload request, dan response API (contoh: `NoInvoice`, `IdCustomer`, `GrandTotal`).
+- Gunakan camelCase untuk penamaan field domain/bisnis pada schema, payload request, dan response API (contoh: `noInvoice`, `idCustomer`, `grandTotal`).
 - Struktur route harus rapi dan terpisah per domain:
   - Gunakan folder per domain, contoh: `backend/routes/auth/`.
   - Pisahkan endpoint ke file masing-masing (contoh: `login.js`, `register.js`, `me.js`).
   - Gunakan `index.js` sebagai aggregator route dalam folder domain.
+- Jangan mengganti/mengubah kontrak CRUD route yang sudah ada tanpa permintaan eksplisit dari user.
+- Jika UI membutuhkan data untuk komponen `select` dari backend, kirim field seminimal mungkin (contoh: `id` + label) untuk mencegah data berlebihan terekspos.
 - Pertahankan proteksi CSRF yang sesuai untuk Bearer:
   - CORS allowlist via `APP_ORIGINS`.
   - Validasi `Origin/Referer` untuk method mutasi (`POST`, `PUT`, `PATCH`, `DELETE`).
@@ -45,7 +47,7 @@ Panduan untuk agent yang bekerja di repository `prima_putra_perkasa`.
   - Page awal menampilkan **table Surat Jalan + filter berdasarkan field**.
   - Klik row membuka **form + preview pada halaman yang sama**.
 - Pertahankan opsi konfigurasi tampilan berikut di Style A:
-  - `Tipe Positioning`
+  - `tipe Positioning`
   - `Warna`
   - `Style Table`
   - `Style Form`

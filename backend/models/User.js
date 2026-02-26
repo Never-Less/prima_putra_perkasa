@@ -5,7 +5,7 @@ const ALLOWED_ROLES = ["admin", "staff"];
 
 const userSchema = new mongoose.Schema(
   {
-    Username: {
+    username: {
       type: String,
       required: true,
       unique: true,
@@ -14,13 +14,13 @@ const userSchema = new mongoose.Schema(
       minlength: 3,
       maxlength: 50,
     },
-    Password: {
+    password: {
       type: String,
       required: true,
       minlength: 8,
       select: false,
     },
-    Role: {
+    role: {
       type: String,
       required: true,
       enum: ALLOWED_ROLES,
@@ -31,15 +31,15 @@ const userSchema = new mongoose.Schema(
 );
 
 userSchema.pre("save", async function hashPassword() {
-  if (!this.isModified("Password")) {
+  if (!this.isModified("password")) {
     return;
   }
 
-  this.Password = await bcrypt.hash(this.Password, 12);
+  this.password = await bcrypt.hash(this.password, 12);
 });
 
 userSchema.methods.comparePassword = function comparePassword(candidatePassword) {
-  return bcrypt.compare(candidatePassword, this.Password);
+  return bcrypt.compare(candidatePassword, this.password);
 };
 
 const User = mongoose.model("User", userSchema);

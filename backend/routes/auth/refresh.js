@@ -9,10 +9,10 @@ const { sanitizeUser } = require("./sanitize-user");
 const router = express.Router();
 
 router.post("/refresh", async (req, res) => {
-  const refreshToken = String(req.body.RefreshToken || "").trim();
+  const refreshToken = String(req.body.refreshToken || "").trim();
 
   if (!refreshToken) {
-    return res.status(400).json({ message: "RefreshToken is required" });
+    return res.status(400).json({ message: "refreshToken is required" });
   }
 
   try {
@@ -22,9 +22,9 @@ router.post("/refresh", async (req, res) => {
 
     return res.json({
       message: "token refreshed",
-      AccessToken: accessToken,
-      RefreshToken: newRefreshToken,
-      User: sanitizeUser(user),
+      accessToken: accessToken,
+      refreshToken: newRefreshToken,
+      user: sanitizeUser(user),
     });
   } catch (error) {
     if (error.message === INVALID_REFRESH_TOKEN_ERROR) {

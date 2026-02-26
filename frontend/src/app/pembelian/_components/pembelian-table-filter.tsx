@@ -22,7 +22,7 @@ export function PembelianTableFilter({ rows, selectedId, onSelectRow }: Pembelia
   const { locale, t } = useI18n();
   const [filter, setFilter] = useState<PembelianFilter>(defaultPembelianFilter);
   const noInvoiceOptions = useMemo(() => {
-    return Array.from(new Set(sampleInvoiceRows.map((invoice) => invoice.NoInvoice)));
+    return Array.from(new Set(sampleInvoiceRows.map((invoice) => invoice.noInvoice)));
   }, []);
 
   const filteredRows = useMemo(() => filterPembelianRows(rows, filter), [filter, rows]);
@@ -43,31 +43,31 @@ export function PembelianTableFilter({ rows, selectedId, onSelectRow }: Pembelia
         <p className="mb-2 text-sm font-medium text-sky-800">{t("common.filterByField")}</p>
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           <label className="text-sm text-slate-700">
-            {t("field.NamaSupplier")}
+            {t("field.namaSupplier")}
             <input
-              value={filter.NamaSupplier}
+              value={filter.namaSupplier}
               onChange={(event) =>
-                setFilter((prev) => ({ ...prev, NamaSupplier: event.target.value }))
+                setFilter((prev) => ({ ...prev, namaSupplier: event.target.value }))
               }
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             />
           </label>
 
           <label className="text-sm text-slate-700">
-            {t("field.NoNpwp")}
+            {t("field.noNpwp")}
             <input
-              value={filter.NoNpwp}
-              onChange={(event) => setFilter((prev) => ({ ...prev, NoNpwp: event.target.value }))}
+              value={filter.noNpwp}
+              onChange={(event) => setFilter((prev) => ({ ...prev, noNpwp: event.target.value }))}
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             />
           </label>
 
           <label className="text-sm text-slate-700">
-            {t("field.NoInvoice")}
+            {t("field.noInvoice")}
             <select
-              value={filter.NoInvoice}
+              value={filter.noInvoice}
               onChange={(event) =>
-                setFilter((prev) => ({ ...prev, NoInvoice: event.target.value }))
+                setFilter((prev) => ({ ...prev, noInvoice: event.target.value }))
               }
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             >
@@ -81,13 +81,13 @@ export function PembelianTableFilter({ rows, selectedId, onSelectRow }: Pembelia
           </label>
 
           <label className="text-sm text-slate-700">
-            {t("field.Hutang")}
+            {t("field.hutang")}
             <select
-              value={filter.Hutang}
+              value={filter.hutang}
               onChange={(event) =>
                 setFilter((prev) => ({
                   ...prev,
-                  Hutang: event.target.value as PembelianFilter["Hutang"],
+                  hutang: event.target.value as PembelianFilter["hutang"],
                 }))
               }
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
@@ -99,13 +99,13 @@ export function PembelianTableFilter({ rows, selectedId, onSelectRow }: Pembelia
           </label>
 
           <label className="text-sm text-slate-700">
-            {t("field.Ppn")}
+            {t("field.ppn")}
             <select
-              value={filter.Ppn}
+              value={filter.ppn}
               onChange={(event) =>
                 setFilter((prev) => ({
                   ...prev,
-                  Ppn: event.target.value as PembelianFilter["Ppn"],
+                  ppn: event.target.value as PembelianFilter["ppn"],
                 }))
               }
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
@@ -117,74 +117,74 @@ export function PembelianTableFilter({ rows, selectedId, onSelectRow }: Pembelia
           </label>
 
           <label className="text-sm text-slate-700">
-            {t("field.TanggalDari")}
+            {t("field.tanggalDari")}
             <input
               type="date"
-              value={filter.TanggalNotaDari}
+              value={filter.tanggalNotaDari}
               onChange={(event) =>
-                setFilter((prev) => ({ ...prev, TanggalNotaDari: event.target.value }))
+                setFilter((prev) => ({ ...prev, tanggalNotaDari: event.target.value }))
               }
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             />
           </label>
 
           <label className="text-sm text-slate-700">
-            {t("field.TanggalSampai")}
+            {t("field.tanggalSampai")}
             <input
               type="date"
-              value={filter.TanggalNotaSampai}
+              value={filter.tanggalNotaSampai}
               onChange={(event) =>
-                setFilter((prev) => ({ ...prev, TanggalNotaSampai: event.target.value }))
+                setFilter((prev) => ({ ...prev, tanggalNotaSampai: event.target.value }))
               }
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             />
           </label>
 
           <label className="text-sm text-slate-700">
-            {t("field.TanggalBayarDari")}
+            {t("field.tanggalBayarDari")}
             <input
               type="date"
-              value={filter.TanggalBayarDari}
+              value={filter.tanggalBayarDari}
               onChange={(event) =>
-                setFilter((prev) => ({ ...prev, TanggalBayarDari: event.target.value }))
+                setFilter((prev) => ({ ...prev, tanggalBayarDari: event.target.value }))
               }
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             />
           </label>
 
           <label className="text-sm text-slate-700">
-            {t("field.TanggalBayarSampai")}
+            {t("field.tanggalBayarSampai")}
             <input
               type="date"
-              value={filter.TanggalBayarSampai}
+              value={filter.tanggalBayarSampai}
               onChange={(event) =>
-                setFilter((prev) => ({ ...prev, TanggalBayarSampai: event.target.value }))
+                setFilter((prev) => ({ ...prev, tanggalBayarSampai: event.target.value }))
               }
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             />
           </label>
 
           <label className="text-sm text-slate-700">
-            {t("field.NilaiNotaMin")}
+            {t("field.nilaiNotaMin")}
             <input
               type="number"
               min={0}
-              value={filter.NilaiNotaMin}
+              value={filter.nilaiNotaMin}
               onChange={(event) =>
-                setFilter((prev) => ({ ...prev, NilaiNotaMin: event.target.value }))
+                setFilter((prev) => ({ ...prev, nilaiNotaMin: event.target.value }))
               }
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             />
           </label>
 
           <label className="text-sm text-slate-700">
-            {t("field.NilaiNotaMax")}
+            {t("field.nilaiNotaMax")}
             <input
               type="number"
               min={0}
-              value={filter.NilaiNotaMax}
+              value={filter.nilaiNotaMax}
               onChange={(event) =>
-                setFilter((prev) => ({ ...prev, NilaiNotaMax: event.target.value }))
+                setFilter((prev) => ({ ...prev, nilaiNotaMax: event.target.value }))
               }
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             />
@@ -196,19 +196,19 @@ export function PembelianTableFilter({ rows, selectedId, onSelectRow }: Pembelia
         <table className="min-w-full text-sm">
           <thead className="bg-sky-100 text-left text-sky-800">
             <tr>
-              <th className="px-3 py-2 font-medium">{t("field.TanggalNota")}</th>
-              <th className="px-3 py-2 font-medium">{t("field.NamaSupplier")}</th>
-              <th className="px-3 py-2 font-medium">{t("field.NoNpwp")}</th>
-              <th className="px-3 py-2 font-medium">{t("field.NoInvoice")}</th>
-              <th className="px-3 py-2 font-medium">{t("field.Hutang")}</th>
-              <th className="px-3 py-2 font-medium">{t("field.Ppn")}</th>
+              <th className="px-3 py-2 font-medium">{t("field.tanggalNota")}</th>
+              <th className="px-3 py-2 font-medium">{t("field.namaSupplier")}</th>
+              <th className="px-3 py-2 font-medium">{t("field.noNpwp")}</th>
+              <th className="px-3 py-2 font-medium">{t("field.noInvoice")}</th>
+              <th className="px-3 py-2 font-medium">{t("field.hutang")}</th>
+              <th className="px-3 py-2 font-medium">{t("field.ppn")}</th>
               <th className="px-3 py-2 font-medium">
-                <span>{t("field.LamaHutang")}</span>
+                <span>{t("field.lamaHutang")}</span>
                 <span className="block text-xs font-normal text-sky-700">{t("pembelian.lamaHutang.note")}</span>
               </th>
-              <th className="px-3 py-2 font-medium">{t("field.NilaiNota")}</th>
-              <th className="px-3 py-2 font-medium">{t("field.TanggalJatuhTempo")}</th>
-              <th className="px-3 py-2 font-medium">{t("field.TanggalBayar")}</th>
+              <th className="px-3 py-2 font-medium">{t("field.nilaiNota")}</th>
+              <th className="px-3 py-2 font-medium">{t("field.tanggalJatuhTempo")}</th>
+              <th className="px-3 py-2 font-medium">{t("field.tanggalBayar")}</th>
               <th className="px-3 py-2 font-medium">{t("common.action")}</th>
             </tr>
           </thead>
@@ -219,26 +219,26 @@ export function PembelianTableFilter({ rows, selectedId, onSelectRow }: Pembelia
               return (
                 <tr key={row.id} className={isSelected ? "bg-sky-100" : index % 2 ? "bg-sky-50/70" : undefined}>
                   <td className="whitespace-nowrap px-3 py-2 text-slate-600">
-                    {formatTanggal(row.TanggalNota, locale)}
+                    {formatTanggal(row.tanggalNota, locale)}
                   </td>
-                  <td className="whitespace-nowrap px-3 py-2 font-medium text-slate-800">{row.NamaSupplier}</td>
-                  <td className="whitespace-nowrap px-3 py-2 text-slate-600">{row.NoNpwp || "-"}</td>
-                  <td className="whitespace-nowrap px-3 py-2 text-slate-600">{row.NoInvoice || "-"}</td>
+                  <td className="whitespace-nowrap px-3 py-2 font-medium text-slate-800">{row.namaSupplier}</td>
+                  <td className="whitespace-nowrap px-3 py-2 text-slate-600">{row.noNpwp || "-"}</td>
+                  <td className="whitespace-nowrap px-3 py-2 text-slate-600">{row.noInvoice || "-"}</td>
                   <td className="whitespace-nowrap px-3 py-2 text-slate-600">
-                    {row.Hutang ? t("common.true") : t("common.false")}
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-2 text-slate-600">
-                    {row.Ppn ? t("common.true") : t("common.false")}
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-2 text-slate-600">{row.LamaHutang}</td>
-                  <td className="whitespace-nowrap px-3 py-2 text-slate-600">
-                    {formatRupiah(row.NilaiNota, locale)}
+                    {row.hutang ? t("common.true") : t("common.false")}
                   </td>
                   <td className="whitespace-nowrap px-3 py-2 text-slate-600">
-                    {formatTanggal(row.TanggalJatuhTempo, locale)}
+                    {row.ppn ? t("common.true") : t("common.false")}
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-2 text-slate-600">{row.lamaHutang}</td>
+                  <td className="whitespace-nowrap px-3 py-2 text-slate-600">
+                    {formatRupiah(row.nilaiNota, locale)}
                   </td>
                   <td className="whitespace-nowrap px-3 py-2 text-slate-600">
-                    {formatTanggal(row.TanggalBayar, locale)}
+                    {formatTanggal(row.tanggalJatuhTempo, locale)}
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-2 text-slate-600">
+                    {formatTanggal(row.tanggalBayar, locale)}
                   </td>
                   <td className="whitespace-nowrap px-3 py-2">
                     <button

@@ -8,65 +8,65 @@ const { isValidId, parseBoolean, parseDate, parseNumber } = require("./validator
 const router = express.Router();
 
 router.post("/", async (req, res) => {
-  const tanggalNota = parseDate(req.body.TanggalNota);
-  const namaSupplier = String(req.body.NamaSupplier || "").trim();
-  const noNpwp = String(req.body.NoNpwp || "").trim();
+  const tanggalNota = parseDate(req.body.tanggalNota);
+  const namaSupplier = String(req.body.namaSupplier || "").trim();
+  const noNpwp = String(req.body.noNpwp || "").trim();
   let idInvoice = null;
-  const hutang = req.body.Hutang !== undefined ? parseBoolean(req.body.Hutang) : false;
-  const ppn = req.body.Ppn !== undefined ? parseBoolean(req.body.Ppn) : false;
-  let lamaHutang = req.body.LamaHutang !== undefined ? parseNumber(req.body.LamaHutang) : 0;
-  const nilaiNota = parseNumber(req.body.NilaiNota);
+  const hutang = req.body.hutang !== undefined ? parseBoolean(req.body.hutang) : false;
+  const ppn = req.body.ppn !== undefined ? parseBoolean(req.body.ppn) : false;
+  let lamaHutang = req.body.lamaHutang !== undefined ? parseNumber(req.body.lamaHutang) : 0;
+  const nilaiNota = parseNumber(req.body.nilaiNota);
   let tanggalJatuhTempo = null;
   let tanggalBayar = null;
 
-  if (req.body.TanggalJatuhTempo !== undefined && req.body.TanggalJatuhTempo !== null) {
-    tanggalJatuhTempo = parseDate(req.body.TanggalJatuhTempo);
+  if (req.body.tanggalJatuhTempo !== undefined && req.body.tanggalJatuhTempo !== null) {
+    tanggalJatuhTempo = parseDate(req.body.tanggalJatuhTempo);
   }
 
-  if (req.body.TanggalBayar !== undefined && req.body.TanggalBayar !== null) {
-    tanggalBayar = parseDate(req.body.TanggalBayar);
+  if (req.body.tanggalBayar !== undefined && req.body.tanggalBayar !== null) {
+    tanggalBayar = parseDate(req.body.tanggalBayar);
   }
 
-  if (req.body.IdInvoice !== undefined && req.body.IdInvoice !== null) {
-    idInvoice = String(req.body.IdInvoice || "").trim();
+  if (req.body.idInvoice !== undefined && req.body.idInvoice !== null) {
+    idInvoice = String(req.body.idInvoice || "").trim();
     if (!isValidId(idInvoice)) {
-      return res.status(400).json({ message: "IdInvoice tidak valid" });
+      return res.status(400).json({ message: "idInvoice tidak valid" });
     }
   }
 
   if (!tanggalNota || !namaSupplier || nilaiNota === null) {
     return res.status(400).json({
-      message: "TanggalNota, NamaSupplier, dan NilaiNota wajib diisi",
+      message: "tanggalNota, namaSupplier, dan nilaiNota wajib diisi",
     });
   }
 
   if (hutang === null || ppn === null) {
-    return res.status(400).json({ message: "Hutang dan Ppn harus boolean" });
+    return res.status(400).json({ message: "hutang dan ppn harus boolean" });
   }
 
   if (nilaiNota < 0) {
-    return res.status(400).json({ message: "NilaiNota harus angka >= 0" });
+    return res.status(400).json({ message: "nilaiNota harus angka >= 0" });
   }
 
-  if (req.body.TanggalJatuhTempo !== undefined && req.body.TanggalJatuhTempo !== null && !tanggalJatuhTempo) {
-    return res.status(400).json({ message: "TanggalJatuhTempo tidak valid" });
+  if (req.body.tanggalJatuhTempo !== undefined && req.body.tanggalJatuhTempo !== null && !tanggalJatuhTempo) {
+    return res.status(400).json({ message: "tanggalJatuhTempo tidak valid" });
   }
 
-  if (req.body.TanggalBayar !== undefined && req.body.TanggalBayar !== null && !tanggalBayar) {
-    return res.status(400).json({ message: "TanggalBayar tidak valid" });
+  if (req.body.tanggalBayar !== undefined && req.body.tanggalBayar !== null && !tanggalBayar) {
+    return res.status(400).json({ message: "tanggalBayar tidak valid" });
   }
 
   if (hutang) {
     if (!tanggalJatuhTempo) {
       return res
         .status(400)
-        .json({ message: "TanggalJatuhTempo wajib diisi saat Hutang bernilai true" });
+        .json({ message: "tanggalJatuhTempo wajib diisi saat hutang bernilai true" });
     }
 
     if (lamaHutang === null || lamaHutang <= 0) {
       return res
         .status(400)
-        .json({ message: "LamaHutang wajib lebih dari 0 saat Hutang bernilai true" });
+        .json({ message: "lamaHutang wajib lebih dari 0 saat hutang bernilai true" });
     }
   } else {
     lamaHutang = 0;
@@ -75,7 +75,7 @@ router.post("/", async (req, res) => {
 
   if (tanggalBayar && tanggalBayar < tanggalNota) {
     return res.status(400).json({
-      message: "TanggalBayar tidak boleh lebih kecil dari TanggalNota",
+      message: "tanggalBayar tidak boleh lebih kecil dari tanggalNota",
     });
   }
 
@@ -88,21 +88,21 @@ router.post("/", async (req, res) => {
     }
 
     const pembelian = await Pembelian.create({
-      TanggalNota: tanggalNota,
-      NamaSupplier: namaSupplier,
-      NoNpwp: noNpwp,
-      IdInvoice: idInvoice,
-      Hutang: hutang,
-      Ppn: ppn,
-      LamaHutang: lamaHutang,
-      NilaiNota: nilaiNota,
-      TanggalJatuhTempo: tanggalJatuhTempo,
-      TanggalBayar: tanggalBayar,
+      tanggalNota: tanggalNota,
+      namaSupplier: namaSupplier,
+      noNpwp: noNpwp,
+      idInvoice: idInvoice,
+      hutang: hutang,
+      ppn: ppn,
+      lamaHutang: lamaHutang,
+      nilaiNota: nilaiNota,
+      tanggalJatuhTempo: tanggalJatuhTempo,
+      tanggalBayar: tanggalBayar,
     });
 
     return res.status(201).json({
       message: "pembelian created",
-      Pembelian: sanitizePembelian(pembelian),
+      pembelian: sanitizePembelian(pembelian),
     });
   } catch (_error) {
     return res.status(500).json({ message: "failed to create pembelian" });

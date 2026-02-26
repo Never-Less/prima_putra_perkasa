@@ -26,91 +26,91 @@ router.put("/:id", async (req, res) => {
 
   const updates = {};
 
-  if (req.body.Tanggal !== undefined) {
-    const tanggal = parseDate(req.body.Tanggal);
+  if (req.body.tanggal !== undefined) {
+    const tanggal = parseDate(req.body.tanggal);
     if (!tanggal) {
-      return res.status(400).json({ message: "Tanggal tidak valid" });
+      return res.status(400).json({ message: "tanggal tidak valid" });
     }
-    updates.Tanggal = tanggal;
+    updates.tanggal = tanggal;
   }
 
-  if (req.body.NoInvoice !== undefined) {
-    updates.NoInvoice = String(req.body.NoInvoice || "").trim();
+  if (req.body.noInvoice !== undefined) {
+    updates.noInvoice = String(req.body.noInvoice || "").trim();
   }
 
-  if (req.body.NoPO !== undefined) {
-    updates.NoPO = String(req.body.NoPO || "").trim();
+  if (req.body.noPo !== undefined) {
+    updates.noPo = String(req.body.noPo || "").trim();
   }
 
-  if (req.body.NoSuratJalan !== undefined) {
-    const noSuratJalan = normalizeStringList(req.body.NoSuratJalan, {
+  if (req.body.noSuratJalan !== undefined) {
+    const noSuratJalan = normalizeStringList(req.body.noSuratJalan, {
       maxLength: 100,
     });
 
     if (!noSuratJalan) {
       return res.status(400).json({
-        message: "NoSuratJalan harus array minimal 1 item string",
+        message: "noSuratJalan harus array minimal 1 item string",
       });
     }
 
-    updates.NoSuratJalan = noSuratJalan;
+    updates.noSuratJalan = noSuratJalan;
   }
 
-  if (req.body.IdCustomer !== undefined) {
-    const idcustomer = String(req.body.IdCustomer || "").trim();
+  if (req.body.idCustomer !== undefined) {
+    const idCustomer = String(req.body.idCustomer || "").trim();
 
-    if (!isValidId(idcustomer)) {
-      return res.status(400).json({ message: "IdCustomer tidak valid" });
+    if (!isValidId(idCustomer)) {
+      return res.status(400).json({ message: "idCustomer tidak valid" });
     }
 
-    updates.IdCustomer = idcustomer;
+    updates.idCustomer = idCustomer;
   }
 
-  if (req.body.IsPpn !== undefined) {
-    const isPpn = parseBoolean(req.body.IsPpn);
+  if (req.body.isPpn !== undefined) {
+    const isPpn = parseBoolean(req.body.isPpn);
 
     if (isPpn === null) {
-      return res.status(400).json({ message: "IsPpn harus boolean" });
+      return res.status(400).json({ message: "isPpn harus boolean" });
     }
 
-    updates.IsPpn = isPpn;
+    updates.isPpn = isPpn;
   }
 
-  if (req.body.PpnRate !== undefined) {
-    const ppnRate = parseNumber(req.body.PpnRate);
+  if (req.body.ppnRate !== undefined) {
+    const ppnRate = parseNumber(req.body.ppnRate);
 
     if (ppnRate === null || ppnRate < 0 || ppnRate > 100) {
-      return res.status(400).json({ message: "PpnRate harus angka 0 - 100" });
+      return res.status(400).json({ message: "ppnRate harus angka 0 - 100" });
     }
 
-    updates.PpnRate = ppnRate;
+    updates.ppnRate = ppnRate;
   }
 
-  if (req.body.Barang !== undefined) {
-    const barang = normalizeBarangList(req.body.Barang);
+  if (req.body.barang !== undefined) {
+    const barang = normalizeBarangList(req.body.barang);
     if (!barang) {
       return res.status(400).json({
         message:
-          "Barang harus array minimal 1 item (NamaBarang, Kuantitas, Unit, HargaSatuan, Jumlah)",
+          "barang harus array minimal 1 item (namaBarang, kuantitas, unit, hargaSatuan, jumlah)",
       });
     }
-    updates.Barang = barang;
-    updates.Subtotal = calculateSubtotal(barang);
+    updates.barang = barang;
+    updates.subtotal = calculateSubtotal(barang);
   }
 
   if (Object.keys(updates).length === 0) {
     return res.status(400).json({
       message:
-        "minimal kirim salah satu field: Tanggal, NoInvoice, NoPO, NoSuratJalan, IdCustomer, Barang, IsPpn, PpnRate",
+        "minimal kirim salah satu field: tanggal, noInvoice, noPo, noSuratJalan, idCustomer, barang, isPpn, ppnRate",
     });
   }
 
   if (
-    (updates.NoInvoice !== undefined && !updates.NoInvoice) ||
-    (updates.NoPO !== undefined && !updates.NoPO)
+    (updates.noInvoice !== undefined && !updates.noInvoice) ||
+    (updates.noPo !== undefined && !updates.noPo)
   ) {
     return res.status(400).json({
-      message: "NoInvoice dan NoPO tidak boleh kosong",
+      message: "noInvoice dan noPo tidak boleh kosong",
     });
   }
 
@@ -121,28 +121,28 @@ router.put("/:id", async (req, res) => {
       return res.status(404).json({ message: "invoice not found" });
     }
 
-    if (updates.IdCustomer) {
-      const customer = await Customer.findById(updates.IdCustomer);
+    if (updates.idCustomer) {
+      const customer = await Customer.findById(updates.idCustomer);
       if (!customer) {
         return res.status(404).json({ message: "customer tidak ditemukan" });
       }
     }
 
     const effectiveSubtotal =
-      updates.Subtotal !== undefined ? updates.Subtotal : existingInvoice.Subtotal;
-    const effectiveIsPpn = updates.IsPpn ?? existingInvoice.IsPpn ?? true;
-    const effectivePpnRate = updates.PpnRate ?? existingInvoice.PpnRate ?? 11;
+      updates.subtotal !== undefined ? updates.subtotal : existingInvoice.subtotal;
+    const effectiveIsPpn = updates.isPpn ?? existingInvoice.isPpn ?? true;
+    const effectivePpnRate = updates.ppnRate ?? existingInvoice.ppnRate ?? 11;
 
-    updates.Subtotal = effectiveSubtotal;
-    updates.IsPpn = effectiveIsPpn;
-    updates.PpnRate = effectivePpnRate;
-    updates.PpnAmount = calculatePpnAmount(
+    updates.subtotal = effectiveSubtotal;
+    updates.isPpn = effectiveIsPpn;
+    updates.ppnRate = effectivePpnRate;
+    updates.ppnAmount = calculatePpnAmount(
       effectiveSubtotal,
       effectiveIsPpn,
       effectivePpnRate
     );
 
-    updates.GrandTotal = calculateGrandTotal(effectiveSubtotal, updates.PpnAmount);
+    updates.grandTotal = calculateGrandTotal(effectiveSubtotal, updates.ppnAmount);
 
     const invoice = await Invoice.findByIdAndUpdate(id, updates, {
       new: true,

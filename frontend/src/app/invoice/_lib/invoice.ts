@@ -1,139 +1,139 @@
 export type InvoiceBarang = {
-  NamaBarang: string;
-  Kuantitas: number;
-  Unit: string;
-  HargaSatuan: number;
-  Jumlah: number;
+  namaBarang: string;
+  kuantitas: number;
+  unit: string;
+  hargaSatuan: number;
+  jumlah: number;
 };
 
 type Locale = "id" | "en";
 
 export type InvoiceItem = {
   id: string;
-  Tanggal: string;
-  NoInvoice: string;
-  NoPO: string;
-  NoSuratJalan: string[];
-  IdCustomer: string;
-  Barang: InvoiceBarang[];
-  IsPpn: boolean;
-  PpnRate: number;
-  PpnAmount: number;
-  Subtotal: number;
-  GrandTotal: number;
+  tanggal: string;
+  noInvoice: string;
+  noPo: string;
+  noSuratJalan: string[];
+  idCustomer: string;
+  barang: InvoiceBarang[];
+  isPpn: boolean;
+  ppnRate: number;
+  ppnAmount: number;
+  subtotal: number;
+  grandTotal: number;
 };
 
 export type InvoiceBarangFormRow = {
-  NamaBarang: string;
-  Kuantitas: string;
-  Unit: string;
-  HargaSatuan: string;
+  namaBarang: string;
+  kuantitas: string;
+  unit: string;
+  hargaSatuan: string;
 };
 
 export type InvoiceFormState = {
-  Tanggal: string;
-  NoInvoice: string;
-  NoPO: string;
-  NoSuratJalanText: string;
-  IdCustomer: string;
-  IsPpn: boolean;
-  PpnRate: string;
-  BarangRows: InvoiceBarangFormRow[];
+  tanggal: string;
+  noInvoice: string;
+  noPo: string;
+  noSuratJalanText: string;
+  idCustomer: string;
+  isPpn: boolean;
+  ppnRate: string;
+  barangRows: InvoiceBarangFormRow[];
 };
 
 export type InvoiceFilter = {
-  NoInvoice: string;
-  NoPO: string;
-  NoSuratJalan: string;
-  IdCustomer: string;
-  IsPpn: "" | "true" | "false";
-  TanggalDari: string;
-  TanggalSampai: string;
+  noInvoice: string;
+  noPo: string;
+  noSuratJalan: string;
+  idCustomer: string;
+  isPpn: "" | "true" | "false";
+  tanggalDari: string;
+  tanggalSampai: string;
 };
 
 export const defaultInvoiceFilter: InvoiceFilter = {
-  NoInvoice: "",
-  NoPO: "",
-  NoSuratJalan: "",
-  IdCustomer: "",
-  IsPpn: "",
-  TanggalDari: "",
-  TanggalSampai: "",
+  noInvoice: "",
+  noPo: "",
+  noSuratJalan: "",
+  idCustomer: "",
+  isPpn: "",
+  tanggalDari: "",
+  tanggalSampai: "",
 };
 
 export const sampleInvoiceRows: InvoiceItem[] = [
   {
     id: "inv-260301",
-    Tanggal: "2026-03-01",
-    NoInvoice: "INV-260301",
-    NoPO: "PO-90011",
-    NoSuratJalan: ["SJ-260311", "SJ-260312"],
-    IdCustomer: "PT Nusantara Bangun",
-    Barang: [
+    tanggal: "2026-03-01",
+    noInvoice: "INV-260301",
+    noPo: "PO-90011",
+    noSuratJalan: ["SJ-260311", "SJ-260312"],
+    idCustomer: "PT Nusantara Bangun",
+    barang: [
       {
-        NamaBarang: "Semen Curah",
-        Kuantitas: 120,
-        Unit: "zak",
-        HargaSatuan: 75000,
-        Jumlah: 9000000,
+        namaBarang: "Semen Curah",
+        kuantitas: 120,
+        unit: "zak",
+        hargaSatuan: 75000,
+        jumlah: 9000000,
       },
       {
-        NamaBarang: "Pasir Halus",
-        Kuantitas: 40,
-        Unit: "m3",
-        HargaSatuan: 300000,
-        Jumlah: 12000000,
+        namaBarang: "Pasir Halus",
+        kuantitas: 40,
+        unit: "m3",
+        hargaSatuan: 300000,
+        jumlah: 12000000,
       },
     ],
-    IsPpn: true,
-    PpnRate: 11,
-    PpnAmount: 2310000,
-    Subtotal: 21000000,
-    GrandTotal: 23310000,
+    isPpn: true,
+    ppnRate: 11,
+    ppnAmount: 2310000,
+    subtotal: 21000000,
+    grandTotal: 23310000,
   },
   {
     id: "inv-260302",
-    Tanggal: "2026-03-02",
-    NoInvoice: "INV-260302",
-    NoPO: "PO-90012",
-    NoSuratJalan: ["SJ-260320"],
-    IdCustomer: "CV Pilar Teknik",
-    Barang: [
+    tanggal: "2026-03-02",
+    noInvoice: "INV-260302",
+    noPo: "PO-90012",
+    noSuratJalan: ["SJ-260320"],
+    idCustomer: "CV Pilar Teknik",
+    barang: [
       {
-        NamaBarang: "Besi Beton",
-        Kuantitas: 80,
-        Unit: "batang",
-        HargaSatuan: 95000,
-        Jumlah: 7600000,
+        namaBarang: "Besi Beton",
+        kuantitas: 80,
+        unit: "batang",
+        hargaSatuan: 95000,
+        jumlah: 7600000,
       },
     ],
-    IsPpn: false,
-    PpnRate: 11,
-    PpnAmount: 0,
-    Subtotal: 7600000,
-    GrandTotal: 7600000,
+    isPpn: false,
+    ppnRate: 11,
+    ppnAmount: 0,
+    subtotal: 7600000,
+    grandTotal: 7600000,
   },
   {
     id: "inv-260303",
-    Tanggal: "2026-03-03",
-    NoInvoice: "INV-260303",
-    NoPO: "PO-90013",
-    NoSuratJalan: ["SJ-260313", "SJ-260314", "SJ-260315"],
-    IdCustomer: "PT Sinar Baja Utama",
-    Barang: [
+    tanggal: "2026-03-03",
+    noInvoice: "INV-260303",
+    noPo: "PO-90013",
+    noSuratJalan: ["SJ-260313", "SJ-260314", "SJ-260315"],
+    idCustomer: "PT Sinar Baja Utama",
+    barang: [
       {
-        NamaBarang: "Cat Primer",
-        Kuantitas: 24,
-        Unit: "kaleng",
-        HargaSatuan: 150000,
-        Jumlah: 3600000,
+        namaBarang: "Cat Primer",
+        kuantitas: 24,
+        unit: "kaleng",
+        hargaSatuan: 150000,
+        jumlah: 3600000,
       },
     ],
-    IsPpn: true,
-    PpnRate: 11,
-    PpnAmount: 396000,
-    Subtotal: 3600000,
-    GrandTotal: 3996000,
+    isPpn: true,
+    ppnRate: 11,
+    ppnAmount: 396000,
+    subtotal: 3600000,
+    grandTotal: 3996000,
   },
 ];
 
@@ -226,25 +226,25 @@ export function toInputDate(value: string) {
 
 export function createEmptyInvoiceBarangRow(): InvoiceBarangFormRow {
   return {
-    NamaBarang: "",
-    Kuantitas: "",
-    Unit: "",
-    HargaSatuan: "",
+    namaBarang: "",
+    kuantitas: "",
+    unit: "",
+    hargaSatuan: "",
   };
 }
 
 export function isInvoiceBarangRowFilled(row: InvoiceBarangFormRow) {
   return Boolean(
-    row.NamaBarang.trim() || row.Kuantitas.trim() || row.Unit.trim() || row.HargaSatuan.trim()
+    row.namaBarang.trim() || row.kuantitas.trim() || row.unit.trim() || row.hargaSatuan.trim()
   );
 }
 
 export function ensureTrailingEmptyInvoiceBarangRow(rows: InvoiceBarangFormRow[]) {
   const normalizedRows = rows.map((row) => ({
-    NamaBarang: String(row.NamaBarang || ""),
-    Kuantitas: String(row.Kuantitas || ""),
-    Unit: String(row.Unit || ""),
-    HargaSatuan: String(row.HargaSatuan || ""),
+    namaBarang: String(row.namaBarang || ""),
+    kuantitas: String(row.kuantitas || ""),
+    unit: String(row.unit || ""),
+    hargaSatuan: String(row.hargaSatuan || ""),
   }));
 
   if (normalizedRows.length === 0) {
@@ -271,77 +271,77 @@ export function ensureTrailingEmptyInvoiceBarangRow(rows: InvoiceBarangFormRow[]
 export function invoiceBarangRowsToList(rows: InvoiceBarangFormRow[]): InvoiceBarang[] {
   return rows
     .map((row) => {
-      const namaBarang = row.NamaBarang.trim();
-      const kuantitas = parseNumber(row.Kuantitas.trim());
-      const hargaSatuan = parseNumber(row.HargaSatuan.trim());
-      const unit = row.Unit.trim();
+      const namaBarang = row.namaBarang.trim();
+      const kuantitas = parseNumber(row.kuantitas.trim());
+      const hargaSatuan = parseNumber(row.hargaSatuan.trim());
+      const unit = row.unit.trim();
       const jumlah = roundCurrency(kuantitas * hargaSatuan);
 
       return {
-        NamaBarang: namaBarang,
-        Kuantitas: kuantitas,
-        Unit: unit,
-        HargaSatuan: hargaSatuan,
-        Jumlah: jumlah,
+        namaBarang: namaBarang,
+        kuantitas: kuantitas,
+        unit: unit,
+        hargaSatuan: hargaSatuan,
+        jumlah: jumlah,
       };
     })
-    .filter((item) => item.NamaBarang && item.Unit);
+    .filter((item) => item.namaBarang && item.unit);
 }
 
 export function calculateInvoiceSummary(barang: InvoiceBarang[], isPpn: boolean, ppnRate: number) {
-  const subtotal = roundCurrency(barang.reduce((acc, item) => acc + item.Jumlah, 0));
+  const subtotal = roundCurrency(barang.reduce((acc, item) => acc + item.jumlah, 0));
   const ppnAmount = isPpn ? roundCurrency(subtotal * (ppnRate / 100)) : 0;
   const grandTotal = roundCurrency(subtotal + ppnAmount);
 
   return {
-    Subtotal: subtotal,
-    PpnAmount: ppnAmount,
-    GrandTotal: grandTotal,
+    subtotal: subtotal,
+    ppnAmount: ppnAmount,
+    grandTotal: grandTotal,
   };
 }
 
 export function toInvoiceFormState(item: InvoiceItem): InvoiceFormState {
   return {
-    Tanggal: toInputDate(item.Tanggal),
-    NoInvoice: item.NoInvoice,
-    NoPO: item.NoPO,
-    NoSuratJalanText: invoiceNoSuratJalanListToText(item.NoSuratJalan),
-    IdCustomer: item.IdCustomer,
-    IsPpn: item.IsPpn,
-    PpnRate: String(item.PpnRate),
-    BarangRows: ensureTrailingEmptyInvoiceBarangRow(
-      item.Barang.map((barang) => ({
-        NamaBarang: barang.NamaBarang,
-        Kuantitas: String(barang.Kuantitas),
-        Unit: barang.Unit,
-        HargaSatuan: String(barang.HargaSatuan),
+    tanggal: toInputDate(item.tanggal),
+    noInvoice: item.noInvoice,
+    noPo: item.noPo,
+    noSuratJalanText: invoiceNoSuratJalanListToText(item.noSuratJalan),
+    idCustomer: item.idCustomer,
+    isPpn: item.isPpn,
+    ppnRate: String(item.ppnRate),
+    barangRows: ensureTrailingEmptyInvoiceBarangRow(
+      item.barang.map((barang) => ({
+        namaBarang: barang.namaBarang,
+        kuantitas: String(barang.kuantitas),
+        unit: barang.unit,
+        hargaSatuan: String(barang.hargaSatuan),
       }))
     ),
   };
 }
 
 export function filterInvoiceRows(rows: InvoiceItem[], filter: InvoiceFilter) {
-  const fromDate = filter.TanggalDari ? new Date(filter.TanggalDari) : null;
-  const toDate = filter.TanggalSampai ? new Date(filter.TanggalSampai) : null;
+  const fromDate = filter.tanggalDari ? new Date(filter.tanggalDari) : null;
+  const toDate = filter.tanggalSampai ? new Date(filter.tanggalSampai) : null;
 
   if (toDate) {
     toDate.setHours(23, 59, 59, 999);
   }
 
   return rows.filter((row) => {
-    const matchNoInvoice = normalize(row.NoInvoice).includes(normalize(filter.NoInvoice));
-    const matchNoPO = normalize(row.NoPO).includes(normalize(filter.NoPO));
-    const matchNoSuratJalan = normalize(invoiceNoSuratJalanListLabel(row.NoSuratJalan)).includes(
-      normalize(filter.NoSuratJalan)
+    const matchNoInvoice = normalize(row.noInvoice).includes(normalize(filter.noInvoice));
+    const matchNoPO = normalize(row.noPo).includes(normalize(filter.noPo));
+    const matchNoSuratJalan = normalize(invoiceNoSuratJalanListLabel(row.noSuratJalan)).includes(
+      normalize(filter.noSuratJalan)
     );
-    const matchIdCustomer = normalize(row.IdCustomer).includes(normalize(filter.IdCustomer));
+    const matchIdCustomer = normalize(row.idCustomer).includes(normalize(filter.idCustomer));
 
     const matchPpn =
-      !filter.IsPpn ||
-      (filter.IsPpn === "true" && row.IsPpn) ||
-      (filter.IsPpn === "false" && !row.IsPpn);
+      !filter.isPpn ||
+      (filter.isPpn === "true" && row.isPpn) ||
+      (filter.isPpn === "false" && !row.isPpn);
 
-    const rowDate = new Date(row.Tanggal);
+    const rowDate = new Date(row.tanggal);
     const validRowDate = !Number.isNaN(rowDate.getTime());
 
     const matchFromDate = !fromDate || (validRowDate && rowDate >= fromDate);

@@ -2,19 +2,19 @@ const mongoose = require("mongoose");
 
 const customerSchema = new mongoose.Schema(
   {
-    Nama: {
+    nama: {
       type: String,
       required: true,
       trim: true,
       maxlength: 120,
     },
-    Alamat: {
+    alamat: {
       type: String,
       required: true,
       trim: true,
       maxlength: 500,
     },
-    AtasNama: {
+    atasNama: {
       type: String,
       required: true,
       trim: true,

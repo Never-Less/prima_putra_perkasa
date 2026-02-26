@@ -10,7 +10,7 @@ router.get("/", async (_req, res) => {
     const pembelianList = await Pembelian.find().sort({ createdAt: -1 });
 
     return res.json({
-      Pembelians: pembelianList.map(sanitizePembelian),
+      pembelians: pembelianList.map(sanitizePembelian),
     });
   } catch (_error) {
     return res.status(500).json({ message: "failed to get pembelian list" });

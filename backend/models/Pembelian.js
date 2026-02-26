@@ -2,53 +2,53 @@ const mongoose = require("mongoose");
 
 const pembelianSchema = new mongoose.Schema(
   {
-    TanggalNota: {
+    tanggalNota: {
       type: Date,
       required: true,
     },
-    NamaSupplier: {
+    namaSupplier: {
       type: String,
       required: true,
       trim: true,
       maxlength: 150,
     },
-    NoNpwp: {
+    noNpwp: {
       type: String,
       trim: true,
       maxlength: 50,
       default: "",
     },
-    IdInvoice: {
+    idInvoice: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Invoice",
       default: null,
       index: true,
     },
-    Hutang: {
+    hutang: {
       type: Boolean,
       required: true,
       default: false,
     },
-    Ppn: {
+    ppn: {
       type: Boolean,
       required: true,
       default: false,
     },
-    LamaHutang: {
+    lamaHutang: {
       type: Number,
       min: 0,
       default: 0,
     },
-    NilaiNota: {
+    nilaiNota: {
       type: Number,
       required: true,
       min: 0,
     },
-    TanggalJatuhTempo: {
+    tanggalJatuhTempo: {
       type: Date,
       default: null,
     },
-    TanggalBayar: {
+    tanggalBayar: {
       type: Date,
       default: null,
     },
@@ -57,23 +57,23 @@ const pembelianSchema = new mongoose.Schema(
 );
 
 pembelianSchema.pre("validate", function validatePembelian(next) {
-  if (this.Hutang) {
-    if (!this.TanggalJatuhTempo) {
+  if (this.hutang) {
+    if (!this.tanggalJatuhTempo) {
       this.invalidate(
-        "TanggalJatuhTempo",
-        "TanggalJatuhTempo wajib diisi saat Hutang bernilai true"
+        "tanggalJatuhTempo",
+        "tanggalJatuhTempo wajib diisi saat hutang bernilai true"
       );
     }
 
-    if (!Number.isFinite(this.LamaHutang) || this.LamaHutang <= 0) {
-      this.invalidate("LamaHutang", "LamaHutang wajib lebih dari 0 saat Hutang bernilai true");
+    if (!Number.isFinite(this.lamaHutang) || this.lamaHutang <= 0) {
+      this.invalidate("lamaHutang", "lamaHutang wajib lebih dari 0 saat hutang bernilai true");
     }
   } else {
-    this.LamaHutang = 0;
+    this.lamaHutang = 0;
   }
 
-  if (this.TanggalBayar && this.TanggalBayar < this.TanggalNota) {
-    this.invalidate("TanggalBayar", "TanggalBayar tidak boleh lebih kecil dari TanggalNota");
+  if (this.tanggalBayar && this.tanggalBayar < this.tanggalNota) {
+    this.invalidate("tanggalBayar", "tanggalBayar tidak boleh lebih kecil dari tanggalNota");
   }
 
   next();

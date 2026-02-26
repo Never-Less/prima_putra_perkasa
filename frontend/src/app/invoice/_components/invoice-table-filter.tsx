@@ -40,47 +40,47 @@ export function InvoiceTableFilter({ rows, selectedId, onSelectRow }: InvoiceTab
         <p className="mb-2 text-sm font-medium text-sky-800">{t("common.filterByField")}</p>
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           <label className="text-sm text-slate-700">
-            {t("field.NoInvoice")}
+            {t("field.noInvoice")}
             <input
-              value={filter.NoInvoice}
-              onChange={(event) => setFilter((prev) => ({ ...prev, NoInvoice: event.target.value }))}
+              value={filter.noInvoice}
+              onChange={(event) => setFilter((prev) => ({ ...prev, noInvoice: event.target.value }))}
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             />
           </label>
 
           <label className="text-sm text-slate-700">
-            {t("field.NoPO")}
+            {t("field.noPo")}
             <input
-              value={filter.NoPO}
-              onChange={(event) => setFilter((prev) => ({ ...prev, NoPO: event.target.value }))}
+              value={filter.noPo}
+              onChange={(event) => setFilter((prev) => ({ ...prev, noPo: event.target.value }))}
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             />
           </label>
 
           <label className="text-sm text-slate-700">
-            {t("field.NoSuratJalan")}
+            {t("field.noSuratJalan")}
             <input
-              value={filter.NoSuratJalan}
-              onChange={(event) => setFilter((prev) => ({ ...prev, NoSuratJalan: event.target.value }))}
+              value={filter.noSuratJalan}
+              onChange={(event) => setFilter((prev) => ({ ...prev, noSuratJalan: event.target.value }))}
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             />
           </label>
 
           <label className="text-sm text-slate-700">
-            {t("field.NamaCustomer")}
+            {t("field.namaCustomer")}
             <input
-              value={filter.IdCustomer}
-              onChange={(event) => setFilter((prev) => ({ ...prev, IdCustomer: event.target.value }))}
+              value={filter.idCustomer}
+              onChange={(event) => setFilter((prev) => ({ ...prev, idCustomer: event.target.value }))}
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             />
           </label>
 
           <label className="text-sm text-slate-700">
-            {t("field.IsPpn")}
+            {t("field.isPpn")}
             <select
-              value={filter.IsPpn}
+              value={filter.isPpn}
               onChange={(event) =>
-                setFilter((prev) => ({ ...prev, IsPpn: event.target.value as InvoiceFilter["IsPpn"] }))
+                setFilter((prev) => ({ ...prev, isPpn: event.target.value as InvoiceFilter["isPpn"] }))
               }
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             >
@@ -91,21 +91,21 @@ export function InvoiceTableFilter({ rows, selectedId, onSelectRow }: InvoiceTab
           </label>
 
           <label className="text-sm text-slate-700">
-            {t("field.TanggalDari")}
+            {t("field.tanggalDari")}
             <input
               type="date"
-              value={filter.TanggalDari}
-              onChange={(event) => setFilter((prev) => ({ ...prev, TanggalDari: event.target.value }))}
+              value={filter.tanggalDari}
+              onChange={(event) => setFilter((prev) => ({ ...prev, tanggalDari: event.target.value }))}
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             />
           </label>
 
           <label className="text-sm text-slate-700">
-            {t("field.TanggalSampai")}
+            {t("field.tanggalSampai")}
             <input
               type="date"
-              value={filter.TanggalSampai}
-              onChange={(event) => setFilter((prev) => ({ ...prev, TanggalSampai: event.target.value }))}
+              value={filter.tanggalSampai}
+              onChange={(event) => setFilter((prev) => ({ ...prev, tanggalSampai: event.target.value }))}
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             />
           </label>
@@ -116,15 +116,15 @@ export function InvoiceTableFilter({ rows, selectedId, onSelectRow }: InvoiceTab
         <table className="min-w-full text-sm">
           <thead className="bg-sky-100 text-left text-sky-800">
             <tr>
-              <th className="px-3 py-2 font-medium">{t("field.NoInvoice")}</th>
-              <th className="px-3 py-2 font-medium">{t("field.Tanggal")}</th>
-              <th className="px-3 py-2 font-medium">{t("field.NoPO")}</th>
-              <th className="px-3 py-2 font-medium">{t("field.NoSuratJalan")}</th>
-              <th className="px-3 py-2 font-medium">{t("field.Barang")}</th>
-              <th className="px-3 py-2 font-medium">{t("field.NamaCustomer")}</th>
-              <th className="px-3 py-2 font-medium">{t("field.Subtotal")}</th>
-              <th className="px-3 py-2 font-medium">{t("field.PpnAmount")}</th>
-              <th className="px-3 py-2 font-medium">{t("field.GrandTotal")}</th>
+              <th className="px-3 py-2 font-medium">{t("field.noInvoice")}</th>
+              <th className="px-3 py-2 font-medium">{t("field.tanggal")}</th>
+              <th className="px-3 py-2 font-medium">{t("field.noPo")}</th>
+              <th className="px-3 py-2 font-medium">{t("field.noSuratJalan")}</th>
+              <th className="px-3 py-2 font-medium">{t("field.barang")}</th>
+              <th className="px-3 py-2 font-medium">{t("field.namaCustomer")}</th>
+              <th className="px-3 py-2 font-medium">{t("field.subtotal")}</th>
+              <th className="px-3 py-2 font-medium">{t("field.ppnAmount")}</th>
+              <th className="px-3 py-2 font-medium">{t("field.grandTotal")}</th>
               <th className="px-3 py-2 font-medium">{t("common.action")}</th>
             </tr>
           </thead>
@@ -134,17 +134,17 @@ export function InvoiceTableFilter({ rows, selectedId, onSelectRow }: InvoiceTab
 
               return (
                 <tr key={row.id} className={isSelected ? "bg-sky-100" : index % 2 ? "bg-sky-50/70" : undefined}>
-                  <td className="whitespace-nowrap px-3 py-2 font-medium text-slate-800">{row.NoInvoice}</td>
-                  <td className="whitespace-nowrap px-3 py-2 text-slate-600">{formatTanggal(row.Tanggal, locale)}</td>
-                  <td className="whitespace-nowrap px-3 py-2 text-slate-600">{row.NoPO}</td>
-                  <td className="px-3 py-2 text-slate-600">{invoiceNoSuratJalanListLabel(row.NoSuratJalan)}</td>
+                  <td className="whitespace-nowrap px-3 py-2 font-medium text-slate-800">{row.noInvoice}</td>
+                  <td className="whitespace-nowrap px-3 py-2 text-slate-600">{formatTanggal(row.tanggal, locale)}</td>
+                  <td className="whitespace-nowrap px-3 py-2 text-slate-600">{row.noPo}</td>
+                  <td className="px-3 py-2 text-slate-600">{invoiceNoSuratJalanListLabel(row.noSuratJalan)}</td>
                   <td className="px-3 py-2 text-slate-600">
-                    {row.Barang.map((barang) => barang.NamaBarang).join(", ") || "-"}
+                    {row.barang.map((barang) => barang.namaBarang).join(", ") || "-"}
                   </td>
-                  <td className="whitespace-nowrap px-3 py-2 text-slate-600">{row.IdCustomer}</td>
-                  <td className="whitespace-nowrap px-3 py-2 text-slate-600">{formatRupiah(row.Subtotal, locale)}</td>
-                  <td className="whitespace-nowrap px-3 py-2 text-slate-600">{formatRupiah(row.PpnAmount, locale)}</td>
-                  <td className="whitespace-nowrap px-3 py-2 font-medium text-slate-800">{formatRupiah(row.GrandTotal, locale)}</td>
+                  <td className="whitespace-nowrap px-3 py-2 text-slate-600">{row.idCustomer}</td>
+                  <td className="whitespace-nowrap px-3 py-2 text-slate-600">{formatRupiah(row.subtotal, locale)}</td>
+                  <td className="whitespace-nowrap px-3 py-2 text-slate-600">{formatRupiah(row.ppnAmount, locale)}</td>
+                  <td className="whitespace-nowrap px-3 py-2 font-medium text-slate-800">{formatRupiah(row.grandTotal, locale)}</td>
                   <td className="whitespace-nowrap px-3 py-2">
                     <button
                       onClick={() => onSelectRow?.(row)}

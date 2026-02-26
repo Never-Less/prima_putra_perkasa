@@ -50,11 +50,11 @@ function normalizeBarangList(barangInput) {
   const normalized = [];
 
   for (const item of barangInput) {
-    const namaBarang = String(item?.NamaBarang || "").trim();
-    const kuantitas = parseNumber(item?.Kuantitas);
-    const unit = String(item?.Unit || "").trim();
-    const hargasatuan = parseNumber(item?.HargaSatuan);
-    const jumlah = parseNumber(item?.Jumlah);
+    const namaBarang = String(item?.namaBarang || "").trim();
+    const kuantitas = parseNumber(item?.kuantitas);
+    const unit = String(item?.unit || "").trim();
+    const hargasatuan = parseNumber(item?.hargaSatuan);
+    const jumlah = parseNumber(item?.jumlah);
 
     if (
       !namaBarang ||
@@ -70,11 +70,11 @@ function normalizeBarangList(barangInput) {
     }
 
     normalized.push({
-      NamaBarang: namaBarang,
-      Kuantitas: kuantitas,
-      Unit: unit,
-      HargaSatuan: hargasatuan,
-      Jumlah: jumlah,
+      namaBarang: namaBarang,
+      kuantitas: kuantitas,
+      unit: unit,
+      hargaSatuan: hargasatuan,
+      jumlah: jumlah,
     });
   }
 
@@ -103,7 +103,7 @@ function normalizeStringList(value, options = {}) {
 }
 
 function calculateSubtotal(barang) {
-  return barang.reduce((total, item) => total + item.Jumlah, 0);
+  return barang.reduce((total, item) => total + item.jumlah, 0);
 }
 
 function roundCurrency(value) {

@@ -29,29 +29,29 @@ export function CustomerEditForm({ item }: CustomerEditFormProps) {
         <div className="rounded-xl border border-transparent bg-slate-100/80 p-4">
           <div className="grid gap-3">
             <label className="text-sm text-slate-700">
-              {t("field.Nama")}
+              {t("field.nama")}
               <input
-                value={form.Nama}
-                onChange={(event) => setForm((prev) => ({ ...prev, Nama: event.target.value }))}
+                value={form.nama}
+                onChange={(event) => setForm((prev) => ({ ...prev, nama: event.target.value }))}
                 className="mt-1 w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm shadow-sm"
               />
             </label>
 
             <label className="text-sm text-slate-700">
-              {t("field.Alamat")}
+              {t("field.alamat")}
               <textarea
                 rows={4}
-                value={form.Alamat}
-                onChange={(event) => setForm((prev) => ({ ...prev, Alamat: event.target.value }))}
+                value={form.alamat}
+                onChange={(event) => setForm((prev) => ({ ...prev, alamat: event.target.value }))}
                 className="mt-1 w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm shadow-sm"
               />
             </label>
 
             <label className="text-sm text-slate-700">
-              {t("field.AtasNama")}
+              {t("field.atasNama")}
               <input
-                value={form.AtasNama}
-                onChange={(event) => setForm((prev) => ({ ...prev, AtasNama: event.target.value }))}
+                value={form.atasNama}
+                onChange={(event) => setForm((prev) => ({ ...prev, atasNama: event.target.value }))}
                 className="mt-1 w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm shadow-sm"
               />
             </label>
@@ -74,13 +74,13 @@ export function CustomerEditForm({ item }: CustomerEditFormProps) {
           <p className="text-sm font-semibold text-slate-900">{t("customer.preview.title")}</p>
           <div className="mt-3 space-y-2 text-sm text-slate-700">
             <p>
-              <span className="text-slate-500">{t("field.Nama")}:</span> {form.Nama || "-"}
+              <span className="text-slate-500">{t("field.nama")}:</span> {form.nama || "-"}
             </p>
             <p>
-              <span className="text-slate-500">{t("field.Alamat")}:</span> {form.Alamat || "-"}
+              <span className="text-slate-500">{t("field.alamat")}:</span> {form.alamat || "-"}
             </p>
             <p>
-              <span className="text-slate-500">{t("field.AtasNama")}:</span> {form.AtasNama || "-"}
+              <span className="text-slate-500">{t("field.atasNama")}:</span> {form.atasNama || "-"}
             </p>
           </div>
         </div>

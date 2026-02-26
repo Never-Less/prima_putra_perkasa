@@ -10,7 +10,7 @@ import {
   type SuratJalanFormState,
   type SuratJalanItem,
 } from "../_lib/surat-jalan";
-import { sampleCustomerNameOptions } from "../../customer/_lib/customer";
+import { customerNameOptions } from "../../customer/_lib/customer";
 import { useI18n } from "../../_i18n/provider";
 
 type ColorTone = "slate" | "sky" | "emerald";
@@ -110,11 +110,20 @@ export function SuratJalanEditForm({
     setForm(toFormState(item));
   }, [item]);
 
-  const previewBarang = useMemo(() => barangRowsToList(form.BarangRows), [form.BarangRows]);
+  const previewBarang = useMemo(() => barangRowsToList(form.barangRows), [form.barangRows]);
+  const customerOptions = useMemo(() => {
+    const options = customerNameOptions.filter(Boolean);
+
+    if (form.idCustomer && !options.includes(form.idCustomer)) {
+      return [form.idCustomer, ...options];
+    }
+
+    return options;
+  }, [form.idCustomer]);
 
   function updateBarangRow(index: number, field: keyof SuratJalanBarangFormRow, value: string) {
     setForm((prev) => {
-      const nextRows = prev.BarangRows.map((row, rowIndex) => {
+      const nextRows = prev.barangRows.map((row, rowIndex) => {
         if (rowIndex !== index) {
           return row;
         }
@@ -127,7 +136,7 @@ export function SuratJalanEditForm({
 
       return {
         ...prev,
-        BarangRows: ensureTrailingEmptyBarangRow(nextRows),
+        barangRows: ensureTrailingEmptyBarangRow(nextRows),
       };
     });
   }
@@ -143,50 +152,50 @@ export function SuratJalanEditForm({
         <div className={style.formCard}>
           <div className="grid gap-3 sm:grid-cols-2">
             <label className={`text-sm ${tone.label}`}>
-              {t("field.NoSuratJalan")}
+              {t("field.noSuratJalan")}
               <input
-                value={form.NoSuratJalan}
-                onChange={(event) => setForm((prev) => ({ ...prev, NoSuratJalan: event.target.value }))}
+                value={form.noSuratJalan}
+                onChange={(event) => setForm((prev) => ({ ...prev, noSuratJalan: event.target.value }))}
                 className={inputClassName}
               />
             </label>
 
             <label className={`text-sm ${tone.label}`}>
-              {t("field.NoPO")}
+              {t("field.noPo")}
               <input
-                value={form.NoPO}
-                onChange={(event) => setForm((prev) => ({ ...prev, NoPO: event.target.value }))}
+                value={form.noPo}
+                onChange={(event) => setForm((prev) => ({ ...prev, noPo: event.target.value }))}
                 className={inputClassName}
               />
             </label>
 
             <label className={`text-sm ${tone.label}`}>
-              {t("field.Tanggal")}
+              {t("field.tanggal")}
               <input
                 type="date"
-                value={form.Tanggal}
-                onChange={(event) => setForm((prev) => ({ ...prev, Tanggal: event.target.value }))}
+                value={form.tanggal}
+                onChange={(event) => setForm((prev) => ({ ...prev, tanggal: event.target.value }))}
                 className={inputClassName}
               />
             </label>
 
             <label className={`text-sm ${tone.label}`}>
-              {t("field.Kendaraan")}
+              {t("field.kendaraan")}
               <input
-                value={form.Kendaraan}
-                onChange={(event) => setForm((prev) => ({ ...prev, Kendaraan: event.target.value }))}
+                value={form.kendaraan}
+                onChange={(event) => setForm((prev) => ({ ...prev, kendaraan: event.target.value }))}
                 className={inputClassName}
               />
             </label>
 
             <label className={`text-sm sm:col-span-2 ${tone.label}`}>
-              {t("field.NamaCustomer")}
+              {t("field.namaCustomer")}
               <select
-                value={form.IdCustomer}
-                onChange={(event) => setForm((prev) => ({ ...prev, IdCustomer: event.target.value }))}
+                value={form.idCustomer}
+                onChange={(event) => setForm((prev) => ({ ...prev, idCustomer: event.target.value }))}
                 className={inputClassName}
               >
-                {sampleCustomerNameOptions.map((customerName) => (
+                {customerOptions.map((customerName) => (
                   <option key={customerName} value={customerName}>
                     {customerName}
                   </option>
@@ -195,13 +204,13 @@ export function SuratJalanEditForm({
             </label>
 
             <label className={`text-sm ${tone.label}`}>
-              {t("field.Tipe")}
+              {t("field.tipe")}
               <select
-                value={form.Tipe}
+                value={form.tipe}
                 onChange={(event) =>
                   setForm((prev) => ({
                     ...prev,
-                    Tipe: event.target.value as SuratJalanFormState["Tipe"],
+                    tipe: event.target.value as SuratJalanFormState["tipe"],
                   }))
                 }
                 className={inputClassName}
@@ -212,13 +221,13 @@ export function SuratJalanEditForm({
             </label>
 
             <label className={`text-sm ${tone.label}`}>
-              {t("field.SudahSelesai")}
+              {t("field.sudahSelesai")}
               <select
-                value={String(form.SudahSelesai)}
+                value={String(form.sudahSelesai)}
                 onChange={(event) =>
                   setForm((prev) => ({
                     ...prev,
-                    SudahSelesai: event.target.value === "true",
+                    sudahSelesai: event.target.value === "true",
                   }))
                 }
                 className={inputClassName}
@@ -232,21 +241,21 @@ export function SuratJalanEditForm({
               <p>{t("suratJalan.form.items.title")}</p>
               <p className="text-xs text-slate-500">{t("suratJalan.form.items.hint")}</p>
               <div className="mt-2 space-y-2">
-                {form.BarangRows.map((row, index) => (
+                {form.barangRows.map((row, index) => (
                   <div key={`barang-row-${index}`} className="grid gap-2 sm:grid-cols-[1.4fr_1fr]">
                     <input
                       type="text"
-                      value={row.Nama}
+                      value={row.nama}
                       placeholder={t("suratJalan.form.items.placeholder.name")}
-                      onChange={(event) => updateBarangRow(index, "Nama", event.target.value)}
+                      onChange={(event) => updateBarangRow(index, "nama", event.target.value)}
                       className={barangInputClassName}
                     />
                     <input
                       type="number"
                       min={0}
-                      value={row.Jumlah}
+                      value={row.jumlah}
                       placeholder={t("suratJalan.form.items.placeholder.qty")}
-                      onChange={(event) => updateBarangRow(index, "Jumlah", event.target.value)}
+                      onChange={(event) => updateBarangRow(index, "jumlah", event.target.value)}
                       className={barangInputClassName}
                     />
                   </div>
@@ -273,36 +282,36 @@ export function SuratJalanEditForm({
             <p className="text-sm font-semibold text-slate-900">{t("suratJalan.preview.title")}</p>
             <div className="mt-3 space-y-1 text-sm text-slate-700">
               <p>
-                <span className="text-slate-500">{t("field.NoSuratJalan")}:</span> {form.NoSuratJalan || "-"}
+                <span className="text-slate-500">{t("field.noSuratJalan")}:</span> {form.noSuratJalan || "-"}
               </p>
               <p>
-                <span className="text-slate-500">{t("field.NoPO")}:</span> {form.NoPO || "-"}
+                <span className="text-slate-500">{t("field.noPo")}:</span> {form.noPo || "-"}
               </p>
               <p>
-                <span className="text-slate-500">{t("field.Tanggal")}:</span> {formatTanggal(form.Tanggal, locale)}
+                <span className="text-slate-500">{t("field.tanggal")}:</span> {formatTanggal(form.tanggal, locale)}
               </p>
               <p>
-                <span className="text-slate-500">{t("field.NamaCustomer")}:</span> {form.IdCustomer || "-"}
+                <span className="text-slate-500">{t("field.namaCustomer")}:</span> {form.idCustomer || "-"}
               </p>
               <p>
-                <span className="text-slate-500">{t("field.Kendaraan")}:</span> {form.Kendaraan || "-"}
+                <span className="text-slate-500">{t("field.kendaraan")}:</span> {form.kendaraan || "-"}
               </p>
               <p>
-                <span className="text-slate-500">{t("field.Tipe")}:</span> {form.Tipe}
+                <span className="text-slate-500">{t("field.tipe")}:</span> {form.tipe}
               </p>
               <p>
-                <span className="text-slate-500">{t("field.SudahSelesai")}:</span> {String(form.SudahSelesai)}
+                <span className="text-slate-500">{t("field.sudahSelesai")}:</span> {String(form.sudahSelesai)}
               </p>
             </div>
 
             <div className={`mt-3 ${style.previewBarangBox}`}>
               <p className="mb-2 text-xs font-semibold uppercase tracking-[0.15em] text-slate-500">
-                {t("field.Barang")}
+                {t("field.barang")}
               </p>
               {previewBarang.length > 0 ? (
                 <ul className="space-y-1 text-sm text-slate-700">
                   {previewBarang.map((barang) => (
-                    <li key={`${barang.Nama}-${barang.Jumlah}`}>{barang.Nama}: {barang.Jumlah}</li>
+                    <li key={`${barang.nama}-${barang.jumlah}`}>{barang.nama}: {barang.jumlah}</li>
                   ))}
                 </ul>
               ) : (

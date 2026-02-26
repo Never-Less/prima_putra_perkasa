@@ -5,7 +5,7 @@ const { User } = require("../models/User");
 
 // Ganti value ini sesuai kebutuhan sebelum menjalankan script.
 const ADMIN_USERNAME = "admin@gmail.com";
-const ADMIN_PASSWORD = "password";
+const ADMIN_PASSWORD = "password123";
 
 async function createOrUpdateAdmin() {
   const username = String(ADMIN_USERNAME || "")
@@ -18,25 +18,25 @@ async function createOrUpdateAdmin() {
   }
 
   if (password.length < 8) {
-    throw new Error("Password minimal 8 karakter.");
+    throw new Error("password minimal 8 karakter.");
   }
 
-  let adminUser = await User.findOne({ Username: username }).select("+Password");
+  let adminUser = await User.findOne({ username: username }).select("+password");
 
   if (!adminUser) {
     adminUser = new User({
-      Username: username,
-      Password: password,
-      Role: "admin",
+      username: username,
+      password: password,
+      role: "admin",
     });
   } else {
-    adminUser.Password = password;
-    adminUser.Role = "admin";
+    adminUser.password = password;
+    adminUser.role = "admin";
   }
 
   await adminUser.save();
 
-  console.log(`Admin user siap: ${adminUser.Username}`);
+  console.log(`Admin user siap: ${adminUser.username}`);
 }
 
 async function run() {

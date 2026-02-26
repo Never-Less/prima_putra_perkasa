@@ -2,29 +2,29 @@ const mongoose = require("mongoose");
 
 const barangInvoiceSchema = new mongoose.Schema(
   {
-    NamaBarang: {
+    namaBarang: {
       type: String,
       required: true,
       trim: true,
       maxlength: 150,
     },
-    Kuantitas: {
+    kuantitas: {
       type: Number,
       required: true,
       min: 0,
     },
-    Unit: {
+    unit: {
       type: String,
       required: true,
       trim: true,
       maxlength: 50,
     },
-    HargaSatuan: {
+    hargaSatuan: {
       type: Number,
       required: true,
       min: 0,
     },
-    Jumlah: {
+    jumlah: {
       type: Number,
       required: true,
       min: 0,
@@ -35,23 +35,23 @@ const barangInvoiceSchema = new mongoose.Schema(
 
 const invoiceSchema = new mongoose.Schema(
   {
-    Tanggal: {
+    tanggal: {
       type: Date,
       required: true,
     },
-    NoInvoice: {
+    noInvoice: {
       type: String,
       required: true,
       trim: true,
       maxlength: 100,
     },
-    NoPO: {
+    noPo: {
       type: String,
       required: true,
       trim: true,
       maxlength: 100,
     },
-    NoSuratJalan: {
+    noSuratJalan: {
       type: [
         {
           type: String,
@@ -70,48 +70,48 @@ const invoiceSchema = new mongoose.Schema(
             )
           );
         },
-        message: "NoSuratJalan minimal 1 item",
+        message: "noSuratJalan minimal 1 item",
       },
     },
-    IdCustomer: {
+    idCustomer: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Customer",
       required: true,
       index: true,
     },
-    Barang: {
+    barang: {
       type: [barangInvoiceSchema],
       required: true,
       validate: {
         validator(value) {
           return Array.isArray(value) && value.length > 0;
         },
-        message: "Barang minimal 1 item",
+        message: "barang minimal 1 item",
       },
     },
-    IsPpn: {
+    isPpn: {
       type: Boolean,
       required: true,
       default: true,
     },
-    PpnRate: {
+    ppnRate: {
       type: Number,
       required: true,
       default: 11,
       min: 0,
       max: 100,
     },
-    PpnAmount: {
+    ppnAmount: {
       type: Number,
       required: true,
       min: 0,
     },
-    Subtotal: {
+    subtotal: {
       type: Number,
       required: true,
       min: 0,
     },
-    GrandTotal: {
+    grandTotal: {
       type: Number,
       required: true,
       min: 0,

@@ -2,124 +2,124 @@ export type SuratJalanTipe = "partial" | "non partial";
 type Locale = "id" | "en";
 
 export type SuratJalanBarang = {
-  Nama: string;
-  Jumlah: number;
+  nama: string;
+  jumlah: number;
 };
 
 export type SuratJalanBarangFormRow = {
-  Nama: string;
-  Jumlah: string;
+  nama: string;
+  jumlah: string;
 };
 
 export type SuratJalanItem = {
   id: string;
-  NoSuratJalan: string;
-  NoPO: string;
-  Tanggal: string;
-  IdCustomer: string;
-  Barang: SuratJalanBarang[];
-  Kendaraan: string;
-  Tipe: SuratJalanTipe;
-  SudahSelesai: boolean;
+  noSuratJalan: string;
+  noPo: string;
+  tanggal: string;
+  idCustomer: string;
+  barang: SuratJalanBarang[];
+  kendaraan: string;
+  tipe: SuratJalanTipe;
+  sudahSelesai: boolean;
 };
 
 export type SuratJalanFilter = {
-  NoSuratJalan: string;
-  NoPO: string;
-  IdCustomer: string;
-  Kendaraan: string;
-  Tipe: "" | SuratJalanTipe;
-  SudahSelesai: "" | "true" | "false";
-  TanggalDari: string;
-  TanggalSampai: string;
+  noSuratJalan: string;
+  noPo: string;
+  idCustomer: string;
+  kendaraan: string;
+  tipe: "" | SuratJalanTipe;
+  sudahSelesai: "" | "true" | "false";
+  tanggalDari: string;
+  tanggalSampai: string;
 };
 
 export type SuratJalanFormState = {
-  NoSuratJalan: string;
-  NoPO: string;
-  Tanggal: string;
-  IdCustomer: string;
-  Kendaraan: string;
-  Tipe: SuratJalanTipe;
-  SudahSelesai: boolean;
-  BarangRows: SuratJalanBarangFormRow[];
+  noSuratJalan: string;
+  noPo: string;
+  tanggal: string;
+  idCustomer: string;
+  kendaraan: string;
+  tipe: SuratJalanTipe;
+  sudahSelesai: boolean;
+  barangRows: SuratJalanBarangFormRow[];
 };
 
 export const defaultSuratJalanFilter: SuratJalanFilter = {
-  NoSuratJalan: "",
-  NoPO: "",
-  IdCustomer: "",
-  Kendaraan: "",
-  Tipe: "",
-  SudahSelesai: "",
-  TanggalDari: "",
-  TanggalSampai: "",
+  noSuratJalan: "",
+  noPo: "",
+  idCustomer: "",
+  kendaraan: "",
+  tipe: "",
+  sudahSelesai: "",
+  tanggalDari: "",
+  tanggalSampai: "",
 };
 
 export const sampleSuratJalanRows: SuratJalanItem[] = [
   {
     id: "sj-260311",
-    NoSuratJalan: "SJ-260311",
-    NoPO: "PO-90011",
-    Tanggal: "2026-03-11",
-    IdCustomer: "PT Nusantara Bangun",
-    Barang: [
-      { Nama: "Semen Curah", Jumlah: 120 },
-      { Nama: "Pasir Halus", Jumlah: 40 },
+    noSuratJalan: "SJ-260311",
+    noPo: "PO-90011",
+    tanggal: "2026-03-11",
+    idCustomer: "PT Nusantara Bangun",
+    barang: [
+      { nama: "Semen Curah", jumlah: 120 },
+      { nama: "Pasir Halus", jumlah: 40 },
     ],
-    Kendaraan: "B 9123 KXP",
-    Tipe: "partial",
-    SudahSelesai: false,
+    kendaraan: "B 9123 KXP",
+    tipe: "partial",
+    sudahSelesai: false,
   },
   {
     id: "sj-260312",
-    NoSuratJalan: "SJ-260312",
-    NoPO: "PO-90011",
-    Tanggal: "2026-03-12",
-    IdCustomer: "CV Pilar Teknik",
-    Barang: [
-      { Nama: "Besi Beton 10mm", Jumlah: 80 },
-      { Nama: "Besi Beton 12mm", Jumlah: 65 },
+    noSuratJalan: "SJ-260312",
+    noPo: "PO-90011",
+    tanggal: "2026-03-12",
+    idCustomer: "CV Pilar Teknik",
+    barang: [
+      { nama: "Besi Beton 10mm", jumlah: 80 },
+      { nama: "Besi Beton 12mm", jumlah: 65 },
     ],
-    Kendaraan: "B 1455 TTY",
-    Tipe: "non partial",
-    SudahSelesai: true,
+    kendaraan: "B 1455 TTY",
+    tipe: "non partial",
+    sudahSelesai: true,
   },
   {
     id: "sj-260313",
-    NoSuratJalan: "SJ-260313",
-    NoPO: "PO-90013",
-    Tanggal: "2026-03-13",
-    IdCustomer: "PT Sinar Baja Utama",
-    Barang: [{ Nama: "Cat Dasar", Jumlah: 24 }],
-    Kendaraan: "B 8071 VKD",
-    Tipe: "partial",
-    SudahSelesai: false,
+    noSuratJalan: "SJ-260313",
+    noPo: "PO-90013",
+    tanggal: "2026-03-13",
+    idCustomer: "PT Sinar Baja Utama",
+    barang: [{ nama: "Cat Dasar", jumlah: 24 }],
+    kendaraan: "B 8071 VKD",
+    tipe: "partial",
+    sudahSelesai: false,
   },
   {
     id: "sj-260314",
-    NoSuratJalan: "SJ-260314",
-    NoPO: "PO-90013",
-    Tanggal: "2026-03-14",
-    IdCustomer: "PT Delima Konstruksi",
-    Barang: [
-      { Nama: "Pipa PVC 4 inch", Jumlah: 32 },
-      { Nama: "Pipa PVC 2 inch", Jumlah: 50 },
+    noSuratJalan: "SJ-260314",
+    noPo: "PO-90013",
+    tanggal: "2026-03-14",
+    idCustomer: "PT Delima Konstruksi",
+    barang: [
+      { nama: "Pipa PVC 4 inch", jumlah: 32 },
+      { nama: "Pipa PVC 2 inch", jumlah: 50 },
     ],
-    Kendaraan: "B 6520 QPA",
-    Tipe: "non partial",
-    SudahSelesai: true,
+    kendaraan: "B 6520 QPA",
+    tipe: "non partial",
+    sudahSelesai: true,
   },
   {
     id: "sj-260315",
-    NoSuratJalan: "SJ-260315",
-    NoPO: "PO-90015",
-    Tanggal: "2026-03-15",
-    IdCustomer: "PT Nusantara Bangun",
-    Barang: [{ Nama: "Kawat Beton", Jumlah: 200 }],
-    Kendaraan: "B 8345 PRT",
-    Tipe: "partial",
-    SudahSelesai: false,
+    noSuratJalan: "SJ-260315",
+    noPo: "PO-90015",
+    tanggal: "2026-03-15",
+    idCustomer: "PT Nusantara Bangun",
+    barang: [{ nama: "Kawat Beton", jumlah: 200 }],
+    kendaraan: "B 8345 PRT",
+    tipe: "partial",
+    sudahSelesai: false,
   },
 ];
 
@@ -158,30 +158,30 @@ export function barangLabel(items: SuratJalanBarang[]) {
     return "-";
   }
 
-  return items.map((item) => `${item.Nama} (${item.Jumlah})`).join(", ");
+  return items.map((item) => `${item.nama} (${item.jumlah})`).join(", ");
 }
 
 export function filterSuratJalanRows(rows: SuratJalanItem[], filters: SuratJalanFilter) {
-  const fromDate = filters.TanggalDari ? new Date(filters.TanggalDari) : null;
-  const toDate = filters.TanggalSampai ? new Date(filters.TanggalSampai) : null;
+  const fromDate = filters.tanggalDari ? new Date(filters.tanggalDari) : null;
+  const toDate = filters.tanggalSampai ? new Date(filters.tanggalSampai) : null;
 
   if (toDate) {
     toDate.setHours(23, 59, 59, 999);
   }
 
   return rows.filter((row) => {
-    const noSuratJalanMatch = normalize(row.NoSuratJalan).includes(normalize(filters.NoSuratJalan));
-    const noPOMatch = normalize(row.NoPO).includes(normalize(filters.NoPO));
-    const idCustomerMatch = normalize(row.IdCustomer).includes(normalize(filters.IdCustomer));
-    const kendaraanMatch = normalize(row.Kendaraan).includes(normalize(filters.Kendaraan));
+    const noSuratJalanMatch = normalize(row.noSuratJalan).includes(normalize(filters.noSuratJalan));
+    const noPOMatch = normalize(row.noPo).includes(normalize(filters.noPo));
+    const idCustomerMatch = normalize(row.idCustomer).includes(normalize(filters.idCustomer));
+    const kendaraanMatch = normalize(row.kendaraan).includes(normalize(filters.kendaraan));
 
-    const tipeMatch = !filters.Tipe || row.Tipe === filters.Tipe;
+    const tipeMatch = !filters.tipe || row.tipe === filters.tipe;
     const selesaiMatch =
-      !filters.SudahSelesai ||
-      (filters.SudahSelesai === "true" && row.SudahSelesai) ||
-      (filters.SudahSelesai === "false" && !row.SudahSelesai);
+      !filters.sudahSelesai ||
+      (filters.sudahSelesai === "true" && row.sudahSelesai) ||
+      (filters.sudahSelesai === "false" && !row.sudahSelesai);
 
-    const rowDate = new Date(row.Tanggal);
+    const rowDate = new Date(row.tanggal);
     const hasValidDate = !Number.isNaN(rowDate.getTime());
 
     const fromDateMatch = !fromDate || (hasValidDate && rowDate >= fromDate);
@@ -202,17 +202,17 @@ export function filterSuratJalanRows(rows: SuratJalanItem[], filters: SuratJalan
 
 export function toFormState(item: SuratJalanItem): SuratJalanFormState {
   return {
-    NoSuratJalan: item.NoSuratJalan,
-    NoPO: item.NoPO,
-    Tanggal: toInputDate(item.Tanggal),
-    IdCustomer: item.IdCustomer,
-    Kendaraan: item.Kendaraan,
-    Tipe: item.Tipe,
-    SudahSelesai: item.SudahSelesai,
-    BarangRows: ensureTrailingEmptyBarangRow(
-      item.Barang.map((barang) => ({
-        Nama: barang.Nama,
-        Jumlah: String(barang.Jumlah),
+    noSuratJalan: item.noSuratJalan,
+    noPo: item.noPo,
+    tanggal: toInputDate(item.tanggal),
+    idCustomer: item.idCustomer,
+    kendaraan: item.kendaraan,
+    tipe: item.tipe,
+    sudahSelesai: item.sudahSelesai,
+    barangRows: ensureTrailingEmptyBarangRow(
+      item.barang.map((barang) => ({
+        nama: barang.nama,
+        jumlah: String(barang.jumlah),
       }))
     ),
   };
@@ -220,19 +220,19 @@ export function toFormState(item: SuratJalanItem): SuratJalanFormState {
 
 export function createEmptyBarangRow(): SuratJalanBarangFormRow {
   return {
-    Nama: "",
-    Jumlah: "",
+    nama: "",
+    jumlah: "",
   };
 }
 
 export function isBarangRowFilled(row: SuratJalanBarangFormRow) {
-  return Boolean(row.Nama.trim() || row.Jumlah.trim());
+  return Boolean(row.nama.trim() || row.jumlah.trim());
 }
 
 export function ensureTrailingEmptyBarangRow(rows: SuratJalanBarangFormRow[]) {
   const normalizedRows = rows.map((row) => ({
-    Nama: String(row.Nama || ""),
-    Jumlah: String(row.Jumlah || ""),
+    nama: String(row.nama || ""),
+    jumlah: String(row.jumlah || ""),
   }));
 
   if (normalizedRows.length === 0) {
@@ -259,13 +259,13 @@ export function ensureTrailingEmptyBarangRow(rows: SuratJalanBarangFormRow[]) {
 export function barangRowsToList(rows: SuratJalanBarangFormRow[]) {
   return rows
     .map((row) => {
-      const Nama = row.Nama.trim();
-      const jumlahParsed = Number(row.Jumlah.trim());
+      const nama = row.nama.trim();
+      const jumlahParsed = Number(row.jumlah.trim());
 
       return {
-        Nama,
-        Jumlah: Number.isFinite(jumlahParsed) ? jumlahParsed : 0,
+        nama,
+        jumlah: Number.isFinite(jumlahParsed) ? jumlahParsed : 0,
       };
     })
-    .filter((barang) => barang.Nama);
+    .filter((barang) => barang.nama);
 }

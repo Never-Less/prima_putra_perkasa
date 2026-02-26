@@ -23,8 +23,8 @@ function getJwtRefreshSecret() {
 function signAccessToken(user) {
   const payload = {
     sub: user._id.toString(),
-    Username: user.Username,
-    Role: user.Role,
+    username: user.username,
+    role: user.role,
   };
 
   return jwt.sign(payload, getJwtSecret(), {

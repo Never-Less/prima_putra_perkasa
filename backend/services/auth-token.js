@@ -1,6 +1,6 @@
 const { randomUUID } = require("crypto");
 
-const { RefreshToken } = require("../models/RefreshToken");
+const { refreshToken: refreshTokenModel } = require("../models/RefreshToken");
 const { User } = require("../models/User");
 const {
   decodeToken,
@@ -33,7 +33,7 @@ async function issueTokenPair(user) {
   const refreshToken = signRefreshToken(user, tokenId);
   const expiresAt = getExpiryDateFromToken(refreshToken);
 
-  await RefreshToken.create({
+  await refreshTokenModel.create({
     user: user._id,
     tokenId,
     expiresAt,
@@ -50,7 +50,7 @@ async function refreshSession(currentRefreshToken) {
     const payload = verifyRefreshToken(currentRefreshToken);
     validateRefreshPayload(payload);
 
-    const storedToken = await RefreshToken.findOne({
+    const storedToken = await refreshTokenModel.findOne({
       tokenId: payload.tokenId,
       user: payload.sub,
     });
@@ -93,7 +93,7 @@ async function revokeRefreshToken(currentRefreshToken) {
     const payload = verifyRefreshToken(currentRefreshToken);
     validateRefreshPayload(payload);
 
-    const storedToken = await RefreshToken.findOne({
+    const storedToken = await refreshTokenModel.findOne({
       tokenId: payload.tokenId,
       user: payload.sub,
     });

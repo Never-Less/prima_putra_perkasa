@@ -10,7 +10,7 @@ router.get("/", async (_req, res) => {
     const customers = await Customer.find().sort({ createdAt: -1 });
 
     return res.json({
-      Customers: customers.map(sanitizeCustomer),
+      customers: customers.map(sanitizeCustomer),
     });
   } catch (_error) {
     return res.status(500).json({ message: "failed to get customers" });

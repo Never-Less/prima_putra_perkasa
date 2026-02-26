@@ -18,66 +18,66 @@ const {
 const router = express.Router();
 
 router.post("/", async (req, res) => {
-  const tanggal = parseDate(req.body.Tanggal);
-  const noinvoice = String(req.body.NoInvoice || "").trim();
-  const nopo = String(req.body.NoPO || "").trim();
-  const nosuratjalan = normalizeStringList(req.body.NoSuratJalan, {
+  const tanggal = parseDate(req.body.tanggal);
+  const noInvoice = String(req.body.noInvoice || "").trim();
+  const noPo = String(req.body.noPo || "").trim();
+  const noSuratJalan = normalizeStringList(req.body.noSuratJalan, {
     maxLength: 100,
   });
-  const idcustomer = String(req.body.IdCustomer || "").trim();
-  const barang = normalizeBarangList(req.body.Barang);
+  const idCustomer = String(req.body.idCustomer || "").trim();
+  const barang = normalizeBarangList(req.body.barang);
   const parsedIsPpn =
-    req.body.IsPpn !== undefined ? parseBoolean(req.body.IsPpn) : true;
+    req.body.isPpn !== undefined ? parseBoolean(req.body.isPpn) : true;
   const parsedPpnRate =
-    req.body.PpnRate !== undefined ? parseNumber(req.body.PpnRate) : 11;
+    req.body.ppnRate !== undefined ? parseNumber(req.body.ppnRate) : 11;
 
-  if (!tanggal || !noinvoice || !nopo || !nosuratjalan || !idcustomer) {
+  if (!tanggal || !noInvoice || !noPo || !noSuratJalan || !idCustomer) {
     return res.status(400).json({
-      message: "Tanggal, NoInvoice, NoPO, NoSuratJalan, dan IdCustomer wajib diisi",
+      message: "tanggal, noInvoice, noPo, noSuratJalan, dan idCustomer wajib diisi",
     });
   }
 
   if (!barang) {
     return res.status(400).json({
       message:
-        "Barang harus array minimal 1 item (NamaBarang, Kuantitas, Unit, HargaSatuan, Jumlah)",
+        "barang harus array minimal 1 item (namaBarang, kuantitas, unit, hargaSatuan, jumlah)",
     });
   }
 
   if (parsedIsPpn === null) {
-    return res.status(400).json({ message: "IsPpn harus boolean" });
+    return res.status(400).json({ message: "isPpn harus boolean" });
   }
 
   if (parsedPpnRate === null || parsedPpnRate < 0 || parsedPpnRate > 100) {
-    return res.status(400).json({ message: "PpnRate harus angka 0 - 100" });
+    return res.status(400).json({ message: "ppnRate harus angka 0 - 100" });
   }
 
-  if (!isValidId(idcustomer)) {
-    return res.status(400).json({ message: "IdCustomer tidak valid" });
+  if (!isValidId(idCustomer)) {
+    return res.status(400).json({ message: "idCustomer tidak valid" });
   }
 
   const subtotal = calculateSubtotal(barang);
   const ppnAmount = calculatePpnAmount(subtotal, parsedIsPpn, parsedPpnRate);
-  const grandtotal = calculateGrandTotal(subtotal, ppnAmount);
+  const grandTotal = calculateGrandTotal(subtotal, ppnAmount);
 
   try {
-    const customer = await Customer.findById(idcustomer);
+    const customer = await Customer.findById(idCustomer);
     if (!customer) {
       return res.status(404).json({ message: "customer tidak ditemukan" });
     }
 
     const invoice = await Invoice.create({
-      Tanggal: tanggal,
-      NoInvoice: noinvoice,
-      NoPO: nopo,
-      NoSuratJalan: nosuratjalan,
-      IdCustomer: idcustomer,
-      Barang: barang,
-      IsPpn: parsedIsPpn,
-      PpnRate: parsedPpnRate,
-      PpnAmount: ppnAmount,
-      Subtotal: subtotal,
-      GrandTotal: grandtotal,
+      tanggal: tanggal,
+      noInvoice: noInvoice,
+      noPo: noPo,
+      noSuratJalan: noSuratJalan,
+      idCustomer: idCustomer,
+      barang: barang,
+      isPpn: parsedIsPpn,
+      ppnRate: parsedPpnRate,
+      ppnAmount: ppnAmount,
+      subtotal: subtotal,
+      grandTotal: grandTotal,
     });
 
     return res.status(201).json({

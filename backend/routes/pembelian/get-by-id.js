@@ -21,7 +21,7 @@ router.get("/:id", async (req, res) => {
     }
 
     return res.json({
-      Pembelian: sanitizePembelian(pembelian),
+      pembelian: sanitizePembelian(pembelian),
     });
   } catch (_error) {
     return res.status(500).json({ message: "failed to get pembelian" });

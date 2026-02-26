@@ -89,7 +89,7 @@ export function SuratJalanTableFilter({
     const groupMap = new Map<string, SuratJalanItem[]>();
 
     filteredRows.forEach((row) => {
-      const key = row.NoPO || "-";
+      const key = row.noPo || "-";
       const existingRows = groupMap.get(key);
 
       if (existingRows) {
@@ -100,8 +100,8 @@ export function SuratJalanTableFilter({
       groupMap.set(key, [row]);
     });
 
-    return Array.from(groupMap.entries()).map(([NoPO, items]) => ({
-      NoPO,
+    return Array.from(groupMap.entries()).map(([noPo, items]) => ({
+      noPo,
       items,
     }));
   }, [filteredRows]);
@@ -122,49 +122,49 @@ export function SuratJalanTableFilter({
         <p className={`mb-2 text-sm font-medium ${tone.subtitle}`}>{t("common.filterByField")}</p>
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           <label className="text-sm text-slate-700">
-            {t("field.NoSuratJalan")}
+            {t("field.noSuratJalan")}
             <input
-              value={filters.NoSuratJalan}
-              onChange={(event) => setFilters((prev) => ({ ...prev, NoSuratJalan: event.target.value }))}
+              value={filters.noSuratJalan}
+              onChange={(event) => setFilters((prev) => ({ ...prev, noSuratJalan: event.target.value }))}
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             />
           </label>
 
           <label className="text-sm text-slate-700">
-            {t("field.NoPO")}
+            {t("field.noPo")}
             <input
-              value={filters.NoPO}
-              onChange={(event) => setFilters((prev) => ({ ...prev, NoPO: event.target.value }))}
+              value={filters.noPo}
+              onChange={(event) => setFilters((prev) => ({ ...prev, noPo: event.target.value }))}
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             />
           </label>
 
           <label className="text-sm text-slate-700">
-            {t("field.NamaCustomer")}
+            {t("field.namaCustomer")}
             <input
-              value={filters.IdCustomer}
-              onChange={(event) => setFilters((prev) => ({ ...prev, IdCustomer: event.target.value }))}
+              value={filters.idCustomer}
+              onChange={(event) => setFilters((prev) => ({ ...prev, idCustomer: event.target.value }))}
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             />
           </label>
 
           <label className="text-sm text-slate-700">
-            {t("field.Kendaraan")}
+            {t("field.kendaraan")}
             <input
-              value={filters.Kendaraan}
-              onChange={(event) => setFilters((prev) => ({ ...prev, Kendaraan: event.target.value }))}
+              value={filters.kendaraan}
+              onChange={(event) => setFilters((prev) => ({ ...prev, kendaraan: event.target.value }))}
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             />
           </label>
 
           <label className="text-sm text-slate-700">
-            {t("field.Tipe")}
+            {t("field.tipe")}
             <select
-              value={filters.Tipe}
+              value={filters.tipe}
               onChange={(event) =>
                 setFilters((prev) => ({
                   ...prev,
-                  Tipe: event.target.value as SuratJalanFilter["Tipe"],
+                  tipe: event.target.value as SuratJalanFilter["tipe"],
                 }))
               }
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
@@ -176,13 +176,13 @@ export function SuratJalanTableFilter({
           </label>
 
           <label className="text-sm text-slate-700">
-            {t("field.SudahSelesai")}
+            {t("field.sudahSelesai")}
             <select
-              value={filters.SudahSelesai}
+              value={filters.sudahSelesai}
               onChange={(event) =>
                 setFilters((prev) => ({
                   ...prev,
-                  SudahSelesai: event.target.value as SuratJalanFilter["SudahSelesai"],
+                  sudahSelesai: event.target.value as SuratJalanFilter["sudahSelesai"],
                 }))
               }
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
@@ -194,21 +194,21 @@ export function SuratJalanTableFilter({
           </label>
 
           <label className="text-sm text-slate-700">
-            {t("field.TanggalDari")}
+            {t("field.tanggalDari")}
             <input
               type="date"
-              value={filters.TanggalDari}
-              onChange={(event) => setFilters((prev) => ({ ...prev, TanggalDari: event.target.value }))}
+              value={filters.tanggalDari}
+              onChange={(event) => setFilters((prev) => ({ ...prev, tanggalDari: event.target.value }))}
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             />
           </label>
 
           <label className="text-sm text-slate-700">
-            {t("field.TanggalSampai")}
+            {t("field.tanggalSampai")}
             <input
               type="date"
-              value={filters.TanggalSampai}
-              onChange={(event) => setFilters((prev) => ({ ...prev, TanggalSampai: event.target.value }))}
+              value={filters.tanggalSampai}
+              onChange={(event) => setFilters((prev) => ({ ...prev, tanggalSampai: event.target.value }))}
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             />
           </label>
@@ -217,10 +217,10 @@ export function SuratJalanTableFilter({
 
       <div className="space-y-4">
         {groupedRows.map((group) => (
-          <div key={group.NoPO} className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+          <div key={group.noPo} className="overflow-hidden rounded-xl border border-slate-200 bg-white">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-slate-50 px-3 py-2">
               <p className="text-sm font-semibold text-slate-800">
-                {t("field.NoPO")}: {group.NoPO}
+                {t("field.noPo")}: {group.noPo}
               </p>
               <span className="text-xs text-slate-500">{t("common.totalData", { count: group.items.length })}</span>
             </div>
@@ -229,13 +229,13 @@ export function SuratJalanTableFilter({
               <table className={`min-w-full ${tableText}`}>
                 <thead className={`${tone.header} text-left`}>
                   <tr>
-                    <th className={`${cellPadding} font-medium`}>{t("field.NoSuratJalan")}</th>
-                    <th className={`${cellPadding} font-medium`}>{t("field.Tanggal")}</th>
-                    <th className={`${cellPadding} font-medium`}>{t("field.NamaCustomer")}</th>
-                    <th className={`${cellPadding} font-medium`}>{t("field.Barang")}</th>
-                    <th className={`${cellPadding} font-medium`}>{t("field.Kendaraan")}</th>
-                    <th className={`${cellPadding} font-medium`}>{t("field.Tipe")}</th>
-                    <th className={`${cellPadding} font-medium`}>{t("field.SudahSelesai")}</th>
+                    <th className={`${cellPadding} font-medium`}>{t("field.noSuratJalan")}</th>
+                    <th className={`${cellPadding} font-medium`}>{t("field.tanggal")}</th>
+                    <th className={`${cellPadding} font-medium`}>{t("field.namaCustomer")}</th>
+                    <th className={`${cellPadding} font-medium`}>{t("field.barang")}</th>
+                    <th className={`${cellPadding} font-medium`}>{t("field.kendaraan")}</th>
+                    <th className={`${cellPadding} font-medium`}>{t("field.tipe")}</th>
+                    <th className={`${cellPadding} font-medium`}>{t("field.sudahSelesai")}</th>
                     <th className={`${cellPadding} font-medium`}>{t("common.action")}</th>
                   </tr>
                 </thead>
@@ -252,22 +252,22 @@ export function SuratJalanTableFilter({
                     return (
                       <tr key={row.id} className={rowClassName}>
                         <td className={`whitespace-nowrap ${cellPadding} font-medium text-slate-800`}>
-                          {row.NoSuratJalan}
+                          {row.noSuratJalan}
                         </td>
                         <td className={`whitespace-nowrap ${cellPadding} text-slate-600`}>
-                          {formatTanggal(row.Tanggal, locale)}
+                          {formatTanggal(row.tanggal, locale)}
                         </td>
-                        <td className={`whitespace-nowrap ${cellPadding} text-slate-600`}>{row.IdCustomer}</td>
-                        <td className={`${cellPadding} text-slate-600`}>{barangLabel(row.Barang)}</td>
-                        <td className={`whitespace-nowrap ${cellPadding} text-slate-600`}>{row.Kendaraan}</td>
-                        <td className={`whitespace-nowrap ${cellPadding} text-slate-600`}>{row.Tipe}</td>
+                        <td className={`whitespace-nowrap ${cellPadding} text-slate-600`}>{row.idCustomer}</td>
+                        <td className={`${cellPadding} text-slate-600`}>{barangLabel(row.barang)}</td>
+                        <td className={`whitespace-nowrap ${cellPadding} text-slate-600`}>{row.kendaraan}</td>
+                        <td className={`whitespace-nowrap ${cellPadding} text-slate-600`}>{row.tipe}</td>
                         <td className={`whitespace-nowrap ${cellPadding}`}>
                           <span
                             className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
-                              row.SudahSelesai ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
+                              row.sudahSelesai ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
                             }`}
                           >
-                            {row.SudahSelesai ? t("common.true") : t("common.false")}
+                            {row.sudahSelesai ? t("common.true") : t("common.false")}
                           </span>
                         </td>
                         <td className={`whitespace-nowrap ${cellPadding}`}>

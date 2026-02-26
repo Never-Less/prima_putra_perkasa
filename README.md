@@ -68,19 +68,19 @@ Body register/login:
 
 ```json
 {
-  "Username": "admin",
-  "Password": "passwordku123"
+  "username": "admin",
+  "password": "passwordku123"
 }
 ```
 
 Catatan: role default user baru adalah `staff`.
-Response `register`, `login`, dan `refresh` mengembalikan `AccessToken` dan `RefreshToken`.
+Response `register`, `login`, dan `refresh` mengembalikan `accessToken` dan `refreshToken`.
 
 Body refresh/logout:
 
 ```json
 {
-  "RefreshToken": "isi_refresh_token_di_sini"
+  "refreshToken": "isi_refresh_token_di_sini"
 }
 ```
 
@@ -98,9 +98,9 @@ Body create/update:
 
 ```json
 {
-  "Nama": "PT Contoh",
-  "Alamat": "Jl. Contoh No. 123",
-  "AtasNama": "Budi Santoso"
+  "nama": "PT Contoh",
+  "alamat": "Jl. Contoh No. 123",
+  "atasNama": "Budi Santoso"
 }
 ```
 
@@ -118,16 +118,16 @@ Body create/update:
 
 ```json
 {
-  "TanggalNota": "2026-02-24",
-  "NamaSupplier": "PT Supplier Utama",
-  "NoNpwp": "01.234.567.8-901.000",
-  "IdInvoice": "65f1234567890abcde123456",
-  "Hutang": true,
-  "Ppn": true,
-  "LamaHutang": 30,
-  "NilaiNota": 15000000,
-  "TanggalJatuhTempo": "2026-03-26",
-  "TanggalBayar": null
+  "tanggalNota": "2026-02-24",
+  "namaSupplier": "PT Supplier Utama",
+  "noNpwp": "01.234.567.8-901.000",
+  "idInvoice": "65f1234567890abcde123456",
+  "hutang": true,
+  "ppn": true,
+  "lamaHutang": 30,
+  "nilaiNota": 15000000,
+  "tanggalJatuhTempo": "2026-03-26",
+  "tanggalBayar": null
 }
 ```
 
