@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import type { SingleValue } from "react-select";
+import CreatableSelect from "react-select/creatable";
 import {
   barangRowsToList,
   createEmptyBarangRow,
@@ -11,11 +13,14 @@ import {
   type SuratJalanFormState,
   type SuratJalanItem,
 } from "../_lib/surat-jalan";
-import { AutocompleteModal } from "../../_components/autocomplete-modal";
 import { useI18n } from "../../_i18n/provider";
 
 type ColorTone = "slate" | "sky" | "emerald";
 type FormStyle = "default" | "outlined" | "soft";
+type NoPoSelectOption = {
+  value: string;
+  label: string;
+};
 
 type SuratJalanEditFormProps = {
   item?: SuratJalanItem;
@@ -129,8 +134,6 @@ export function SuratJalanEditForm({
   formStyle = "default",
 }: SuratJalanEditFormProps) {
   const { locale, t } = useI18n();
-  const [isNoPoModalOpen, setIsNoPoModalOpen] = useState(false);
-  const [noPoAutocompleteQuery, setNoPoAutocompleteQuery] = useState("");
   const [form, setForm] = useState<SuratJalanFormState>(() =>
     item ? toFormState(item) : createEmptySuratJalanFormState()
   );
@@ -159,6 +162,22 @@ export function SuratJalanEditForm({
 
     return Array.from(noPoSet.values());
   }, [form.noPo, noPoOptions]);
+  const noPoSelectOptions = useMemo(() => {
+    return normalizedNoPoOptions.map((noPoOption) => ({
+      value: noPoOption,
+      label: noPoOption,
+    }));
+  }, [normalizedNoPoOptions]);
+  const selectedNoPoOption = useMemo<NoPoSelectOption | null>(() => {
+    const noPoValue = String(form.noPo || "").trim();
+
+    if (!noPoValue) {
+      return null;
+    }
+
+    const existingOption = noPoSelectOptions.find((option) => option.value === noPoValue);
+    return existingOption || { value: noPoValue, label: noPoValue };
+  }, [form.noPo, noPoSelectOptions]);
   const normalizedCustomerOptions = useMemo(() => {
     const customerMap = new Map<string, string>();
 
@@ -207,9 +226,15 @@ export function SuratJalanEditForm({
     });
   }
 
+  function handleNoPoChange(option: SingleValue<NoPoSelectOption>) {
+    setForm((prev) => ({
+      ...prev,
+      noPo: option?.value || "",
+    }));
+  }
+
   return (
-    <>
-      <section className={`rounded-2xl border p-5 shadow-sm ${tone.section}`}>
+    <section className={`rounded-2xl border p-5 shadow-sm ${tone.section}`}>
       <div className="mb-3">
         <h2 className={`text-lg font-semibold ${tone.title}`}>{title}</h2>
         <p className={`text-sm ${tone.subtitle}`}>{description}</p>
@@ -229,23 +254,29 @@ export function SuratJalanEditForm({
 
             <label className={`text-sm ${tone.label}`}>
               {t("field.noPo")}
-              <p className="mt-1 text-xs text-slate-500">{t("suratJalan.form.noPoHint")}</p>
-              <input
-                value={form.noPo}
-                onChange={(event) => setForm((prev) => ({ ...prev, noPo: event.target.value }))}
-                className={inputClassName}
-              />
-              <button
-                type="button"
-                disabled={isSaving || isDeleting}
-                onClick={() => {
-                  setNoPoAutocompleteQuery(form.noPo);
-                  setIsNoPoModalOpen(true);
-                }}
-                className="mt-2 rounded-lg border border-sky-300 bg-white px-3 py-2 text-xs text-sky-700 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {t("suratJalan.form.noPoModalButton")}
-              </button>
+              <div className="mt-1">
+                <CreatableSelect
+                  inputId="surat-jalan-no-po-select"
+                  value={selectedNoPoOption}
+                  options={noPoSelectOptions}
+                  isClearable={true}
+                  isDisabled={isSaving || isDeleting}
+                  placeholder={t("suratJalan.form.noPoSelectPlaceholder")}
+                  noOptionsMessage={() => t("suratJalan.form.noPoNoOptions")}
+                  formatCreateLabel={(inputValue) =>
+                    t("suratJalan.form.noPoCreateLabel", {
+                      value: inputValue,
+                    })
+                  }
+                  onChange={handleNoPoChange}
+                  onCreateOption={(inputValue) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      noPo: String(inputValue || "").trim(),
+                    }))
+                  }
+                />
+              </div>
             </label>
 
             <label className={`text-sm ${tone.label}`}>
@@ -414,31 +445,6 @@ export function SuratJalanEditForm({
           </div>
         ) : null}
       </div>
-      </section>
-
-      <AutocompleteModal
-        isOpen={isNoPoModalOpen}
-        title={t("suratJalan.form.noPoModalTitle")}
-        placeholder={t("suratJalan.form.noPoModalPlaceholder")}
-        query={noPoAutocompleteQuery}
-        options={normalizedNoPoOptions}
-        selectedValue={form.noPo}
-        useTypedLabel={t("suratJalan.form.noPoModalUseTyped", {
-          value: noPoAutocompleteQuery.trim(),
-        })}
-        emptyLabel={t("suratJalan.form.noPoModalEmpty")}
-        closeLabel={t("common.close")}
-        onQueryChange={(value) => setNoPoAutocompleteQuery(value)}
-        onSelect={(value) => {
-          setForm((prev) => ({
-            ...prev,
-            noPo: value,
-          }));
-          setNoPoAutocompleteQuery(value);
-          setIsNoPoModalOpen(false);
-        }}
-        onClose={() => setIsNoPoModalOpen(false)}
-      />
-    </>
+    </section>
   );
 }

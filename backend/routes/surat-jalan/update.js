@@ -102,6 +102,15 @@ router.put("/:id", async (req, res) => {
       return res.status(404).json({ message: "surat jalan not found" });
     }
 
+    await SuratJalan.updateMany(
+      { noPo: suratJalan.noPo },
+      {
+        $set: {
+          tipe: suratJalan.tipe,
+        },
+      }
+    );
+
     return res.json({
       message: "surat jalan updated",
       suratJalan: sanitizeSuratJalan(suratJalan),
