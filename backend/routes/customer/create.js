@@ -1,11 +1,12 @@
 const express = require("express");
 
+const { requireRole } = require("../../middlewares/auth");
 const { Customer } = require("../../models/Customer");
 const { sanitizeCustomer } = require("./sanitize-customer");
 
 const router = express.Router();
 
-router.post("/", async (req, res) => {
+router.post("/", requireRole("admin"), async (req, res) => {
   try {
     const nama = String(req.body.nama || "").trim();
     const alamat = String(req.body.alamat || "").trim();

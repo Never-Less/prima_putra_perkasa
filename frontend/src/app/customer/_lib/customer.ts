@@ -31,6 +31,14 @@ type CustomerListResponse = {
   customers?: unknown[];
 };
 
+type CustomerResponse = {
+  customer?: unknown;
+};
+
+type AuthMeResponse = {
+  user?: unknown;
+};
+
 export const customerNameOptions: string[] = [];
 
 function toText(value: unknown) {
@@ -67,6 +75,14 @@ function toCustomerItem(value: unknown): CustomerItem | null {
   };
 }
 
+function toNormalizedCustomerPayload(form: CustomerFormState) {
+  return {
+    nama: toText(form.nama).trim(),
+    alamat: toText(form.alamat).trim(),
+    atasNama: toText(form.atasNama).trim(),
+  };
+}
+
 export async function fetchCustomerRows() {
   const response = await requestApi<CustomerListResponse>("/api/customers");
 
@@ -75,6 +91,43 @@ export async function fetchCustomerRows() {
   }
 
   return response.customers.map(toCustomerItem).filter((row): row is CustomerItem => Boolean(row));
+}
+
+export async function createCustomer(form: CustomerFormState) {
+  const payload = toNormalizedCustomerPayload(form);
+  const response = await requestApi<CustomerResponse>("/api/customers", {
+    method: "POST",
+    body: payload,
+  });
+
+  return toCustomerItem(response?.customer);
+}
+
+export async function updateCustomer(id: string, form: CustomerFormState) {
+  const payload = toNormalizedCustomerPayload(form);
+  const response = await requestApi<CustomerResponse>(`/api/customers/${id}`, {
+    method: "PUT",
+    body: payload,
+  });
+
+  return toCustomerItem(response?.customer);
+}
+
+export async function deleteCustomer(id: string) {
+  await requestApi(`/api/customers/${id}`, {
+    method: "DELETE",
+  });
+}
+
+export async function fetchCurrentUserRole() {
+  const response = await requestApi<AuthMeResponse>("/api/auth/me");
+
+  if (!response || typeof response !== "object") {
+    return "";
+  }
+
+  const user = response.user as Record<string, unknown> | undefined;
+  return toText(user?.role).trim().toLowerCase();
 }
 
 function normalize(value: unknown) {

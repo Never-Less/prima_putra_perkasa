@@ -13,6 +13,9 @@ router.post("/login", async (req, res) => {
       .toLowerCase();
     const password = String(req.body.password || "");
 
+    console.log(username);
+    console.log(password);
+
     if (!username || !password) {
       return res.status(400).json({
         message: "username and password are required",

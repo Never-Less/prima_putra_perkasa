@@ -1,9 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 import { useI18n } from "../_i18n/provider";
 import { type Locale } from "../_i18n/messages";
+import { requestApi } from "../_lib/api-client";
+import { clearAuthSession, getStoredRefreshToken } from "../_lib/auth-session";
 
 function isActivePath(pathname: string, href: string) {
   if (href === "/") {
@@ -15,7 +18,9 @@ function isActivePath(pathname: string, href: string) {
 
 export function AppNavbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { locale, setLocale, t } = useI18n();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const navItems = [
     { href: "/", label: t("nav.home") },
@@ -24,6 +29,34 @@ export function AppNavbar() {
     { href: "/invoice", label: t("nav.invoice") },
     { href: "/pembelian", label: t("nav.pembelian") },
   ];
+
+  async function handleLogout() {
+    if (isLoggingOut) {
+      return;
+    }
+
+    setIsLoggingOut(true);
+
+    try {
+      const refreshToken = getStoredRefreshToken();
+
+      if (refreshToken) {
+        await requestApi("/api/auth/logout", {
+          method: "POST",
+          body: {
+            refreshToken: refreshToken,
+          },
+        });
+      }
+    } catch {
+      // Session cleanup tetap dijalankan walaupun revoke token gagal.
+    } finally {
+      clearAuthSession();
+      router.replace("/login");
+      router.refresh();
+      setIsLoggingOut(false);
+    }
+  }
 
   return (
     <>
@@ -64,6 +97,14 @@ export function AppNavbar() {
               );
             })}
           </nav>
+          <button
+            type="button"
+            onClick={() => void handleLogout()}
+            disabled={isLoggingOut}
+            className="rounded-lg border border-red-300 bg-white px-2.5 py-1.5 text-xs text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isLoggingOut ? t("common.loading") : t("nav.logout")}
+          </button>
         </div>
       </header>
 
@@ -107,6 +148,14 @@ export function AppNavbar() {
               <option value="en">{t("nav.language.en")}</option>
             </select>
           </label>
+          <button
+            type="button"
+            onClick={() => void handleLogout()}
+            disabled={isLoggingOut}
+            className="mt-3 w-full rounded-lg border border-red-300 bg-white px-3 py-2 text-sm text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isLoggingOut ? t("common.loading") : t("nav.logout")}
+          </button>
         </div>
       </aside>
     </>

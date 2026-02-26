@@ -8,10 +8,10 @@ import { useI18n } from "../_i18n/provider";
 
 export default function PembelianPage() {
   const { t } = useI18n();
-  const [selectedId, setSelectedId] = useState(samplePembelianRows[0]?.id || "");
+  const [selectedId, setSelectedId] = useState("");
 
   const selectedRow = useMemo(() => {
-    return samplePembelianRows.find((row) => row.id === selectedId) || samplePembelianRows[0];
+    return samplePembelianRows.find((row) => row.id === selectedId);
   }, [selectedId]);
 
   return (
@@ -24,11 +24,15 @@ export default function PembelianPage() {
       <div className="mt-5 space-y-5">
         <PembelianTableFilter
           rows={samplePembelianRows}
-          selectedId={selectedRow?.id}
+          selectedId={selectedId}
           onSelectRow={(row) => setSelectedId(row.id)}
         />
 
-        {selectedRow ? <PembelianEditForm key={selectedRow.id} item={selectedRow} /> : null}
+        <PembelianEditForm
+          key={selectedId || "new"}
+          item={selectedRow}
+          onNewData={() => setSelectedId("")}
+        />
       </div>
     </main>
   );

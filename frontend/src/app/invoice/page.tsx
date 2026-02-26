@@ -8,10 +8,10 @@ import { useI18n } from "../_i18n/provider";
 
 export default function InvoicePage() {
   const { t } = useI18n();
-  const [selectedId, setSelectedId] = useState(sampleInvoiceRows[0]?.id || "");
+  const [selectedId, setSelectedId] = useState("");
 
   const selectedRow = useMemo(() => {
-    return sampleInvoiceRows.find((row) => row.id === selectedId) || sampleInvoiceRows[0];
+    return sampleInvoiceRows.find((row) => row.id === selectedId);
   }, [selectedId]);
 
   return (
@@ -26,11 +26,15 @@ export default function InvoicePage() {
       <div className="mt-5 space-y-5">
         <InvoiceTableFilter
           rows={sampleInvoiceRows}
-          selectedId={selectedRow?.id}
+          selectedId={selectedId}
           onSelectRow={(row) => setSelectedId(row.id)}
         />
 
-        {selectedRow ? <InvoiceEditForm key={selectedRow.id} item={selectedRow} /> : null}
+        <InvoiceEditForm
+          key={selectedId || "new"}
+          item={selectedRow}
+          onNewData={() => setSelectedId("")}
+        />
       </div>
     </main>
   );

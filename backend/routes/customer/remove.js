@@ -1,11 +1,12 @@
 const express = require("express");
 
+const { requireRole } = require("../../middlewares/auth");
 const { Customer } = require("../../models/Customer");
 const { isValidId } = require("./validate-id");
 
 const router = express.Router();
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", requireRole("admin"), async (req, res) => {
   const id = String(req.params.id || "");
 
   if (!isValidId(id)) {

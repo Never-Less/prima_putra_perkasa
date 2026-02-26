@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   calculateInvoiceSummary,
+  createEmptyInvoiceBarangRow,
   ensureTrailingEmptyInvoiceBarangRow,
   formatRupiah,
   formatTanggal,
@@ -18,16 +19,28 @@ import { customerNameOptions } from "../../customer/_lib/customer";
 import { useI18n } from "../../_i18n/provider";
 
 type InvoiceEditFormProps = {
-  item: InvoiceItem;
+  item?: InvoiceItem;
+  onNewData?: () => void;
 };
 
-export function InvoiceEditForm({ item }: InvoiceEditFormProps) {
-  const { locale, t } = useI18n();
-  const [form, setForm] = useState<InvoiceFormState>(() => toInvoiceFormState(item));
+function createEmptyInvoiceFormState(): InvoiceFormState {
+  return {
+    tanggal: "",
+    noInvoice: "",
+    noPo: "",
+    noSuratJalanText: "",
+    idCustomer: "",
+    isPpn: true,
+    ppnRate: "11",
+    barangRows: ensureTrailingEmptyInvoiceBarangRow([createEmptyInvoiceBarangRow()]),
+  };
+}
 
-  useEffect(() => {
-    setForm(toInvoiceFormState(item));
-  }, [item]);
+export function InvoiceEditForm({ item, onNewData }: InvoiceEditFormProps) {
+  const { locale, t } = useI18n();
+  const [form, setForm] = useState<InvoiceFormState>(() =>
+    item ? toInvoiceFormState(item) : createEmptyInvoiceFormState()
+  );
 
   const barangList = useMemo(() => invoiceBarangRowsToList(form.barangRows), [form.barangRows]);
   const noSuratJalanList = useMemo(
@@ -132,6 +145,7 @@ export function InvoiceEditForm({ item }: InvoiceEditFormProps) {
                 onChange={(event) => setForm((prev) => ({ ...prev, idCustomer: event.target.value }))}
                 className="mt-1 w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm shadow-sm"
               >
+                <option value="">-</option>
                 {customerOptions.map((customerName) => (
                   <option key={customerName} value={customerName}>
                     {customerName}
@@ -233,7 +247,16 @@ export function InvoiceEditForm({ item }: InvoiceEditFormProps) {
               {t("common.saveChanges")}
             </button>
             <button
-              onClick={() => setForm(toInvoiceFormState(item))}
+              onClick={() => {
+                onNewData?.();
+                setForm(createEmptyInvoiceFormState());
+              }}
+              className="rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm text-sky-700 hover:bg-sky-50"
+            >
+              {t("common.newData")}
+            </button>
+            <button
+              onClick={() => setForm(item ? toInvoiceFormState(item) : createEmptyInvoiceFormState())}
               className="rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm text-sky-700 hover:bg-sky-50"
             >
               {t("common.resetForm")}

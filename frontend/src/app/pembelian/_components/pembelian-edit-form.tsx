@@ -12,7 +12,8 @@ import { sampleInvoiceRows } from "../../invoice/_lib/invoice";
 import { useI18n } from "../../_i18n/provider";
 
 type PembelianEditFormProps = {
-  item: PembelianItem;
+  item?: PembelianItem;
+  onNewData?: () => void;
 };
 
 function ensureValidNoInvoice(value: string, options: string[]) {
@@ -23,19 +24,38 @@ function ensureValidNoInvoice(value: string, options: string[]) {
   return options[0] || "";
 }
 
-export function PembelianEditForm({ item }: PembelianEditFormProps) {
+function createEmptyPembelianFormState(noInvoiceOptions: string[]): PembelianFormState {
+  return {
+    tanggalNota: "",
+    namaSupplier: "",
+    noNpwp: "",
+    noInvoice: ensureValidNoInvoice("", noInvoiceOptions),
+    hutang: false,
+    ppn: false,
+    lamaHutang: "0",
+    nilaiNota: "0",
+    tanggalJatuhTempo: "",
+    tanggalBayar: "",
+  };
+}
+
+export function PembelianEditForm({ item, onNewData }: PembelianEditFormProps) {
   const { locale, t } = useI18n();
   const noInvoiceOptions = useMemo(() => {
     return Array.from(new Set(sampleInvoiceRows.map((invoice) => invoice.noInvoice)));
   }, []);
-  const [form, setForm] = useState<PembelianFormState>(() => {
-    const initialForm = toPembelianFormState(item);
+  const [form, setForm] = useState<PembelianFormState>(() =>
+    item
+      ? (() => {
+          const mappedForm = toPembelianFormState(item);
 
-    return {
-      ...initialForm,
-      noInvoice: ensureValidNoInvoice(initialForm.noInvoice, noInvoiceOptions),
-    };
-  });
+          return {
+            ...mappedForm,
+            noInvoice: ensureValidNoInvoice(mappedForm.noInvoice, noInvoiceOptions),
+          };
+        })()
+      : createEmptyPembelianFormState(noInvoiceOptions)
+  );
 
   return (
     <section className="rounded-2xl border border-sky-200 bg-sky-50/40 p-5 shadow-sm">
@@ -182,12 +202,26 @@ export function PembelianEditForm({ item }: PembelianEditFormProps) {
             </button>
             <button
               onClick={() => {
-                const resetForm = toPembelianFormState(item);
+                onNewData?.();
+                setForm(createEmptyPembelianFormState(noInvoiceOptions));
+              }}
+              className="rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm text-sky-700 hover:bg-sky-50"
+            >
+              {t("common.newData")}
+            </button>
+            <button
+              onClick={() => {
+                if (item) {
+                  const resetForm = toPembelianFormState(item);
 
-                setForm({
-                  ...resetForm,
-                  noInvoice: ensureValidNoInvoice(resetForm.noInvoice, noInvoiceOptions),
-                });
+                  setForm({
+                    ...resetForm,
+                    noInvoice: ensureValidNoInvoice(resetForm.noInvoice, noInvoiceOptions),
+                  });
+                  return;
+                }
+
+                setForm(createEmptyPembelianFormState(noInvoiceOptions));
               }}
               className="rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm text-sky-700 hover:bg-sky-50"
             >

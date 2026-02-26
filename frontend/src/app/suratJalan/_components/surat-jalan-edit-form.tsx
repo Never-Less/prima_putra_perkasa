@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   barangRowsToList,
+  createEmptyBarangRow,
   ensureTrailingEmptyBarangRow,
   formatTanggal,
   toFormState,
@@ -17,7 +18,8 @@ type ColorTone = "slate" | "sky" | "emerald";
 type FormStyle = "default" | "outlined" | "soft";
 
 type SuratJalanEditFormProps = {
-  item: SuratJalanItem;
+  item?: SuratJalanItem;
+  onNewData?: () => void;
   title: string;
   description: string;
   showPreview: boolean;
@@ -91,8 +93,22 @@ const formStyles: Record<
   },
 };
 
+function createEmptySuratJalanFormState(): SuratJalanFormState {
+  return {
+    noSuratJalan: "",
+    noPo: "",
+    tanggal: "",
+    idCustomer: "",
+    kendaraan: "",
+    tipe: "partial",
+    sudahSelesai: false,
+    barangRows: ensureTrailingEmptyBarangRow([createEmptyBarangRow()]),
+  };
+}
+
 export function SuratJalanEditForm({
   item,
+  onNewData,
   title,
   description,
   showPreview,
@@ -100,15 +116,13 @@ export function SuratJalanEditForm({
   formStyle = "default",
 }: SuratJalanEditFormProps) {
   const { locale, t } = useI18n();
-  const [form, setForm] = useState<SuratJalanFormState>(() => toFormState(item));
+  const [form, setForm] = useState<SuratJalanFormState>(() =>
+    item ? toFormState(item) : createEmptySuratJalanFormState()
+  );
   const tone = toneStyles[colorTone];
   const style = formStyles[formStyle];
   const inputClassName = `mt-1 w-full rounded-lg px-3 py-2 text-sm ${style.input}`;
   const barangInputClassName = `w-full rounded-lg px-3 py-2 text-sm ${style.input}`;
-
-  useEffect(() => {
-    setForm(toFormState(item));
-  }, [item]);
 
   const previewBarang = useMemo(() => barangRowsToList(form.barangRows), [form.barangRows]);
   const customerOptions = useMemo(() => {
@@ -195,6 +209,7 @@ export function SuratJalanEditForm({
                 onChange={(event) => setForm((prev) => ({ ...prev, idCustomer: event.target.value }))}
                 className={inputClassName}
               >
+                <option value="">-</option>
                 {customerOptions.map((customerName) => (
                   <option key={customerName} value={customerName}>
                     {customerName}
@@ -269,7 +284,16 @@ export function SuratJalanEditForm({
               {t("common.saveChanges")}
             </button>
             <button
-              onClick={() => setForm(toFormState(item))}
+              onClick={() => {
+                onNewData?.();
+                setForm(createEmptySuratJalanFormState());
+              }}
+              className={`rounded-lg px-4 py-2 text-sm ${tone.resetButton}`}
+            >
+              {t("common.newData")}
+            </button>
+            <button
+              onClick={() => setForm(item ? toFormState(item) : createEmptySuratJalanFormState())}
               className={`rounded-lg px-4 py-2 text-sm ${tone.resetButton}`}
             >
               {t("common.resetForm")}

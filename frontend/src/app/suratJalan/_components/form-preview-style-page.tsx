@@ -8,33 +8,32 @@ import { useI18n } from "../../_i18n/provider";
 
 export function FormPreviewStylePage() {
   const { t } = useI18n();
-  const [selectedId, setSelectedId] = useState(sampleSuratJalanRows[0]?.id || "");
+  const [selectedId, setSelectedId] = useState("");
 
   const selectedRow = useMemo(() => {
-    return sampleSuratJalanRows.find((row) => row.id === selectedId) || sampleSuratJalanRows[0];
+    return sampleSuratJalanRows.find((row) => row.id === selectedId);
   }, [selectedId]);
 
   return (
     <div className="space-y-5">
       <SuratJalanTableFilter
         rows={sampleSuratJalanRows}
-        selectedId={selectedRow?.id}
+        selectedId={selectedId}
         onSelectRow={(row) => setSelectedId(row.id)}
         colorTone="sky"
         tableStyle="compact"
       />
 
-      {selectedRow ? (
-        <SuratJalanEditForm
-          key={selectedRow.id}
-          item={selectedRow}
-          title={t("suratJalan.form.title")}
-          description={t("suratJalan.form.description")}
-          showPreview={true}
-          colorTone="sky"
-          formStyle="soft"
-        />
-      ) : null}
+      <SuratJalanEditForm
+        key={selectedId || "new"}
+        item={selectedRow}
+        onNewData={() => setSelectedId("")}
+        title={t("suratJalan.form.title")}
+        description={t("suratJalan.form.description")}
+        showPreview={true}
+        colorTone="sky"
+        formStyle="soft"
+      />
     </div>
   );
 }

@@ -1,12 +1,13 @@
 const express = require("express");
 
+const { requireRole } = require("../../middlewares/auth");
 const { Customer } = require("../../models/Customer");
 const { sanitizeCustomer } = require("./sanitize-customer");
 const { isValidId } = require("./validate-id");
 
 const router = express.Router();
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", requireRole("admin"), async (req, res) => {
   const id = String(req.params.id || "");
 
   if (!isValidId(id)) {

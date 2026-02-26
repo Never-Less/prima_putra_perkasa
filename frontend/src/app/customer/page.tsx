@@ -2,21 +2,69 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiLoadingState } from "../_components/api-loading-state";
+import { AppToast } from "../_components/app-toast";
+import { ConfirmationModal } from "../_components/confirmation-modal";
 import { ApiRequestError } from "../_lib/api-client";
 import { CustomerEditForm } from "./_components/customer-edit-form";
 import { CustomerTableFilter } from "./_components/customer-table-filter";
-import { fetchCustomerRows, type CustomerItem } from "./_lib/customer";
+import {
+  createCustomer,
+  deleteCustomer,
+  fetchCurrentUserRole,
+  fetchCustomerRows,
+  updateCustomer,
+  type CustomerFormState,
+  type CustomerItem,
+} from "./_lib/customer";
 import { useI18n } from "../_i18n/provider";
+
+type ToastState = {
+  id: number;
+  message: string;
+  variant: "success" | "error";
+};
 
 export default function CustomerPage() {
   const { t } = useI18n();
   const [rows, setRows] = useState<CustomerItem[]>([]);
   const [selectedId, setSelectedId] = useState("");
+  const [userRole, setUserRole] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [actionErrorMessage, setActionErrorMessage] = useState("");
+  const [toast, setToast] = useState<ToastState | null>(null);
+  const [pendingConfirmation, setPendingConfirmation] = useState<
+    | {
+        type: "update";
+        form: CustomerFormState;
+        selectedItem: CustomerItem;
+      }
+    | {
+        type: "delete";
+        selectedItem: CustomerItem;
+      }
+    | null
+  >(null);
 
-  const loadCustomers = useCallback(async () => {
-    setIsLoading(true);
+  const canManageCustomer = userRole === "admin";
+
+  const showToast = useCallback((message: string, variant: ToastState["variant"]) => {
+    setToast({
+      id: Date.now(),
+      message,
+      variant,
+    });
+  }, []);
+
+  const loadCustomers = useCallback(async (options: { showLoading?: boolean } = {}) => {
+    const { showLoading = true } = options;
+
+    if (showLoading) {
+      setIsLoading(true);
+    }
+
     setErrorMessage("");
 
     try {
@@ -28,7 +76,7 @@ export default function CustomerPage() {
           return prevSelectedId;
         }
 
-        return customerRows[0]?.id || "";
+        return "";
       });
     } catch (error) {
       setRows([]);
@@ -41,56 +89,260 @@ export default function CustomerPage() {
 
       setErrorMessage(t("customer.apiLoadError"));
     } finally {
-      setIsLoading(false);
+      if (showLoading) {
+        setIsLoading(false);
+      }
     }
   }, [t]);
 
+  const loadCurrentUserRole = useCallback(async () => {
+    try {
+      const role = await fetchCurrentUserRole();
+      setUserRole(role);
+    } catch {
+      setUserRole("");
+    }
+  }, []);
+
   useEffect(() => {
-    void loadCustomers();
-  }, [loadCustomers]);
+    void Promise.all([loadCustomers(), loadCurrentUserRole()]);
+  }, [loadCustomers, loadCurrentUserRole]);
 
   const selectedRow = useMemo(() => {
-    return rows.find((row) => row.id === selectedId) || rows[0];
+    return rows.find((row) => row.id === selectedId);
   }, [rows, selectedId]);
 
   const showDataSection = !isLoading && (rows.length > 0 || !errorMessage);
 
+  const executeSaveCustomer = useCallback(
+    async (form: CustomerFormState, selectedItem?: CustomerItem) => {
+      if (!canManageCustomer) {
+        const message = t("customer.adminOnlyAction");
+        setActionErrorMessage(message);
+        showToast(message, "error");
+        return;
+      }
+
+      setActionErrorMessage("");
+      setIsSaving(true);
+
+      try {
+        if (selectedItem?.id) {
+          const updatedCustomer = await updateCustomer(selectedItem.id, form);
+          await loadCustomers({ showLoading: false });
+          setSelectedId(updatedCustomer?.id || selectedItem.id);
+          showToast(
+            t("customer.toast.updateSuccess", {
+              nama: form.nama || selectedItem.nama || "-",
+            }),
+            "success"
+          );
+          return;
+        }
+
+        const createdCustomer = await createCustomer(form);
+        await loadCustomers({ showLoading: false });
+        setSelectedId(createdCustomer?.id || "");
+        showToast(t("customer.toast.createSuccess"), "success");
+      } catch (error) {
+        if (error instanceof ApiRequestError) {
+          const message = error.message || t("customer.mutationError");
+          setActionErrorMessage(message);
+          showToast(message, "error");
+          return;
+        }
+
+        const message = t("customer.mutationError");
+        setActionErrorMessage(message);
+        showToast(message, "error");
+      } finally {
+        setIsSaving(false);
+      }
+    },
+    [canManageCustomer, loadCustomers, showToast, t]
+  );
+
+  const executeDeleteCustomer = useCallback(
+    async (selectedItem: CustomerItem) => {
+      if (!canManageCustomer) {
+        const message = t("customer.adminOnlyAction");
+        setActionErrorMessage(message);
+        showToast(message, "error");
+        return;
+      }
+
+      setActionErrorMessage("");
+      setIsDeleting(true);
+
+      try {
+        await deleteCustomer(selectedItem.id);
+        setSelectedId("");
+        await loadCustomers({ showLoading: false });
+        showToast(
+          t("customer.toast.deleteSuccess", {
+            nama: selectedItem.nama || "-",
+          }),
+          "success"
+        );
+      } catch (error) {
+        if (error instanceof ApiRequestError) {
+          const message = error.message || t("customer.mutationError");
+          setActionErrorMessage(message);
+          showToast(message, "error");
+          return;
+        }
+
+        const message = t("customer.mutationError");
+        setActionErrorMessage(message);
+        showToast(message, "error");
+      } finally {
+        setIsDeleting(false);
+      }
+    },
+    [canManageCustomer, loadCustomers, showToast, t]
+  );
+
+  const handleSaveCustomer = useCallback(
+    async (form: CustomerFormState, selectedItem?: CustomerItem) => {
+      if (selectedItem?.id) {
+        setPendingConfirmation({
+          type: "update",
+          form: form,
+          selectedItem: selectedItem,
+        });
+        return;
+      }
+
+      await executeSaveCustomer(form, selectedItem);
+    },
+    [executeSaveCustomer]
+  );
+
+  const handleDeleteCustomer = useCallback((selectedItem: CustomerItem) => {
+    setPendingConfirmation({
+      type: "delete",
+      selectedItem: selectedItem,
+    });
+  }, []);
+
+  const handleConfirmAction = useCallback(async () => {
+    if (!pendingConfirmation) {
+      return;
+    }
+
+    const currentConfirmation = pendingConfirmation;
+    setPendingConfirmation(null);
+
+    if (currentConfirmation.type === "update") {
+      await executeSaveCustomer(currentConfirmation.form, currentConfirmation.selectedItem);
+      return;
+    }
+
+    await executeDeleteCustomer(currentConfirmation.selectedItem);
+  }, [executeDeleteCustomer, executeSaveCustomer, pendingConfirmation]);
+
+  const confirmationConfig = useMemo(() => {
+    if (!pendingConfirmation) {
+      return null;
+    }
+
+    if (pendingConfirmation.type === "update") {
+      return {
+        title: t("customer.confirmUpdateTitle"),
+        description: t("customer.confirmUpdateDescription", {
+          nama: pendingConfirmation.selectedItem.nama || "-",
+        }),
+        confirmLabel: t("common.saveChanges"),
+        variant: "default" as const,
+      };
+    }
+
+    return {
+      title: t("customer.confirmDeleteTitle"),
+      description: t("customer.confirmDeleteDescription", {
+        nama: pendingConfirmation.selectedItem.nama || "-",
+      }),
+      confirmLabel: t("common.delete"),
+      variant: "danger" as const,
+    };
+  }, [pendingConfirmation, t]);
+
   return (
-    <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <section className="rounded-2xl border border-sky-100 bg-gradient-to-r from-sky-50 to-white p-5 shadow-sm">
-        <h1 className="text-2xl font-semibold text-slate-900">{t("nav.customer")}</h1>
-        <p className="mt-1 text-sm text-slate-600">
-          {t("customer.page.description")}
-        </p>
-      </section>
+    <>
+      <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <section className="rounded-2xl border border-sky-100 bg-gradient-to-r from-sky-50 to-white p-5 shadow-sm">
+          <h1 className="text-2xl font-semibold text-slate-900">{t("nav.customer")}</h1>
+          <p className="mt-1 text-sm text-slate-600">
+            {t("customer.page.description")}
+          </p>
+        </section>
 
-      <div className="mt-5 space-y-5">
-        {isLoading ? <ApiLoadingState /> : null}
+        <div className="mt-5 space-y-5">
+          {isLoading ? <ApiLoadingState /> : null}
 
-        {!isLoading && errorMessage ? (
-          <section className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-            <p>{errorMessage}</p>
-            <button
-              onClick={() => void loadCustomers()}
-              className="mt-3 rounded-lg border border-red-300 bg-white px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-100"
-            >
-              {t("common.retry")}
-            </button>
-          </section>
-        ) : null}
+          {!isLoading && errorMessage ? (
+            <section className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+              <p>{errorMessage}</p>
+              <button
+                onClick={() => void loadCustomers()}
+                className="mt-3 rounded-lg border border-red-300 bg-white px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-100"
+              >
+                {t("common.retry")}
+              </button>
+            </section>
+          ) : null}
 
-        {showDataSection ? (
-          <>
-            <CustomerTableFilter
-              rows={rows}
-              selectedId={selectedRow?.id}
-              onSelectRow={(row) => setSelectedId(row.id)}
-            />
+          {showDataSection ? (
+            <>
+              <CustomerTableFilter
+                rows={rows}
+                selectedId={selectedId}
+                onSelectRow={(row) => {
+                  setActionErrorMessage("");
+                  setToast(null);
+                  setSelectedId(row.id);
+                }}
+              />
 
-            {selectedRow ? <CustomerEditForm key={selectedRow.id} item={selectedRow} /> : null}
-          </>
-        ) : null}
-      </div>
-    </main>
+              <CustomerEditForm
+                key={selectedId || "new"}
+                item={selectedRow}
+                onNewData={() => {
+                  setActionErrorMessage("");
+                  setToast(null);
+                  setSelectedId("");
+                }}
+                canManageCustomer={canManageCustomer}
+                isSaving={isSaving}
+                isDeleting={isDeleting}
+                actionErrorMessage={actionErrorMessage}
+                onSave={handleSaveCustomer}
+                onDelete={handleDeleteCustomer}
+              />
+            </>
+          ) : null}
+        </div>
+      </main>
+
+      <ConfirmationModal
+        isOpen={Boolean(confirmationConfig)}
+        title={confirmationConfig?.title ?? ""}
+        description={confirmationConfig?.description ?? ""}
+        confirmLabel={confirmationConfig?.confirmLabel ?? ""}
+        cancelLabel={t("common.cancel")}
+        variant={confirmationConfig?.variant ?? "default"}
+        isLoading={isSaving || isDeleting}
+        onCancel={() => setPendingConfirmation(null)}
+        onConfirm={() => void handleConfirmAction()}
+      />
+      <AppToast
+        isOpen={Boolean(toast)}
+        message={toast?.message ?? ""}
+        variant={toast?.variant ?? "success"}
+        closeLabel={t("common.close")}
+        toastKey={toast?.id}
+        onClose={() => setToast(null)}
+      />
+    </>
   );
 }
