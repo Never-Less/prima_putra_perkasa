@@ -69,9 +69,10 @@ export const messages: Record<Locale, MessageDictionary> = {
     "invoice.form.description":
       "Field disesuaikan dengan schema backend invoice. Nilai Subtotal, PpnAmount, dan GrandTotal dihitung otomatis.",
     "invoice.form.noSuratJalanHint": "Isi 1 NoSuratJalan per baris.",
-    "invoice.form.items.title": "Barang (Kuantitas, Unit, HargaSatuan)",
+    "invoice.form.items.title": "Barang (NamaBarang, Kuantitas, Unit, HargaSatuan)",
     "invoice.form.items.hint":
       "Baris kosong baru akan muncul otomatis saat baris terakhir mulai diisi.",
+    "invoice.form.items.placeholder.name": "NamaBarang",
     "invoice.form.items.placeholder.qty": "Kuantitas",
     "invoice.form.items.placeholder.unit": "Unit",
     "invoice.form.items.placeholder.price": "HargaSatuan",
@@ -117,6 +118,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "field.Tipe": "Tipe",
     "field.SudahSelesai": "SudahSelesai",
     "field.Barang": "Barang",
+    "field.NamaBarang": "NamaBarang",
     "field.PpnRate": "PpnRate",
     "field.TanggalNota": "TanggalNota",
     "field.NamaSupplier": "NamaSupplier",
@@ -194,8 +196,9 @@ export const messages: Record<Locale, MessageDictionary> = {
     "invoice.form.description":
       "Fields are aligned with invoice backend schema. Subtotal, PpnAmount, and GrandTotal are auto-calculated.",
     "invoice.form.noSuratJalanHint": "Enter one NoSuratJalan per line.",
-    "invoice.form.items.title": "Items (Quantity, Unit, UnitPrice)",
+    "invoice.form.items.title": "Items (ItemName, Quantity, Unit, UnitPrice)",
     "invoice.form.items.hint": "A new empty row is added when the last row starts being filled.",
+    "invoice.form.items.placeholder.name": "Item name",
     "invoice.form.items.placeholder.qty": "Quantity",
     "invoice.form.items.placeholder.unit": "Unit",
     "invoice.form.items.placeholder.price": "Unit Price",
@@ -242,6 +245,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "field.Tipe": "Type",
     "field.SudahSelesai": "SudahSelesai",
     "field.Barang": "Items",
+    "field.NamaBarang": "ItemName",
     "field.PpnRate": "PpnRate",
     "field.TanggalNota": "TanggalNota",
     "field.NamaSupplier": "NamaSupplier",

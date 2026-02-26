@@ -1,4 +1,5 @@
 export type InvoiceBarang = {
+  NamaBarang: string;
   Kuantitas: number;
   Unit: string;
   HargaSatuan: number;
@@ -23,6 +24,7 @@ export type InvoiceItem = {
 };
 
 export type InvoiceBarangFormRow = {
+  NamaBarang: string;
   Kuantitas: string;
   Unit: string;
   HargaSatuan: string;
@@ -69,12 +71,14 @@ export const sampleInvoiceRows: InvoiceItem[] = [
     IdCustomer: "PT Nusantara Bangun",
     Barang: [
       {
+        NamaBarang: "Semen Curah",
         Kuantitas: 120,
         Unit: "zak",
         HargaSatuan: 75000,
         Jumlah: 9000000,
       },
       {
+        NamaBarang: "Pasir Halus",
         Kuantitas: 40,
         Unit: "m3",
         HargaSatuan: 300000,
@@ -96,6 +100,7 @@ export const sampleInvoiceRows: InvoiceItem[] = [
     IdCustomer: "CV Pilar Teknik",
     Barang: [
       {
+        NamaBarang: "Besi Beton",
         Kuantitas: 80,
         Unit: "batang",
         HargaSatuan: 95000,
@@ -117,6 +122,7 @@ export const sampleInvoiceRows: InvoiceItem[] = [
     IdCustomer: "PT Sinar Baja Utama",
     Barang: [
       {
+        NamaBarang: "Cat Primer",
         Kuantitas: 24,
         Unit: "kaleng",
         HargaSatuan: 150000,
@@ -220,6 +226,7 @@ export function toInputDate(value: string) {
 
 export function createEmptyInvoiceBarangRow(): InvoiceBarangFormRow {
   return {
+    NamaBarang: "",
     Kuantitas: "",
     Unit: "",
     HargaSatuan: "",
@@ -227,11 +234,14 @@ export function createEmptyInvoiceBarangRow(): InvoiceBarangFormRow {
 }
 
 export function isInvoiceBarangRowFilled(row: InvoiceBarangFormRow) {
-  return Boolean(row.Kuantitas.trim() || row.Unit.trim() || row.HargaSatuan.trim());
+  return Boolean(
+    row.NamaBarang.trim() || row.Kuantitas.trim() || row.Unit.trim() || row.HargaSatuan.trim()
+  );
 }
 
 export function ensureTrailingEmptyInvoiceBarangRow(rows: InvoiceBarangFormRow[]) {
   const normalizedRows = rows.map((row) => ({
+    NamaBarang: String(row.NamaBarang || ""),
     Kuantitas: String(row.Kuantitas || ""),
     Unit: String(row.Unit || ""),
     HargaSatuan: String(row.HargaSatuan || ""),
@@ -261,19 +271,21 @@ export function ensureTrailingEmptyInvoiceBarangRow(rows: InvoiceBarangFormRow[]
 export function invoiceBarangRowsToList(rows: InvoiceBarangFormRow[]): InvoiceBarang[] {
   return rows
     .map((row) => {
+      const namaBarang = row.NamaBarang.trim();
       const kuantitas = parseNumber(row.Kuantitas.trim());
       const hargaSatuan = parseNumber(row.HargaSatuan.trim());
       const unit = row.Unit.trim();
       const jumlah = roundCurrency(kuantitas * hargaSatuan);
 
       return {
+        NamaBarang: namaBarang,
         Kuantitas: kuantitas,
         Unit: unit,
         HargaSatuan: hargaSatuan,
         Jumlah: jumlah,
       };
     })
-    .filter((item) => item.Unit);
+    .filter((item) => item.NamaBarang && item.Unit);
 }
 
 export function calculateInvoiceSummary(barang: InvoiceBarang[], isPpn: boolean, ppnRate: number) {
@@ -299,6 +311,7 @@ export function toInvoiceFormState(item: InvoiceItem): InvoiceFormState {
     PpnRate: String(item.PpnRate),
     BarangRows: ensureTrailingEmptyInvoiceBarangRow(
       item.Barang.map((barang) => ({
+        NamaBarang: barang.NamaBarang,
         Kuantitas: String(barang.Kuantitas),
         Unit: barang.Unit,
         HargaSatuan: String(barang.HargaSatuan),

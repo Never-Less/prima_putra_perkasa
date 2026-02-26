@@ -90,7 +90,8 @@ router.put("/:id", async (req, res) => {
     const barang = normalizeBarangList(req.body.Barang);
     if (!barang) {
       return res.status(400).json({
-        message: "Barang harus array minimal 1 item (Kuantitas, Unit, HargaSatuan, Jumlah)",
+        message:
+          "Barang harus array minimal 1 item (NamaBarang, Kuantitas, Unit, HargaSatuan, Jumlah)",
       });
     }
     updates.Barang = barang;

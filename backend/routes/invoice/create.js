@@ -31,9 +31,16 @@ router.post("/", async (req, res) => {
   const parsedPpnRate =
     req.body.PpnRate !== undefined ? parseNumber(req.body.PpnRate) : 11;
 
-  if (!tanggal || !noinvoice || !nopo || !nosuratjalan || !idcustomer || !barang) {
+  if (!tanggal || !noinvoice || !nopo || !nosuratjalan || !idcustomer) {
     return res.status(400).json({
-      message: "Tanggal, NoInvoice, NoPO, NoSuratJalan, IdCustomer, dan Barang wajib diisi",
+      message: "Tanggal, NoInvoice, NoPO, NoSuratJalan, dan IdCustomer wajib diisi",
+    });
+  }
+
+  if (!barang) {
+    return res.status(400).json({
+      message:
+        "Barang harus array minimal 1 item (NamaBarang, Kuantitas, Unit, HargaSatuan, Jumlah)",
     });
   }
 

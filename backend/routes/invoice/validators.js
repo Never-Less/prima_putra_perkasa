@@ -50,12 +50,14 @@ function normalizeBarangList(barangInput) {
   const normalized = [];
 
   for (const item of barangInput) {
+    const namaBarang = String(item?.NamaBarang || "").trim();
     const kuantitas = parseNumber(item?.Kuantitas);
     const unit = String(item?.Unit || "").trim();
     const hargasatuan = parseNumber(item?.HargaSatuan);
     const jumlah = parseNumber(item?.Jumlah);
 
     if (
+      !namaBarang ||
       kuantitas === null ||
       kuantitas < 0 ||
       !unit ||
@@ -68,6 +70,7 @@ function normalizeBarangList(barangInput) {
     }
 
     normalized.push({
+      NamaBarang: namaBarang,
       Kuantitas: kuantitas,
       Unit: unit,
       HargaSatuan: hargasatuan,

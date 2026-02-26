@@ -171,7 +171,17 @@ export function InvoiceEditForm({ item }: InvoiceEditFormProps) {
                     : 0;
 
                   return (
-                    <div key={`invoice-barang-row-${index}`} className="grid gap-2 sm:grid-cols-[1fr_1fr_1fr_1fr]">
+                    <div
+                      key={`invoice-barang-row-${index}`}
+                      className="grid gap-2 sm:grid-cols-[1.2fr_0.8fr_0.8fr_1fr_1fr]"
+                    >
+                      <input
+                        type="text"
+                        value={row.NamaBarang}
+                        placeholder={t("invoice.form.items.placeholder.name")}
+                        onChange={(event) => updateBarangRow(index, "NamaBarang", event.target.value)}
+                        className="w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm shadow-sm"
+                      />
                       <input
                         type="number"
                         min={0}
@@ -256,8 +266,8 @@ export function InvoiceEditForm({ item }: InvoiceEditFormProps) {
               <ul className="space-y-1 text-sm text-slate-700">
                 {barangList.map((barang, index) => (
                   <li key={`preview-barang-${index}`}>
-                    {barang.Kuantitas} {barang.Unit} x {formatRupiah(barang.HargaSatuan, locale)} ={" "}
-                    {formatRupiah(barang.Jumlah, locale)}
+                    {barang.NamaBarang}: {barang.Kuantitas} {barang.Unit} x{" "}
+                    {formatRupiah(barang.HargaSatuan, locale)} = {formatRupiah(barang.Jumlah, locale)}
                   </li>
                 ))}
               </ul>

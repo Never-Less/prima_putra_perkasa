@@ -2,6 +2,12 @@ const mongoose = require("mongoose");
 
 const barangInvoiceSchema = new mongoose.Schema(
   {
+    NamaBarang: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 150,
+    },
     Kuantitas: {
       type: Number,
       required: true,

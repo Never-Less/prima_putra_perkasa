@@ -120,6 +120,7 @@ export function InvoiceTableFilter({ rows, selectedId, onSelectRow }: InvoiceTab
               <th className="px-3 py-2 font-medium">{t("field.Tanggal")}</th>
               <th className="px-3 py-2 font-medium">{t("field.NoPO")}</th>
               <th className="px-3 py-2 font-medium">{t("field.NoSuratJalan")}</th>
+              <th className="px-3 py-2 font-medium">{t("field.Barang")}</th>
               <th className="px-3 py-2 font-medium">{t("field.NamaCustomer")}</th>
               <th className="px-3 py-2 font-medium">{t("field.Subtotal")}</th>
               <th className="px-3 py-2 font-medium">{t("field.PpnAmount")}</th>
@@ -137,6 +138,9 @@ export function InvoiceTableFilter({ rows, selectedId, onSelectRow }: InvoiceTab
                   <td className="whitespace-nowrap px-3 py-2 text-slate-600">{formatTanggal(row.Tanggal, locale)}</td>
                   <td className="whitespace-nowrap px-3 py-2 text-slate-600">{row.NoPO}</td>
                   <td className="px-3 py-2 text-slate-600">{invoiceNoSuratJalanListLabel(row.NoSuratJalan)}</td>
+                  <td className="px-3 py-2 text-slate-600">
+                    {row.Barang.map((barang) => barang.NamaBarang).join(", ") || "-"}
+                  </td>
                   <td className="whitespace-nowrap px-3 py-2 text-slate-600">{row.IdCustomer}</td>
                   <td className="whitespace-nowrap px-3 py-2 text-slate-600">{formatRupiah(row.Subtotal, locale)}</td>
                   <td className="whitespace-nowrap px-3 py-2 text-slate-600">{formatRupiah(row.PpnAmount, locale)}</td>
