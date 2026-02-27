@@ -116,6 +116,14 @@ export const messages: Record<Locale, MessageDictionary> = {
     "invoice.toast.createSuccess": "Invoice \"{{noInvoice}}\" berhasil ditambahkan.",
     "invoice.toast.updateSuccess": "Invoice \"{{noInvoice}}\" berhasil diperbarui.",
     "invoice.toast.deleteSuccess": "Invoice \"{{noInvoice}}\" berhasil dihapus.",
+    "invoice.postCreateModal.title": "Invoice Berhasil Dibuat",
+    "invoice.postCreateModal.description":
+      "Invoice \"{{noInvoice}}\" (NoPO: {{noPo}}) berhasil dibuat. Anda dapat mengekspor invoice atau lanjut membuat data pembelian baru.",
+    "invoice.postUpdateModal.title": "Invoice Berhasil Diperbarui",
+    "invoice.postUpdateModal.description":
+      "Invoice \"{{noInvoice}}\" (NoPO: {{noPo}}) berhasil diperbarui. Anda dapat mengekspor invoice.",
+    "invoice.postSaveModal.exportButton": "Export Invoice",
+    "invoice.postSaveModal.createPembelianButton": "Buat Pembelian Baru",
 
     "suratJalan.page.description":
       "Page surat jalan disesuaikan dengan field schema backend: noSuratJalan, noPo, tanggal, namaCustomer, barang, kendaraan, dan tipe.",
@@ -318,6 +326,14 @@ export const messages: Record<Locale, MessageDictionary> = {
     "invoice.toast.createSuccess": "Invoice \"{{noInvoice}}\" has been added successfully.",
     "invoice.toast.updateSuccess": "Invoice \"{{noInvoice}}\" has been updated successfully.",
     "invoice.toast.deleteSuccess": "Invoice \"{{noInvoice}}\" has been deleted successfully.",
+    "invoice.postCreateModal.title": "Invoice Created",
+    "invoice.postCreateModal.description":
+      "Invoice \"{{noInvoice}}\" (noPo: {{noPo}}) was created successfully. You can export this invoice or continue creating a new purchase record.",
+    "invoice.postUpdateModal.title": "Invoice Updated",
+    "invoice.postUpdateModal.description":
+      "Invoice \"{{noInvoice}}\" (noPo: {{noPo}}) was updated successfully. You can export this invoice.",
+    "invoice.postSaveModal.exportButton": "Export Invoice",
+    "invoice.postSaveModal.createPembelianButton": "Create New Purchase",
 
     "suratJalan.page.description":
       "Delivery Note page aligned with backend schema fields: noSuratJalan, noPo, tanggal, customerName, barang, kendaraan, and tipe.",

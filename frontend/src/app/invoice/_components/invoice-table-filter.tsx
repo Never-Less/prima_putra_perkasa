@@ -19,6 +19,27 @@ type InvoiceTableFilterProps = {
   resolveCustomerLabel?: (customerId: string) => string;
 };
 
+function escapeCsvValue(value: string) {
+  const text = String(value || "");
+
+  if (!/[",\r\n]/.test(text)) {
+    return text;
+  }
+
+  return `"${text.replace(/"/g, "\"\"")}"`;
+}
+
+function sanitizeFileName(value: string) {
+  const normalized = String(value || "")
+    .trim()
+    .replace(/[\\/:*?"<>|]/g, "-")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+
+  return normalized || "invoice-export";
+}
+
 export function InvoiceTableFilter({
   rows,
   selectedId,
@@ -32,6 +53,65 @@ export function InvoiceTableFilter({
     () => filterInvoiceRows(rows, filter, resolveCustomerLabel),
     [filter, resolveCustomerLabel, rows]
   );
+
+  function exportInvoiceRowAsCsv(row: InvoiceItem) {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const customerLabel = resolveCustomerLabel?.(row.idCustomer) || row.idCustomer || "-";
+    const barangText = row.barang
+      .map((barang) =>
+        [
+          barang.namaBarang,
+          barang.kuantitas,
+          barang.unit,
+          barang.hargaSatuan,
+          barang.jumlah,
+        ].join("|")
+      )
+      .join(";");
+
+    const header = [
+      "noInvoice",
+      "tanggal",
+      "noPo",
+      "noSuratJalan",
+      "namaCustomer",
+      "isPpn",
+      "ppnRate",
+      "subtotal",
+      "ppnAmount",
+      "grandTotal",
+      "barang",
+    ];
+    const bodyRow = [
+      row.noInvoice,
+      formatTanggal(row.tanggal, locale),
+      row.noPo,
+      invoiceNoSuratJalanListLabel(row.noSuratJalan),
+      customerLabel,
+      String(row.isPpn),
+      String(row.ppnRate),
+      String(row.subtotal),
+      String(row.ppnAmount),
+      String(row.grandTotal),
+      barangText,
+    ];
+    const csvContent = `\uFEFF${header.map(escapeCsvValue).join(",")}\r\n${bodyRow
+      .map(escapeCsvValue)
+      .join(",")}`;
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+
+    anchor.href = downloadUrl;
+    anchor.download = `${sanitizeFileName(`invoice-${row.noInvoice}`)}.csv`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+    window.URL.revokeObjectURL(downloadUrl);
+  }
 
   return (
     <section className="space-y-4 rounded-2xl border border-sky-200 bg-sky-50/40 p-5 shadow-sm">
@@ -163,16 +243,26 @@ export function InvoiceTableFilter({
                   <td className="whitespace-nowrap px-3 py-2 text-slate-600">{formatRupiah(row.ppnAmount, locale)}</td>
                   <td className="whitespace-nowrap px-3 py-2 font-medium text-slate-800">{formatRupiah(row.grandTotal, locale)}</td>
                   <td className="whitespace-nowrap px-3 py-2">
-                    <button
-                      onClick={() => onSelectRow?.(row)}
-                      className={`rounded-lg px-3 py-1.5 text-xs font-medium ${
-                        isSelected
-                          ? "bg-sky-700 text-white"
-                          : "border border-sky-200 bg-white text-sky-700 hover:bg-sky-50"
-                      }`}
-                    >
-                      {isSelected ? t("common.selected") : t("common.selectRow")}
-                    </button>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => onSelectRow?.(row)}
+                        className={`rounded-lg px-3 py-1.5 text-xs font-medium ${
+                          isSelected
+                            ? "bg-sky-700 text-white"
+                            : "border border-sky-200 bg-white text-sky-700 hover:bg-sky-50"
+                        }`}
+                      >
+                        {isSelected ? t("common.selected") : t("common.selectRow")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => exportInvoiceRowAsCsv(row)}
+                        className="rounded-lg border border-sky-200 bg-white px-3 py-1.5 text-xs font-medium text-sky-700 hover:bg-sky-50"
+                      >
+                        {t("common.export")}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );

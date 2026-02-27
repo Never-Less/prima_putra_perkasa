@@ -3,12 +3,22 @@
 import { useMemo, useState } from "react";
 import { PembelianEditForm } from "./_components/pembelian-edit-form";
 import { PembelianTableFilter } from "./_components/pembelian-table-filter";
-import { samplePembelianRows } from "./_lib/pembelian";
+import {
+  consumePembelianPrefill,
+  samplePembelianRows,
+  toPembelianFormStateFromPrefill,
+  type PembelianFormState,
+} from "./_lib/pembelian";
 import { useI18n } from "../_i18n/provider";
 
 export default function PembelianPage() {
   const { t } = useI18n();
+  const [prefillOnLoad] = useState(() => consumePembelianPrefill());
   const [selectedId, setSelectedId] = useState("");
+  const [initialForm, setInitialForm] = useState<PembelianFormState | null>(() =>
+    prefillOnLoad ? toPembelianFormStateFromPrefill(prefillOnLoad) : null
+  );
+  const [initialFormKey, setInitialFormKey] = useState(() => (prefillOnLoad ? Date.now() : 0));
 
   const selectedRow = useMemo(() => {
     return samplePembelianRows.find((row) => row.id === selectedId);
@@ -25,13 +35,21 @@ export default function PembelianPage() {
         <PembelianTableFilter
           rows={samplePembelianRows}
           selectedId={selectedId}
-          onSelectRow={(row) => setSelectedId(row.id)}
+          onSelectRow={(row) => {
+            setInitialForm(null);
+            setSelectedId(row.id);
+          }}
         />
 
         <PembelianEditForm
-          key={selectedId || "new"}
+          key={`${selectedId || "new"}-${initialFormKey}`}
           item={selectedRow}
-          onNewData={() => setSelectedId("")}
+          initialForm={selectedRow ? undefined : initialForm || undefined}
+          onNewData={() => {
+            setInitialForm(null);
+            setInitialFormKey(Date.now());
+            setSelectedId("");
+          }}
         />
       </div>
     </main>

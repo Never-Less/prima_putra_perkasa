@@ -43,6 +43,13 @@ export type PembelianFormState = {
   tanggalBayar: string;
 };
 
+export type PembelianPrefillPayload = {
+  tanggalNota?: string;
+  noInvoice: string;
+  ppn?: boolean;
+  nilaiNota?: number;
+};
+
 export const defaultPembelianFilter: PembelianFilter = {
   namaSupplier: "",
   noNpwp: "",
@@ -56,6 +63,8 @@ export const defaultPembelianFilter: PembelianFilter = {
   nilaiNotaMin: "",
   nilaiNotaMax: "",
 };
+
+const pembelianPrefillStorageKey = "ppp_pembelian_prefill";
 
 export const samplePembelianRows: PembelianItem[] = [
   {
@@ -122,6 +131,48 @@ export const samplePembelianRows: PembelianItem[] = [
 
 function normalize(value: string) {
   return value.trim().toLowerCase();
+}
+
+function toText(value: unknown) {
+  if (typeof value === "string") {
+    return value;
+  }
+
+  if (value === null || value === undefined) {
+    return "";
+  }
+
+  return String(value);
+}
+
+function parseNumberFromUnknown(value: unknown, fallback = 0) {
+  const parsed = Number(value);
+
+  if (!Number.isFinite(parsed)) {
+    return fallback;
+  }
+
+  return parsed;
+}
+
+function toPembelianPrefillPayload(value: unknown): PembelianPrefillPayload | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const payload = value as Record<string, unknown>;
+  const noInvoice = toText(payload.noInvoice).trim();
+
+  if (!noInvoice) {
+    return null;
+  }
+
+  return {
+    tanggalNota: toText(payload.tanggalNota).trim(),
+    noInvoice,
+    ppn: typeof payload.ppn === "boolean" ? payload.ppn : false,
+    nilaiNota: parseNumberFromUnknown(payload.nilaiNota),
+  };
 }
 
 function parseFilterNumber(value: string) {
@@ -240,6 +291,52 @@ export function toPembelianFormState(item: PembelianItem): PembelianFormState {
     tanggalJatuhTempo: toInputDate(item.tanggalJatuhTempo),
     tanggalBayar: toInputDate(item.tanggalBayar),
   };
+}
+
+export function toPembelianFormStateFromPrefill(prefill: PembelianPrefillPayload): PembelianFormState {
+  const nilaiNota = parseNumberFromUnknown(prefill.nilaiNota);
+
+  return {
+    tanggalNota: toInputDate(prefill.tanggalNota || null),
+    namaSupplier: "",
+    noNpwp: "",
+    noInvoice: prefill.noInvoice,
+    hutang: false,
+    ppn: Boolean(prefill.ppn),
+    lamaHutang: "0",
+    nilaiNota: String(nilaiNota),
+    tanggalJatuhTempo: "",
+    tanggalBayar: "",
+  };
+}
+
+export function savePembelianPrefill(payload: PembelianPrefillPayload) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.sessionStorage.setItem(pembelianPrefillStorageKey, JSON.stringify(payload));
+}
+
+export function consumePembelianPrefill() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const rawValue = window.sessionStorage.getItem(pembelianPrefillStorageKey);
+
+  if (!rawValue) {
+    return null;
+  }
+
+  window.sessionStorage.removeItem(pembelianPrefillStorageKey);
+
+  try {
+    const parsedValue = JSON.parse(rawValue);
+    return toPembelianPrefillPayload(parsedValue);
+  } catch {
+    return null;
+  }
 }
 
 export function filterPembelianRows(rows: PembelianItem[], filter: PembelianFilter) {

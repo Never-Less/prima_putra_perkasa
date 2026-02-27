@@ -1,13 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { ApiLoadingState } from "../_components/api-loading-state";
 import { AppToast } from "../_components/app-toast";
 import { ConfirmationModal } from "../_components/confirmation-modal";
 import { ApiRequestError } from "../_lib/api-client";
 import { useI18n } from "../_i18n/provider";
 import { fetchCustomerRows, type CustomerItem } from "../customer/_lib/customer";
+import { savePembelianPrefill } from "../pembelian/_lib/pembelian";
 import { InvoiceEditForm } from "./_components/invoice-edit-form";
+import { PostSaveActionModal } from "./_components/post-save-action-modal";
 import { InvoiceTableFilter } from "./_components/invoice-table-filter";
 import {
   consumeInvoicePrefill,
@@ -26,8 +29,14 @@ type ToastState = {
   variant: "success" | "error";
 };
 
+type PostSaveActionState = {
+  actionType: "create" | "update";
+  invoice: InvoiceItem;
+};
+
 export default function InvoicePage() {
   const { t } = useI18n();
+  const router = useRouter();
   const [rows, setRows] = useState<InvoiceItem[]>([]);
   const [customerRows, setCustomerRows] = useState<CustomerItem[]>([]);
   const [selectedId, setSelectedId] = useState("");
@@ -37,6 +46,7 @@ export default function InvoicePage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [actionErrorMessage, setActionErrorMessage] = useState("");
   const [toast, setToast] = useState<ToastState | null>(null);
+  const [postSaveAction, setPostSaveAction] = useState<PostSaveActionState | null>(null);
   const [prefillOnLoad] = useState(() => consumeInvoicePrefill());
   const [initialForm, setInitialForm] = useState<InvoiceFormState | null>(() =>
     prefillOnLoad ? toInvoiceFormStateFromPrefill(prefillOnLoad) : null
@@ -83,16 +93,19 @@ export default function InvoicePage() {
 
           return "";
         });
+
+        return invoiceRows;
       } catch (error) {
         setRows([]);
         setSelectedId("");
 
         if (error instanceof ApiRequestError) {
           setErrorMessage(error.message || t("invoice.apiLoadError"));
-          return;
+          return [];
         }
 
         setErrorMessage(t("invoice.apiLoadError"));
+        return [];
       } finally {
         if (showLoading) {
           setIsLoading(false);
@@ -170,8 +183,17 @@ export default function InvoicePage() {
       try {
         if (selectedItem?.id) {
           const updatedInvoice = await updateInvoice(selectedItem.id, form);
-          await loadInvoices({ showLoading: false });
-          setSelectedId(updatedInvoice?.id || selectedItem.id);
+          const refreshedRows = await loadInvoices({ showLoading: false });
+          const currentUpdatedInvoice = updatedInvoice
+            ? refreshedRows.find((row) => row.id === updatedInvoice.id) || updatedInvoice
+            : undefined;
+          setSelectedId(currentUpdatedInvoice?.id || selectedItem.id);
+          if (currentUpdatedInvoice) {
+            setPostSaveAction({
+              actionType: "update",
+              invoice: currentUpdatedInvoice,
+            });
+          }
           showToast(
             t("invoice.toast.updateSuccess", {
               noInvoice: form.noInvoice || selectedItem.noInvoice || "-",
@@ -182,10 +204,19 @@ export default function InvoicePage() {
         }
 
         const createdInvoice = await createInvoice(form);
-        await loadInvoices({ showLoading: false });
-        setSelectedId(createdInvoice?.id || "");
+        const refreshedRows = await loadInvoices({ showLoading: false });
+        const currentCreatedInvoice = createdInvoice
+          ? refreshedRows.find((row) => row.id === createdInvoice.id) || createdInvoice
+          : undefined;
+        setSelectedId(currentCreatedInvoice?.id || "");
         setInitialForm(null);
         setInitialFormKey(Date.now());
+        if (currentCreatedInvoice) {
+          setPostSaveAction({
+            actionType: "create",
+            invoice: currentCreatedInvoice,
+          });
+        }
         showToast(
           t("invoice.toast.createSuccess", {
             noInvoice: form.noInvoice || "-",
@@ -219,6 +250,7 @@ export default function InvoicePage() {
         await deleteInvoice(selectedItem.id);
         setSelectedId("");
         await loadInvoices({ showLoading: false });
+        setPostSaveAction(null);
         showToast(
           t("invoice.toast.deleteSuccess", {
             noInvoice: selectedItem.noInvoice || "-",
@@ -308,6 +340,44 @@ export default function InvoicePage() {
     };
   }, [pendingConfirmation, t]);
 
+  const postSaveModalConfig = useMemo(() => {
+    if (!postSaveAction) {
+      return null;
+    }
+
+    const isCreate = postSaveAction.actionType === "create";
+
+    return {
+      title: isCreate ? t("invoice.postCreateModal.title") : t("invoice.postUpdateModal.title"),
+      description: isCreate
+        ? t("invoice.postCreateModal.description", {
+            noInvoice: postSaveAction.invoice.noInvoice || "-",
+            noPo: postSaveAction.invoice.noPo || "-",
+          })
+        : t("invoice.postUpdateModal.description", {
+            noInvoice: postSaveAction.invoice.noInvoice || "-",
+            noPo: postSaveAction.invoice.noPo || "-",
+          }),
+      showCreatePembelianButton: isCreate,
+    };
+  }, [postSaveAction, t]);
+
+  const handleCreatePembelianFromPostSave = useCallback(() => {
+    if (!postSaveAction || postSaveAction.actionType !== "create") {
+      return;
+    }
+
+    savePembelianPrefill({
+      tanggalNota: postSaveAction.invoice.tanggal,
+      noInvoice: postSaveAction.invoice.noInvoice,
+      ppn: postSaveAction.invoice.isPpn,
+      nilaiNota: postSaveAction.invoice.grandTotal,
+    });
+
+    setPostSaveAction(null);
+    router.push("/pembelian");
+  }, [postSaveAction, router]);
+
   const showDataSection = !isLoading && (rows.length > 0 || !errorMessage);
 
   return (
@@ -343,6 +413,7 @@ export default function InvoicePage() {
                 onSelectRow={(row) => {
                   setActionErrorMessage("");
                   setToast(null);
+                  setPostSaveAction(null);
                   setInitialForm(null);
                   setSelectedId(row.id);
                 }}
@@ -361,6 +432,7 @@ export default function InvoicePage() {
                 onNewData={() => {
                   setActionErrorMessage("");
                   setToast(null);
+                  setPostSaveAction(null);
                   setInitialForm(null);
                   setInitialFormKey(Date.now());
                   setSelectedId("");
@@ -381,6 +453,19 @@ export default function InvoicePage() {
         isLoading={isSaving || isDeleting}
         onCancel={() => setPendingConfirmation(null)}
         onConfirm={() => void handleConfirmAction()}
+      />
+
+      <PostSaveActionModal
+        isOpen={Boolean(postSaveModalConfig)}
+        title={postSaveModalConfig?.title ?? ""}
+        description={postSaveModalConfig?.description ?? ""}
+        showCreatePembelianButton={Boolean(postSaveModalConfig?.showCreatePembelianButton)}
+        exportLabel={t("invoice.postSaveModal.exportButton")}
+        createPembelianLabel={t("invoice.postSaveModal.createPembelianButton")}
+        closeLabel={t("common.close")}
+        onExport={() => undefined}
+        onCreatePembelian={handleCreatePembelianFromPostSave}
+        onClose={() => setPostSaveAction(null)}
       />
 
       <AppToast

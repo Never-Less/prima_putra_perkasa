@@ -13,6 +13,7 @@ import { useI18n } from "../../_i18n/provider";
 
 type PembelianEditFormProps = {
   item?: PembelianItem;
+  initialForm?: PembelianFormState;
   onNewData?: () => void;
 };
 
@@ -39,11 +40,21 @@ function createEmptyPembelianFormState(noInvoiceOptions: string[]): PembelianFor
   };
 }
 
-export function PembelianEditForm({ item, onNewData }: PembelianEditFormProps) {
+export function PembelianEditForm({ item, initialForm, onNewData }: PembelianEditFormProps) {
   const { locale, t } = useI18n();
   const noInvoiceOptions = useMemo(() => {
-    return Array.from(new Set(sampleInvoiceRows.map((invoice) => invoice.noInvoice)));
-  }, []);
+    const options = new Set(sampleInvoiceRows.map((invoice) => invoice.noInvoice));
+
+    if (item?.noInvoice) {
+      options.add(item.noInvoice);
+    }
+
+    if (initialForm?.noInvoice) {
+      options.add(initialForm.noInvoice);
+    }
+
+    return Array.from(options);
+  }, [initialForm, item]);
   const [form, setForm] = useState<PembelianFormState>(() =>
     item
       ? (() => {
@@ -54,6 +65,11 @@ export function PembelianEditForm({ item, onNewData }: PembelianEditFormProps) {
             noInvoice: ensureValidNoInvoice(mappedForm.noInvoice, noInvoiceOptions),
           };
         })()
+      : initialForm
+        ? {
+            ...initialForm,
+            noInvoice: ensureValidNoInvoice(initialForm.noInvoice, noInvoiceOptions),
+          }
       : createEmptyPembelianFormState(noInvoiceOptions)
   );
 
@@ -217,6 +233,14 @@ export function PembelianEditForm({ item, onNewData }: PembelianEditFormProps) {
                   setForm({
                     ...resetForm,
                     noInvoice: ensureValidNoInvoice(resetForm.noInvoice, noInvoiceOptions),
+                  });
+                  return;
+                }
+
+                if (initialForm) {
+                  setForm({
+                    ...initialForm,
+                    noInvoice: ensureValidNoInvoice(initialForm.noInvoice, noInvoiceOptions),
                   });
                   return;
                 }
