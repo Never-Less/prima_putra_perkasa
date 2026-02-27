@@ -1,3 +1,5 @@
+import { requestApi } from "../../_lib/api-client";
+
 type Locale = "id" | "en";
 
 export type PembelianItem = {
@@ -5,7 +7,7 @@ export type PembelianItem = {
   tanggalNota: string;
   namaSupplier: string;
   noNpwp: string;
-  noInvoice: string | null;
+  idInvoice: string;
   hutang: boolean;
   ppn: boolean;
   lamaHutang: number;
@@ -14,6 +16,11 @@ export type PembelianItem = {
   tanggalBayar: string | null;
   createdAt: string;
   updatedAt: string;
+};
+
+export type PembelianInvoiceOption = {
+  id: string;
+  noInvoice: string;
 };
 
 export type PembelianFilter = {
@@ -34,7 +41,7 @@ export type PembelianFormState = {
   tanggalNota: string;
   namaSupplier: string;
   noNpwp: string;
-  noInvoice: string;
+  idInvoice: string;
   hutang: boolean;
   ppn: boolean;
   lamaHutang: string;
@@ -45,10 +52,21 @@ export type PembelianFormState = {
 
 export type PembelianPrefillPayload = {
   tanggalNota?: string;
-  noInvoice: string;
+  idInvoice?: string;
+  noInvoice?: string;
   ppn?: boolean;
   nilaiNota?: number;
 };
+
+type PembelianListResponse = {
+  pembelians?: unknown[];
+};
+
+type PembelianResponse = {
+  pembelian?: unknown;
+};
+
+type ResolveInvoiceLabel = (invoiceId: string) => string;
 
 export const defaultPembelianFilter: PembelianFilter = {
   namaSupplier: "",
@@ -66,73 +84,6 @@ export const defaultPembelianFilter: PembelianFilter = {
 
 const pembelianPrefillStorageKey = "ppp_pembelian_prefill";
 
-export const samplePembelianRows: PembelianItem[] = [
-  {
-    id: "pembelian-260401",
-    tanggalNota: "2026-04-01",
-    namaSupplier: "PT Bahan Bangunan Utama",
-    noNpwp: "01.234.567.8-999.000",
-    noInvoice: "INV-260301",
-    hutang: true,
-    ppn: true,
-    lamaHutang: 30,
-    nilaiNota: 27500000,
-    tanggalJatuhTempo: "2026-05-01",
-    tanggalBayar: null,
-    createdAt: "2026-04-01T09:10:00.000Z",
-    updatedAt: "2026-04-01T09:10:00.000Z",
-  },
-  {
-    id: "pembelian-260402",
-    tanggalNota: "2026-04-03",
-    namaSupplier: "CV Beton Jaya",
-    noNpwp: "",
-    noInvoice: "INV-260302",
-    hutang: false,
-    ppn: false,
-    lamaHutang: 0,
-    nilaiNota: 6800000,
-    tanggalJatuhTempo: null,
-    tanggalBayar: "2026-04-03",
-    createdAt: "2026-04-03T11:00:00.000Z",
-    updatedAt: "2026-04-03T11:00:00.000Z",
-  },
-  {
-    id: "pembelian-260403",
-    tanggalNota: "2026-04-05",
-    namaSupplier: "PT Cat Nusantara",
-    noNpwp: "02.987.654.3-111.000",
-    noInvoice: "INV-260303",
-    hutang: true,
-    ppn: true,
-    lamaHutang: 14,
-    nilaiNota: 12950000,
-    tanggalJatuhTempo: "2026-04-19",
-    tanggalBayar: "2026-04-18",
-    createdAt: "2026-04-05T10:20:00.000Z",
-    updatedAt: "2026-04-18T09:30:00.000Z",
-  },
-  {
-    id: "pembelian-260404",
-    tanggalNota: "2026-04-07",
-    namaSupplier: "PT Logam Perkasa",
-    noNpwp: "03.456.789.0-222.000",
-    noInvoice: "INV-260302",
-    hutang: false,
-    ppn: true,
-    lamaHutang: 0,
-    nilaiNota: 45000000,
-    tanggalJatuhTempo: null,
-    tanggalBayar: "2026-04-09",
-    createdAt: "2026-04-07T13:45:00.000Z",
-    updatedAt: "2026-04-09T09:00:00.000Z",
-  },
-];
-
-function normalize(value: string) {
-  return value.trim().toLowerCase();
-}
-
 function toText(value: unknown) {
   if (typeof value === "string") {
     return value;
@@ -145,6 +96,10 @@ function toText(value: unknown) {
   return String(value);
 }
 
+function normalize(value: string) {
+  return value.trim().toLowerCase();
+}
+
 function parseNumberFromUnknown(value: unknown, fallback = 0) {
   const parsed = Number(value);
 
@@ -155,23 +110,49 @@ function parseNumberFromUnknown(value: unknown, fallback = 0) {
   return parsed;
 }
 
-function toPembelianPrefillPayload(value: unknown): PembelianPrefillPayload | null {
+function parseInvoiceId(value: unknown) {
+  if (!value) {
+    return "";
+  }
+
+  if (typeof value === "string") {
+    return value.trim();
+  }
+
+  if (typeof value === "object") {
+    const invoice = value as Record<string, unknown>;
+    return toText(invoice.id || invoice._id).trim();
+  }
+
+  return toText(value).trim();
+}
+
+function toPembelianItem(value: unknown): PembelianItem | null {
   if (!value || typeof value !== "object") {
     return null;
   }
 
-  const payload = value as Record<string, unknown>;
-  const noInvoice = toText(payload.noInvoice).trim();
+  const row = value as Record<string, unknown>;
+  const id = toText(row.id || row._id).trim();
 
-  if (!noInvoice) {
+  if (!id) {
     return null;
   }
 
   return {
-    tanggalNota: toText(payload.tanggalNota).trim(),
-    noInvoice,
-    ppn: typeof payload.ppn === "boolean" ? payload.ppn : false,
-    nilaiNota: parseNumberFromUnknown(payload.nilaiNota),
+    id: id,
+    tanggalNota: toText(row.tanggalNota).trim(),
+    namaSupplier: toText(row.namaSupplier).trim(),
+    noNpwp: toText(row.noNpwp).trim(),
+    idInvoice: parseInvoiceId(row.idInvoice),
+    hutang: Boolean(row.hutang),
+    ppn: Boolean(row.ppn),
+    lamaHutang: parseNumberFromUnknown(row.lamaHutang),
+    nilaiNota: parseNumberFromUnknown(row.nilaiNota),
+    tanggalJatuhTempo: toText(row.tanggalJatuhTempo).trim() || null,
+    tanggalBayar: toText(row.tanggalBayar).trim() || null,
+    createdAt: toText(row.createdAt).trim(),
+    updatedAt: toText(row.updatedAt).trim(),
   };
 }
 
@@ -234,6 +215,87 @@ function isDateWithinRange(value: string | null, fromDate: Date | null, toDate: 
   return true;
 }
 
+function toNormalizedPembelianPayload(form: PembelianFormState) {
+  const lamaHutang = parseNumberFromUnknown(form.lamaHutang);
+  const nilaiNota = parseNumberFromUnknown(form.nilaiNota);
+  const idInvoice = toText(form.idInvoice).trim();
+  const tanggalJatuhTempo = toText(form.tanggalJatuhTempo).trim();
+  const tanggalBayar = toText(form.tanggalBayar).trim();
+
+  return {
+    tanggalNota: toText(form.tanggalNota).trim(),
+    namaSupplier: toText(form.namaSupplier).trim(),
+    noNpwp: toText(form.noNpwp).trim(),
+    idInvoice: idInvoice || null,
+    hutang: form.hutang,
+    ppn: form.ppn,
+    lamaHutang: lamaHutang,
+    nilaiNota: nilaiNota,
+    tanggalJatuhTempo: tanggalJatuhTempo || null,
+    tanggalBayar: tanggalBayar || null,
+  };
+}
+
+function toPembelianPrefillPayload(value: unknown): PembelianPrefillPayload | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const payload = value as Record<string, unknown>;
+  const idInvoice = toText(payload.idInvoice).trim();
+  const noInvoice = toText(payload.noInvoice).trim();
+
+  if (!idInvoice && !noInvoice) {
+    return null;
+  }
+
+  return {
+    tanggalNota: toText(payload.tanggalNota).trim(),
+    idInvoice: idInvoice,
+    noInvoice: noInvoice,
+    ppn: typeof payload.ppn === "boolean" ? payload.ppn : false,
+    nilaiNota: parseNumberFromUnknown(payload.nilaiNota),
+  };
+}
+
+export async function fetchPembelianRows() {
+  const response = await requestApi<PembelianListResponse>("/api/pembelian");
+
+  if (!response || !Array.isArray(response.pembelians)) {
+    return [];
+  }
+
+  return response.pembelians
+    .map(toPembelianItem)
+    .filter((item): item is PembelianItem => Boolean(item));
+}
+
+export async function createPembelian(form: PembelianFormState) {
+  const payload = toNormalizedPembelianPayload(form);
+  const response = await requestApi<PembelianResponse>("/api/pembelian", {
+    method: "POST",
+    body: payload,
+  });
+
+  return toPembelianItem(response?.pembelian);
+}
+
+export async function updatePembelian(id: string, form: PembelianFormState) {
+  const payload = toNormalizedPembelianPayload(form);
+  const response = await requestApi<PembelianResponse>(`/api/pembelian/${id}`, {
+    method: "PUT",
+    body: payload,
+  });
+
+  return toPembelianItem(response?.pembelian);
+}
+
+export async function deletePembelian(id: string) {
+  await requestApi(`/api/pembelian/${id}`, {
+    method: "DELETE",
+  });
+}
+
 export function formatTanggal(value: string | null, locale: Locale = "id") {
   if (!value) {
     return "-";
@@ -283,7 +345,7 @@ export function toPembelianFormState(item: PembelianItem): PembelianFormState {
     tanggalNota: toInputDate(item.tanggalNota),
     namaSupplier: item.namaSupplier,
     noNpwp: item.noNpwp,
-    noInvoice: item.noInvoice || "",
+    idInvoice: item.idInvoice,
     hutang: item.hutang,
     ppn: item.ppn,
     lamaHutang: String(item.lamaHutang),
@@ -293,18 +355,24 @@ export function toPembelianFormState(item: PembelianItem): PembelianFormState {
   };
 }
 
-export function toPembelianFormStateFromPrefill(prefill: PembelianPrefillPayload): PembelianFormState {
-  const nilaiNota = parseNumberFromUnknown(prefill.nilaiNota);
+export function toPembelianFormStateFromPrefill(
+  prefill: PembelianPrefillPayload,
+  invoiceOptions: PembelianInvoiceOption[] = []
+): PembelianFormState {
+  const fallbackInvoiceId =
+    prefill.idInvoice ||
+    invoiceOptions.find((invoice) => invoice.noInvoice === prefill.noInvoice)?.id ||
+    "";
 
   return {
     tanggalNota: toInputDate(prefill.tanggalNota || null),
     namaSupplier: "",
     noNpwp: "",
-    noInvoice: prefill.noInvoice,
+    idInvoice: fallbackInvoiceId,
     hutang: false,
     ppn: Boolean(prefill.ppn),
     lamaHutang: "0",
-    nilaiNota: String(nilaiNota),
+    nilaiNota: String(parseNumberFromUnknown(prefill.nilaiNota)),
     tanggalJatuhTempo: "",
     tanggalBayar: "",
   };
@@ -339,7 +407,11 @@ export function consumePembelianPrefill() {
   }
 }
 
-export function filterPembelianRows(rows: PembelianItem[], filter: PembelianFilter) {
+export function filterPembelianRows(
+  rows: PembelianItem[],
+  filter: PembelianFilter,
+  resolveInvoiceLabel?: ResolveInvoiceLabel
+) {
   const tanggalNotaDari = parseDateRangeStart(filter.tanggalNotaDari);
   const tanggalNotaSampai = parseDateRangeEnd(filter.tanggalNotaSampai);
   const tanggalBayarDari = parseDateRangeStart(filter.tanggalBayarDari);
@@ -350,7 +422,8 @@ export function filterPembelianRows(rows: PembelianItem[], filter: PembelianFilt
   return rows.filter((row) => {
     const matchNamaSupplier = normalize(row.namaSupplier).includes(normalize(filter.namaSupplier));
     const matchNoNpwp = normalize(row.noNpwp || "").includes(normalize(filter.noNpwp));
-    const matchNoInvoice = normalize(row.noInvoice || "").includes(normalize(filter.noInvoice));
+    const invoiceLabel = resolveInvoiceLabel ? resolveInvoiceLabel(row.idInvoice) : row.idInvoice;
+    const matchNoInvoice = normalize(invoiceLabel || "").includes(normalize(filter.noInvoice));
 
     const matchHutang =
       !filter.hutang ||

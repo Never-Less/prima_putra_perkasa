@@ -56,7 +56,7 @@ const pembelianSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-pembelianSchema.pre("validate", function validatePembelian(next) {
+pembelianSchema.pre("validate", function validatePembelian() {
   if (this.hutang) {
     if (!this.tanggalJatuhTempo) {
       this.invalidate(
@@ -75,8 +75,6 @@ pembelianSchema.pre("validate", function validatePembelian(next) {
   if (this.tanggalBayar && this.tanggalBayar < this.tanggalNota) {
     this.invalidate("tanggalBayar", "tanggalBayar tidak boleh lebih kecil dari tanggalNota");
   }
-
-  next();
 });
 
 const Pembelian = mongoose.model("Pembelian", pembelianSchema);

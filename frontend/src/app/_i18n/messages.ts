@@ -181,6 +181,21 @@ export const messages: Record<Locale, MessageDictionary> = {
       "Field disesuaikan dengan schema backend pembelian. lamaHutang dan tanggalJatuhTempo wajib saat hutang bernilai true.",
     "pembelian.lamaHutang.note": "Dalam hitungan hari",
     "pembelian.preview.title": "Preview Pembelian",
+    "pembelian.apiLoadError": "Gagal memuat data pembelian dari backend.",
+    "pembelian.invoiceLoadError": "Gagal memuat pilihan invoice untuk pembelian.",
+    "pembelian.mutationError": "Gagal memproses perubahan pembelian.",
+    "pembelian.invoiceRequired": "Invoice wajib dipilih sebelum menyimpan pembelian.",
+    "pembelian.confirmUpdateTitle": "Konfirmasi Ubah Pembelian",
+    "pembelian.confirmUpdateDescription":
+      "Simpan perubahan data pembelian untuk supplier \"{{namaSupplier}}\"?",
+    "pembelian.confirmDeleteTitle": "Konfirmasi Hapus Pembelian",
+    "pembelian.confirmDeleteDescription":
+      "Data pembelian supplier \"{{namaSupplier}}\" akan dihapus permanen. Lanjutkan?",
+    "pembelian.toast.createSuccess": "Data pembelian berhasil ditambahkan.",
+    "pembelian.toast.updateSuccess":
+      "Data pembelian supplier \"{{namaSupplier}}\" berhasil diperbarui.",
+    "pembelian.toast.deleteSuccess":
+      "Data pembelian supplier \"{{namaSupplier}}\" berhasil dihapus.",
 
     "field.nama": "nama",
     "field.username": "username",
@@ -394,6 +409,21 @@ export const messages: Record<Locale, MessageDictionary> = {
       "Fields are aligned with purchase backend schema. lamaHutang and tanggalJatuhTempo are required when hutang is true.",
     "pembelian.lamaHutang.note": "Measured in days",
     "pembelian.preview.title": "Purchase Preview",
+    "pembelian.apiLoadError": "Failed to load purchase data from backend.",
+    "pembelian.invoiceLoadError": "Failed to load invoice options for purchase.",
+    "pembelian.mutationError": "Failed to process purchase changes.",
+    "pembelian.invoiceRequired": "Invoice must be selected before saving purchase data.",
+    "pembelian.confirmUpdateTitle": "Confirm Purchase Update",
+    "pembelian.confirmUpdateDescription":
+      "Save purchase changes for supplier \"{{namaSupplier}}\"?",
+    "pembelian.confirmDeleteTitle": "Confirm Purchase Deletion",
+    "pembelian.confirmDeleteDescription":
+      "Purchase data for supplier \"{{namaSupplier}}\" will be deleted permanently. Continue?",
+    "pembelian.toast.createSuccess": "Purchase data has been added successfully.",
+    "pembelian.toast.updateSuccess":
+      "Purchase data for supplier \"{{namaSupplier}}\" has been updated successfully.",
+    "pembelian.toast.deleteSuccess":
+      "Purchase data for supplier \"{{namaSupplier}}\" has been deleted successfully.",
 
     "field.nama": "Name",
     "field.username": "username",

@@ -6,31 +6,37 @@ import {
   formatTanggal,
   toPembelianFormState,
   type PembelianFormState,
+  type PembelianInvoiceOption,
   type PembelianItem,
 } from "../_lib/pembelian";
-import { sampleInvoiceRows } from "../../invoice/_lib/invoice";
 import { useI18n } from "../../_i18n/provider";
 
 type PembelianEditFormProps = {
   item?: PembelianItem;
   initialForm?: PembelianFormState;
+  invoiceOptions?: PembelianInvoiceOption[];
+  isSaving?: boolean;
+  isDeleting?: boolean;
+  actionErrorMessage?: string;
   onNewData?: () => void;
+  onSave?: (form: PembelianFormState, selectedItem?: PembelianItem) => Promise<void> | void;
+  onDelete?: (selectedItem: PembelianItem) => Promise<void> | void;
 };
 
-function ensureValidNoInvoice(value: string, options: string[]) {
-  if (value && options.includes(value)) {
+function ensureValidIdInvoice(value: string, options: PembelianInvoiceOption[]) {
+  if (value && options.some((option) => option.id === value)) {
     return value;
   }
 
-  return options[0] || "";
+  return options[0]?.id || "";
 }
 
-function createEmptyPembelianFormState(noInvoiceOptions: string[]): PembelianFormState {
+function createEmptyPembelianFormState(invoiceOptions: PembelianInvoiceOption[]): PembelianFormState {
   return {
     tanggalNota: "",
     namaSupplier: "",
     noNpwp: "",
-    noInvoice: ensureValidNoInvoice("", noInvoiceOptions),
+    idInvoice: ensureValidIdInvoice("", invoiceOptions),
     hutang: false,
     ppn: false,
     lamaHutang: "0",
@@ -40,21 +46,18 @@ function createEmptyPembelianFormState(noInvoiceOptions: string[]): PembelianFor
   };
 }
 
-export function PembelianEditForm({ item, initialForm, onNewData }: PembelianEditFormProps) {
+export function PembelianEditForm({
+  item,
+  initialForm,
+  invoiceOptions = [],
+  isSaving = false,
+  isDeleting = false,
+  actionErrorMessage = "",
+  onNewData,
+  onSave,
+  onDelete,
+}: PembelianEditFormProps) {
   const { locale, t } = useI18n();
-  const noInvoiceOptions = useMemo(() => {
-    const options = new Set(sampleInvoiceRows.map((invoice) => invoice.noInvoice));
-
-    if (item?.noInvoice) {
-      options.add(item.noInvoice);
-    }
-
-    if (initialForm?.noInvoice) {
-      options.add(initialForm.noInvoice);
-    }
-
-    return Array.from(options);
-  }, [initialForm, item]);
   const [form, setForm] = useState<PembelianFormState>(() =>
     item
       ? (() => {
@@ -62,16 +65,47 @@ export function PembelianEditForm({ item, initialForm, onNewData }: PembelianEdi
 
           return {
             ...mappedForm,
-            noInvoice: ensureValidNoInvoice(mappedForm.noInvoice, noInvoiceOptions),
+            idInvoice: ensureValidIdInvoice(mappedForm.idInvoice, invoiceOptions),
           };
         })()
       : initialForm
         ? {
             ...initialForm,
-            noInvoice: ensureValidNoInvoice(initialForm.noInvoice, noInvoiceOptions),
+            idInvoice: ensureValidIdInvoice(initialForm.idInvoice, invoiceOptions),
           }
-      : createEmptyPembelianFormState(noInvoiceOptions)
+        : createEmptyPembelianFormState(invoiceOptions)
   );
+
+  const normalizedInvoiceOptions = useMemo(() => {
+    const optionMap = new Map<string, string>();
+
+    invoiceOptions.forEach((option) => {
+      const id = String(option.id || "").trim();
+      const noInvoice = String(option.noInvoice || "").trim();
+
+      if (!id) {
+        return;
+      }
+
+      optionMap.set(id, noInvoice || id);
+    });
+
+    if (form.idInvoice && !optionMap.has(form.idInvoice)) {
+      optionMap.set(form.idInvoice, form.idInvoice);
+    }
+
+    return Array.from(optionMap.entries()).map(([id, noInvoice]) => ({
+      id,
+      noInvoice,
+    }));
+  }, [form.idInvoice, invoiceOptions]);
+
+  const effectiveIdInvoice = form.idInvoice || normalizedInvoiceOptions[0]?.id || "";
+
+  const invoiceLabelMap = useMemo(() => {
+    return new Map(normalizedInvoiceOptions.map((option) => [option.id, option.noInvoice]));
+  }, [normalizedInvoiceOptions]);
+  const previewInvoiceLabel = invoiceLabelMap.get(effectiveIdInvoice) || effectiveIdInvoice || "-";
 
   return (
     <section className="rounded-2xl border border-sky-200 bg-sky-50/40 p-5 shadow-sm">
@@ -125,15 +159,20 @@ export function PembelianEditForm({ item, initialForm, onNewData }: PembelianEdi
             <label className="text-sm text-slate-700">
               {t("field.noInvoice")}
               <select
-                value={form.noInvoice}
-                onChange={(event) => setForm((prev) => ({ ...prev, noInvoice: event.target.value }))}
+                value={effectiveIdInvoice}
+                onChange={(event) => setForm((prev) => ({ ...prev, idInvoice: event.target.value }))}
+                disabled={normalizedInvoiceOptions.length === 0}
                 className="mt-1 w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm shadow-sm"
               >
-                {noInvoiceOptions.map((noInvoice) => (
-                  <option key={noInvoice} value={noInvoice}>
-                    {noInvoice}
-                  </option>
-                ))}
+                {normalizedInvoiceOptions.length === 0 ? (
+                  <option value="">{t("common.noData")}</option>
+                ) : (
+                  normalizedInvoiceOptions.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.noInvoice}
+                    </option>
+                  ))
+                )}
               </select>
             </label>
 
@@ -184,12 +223,15 @@ export function PembelianEditForm({ item, initialForm, onNewData }: PembelianEdi
                 value={form.lamaHutang}
                 disabled={!form.hutang}
                 onChange={(event) => setForm((prev) => ({ ...prev, lamaHutang: event.target.value }))}
-                className="mt-1 w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm shadow-sm disabled:cursor-not-allowed disabled:bg-slate-100"
+                className="mt-1 h-10 w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm shadow-sm disabled:cursor-not-allowed disabled:bg-slate-100"
               />
             </label>
 
             <label className="text-sm text-slate-700">
               {t("field.tanggalJatuhTempo")}
+              <p aria-hidden="true" className="mt-1 text-xs text-transparent select-none">
+                {t("pembelian.lamaHutang.note")}
+              </p>
               <input
                 type="date"
                 value={form.tanggalJatuhTempo}
@@ -197,7 +239,7 @@ export function PembelianEditForm({ item, initialForm, onNewData }: PembelianEdi
                 onChange={(event) =>
                   setForm((prev) => ({ ...prev, tanggalJatuhTempo: event.target.value }))
                 }
-                className="mt-1 w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm shadow-sm disabled:cursor-not-allowed disabled:bg-slate-100"
+                className="mt-1 h-10 w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm shadow-sm disabled:cursor-not-allowed disabled:bg-slate-100"
               />
             </label>
 
@@ -213,26 +255,35 @@ export function PembelianEditForm({ item, initialForm, onNewData }: PembelianEdi
           </div>
 
           <div className="mt-3 flex flex-wrap gap-2">
-            <button className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600">
-              {t("common.saveChanges")}
+            <button
+              type="button"
+              onClick={() => void onSave?.({ ...form, idInvoice: effectiveIdInvoice }, item)}
+              disabled={isSaving || isDeleting}
+              className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isSaving ? t("common.loading") : t("common.saveChanges")}
             </button>
             <button
+              type="button"
+              disabled={isSaving || isDeleting}
               onClick={() => {
                 onNewData?.();
-                setForm(createEmptyPembelianFormState(noInvoiceOptions));
+                setForm(createEmptyPembelianFormState(invoiceOptions));
               }}
-              className="rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm text-sky-700 hover:bg-sky-50"
+              className="rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm text-sky-700 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {t("common.newData")}
             </button>
             <button
+              type="button"
+              disabled={isSaving || isDeleting}
               onClick={() => {
                 if (item) {
                   const resetForm = toPembelianFormState(item);
 
                   setForm({
                     ...resetForm,
-                    noInvoice: ensureValidNoInvoice(resetForm.noInvoice, noInvoiceOptions),
+                    idInvoice: ensureValidIdInvoice(resetForm.idInvoice, invoiceOptions),
                   });
                   return;
                 }
@@ -240,18 +291,33 @@ export function PembelianEditForm({ item, initialForm, onNewData }: PembelianEdi
                 if (initialForm) {
                   setForm({
                     ...initialForm,
-                    noInvoice: ensureValidNoInvoice(initialForm.noInvoice, noInvoiceOptions),
+                    idInvoice: ensureValidIdInvoice(initialForm.idInvoice, invoiceOptions),
                   });
                   return;
                 }
 
-                setForm(createEmptyPembelianFormState(noInvoiceOptions));
+                setForm(createEmptyPembelianFormState(invoiceOptions));
               }}
-              className="rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm text-sky-700 hover:bg-sky-50"
+              className="rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm text-sky-700 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {t("common.resetForm")}
             </button>
+            {item ? (
+              <button
+                type="button"
+                onClick={() => void onDelete?.(item)}
+                disabled={isSaving || isDeleting}
+                className="rounded-lg border border-red-300 bg-white px-4 py-2 text-sm text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isDeleting ? t("common.loading") : t("common.delete")}
+              </button>
+            ) : null}
           </div>
+          {actionErrorMessage ? (
+            <p className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              {actionErrorMessage}
+            </p>
+          ) : null}
         </div>
 
         <div className="rounded-xl border border-transparent bg-slate-100/70 p-4">
@@ -268,7 +334,7 @@ export function PembelianEditForm({ item, initialForm, onNewData }: PembelianEdi
               <span className="text-slate-500">{t("field.noNpwp")}:</span> {form.noNpwp || "-"}
             </p>
             <p>
-              <span className="text-slate-500">{t("field.noInvoice")}:</span> {form.noInvoice || "-"}
+              <span className="text-slate-500">{t("field.noInvoice")}:</span> {previewInvoiceLabel}
             </p>
             <p>
               <span className="text-slate-500">{t("field.hutang")}:</span>{" "}

@@ -1,57 +1,413 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { ApiLoadingState } from "../_components/api-loading-state";
+import { AppToast } from "../_components/app-toast";
+import { ConfirmationModal } from "../_components/confirmation-modal";
+import { ApiRequestError } from "../_lib/api-client";
 import { PembelianEditForm } from "./_components/pembelian-edit-form";
 import { PembelianTableFilter } from "./_components/pembelian-table-filter";
 import {
   consumePembelianPrefill,
-  samplePembelianRows,
+  createPembelian,
+  deletePembelian,
+  fetchPembelianRows,
   toPembelianFormStateFromPrefill,
+  updatePembelian,
   type PembelianFormState,
+  type PembelianInvoiceOption,
+  type PembelianItem,
 } from "./_lib/pembelian";
 import { useI18n } from "../_i18n/provider";
+import { fetchInvoiceRows } from "../invoice/_lib/invoice";
+
+type ToastState = {
+  id: number;
+  message: string;
+  variant: "success" | "error";
+};
 
 export default function PembelianPage() {
   const { t } = useI18n();
+  const [rows, setRows] = useState<PembelianItem[]>([]);
+  const [invoiceOptions, setInvoiceOptions] = useState<PembelianInvoiceOption[]>([]);
   const [prefillOnLoad] = useState(() => consumePembelianPrefill());
   const [selectedId, setSelectedId] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [actionErrorMessage, setActionErrorMessage] = useState("");
+  const [toast, setToast] = useState<ToastState | null>(null);
   const [initialForm, setInitialForm] = useState<PembelianFormState | null>(() =>
     prefillOnLoad ? toPembelianFormStateFromPrefill(prefillOnLoad) : null
   );
   const [initialFormKey, setInitialFormKey] = useState(() => (prefillOnLoad ? Date.now() : 0));
+  const [pendingConfirmation, setPendingConfirmation] = useState<
+    | {
+        type: "update";
+        form: PembelianFormState;
+        selectedItem: PembelianItem;
+      }
+    | {
+        type: "delete";
+        selectedItem: PembelianItem;
+      }
+    | null
+  >(null);
+
+  const showToast = useCallback((message: string, variant: ToastState["variant"]) => {
+    setToast({
+      id: Date.now(),
+      message,
+      variant,
+    });
+  }, []);
+
+  const loadPembelianRows = useCallback(
+    async (options: { showLoading?: boolean } = {}) => {
+      const { showLoading = true } = options;
+
+      if (showLoading) {
+        setIsLoading(true);
+      }
+
+      setErrorMessage("");
+
+      try {
+        const pembelianRows = await fetchPembelianRows();
+        setRows(pembelianRows);
+        setSelectedId((prevSelectedId) => {
+          if (pembelianRows.some((row) => row.id === prevSelectedId)) {
+            return prevSelectedId;
+          }
+
+          return "";
+        });
+      } catch (error) {
+        setRows([]);
+        setSelectedId("");
+
+        if (error instanceof ApiRequestError) {
+          setErrorMessage(error.message || t("pembelian.apiLoadError"));
+          return;
+        }
+
+        setErrorMessage(t("pembelian.apiLoadError"));
+      } finally {
+        if (showLoading) {
+          setIsLoading(false);
+        }
+      }
+    },
+    [t]
+  );
+
+  const loadInvoiceOptions = useCallback(async () => {
+    try {
+      const invoiceRows = await fetchInvoiceRows();
+      const optionMap = new Map<string, string>();
+
+      invoiceRows.forEach((invoice) => {
+        const id = String(invoice.id || "").trim();
+
+        if (!id) {
+          return;
+        }
+
+        optionMap.set(id, String(invoice.noInvoice || "").trim() || id);
+      });
+
+      const mappedOptions = Array.from(optionMap.entries()).map(([id, noInvoice]) => ({
+        id,
+        noInvoice,
+      }));
+
+      setInvoiceOptions(mappedOptions);
+
+      if (prefillOnLoad) {
+        setInitialForm(toPembelianFormStateFromPrefill(prefillOnLoad, mappedOptions));
+        setInitialFormKey(Date.now());
+      }
+    } catch (error) {
+      setInvoiceOptions([]);
+
+      if (error instanceof ApiRequestError) {
+        showToast(error.message || t("pembelian.invoiceLoadError"), "error");
+      } else {
+        showToast(t("pembelian.invoiceLoadError"), "error");
+      }
+    }
+  }, [prefillOnLoad, showToast, t]);
+
+  useEffect(() => {
+    void Promise.all([loadPembelianRows(), loadInvoiceOptions()]);
+  }, [loadInvoiceOptions, loadPembelianRows]);
 
   const selectedRow = useMemo(() => {
-    return samplePembelianRows.find((row) => row.id === selectedId);
-  }, [selectedId]);
+    return rows.find((row) => row.id === selectedId);
+  }, [rows, selectedId]);
+
+  const invoiceLabelMap = useMemo(() => {
+    const map = new Map<string, string>();
+
+    invoiceOptions.forEach((option) => {
+      const id = String(option.id || "").trim();
+
+      if (!id) {
+        return;
+      }
+
+      map.set(id, String(option.noInvoice || "").trim() || id);
+    });
+
+    return map;
+  }, [invoiceOptions]);
+
+  const resolveInvoiceLabel = useCallback(
+    (invoiceId: string) => {
+      const key = String(invoiceId || "").trim();
+
+      if (!key) {
+        return "-";
+      }
+
+      return invoiceLabelMap.get(key) || key;
+    },
+    [invoiceLabelMap]
+  );
+
+  const executeSavePembelian = useCallback(
+    async (form: PembelianFormState, selectedItem?: PembelianItem) => {
+      if (!String(form.idInvoice || "").trim()) {
+        const message = t("pembelian.invoiceRequired");
+        setActionErrorMessage(message);
+        showToast(message, "error");
+        return;
+      }
+
+      setActionErrorMessage("");
+      setIsSaving(true);
+
+      try {
+        if (selectedItem?.id) {
+          const updatedPembelian = await updatePembelian(selectedItem.id, form);
+          await loadPembelianRows({ showLoading: false });
+          setSelectedId(updatedPembelian?.id || selectedItem.id);
+          showToast(
+            t("pembelian.toast.updateSuccess", {
+              namaSupplier: form.namaSupplier || selectedItem.namaSupplier || "-",
+            }),
+            "success"
+          );
+          return;
+        }
+
+        const createdPembelian = await createPembelian(form);
+        await loadPembelianRows({ showLoading: false });
+        setSelectedId(createdPembelian?.id || "");
+        setInitialForm(null);
+        setInitialFormKey(Date.now());
+        showToast(t("pembelian.toast.createSuccess"), "success");
+      } catch (error) {
+        if (error instanceof ApiRequestError) {
+          const message = error.message || t("pembelian.mutationError");
+          setActionErrorMessage(message);
+          showToast(message, "error");
+          return;
+        }
+
+        const message = t("pembelian.mutationError");
+        setActionErrorMessage(message);
+        showToast(message, "error");
+      } finally {
+        setIsSaving(false);
+      }
+    },
+    [loadPembelianRows, showToast, t]
+  );
+
+  const executeDeletePembelian = useCallback(
+    async (selectedItem: PembelianItem) => {
+      setActionErrorMessage("");
+      setIsDeleting(true);
+
+      try {
+        await deletePembelian(selectedItem.id);
+        setSelectedId("");
+        await loadPembelianRows({ showLoading: false });
+        showToast(
+          t("pembelian.toast.deleteSuccess", {
+            namaSupplier: selectedItem.namaSupplier || "-",
+          }),
+          "success"
+        );
+      } catch (error) {
+        if (error instanceof ApiRequestError) {
+          const message = error.message || t("pembelian.mutationError");
+          setActionErrorMessage(message);
+          showToast(message, "error");
+          return;
+        }
+
+        const message = t("pembelian.mutationError");
+        setActionErrorMessage(message);
+        showToast(message, "error");
+      } finally {
+        setIsDeleting(false);
+      }
+    },
+    [loadPembelianRows, showToast, t]
+  );
+
+  const handleSavePembelian = useCallback(
+    async (form: PembelianFormState, selectedItem?: PembelianItem) => {
+      if (selectedItem?.id) {
+        setPendingConfirmation({
+          type: "update",
+          form,
+          selectedItem,
+        });
+        return;
+      }
+
+      await executeSavePembelian(form, selectedItem);
+    },
+    [executeSavePembelian]
+  );
+
+  const handleDeletePembelian = useCallback((selectedItem: PembelianItem) => {
+    setPendingConfirmation({
+      type: "delete",
+      selectedItem,
+    });
+  }, []);
+
+  const handleConfirmAction = useCallback(async () => {
+    if (!pendingConfirmation) {
+      return;
+    }
+
+    const currentConfirmation = pendingConfirmation;
+    setPendingConfirmation(null);
+
+    if (currentConfirmation.type === "update") {
+      await executeSavePembelian(currentConfirmation.form, currentConfirmation.selectedItem);
+      return;
+    }
+
+    await executeDeletePembelian(currentConfirmation.selectedItem);
+  }, [executeDeletePembelian, executeSavePembelian, pendingConfirmation]);
+
+  const confirmationConfig = useMemo(() => {
+    if (!pendingConfirmation) {
+      return null;
+    }
+
+    if (pendingConfirmation.type === "update") {
+      return {
+        title: t("pembelian.confirmUpdateTitle"),
+        description: t("pembelian.confirmUpdateDescription", {
+          namaSupplier: pendingConfirmation.selectedItem.namaSupplier || "-",
+        }),
+        confirmLabel: t("common.saveChanges"),
+        variant: "default" as const,
+      };
+    }
+
+    return {
+      title: t("pembelian.confirmDeleteTitle"),
+      description: t("pembelian.confirmDeleteDescription", {
+        namaSupplier: pendingConfirmation.selectedItem.namaSupplier || "-",
+      }),
+      confirmLabel: t("common.delete"),
+      variant: "danger" as const,
+    };
+  }, [pendingConfirmation, t]);
+
+  const showDataSection = !isLoading && (rows.length > 0 || !errorMessage);
 
   return (
-    <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <section className="rounded-2xl border border-sky-100 bg-gradient-to-r from-sky-50 to-white p-5 shadow-sm">
-        <h1 className="text-2xl font-semibold text-slate-900">{t("nav.pembelian")}</h1>
-        <p className="mt-1 text-sm text-slate-600">{t("pembelian.page.description")}</p>
-      </section>
+    <>
+      <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <section className="rounded-2xl border border-sky-100 bg-gradient-to-r from-sky-50 to-white p-5 shadow-sm">
+          <h1 className="text-2xl font-semibold text-slate-900">{t("nav.pembelian")}</h1>
+          <p className="mt-1 text-sm text-slate-600">{t("pembelian.page.description")}</p>
+        </section>
 
-      <div className="mt-5 space-y-5">
-        <PembelianTableFilter
-          rows={samplePembelianRows}
-          selectedId={selectedId}
-          onSelectRow={(row) => {
-            setInitialForm(null);
-            setSelectedId(row.id);
-          }}
-        />
+        <div className="mt-5 space-y-5">
+          {isLoading ? <ApiLoadingState /> : null}
 
-        <PembelianEditForm
-          key={`${selectedId || "new"}-${initialFormKey}`}
-          item={selectedRow}
-          initialForm={selectedRow ? undefined : initialForm || undefined}
-          onNewData={() => {
-            setInitialForm(null);
-            setInitialFormKey(Date.now());
-            setSelectedId("");
-          }}
-        />
-      </div>
-    </main>
+          {!isLoading && errorMessage ? (
+            <section className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+              <p>{errorMessage}</p>
+              <button
+                type="button"
+                onClick={() => void loadPembelianRows()}
+                className="mt-3 rounded-lg border border-red-300 bg-white px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-100"
+              >
+                {t("common.retry")}
+              </button>
+            </section>
+          ) : null}
+
+          {showDataSection ? (
+            <>
+              <PembelianTableFilter
+                rows={rows}
+                selectedId={selectedId}
+                resolveInvoiceLabel={resolveInvoiceLabel}
+                onSelectRow={(row) => {
+                  setActionErrorMessage("");
+                  setToast(null);
+                  setInitialForm(null);
+                  setSelectedId(row.id);
+                }}
+              />
+
+              <PembelianEditForm
+                key={`${selectedId || "new"}-${initialFormKey}`}
+                item={selectedRow}
+                initialForm={selectedRow ? undefined : initialForm || undefined}
+                invoiceOptions={invoiceOptions}
+                isSaving={isSaving}
+                isDeleting={isDeleting}
+                actionErrorMessage={actionErrorMessage}
+                onSave={handleSavePembelian}
+                onDelete={handleDeletePembelian}
+                onNewData={() => {
+                  setActionErrorMessage("");
+                  setToast(null);
+                  setInitialForm(null);
+                  setInitialFormKey(Date.now());
+                  setSelectedId("");
+                }}
+              />
+            </>
+          ) : null}
+        </div>
+      </main>
+
+      <ConfirmationModal
+        isOpen={Boolean(confirmationConfig)}
+        title={confirmationConfig?.title ?? ""}
+        description={confirmationConfig?.description ?? ""}
+        confirmLabel={confirmationConfig?.confirmLabel ?? ""}
+        cancelLabel={t("common.cancel")}
+        variant={confirmationConfig?.variant ?? "default"}
+        isLoading={isSaving || isDeleting}
+        onCancel={() => setPendingConfirmation(null)}
+        onConfirm={() => void handleConfirmAction()}
+      />
+
+      <AppToast
+        isOpen={Boolean(toast)}
+        message={toast?.message ?? ""}
+        variant={toast?.variant ?? "success"}
+        closeLabel={t("common.close")}
+        toastKey={toast?.id}
+        onClose={() => setToast(null)}
+      />
+    </>
   );
 }

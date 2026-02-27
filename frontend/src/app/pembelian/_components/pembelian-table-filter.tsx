@@ -9,29 +9,55 @@ import {
   type PembelianFilter,
   type PembelianItem,
 } from "../_lib/pembelian";
-import { sampleInvoiceRows } from "../../invoice/_lib/invoice";
 import { useI18n } from "../../_i18n/provider";
 
 type PembelianTableFilterProps = {
   rows: PembelianItem[];
   selectedId?: string;
   onSelectRow?: (row: PembelianItem) => void;
+  resolveInvoiceLabel?: (invoiceId: string) => string;
 };
 
-export function PembelianTableFilter({ rows, selectedId, onSelectRow }: PembelianTableFilterProps) {
+export function PembelianTableFilter({
+  rows,
+  selectedId,
+  onSelectRow,
+  resolveInvoiceLabel,
+}: PembelianTableFilterProps) {
   const { locale, t } = useI18n();
   const [filter, setFilter] = useState<PembelianFilter>(defaultPembelianFilter);
-  const noInvoiceOptions = useMemo(() => {
-    return Array.from(new Set(sampleInvoiceRows.map((invoice) => invoice.noInvoice)));
-  }, []);
 
-  const filteredRows = useMemo(() => filterPembelianRows(rows, filter), [filter, rows]);
+  const filteredRows = useMemo(
+    () => filterPembelianRows(rows, filter, resolveInvoiceLabel),
+    [filter, resolveInvoiceLabel, rows]
+  );
+  const groupedRows = useMemo(() => {
+    const groupMap = new Map<string, PembelianItem[]>();
+
+    filteredRows.forEach((row) => {
+      const key = resolveInvoiceLabel?.(row.idInvoice) || row.idInvoice || "-";
+      const existingRows = groupMap.get(key);
+
+      if (existingRows) {
+        existingRows.push(row);
+        return;
+      }
+
+      groupMap.set(key, [row]);
+    });
+
+    return Array.from(groupMap.entries()).map(([noInvoice, items]) => ({
+      noInvoice,
+      items,
+    }));
+  }, [filteredRows, resolveInvoiceLabel]);
 
   return (
     <section className="space-y-4 rounded-2xl border border-sky-200 bg-sky-50/40 p-5 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-lg font-semibold text-sky-900">{t("pembelian.table.title")}</h2>
         <button
+          type="button"
           onClick={() => setFilter(defaultPembelianFilter)}
           className="rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-sky-700 hover:bg-sky-50"
         >
@@ -64,20 +90,13 @@ export function PembelianTableFilter({ rows, selectedId, onSelectRow }: Pembelia
 
           <label className="text-sm text-slate-700">
             {t("field.noInvoice")}
-            <select
+            <input
               value={filter.noInvoice}
               onChange={(event) =>
                 setFilter((prev) => ({ ...prev, noInvoice: event.target.value }))
               }
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-            >
-              <option value="">{t("common.all")}</option>
-              {noInvoiceOptions.map((noInvoice) => (
-                <option key={noInvoice} value={noInvoice}>
-                  {noInvoice}
-                </option>
-              ))}
-            </select>
+            />
           </label>
 
           <label className="text-sm text-slate-700">
@@ -192,71 +211,96 @@ export function PembelianTableFilter({ rows, selectedId, onSelectRow }: Pembelia
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full text-sm">
-          <thead className="bg-sky-100 text-left text-sky-800">
-            <tr>
-              <th className="px-3 py-2 font-medium">{t("field.tanggalNota")}</th>
-              <th className="px-3 py-2 font-medium">{t("field.namaSupplier")}</th>
-              <th className="px-3 py-2 font-medium">{t("field.noNpwp")}</th>
-              <th className="px-3 py-2 font-medium">{t("field.noInvoice")}</th>
-              <th className="px-3 py-2 font-medium">{t("field.hutang")}</th>
-              <th className="px-3 py-2 font-medium">{t("field.ppn")}</th>
-              <th className="px-3 py-2 font-medium">
-                <span>{t("field.lamaHutang")}</span>
-                <span className="block text-xs font-normal text-sky-700">{t("pembelian.lamaHutang.note")}</span>
-              </th>
-              <th className="px-3 py-2 font-medium">{t("field.nilaiNota")}</th>
-              <th className="px-3 py-2 font-medium">{t("field.tanggalJatuhTempo")}</th>
-              <th className="px-3 py-2 font-medium">{t("field.tanggalBayar")}</th>
-              <th className="px-3 py-2 font-medium">{t("common.action")}</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 bg-white">
-            {filteredRows.map((row, index) => {
-              const isSelected = selectedId === row.id;
+      <div className="space-y-4">
+        {groupedRows.length === 0 ? (
+          <div className="rounded-xl border border-slate-200 bg-white px-3 py-4 text-center text-sm text-slate-500">
+            {t("common.noData")}
+          </div>
+        ) : null}
 
-              return (
-                <tr key={row.id} className={isSelected ? "bg-sky-100" : index % 2 ? "bg-sky-50/70" : undefined}>
-                  <td className="whitespace-nowrap px-3 py-2 text-slate-600">
-                    {formatTanggal(row.tanggalNota, locale)}
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-2 font-medium text-slate-800">{row.namaSupplier}</td>
-                  <td className="whitespace-nowrap px-3 py-2 text-slate-600">{row.noNpwp || "-"}</td>
-                  <td className="whitespace-nowrap px-3 py-2 text-slate-600">{row.noInvoice || "-"}</td>
-                  <td className="whitespace-nowrap px-3 py-2 text-slate-600">
-                    {row.hutang ? t("common.true") : t("common.false")}
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-2 text-slate-600">
-                    {row.ppn ? t("common.true") : t("common.false")}
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-2 text-slate-600">{row.lamaHutang}</td>
-                  <td className="whitespace-nowrap px-3 py-2 text-slate-600">
-                    {formatRupiah(row.nilaiNota, locale)}
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-2 text-slate-600">
-                    {formatTanggal(row.tanggalJatuhTempo, locale)}
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-2 text-slate-600">
-                    {formatTanggal(row.tanggalBayar, locale)}
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-2">
-                    <button
-                      onClick={() => onSelectRow?.(row)}
-                      className={`rounded-lg px-3 py-1.5 text-xs font-medium ${
-                        isSelected
-                          ? "bg-sky-700 text-white"
-                          : "border border-sky-200 bg-white text-sky-700 hover:bg-sky-50"
-                      }`}
-                    >
-                      {isSelected ? t("common.selected") : t("common.selectRow")}
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        {groupedRows.map((group) => (
+          <div key={group.noInvoice} className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-slate-50 px-3 py-2">
+              <p className="text-sm font-semibold text-slate-800">
+                {t("field.noInvoice")}: {group.noInvoice}
+              </p>
+              <span className="text-xs text-slate-500">
+                {t("common.totalData", { count: group.items.length })}
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead className="bg-sky-100 text-left text-sky-800">
+                  <tr>
+                    <th className="px-3 py-2 font-medium">{t("field.tanggalNota")}</th>
+                    <th className="px-3 py-2 font-medium">{t("field.namaSupplier")}</th>
+                    <th className="px-3 py-2 font-medium">{t("field.noNpwp")}</th>
+                    <th className="px-3 py-2 font-medium">{t("field.hutang")}</th>
+                    <th className="px-3 py-2 font-medium">{t("field.ppn")}</th>
+                    <th className="px-3 py-2 font-medium">
+                      <span>{t("field.lamaHutang")}</span>
+                      <span className="block text-xs font-normal text-sky-700">{t("pembelian.lamaHutang.note")}</span>
+                    </th>
+                    <th className="px-3 py-2 font-medium">{t("field.nilaiNota")}</th>
+                    <th className="px-3 py-2 font-medium">{t("field.tanggalJatuhTempo")}</th>
+                    <th className="px-3 py-2 font-medium">{t("field.tanggalBayar")}</th>
+                    <th className="px-3 py-2 font-medium">{t("common.action")}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200 bg-white">
+                  {group.items.map((row, index) => {
+                    const isSelected = selectedId === row.id;
+
+                    return (
+                      <tr
+                        key={row.id}
+                        className={isSelected ? "bg-sky-100" : index % 2 ? "bg-sky-50/70" : undefined}
+                      >
+                        <td className="whitespace-nowrap px-3 py-2 text-slate-600">
+                          {formatTanggal(row.tanggalNota, locale)}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-2 font-medium text-slate-800">
+                          {row.namaSupplier}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-2 text-slate-600">{row.noNpwp || "-"}</td>
+                        <td className="whitespace-nowrap px-3 py-2 text-slate-600">
+                          {row.hutang ? t("common.true") : t("common.false")}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-2 text-slate-600">
+                          {row.ppn ? t("common.true") : t("common.false")}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-2 text-slate-600">{row.lamaHutang}</td>
+                        <td className="whitespace-nowrap px-3 py-2 text-slate-600">
+                          {formatRupiah(row.nilaiNota, locale)}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-2 text-slate-600">
+                          {formatTanggal(row.tanggalJatuhTempo, locale)}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-2 text-slate-600">
+                          {formatTanggal(row.tanggalBayar, locale)}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-2">
+                          <button
+                            type="button"
+                            onClick={() => onSelectRow?.(row)}
+                            className={`rounded-lg px-3 py-1.5 text-xs font-medium ${
+                              isSelected
+                                ? "bg-sky-700 text-white"
+                                : "border border-sky-200 bg-white text-sky-700 hover:bg-sky-50"
+                            }`}
+                          >
+                            {isSelected ? t("common.selected") : t("common.selectRow")}
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ))}
       </div>
 
       <p className="text-sm text-slate-500">{t("common.filterResult", { count: filteredRows.length })}</p>
