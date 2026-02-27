@@ -1,9 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { ApiLoadingState } from "../../_components/api-loading-state";
 import { AppToast } from "../../_components/app-toast";
 import { ConfirmationModal } from "../../_components/confirmation-modal";
+import { saveInvoicePrefill, type InvoicePrefillPayload } from "../../invoice/_lib/invoice";
 import { ApiRequestError } from "../../_lib/api-client";
 import { useI18n } from "../../_i18n/provider";
 import { fetchCustomerRows, type CustomerItem } from "../../customer/_lib/customer";
@@ -15,6 +17,7 @@ import {
   type SuratJalanFormState,
   type SuratJalanItem,
 } from "../_lib/surat-jalan";
+import { PostCreateActionModal } from "./post-create-action-modal";
 import { SuratJalanEditForm } from "./surat-jalan-edit-form";
 import { SuratJalanTableFilter } from "./surat-jalan-table-filter";
 
@@ -24,8 +27,14 @@ type ToastState = {
   variant: "success" | "error";
 };
 
+type PostCreateActionState = {
+  createdItem: SuratJalanItem;
+  invoicePrefill: InvoicePrefillPayload;
+};
+
 export function FormPreviewStylePage() {
   const { t } = useI18n();
+  const router = useRouter();
   const [rows, setRows] = useState<SuratJalanItem[]>([]);
   const [customerRows, setCustomerRows] = useState<CustomerItem[]>([]);
   const [selectedId, setSelectedId] = useState("");
@@ -35,6 +44,7 @@ export function FormPreviewStylePage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [actionErrorMessage, setActionErrorMessage] = useState("");
   const [toast, setToast] = useState<ToastState | null>(null);
+  const [postCreateAction, setPostCreateAction] = useState<PostCreateActionState | null>(null);
   const [pendingConfirmation, setPendingConfirmation] = useState<
     | {
         type: "update";
@@ -76,6 +86,8 @@ export function FormPreviewStylePage() {
 
           return "";
         });
+
+        return suratJalanRows;
       } catch (error) {
         setRows([]);
         setSelectedId("");
@@ -85,6 +97,8 @@ export function FormPreviewStylePage() {
         } else {
           setErrorMessage(t("suratJalan.apiLoadError"));
         }
+
+        return [];
       } finally {
         if (showLoading) {
           setIsLoading(false);
@@ -168,6 +182,68 @@ export function FormPreviewStylePage() {
 
     return Array.from(noPoSet.values());
   }, [rows]);
+  const noPoCustomerMap = useMemo(() => {
+    const map: Record<string, string> = {};
+
+    rows.forEach((row) => {
+      const noPo = String(row.noPo || "").trim();
+      const idCustomer = String(row.idCustomer || "").trim();
+
+      if (!noPo || !idCustomer || map[noPo]) {
+        return;
+      }
+
+      map[noPo] = idCustomer;
+    });
+
+    return map;
+  }, [rows]);
+
+  const buildInvoicePrefillFromNoPo = useCallback(
+    (allRows: SuratJalanItem[], createdItem: SuratJalanItem): InvoicePrefillPayload => {
+      const sameNoPoRows = allRows.filter((row) => row.noPo === createdItem.noPo);
+      const sourceRows = sameNoPoRows.length > 0 ? sameNoPoRows : [createdItem];
+      const noSuratJalanSet = new Set<string>();
+      const barangMap = new Map<string, number>();
+
+      sourceRows.forEach((row) => {
+        const noSuratJalan = String(row.noSuratJalan || "").trim();
+
+        if (noSuratJalan) {
+          noSuratJalanSet.add(noSuratJalan);
+        }
+
+        row.barang.forEach((barang) => {
+          const namaBarang = String(barang.nama || "").trim();
+
+          if (!namaBarang) {
+            return;
+          }
+
+          const jumlahSaatIni = barangMap.get(namaBarang) || 0;
+          barangMap.set(namaBarang, jumlahSaatIni + Number(barang.jumlah || 0));
+        });
+      });
+
+      const barang = Array.from(barangMap.entries())
+        .map(([namaBarang, kuantitas]) => ({
+          namaBarang,
+          kuantitas,
+        }))
+        .filter((item) => item.kuantitas > 0);
+
+      return {
+        tanggal: createdItem.tanggal,
+        noPo: createdItem.noPo,
+        noSuratJalan: Array.from(noSuratJalanSet.values()),
+        idCustomer: resolveCustomerLabel(createdItem.idCustomer),
+        barang: barang,
+        isPpn: true,
+        ppnRate: 11,
+      };
+    },
+    [resolveCustomerLabel]
+  );
 
   const executeSaveSuratJalan = useCallback(
     async (form: SuratJalanFormState, selectedItem?: SuratJalanItem) => {
@@ -179,6 +255,7 @@ export function FormPreviewStylePage() {
           const updatedItem = await updateSuratJalan(selectedItem.id, form);
           await loadSuratJalanData({ showLoading: false });
           setSelectedId(updatedItem?.id || selectedItem.id);
+          setPostCreateAction(null);
           showToast(
             t("suratJalan.toast.updateSuccess", {
               noSuratJalan: form.noSuratJalan || selectedItem.noSuratJalan || "-",
@@ -189,8 +266,17 @@ export function FormPreviewStylePage() {
         }
 
         const createdItem = await createSuratJalan(form);
-        await loadSuratJalanData({ showLoading: false });
-        setSelectedId(createdItem?.id || "");
+        const refreshedRows = await loadSuratJalanData({ showLoading: false });
+        const currentCreatedItem = createdItem
+          ? refreshedRows.find((row) => row.id === createdItem.id) || createdItem
+          : undefined;
+        setSelectedId(currentCreatedItem?.id || "");
+        if (currentCreatedItem) {
+          setPostCreateAction({
+            createdItem: currentCreatedItem,
+            invoicePrefill: buildInvoicePrefillFromNoPo(refreshedRows, currentCreatedItem),
+          });
+        }
         showToast(
           t("suratJalan.toast.createSuccess", {
             noSuratJalan: form.noSuratJalan || "-",
@@ -212,7 +298,7 @@ export function FormPreviewStylePage() {
         setIsSaving(false);
       }
     },
-    [loadSuratJalanData, showToast, t]
+    [buildInvoicePrefillFromNoPo, loadSuratJalanData, showToast, t]
   );
 
   const executeDeleteSuratJalan = useCallback(
@@ -224,6 +310,7 @@ export function FormPreviewStylePage() {
         await deleteSuratJalan(selectedItem.id);
         setSelectedId("");
         await loadSuratJalanData({ showLoading: false });
+        setPostCreateAction(null);
         showToast(
           t("suratJalan.toast.deleteSuccess", {
             noSuratJalan: selectedItem.noSuratJalan || "-",
@@ -313,6 +400,40 @@ export function FormPreviewStylePage() {
     };
   }, [pendingConfirmation, t]);
 
+  const postCreateModalConfig = useMemo(() => {
+    if (!postCreateAction) {
+      return null;
+    }
+
+    const isNonPartial = postCreateAction.createdItem.tipe === "non partial";
+
+    return {
+      title: isNonPartial
+        ? t("suratJalan.postCreateModal.nonPartialTitle")
+        : t("suratJalan.postCreateModal.partialTitle"),
+      description: isNonPartial
+        ? t("suratJalan.postCreateModal.nonPartialDescription", {
+            noSuratJalan: postCreateAction.createdItem.noSuratJalan || "-",
+            noPo: postCreateAction.createdItem.noPo || "-",
+          })
+        : t("suratJalan.postCreateModal.partialDescription", {
+            noSuratJalan: postCreateAction.createdItem.noSuratJalan || "-",
+            noPo: postCreateAction.createdItem.noPo || "-",
+          }),
+      showCreateInvoiceButton: isNonPartial,
+    };
+  }, [postCreateAction, t]);
+
+  const handleCreateInvoiceFromPostCreate = useCallback(() => {
+    if (!postCreateAction?.invoicePrefill) {
+      return;
+    }
+
+    saveInvoicePrefill(postCreateAction.invoicePrefill);
+    setPostCreateAction(null);
+    router.push("/invoice");
+  }, [postCreateAction, router]);
+
   const showDataSection = !isLoading && (rows.length > 0 || !errorMessage);
 
   return (
@@ -341,6 +462,7 @@ export function FormPreviewStylePage() {
               onSelectRow={(row) => {
                 setActionErrorMessage("");
                 setToast(null);
+                setPostCreateAction(null);
                 setSelectedId(row.id);
               }}
               resolveCustomerLabel={resolveCustomerLabel}
@@ -354,10 +476,12 @@ export function FormPreviewStylePage() {
               onNewData={() => {
                 setActionErrorMessage("");
                 setToast(null);
+                setPostCreateAction(null);
                 setSelectedId("");
               }}
               customerOptions={customerOptions}
               noPoOptions={noPoOptions}
+              noPoCustomerMap={noPoCustomerMap}
               isSaving={isSaving}
               isDeleting={isDeleting}
               actionErrorMessage={actionErrorMessage}
@@ -383,6 +507,19 @@ export function FormPreviewStylePage() {
         isLoading={isSaving || isDeleting}
         onCancel={() => setPendingConfirmation(null)}
         onConfirm={() => void handleConfirmAction()}
+      />
+
+      <PostCreateActionModal
+        isOpen={Boolean(postCreateModalConfig)}
+        title={postCreateModalConfig?.title ?? ""}
+        description={postCreateModalConfig?.description ?? ""}
+        showCreateInvoiceButton={Boolean(postCreateModalConfig?.showCreateInvoiceButton)}
+        exportLabel={t("suratJalan.postCreateModal.exportButton")}
+        createInvoiceLabel={t("suratJalan.postCreateModal.createInvoiceButton")}
+        closeLabel={t("common.close")}
+        onExport={() => undefined}
+        onCreateInvoice={handleCreateInvoiceFromPostCreate}
+        onClose={() => setPostCreateAction(null)}
       />
 
       <AppToast

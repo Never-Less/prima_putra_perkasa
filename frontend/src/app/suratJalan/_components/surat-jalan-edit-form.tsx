@@ -27,6 +27,7 @@ type SuratJalanEditFormProps = {
   onNewData?: () => void;
   customerOptions?: Array<{ id: string; nama: string }>;
   noPoOptions?: string[];
+  noPoCustomerMap?: Record<string, string>;
   isSaving?: boolean;
   isDeleting?: boolean;
   actionErrorMessage?: string;
@@ -122,6 +123,7 @@ export function SuratJalanEditForm({
   onNewData,
   customerOptions = [],
   noPoOptions = [],
+  noPoCustomerMap = {},
   isSaving = false,
   isDeleting = false,
   actionErrorMessage = "",
@@ -162,6 +164,22 @@ export function SuratJalanEditForm({
 
     return Array.from(noPoSet.values());
   }, [form.noPo, noPoOptions]);
+  const normalizedNoPoCustomerMap = useMemo(() => {
+    const map = new Map<string, string>();
+
+    Object.entries(noPoCustomerMap).forEach(([noPo, idCustomer]) => {
+      const noPoKey = String(noPo || "").trim();
+      const idCustomerValue = String(idCustomer || "").trim();
+
+      if (!noPoKey || !idCustomerValue) {
+        return;
+      }
+
+      map.set(noPoKey, idCustomerValue);
+    });
+
+    return map;
+  }, [noPoCustomerMap]);
   const noPoSelectOptions = useMemo(() => {
     return normalizedNoPoOptions.map((noPoOption) => ({
       value: noPoOption,
@@ -178,6 +196,17 @@ export function SuratJalanEditForm({
     const existingOption = noPoSelectOptions.find((option) => option.value === noPoValue);
     return existingOption || { value: noPoValue, label: noPoValue };
   }, [form.noPo, noPoSelectOptions]);
+  const selectedNoPoCustomerId = useMemo(() => {
+    const selectedNoPo = String(form.noPo || "").trim();
+
+    if (!selectedNoPo) {
+      return "";
+    }
+
+    return normalizedNoPoCustomerMap.get(selectedNoPo) || "";
+  }, [form.noPo, normalizedNoPoCustomerMap]);
+  const effectiveIdCustomer = selectedNoPoCustomerId || form.idCustomer;
+  const isCustomerLockedByNoPo = Boolean(selectedNoPoCustomerId);
   const normalizedCustomerOptions = useMemo(() => {
     const customerMap = new Map<string, string>();
 
@@ -192,19 +221,20 @@ export function SuratJalanEditForm({
       customerMap.set(id, nama || id);
     });
 
-    if (form.idCustomer && !customerMap.has(form.idCustomer)) {
-      customerMap.set(form.idCustomer, form.idCustomer);
+    if (effectiveIdCustomer && !customerMap.has(effectiveIdCustomer)) {
+      customerMap.set(effectiveIdCustomer, effectiveIdCustomer);
     }
 
     return Array.from(customerMap.entries()).map(([id, nama]) => ({
       id,
       nama,
     }));
-  }, [customerOptions, form.idCustomer]);
+  }, [customerOptions, effectiveIdCustomer]);
   const customerLabelMap = useMemo(() => {
     return new Map(normalizedCustomerOptions.map((customer) => [customer.id, customer.nama]));
   }, [normalizedCustomerOptions]);
-  const previewCustomerLabel = customerLabelMap.get(form.idCustomer) || form.idCustomer || "-";
+  const previewCustomerLabel =
+    customerLabelMap.get(effectiveIdCustomer) || effectiveIdCustomer || "-";
 
   function updateBarangRow(index: number, field: keyof SuratJalanBarangFormRow, value: string) {
     setForm((prev) => {
@@ -227,9 +257,13 @@ export function SuratJalanEditForm({
   }
 
   function handleNoPoChange(option: SingleValue<NoPoSelectOption>) {
+    const noPo = String(option?.value || "").trim();
+    const mappedCustomerId = normalizedNoPoCustomerMap.get(noPo) || "";
+
     setForm((prev) => ({
       ...prev,
-      noPo: option?.value || "",
+      noPo: noPo,
+      idCustomer: mappedCustomerId || prev.idCustomer,
     }));
   }
 
@@ -273,6 +307,9 @@ export function SuratJalanEditForm({
                     setForm((prev) => ({
                       ...prev,
                       noPo: String(inputValue || "").trim(),
+                      idCustomer:
+                        normalizedNoPoCustomerMap.get(String(inputValue || "").trim()) ||
+                        prev.idCustomer,
                     }))
                   }
                 />
@@ -301,8 +338,9 @@ export function SuratJalanEditForm({
             <label className={`text-sm sm:col-span-2 ${tone.label}`}>
               {t("field.namaCustomer")}
               <select
-                value={form.idCustomer}
+                value={effectiveIdCustomer}
                 onChange={(event) => setForm((prev) => ({ ...prev, idCustomer: event.target.value }))}
+                disabled={isSaving || isDeleting || isCustomerLockedByNoPo}
                 className={inputClassName}
               >
                 <option value="">-</option>
@@ -312,6 +350,11 @@ export function SuratJalanEditForm({
                   </option>
                 ))}
               </select>
+              {isCustomerLockedByNoPo ? (
+                <p className="mt-1 text-xs text-slate-500">
+                  {t("suratJalan.form.customerLockedByNoPo")}
+                </p>
+              ) : null}
             </label>
 
             <label className={`text-sm ${tone.label}`}>
@@ -361,7 +404,7 @@ export function SuratJalanEditForm({
           <div className="mt-3 flex flex-wrap gap-2">
             <button
               type="button"
-              onClick={() => void onSave?.(form, item)}
+              onClick={() => void onSave?.({ ...form, idCustomer: effectiveIdCustomer }, item)}
               disabled={isSaving || isDeleting}
               className={`rounded-lg px-4 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-60 ${tone.primaryButton}`}
             >

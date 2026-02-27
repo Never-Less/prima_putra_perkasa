@@ -41,6 +41,21 @@ export type InvoiceFormState = {
   barangRows: InvoiceBarangFormRow[];
 };
 
+export type InvoicePrefillBarang = {
+  namaBarang: string;
+  kuantitas: number;
+};
+
+export type InvoicePrefillPayload = {
+  tanggal: string;
+  noPo: string;
+  noSuratJalan: string[];
+  idCustomer: string;
+  barang: InvoicePrefillBarang[];
+  isPpn?: boolean;
+  ppnRate?: number;
+};
+
 export type InvoiceFilter = {
   noInvoice: string;
   noPo: string;
@@ -60,6 +75,8 @@ export const defaultInvoiceFilter: InvoiceFilter = {
   tanggalDari: "",
   tanggalSampai: "",
 };
+
+const invoicePrefillStorageKey = "ppp_invoice_prefill";
 
 export const sampleInvoiceRows: InvoiceItem[] = [
   {
@@ -141,6 +158,18 @@ function normalize(value: string) {
   return value.trim().toLowerCase();
 }
 
+function toText(value: unknown) {
+  if (typeof value === "string") {
+    return value;
+  }
+
+  if (value === null || value === undefined) {
+    return "";
+  }
+
+  return String(value);
+}
+
 function normalizeNoSuratJalanList(value: unknown) {
   if (Array.isArray(value)) {
     return value
@@ -163,8 +192,70 @@ function parseNumber(value: string) {
   return parsed;
 }
 
+function parseNumberFromUnknown(value: unknown, fallback = 0) {
+  const parsed = Number(value);
+
+  if (!Number.isFinite(parsed)) {
+    return fallback;
+  }
+
+  return parsed;
+}
+
 function roundCurrency(value: number) {
   return Number(value.toFixed(2));
+}
+
+function normalizePrefillBarang(value: unknown): InvoicePrefillBarang | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const item = value as Record<string, unknown>;
+  const namaBarang = toText(item.namaBarang).trim();
+  const kuantitas = parseNumberFromUnknown(item.kuantitas);
+
+  if (!namaBarang || kuantitas <= 0) {
+    return null;
+  }
+
+  return {
+    namaBarang,
+    kuantitas,
+  };
+}
+
+function toInvoicePrefillPayload(value: unknown): InvoicePrefillPayload | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const payload = value as Record<string, unknown>;
+  const noPo = toText(payload.noPo).trim();
+  const idCustomer = toText(payload.idCustomer).trim();
+  const tanggal = toText(payload.tanggal).trim();
+  const noSuratJalan = normalizeNoSuratJalanList(payload.noSuratJalan);
+  const barang = Array.isArray(payload.barang)
+    ? payload.barang
+        .map(normalizePrefillBarang)
+        .filter((item): item is InvoicePrefillBarang => Boolean(item))
+    : [];
+  const isPpn = typeof payload.isPpn === "boolean" ? payload.isPpn : true;
+  const ppnRate = parseNumberFromUnknown(payload.ppnRate, 11);
+
+  if (!noPo || noSuratJalan.length === 0 || barang.length === 0) {
+    return null;
+  }
+
+  return {
+    tanggal,
+    noPo,
+    noSuratJalan,
+    idCustomer,
+    barang,
+    isPpn,
+    ppnRate,
+  };
 }
 
 export function formatTanggal(value: string, locale: Locale = "id") {
@@ -318,6 +409,58 @@ export function toInvoiceFormState(item: InvoiceItem): InvoiceFormState {
       }))
     ),
   };
+}
+
+export function toInvoiceFormStateFromPrefill(prefill: InvoicePrefillPayload): InvoiceFormState {
+  const normalizedPpnRate = Number.isFinite(prefill.ppnRate) ? prefill.ppnRate : 11;
+  const barangRows = ensureTrailingEmptyInvoiceBarangRow(
+    prefill.barang.map((item) => ({
+      namaBarang: item.namaBarang,
+      kuantitas: String(item.kuantitas),
+      unit: "",
+      hargaSatuan: "",
+    }))
+  );
+
+  return {
+    tanggal: toInputDate(prefill.tanggal),
+    noInvoice: "",
+    noPo: prefill.noPo,
+    noSuratJalanText: invoiceNoSuratJalanListToText(prefill.noSuratJalan),
+    idCustomer: prefill.idCustomer,
+    isPpn: typeof prefill.isPpn === "boolean" ? prefill.isPpn : true,
+    ppnRate: String(normalizedPpnRate),
+    barangRows,
+  };
+}
+
+export function saveInvoicePrefill(payload: InvoicePrefillPayload) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.sessionStorage.setItem(invoicePrefillStorageKey, JSON.stringify(payload));
+}
+
+export function consumeInvoicePrefill() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const rawValue = window.sessionStorage.getItem(invoicePrefillStorageKey);
+
+  if (!rawValue) {
+    return null;
+  }
+
+  window.sessionStorage.removeItem(invoicePrefillStorageKey);
+
+  try {
+    const parsedValue = JSON.parse(rawValue);
+    return toInvoicePrefillPayload(parsedValue);
+  } catch {
+    return null;
+  }
 }
 
 export function filterInvoiceRows(rows: InvoiceItem[], filter: InvoiceFilter) {

@@ -24,6 +24,8 @@ const suratJalanSchema = new mongoose.Schema(
       required: true,
       trim: true,
       maxlength: 100,
+      unique: true,
+      index: true,
     },
     noPo: {
       type: String,

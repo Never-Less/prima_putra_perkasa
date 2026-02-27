@@ -58,6 +58,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "common.noData": "Belum ada data.",
     "common.saveChanges": "Simpan Perubahan",
     "common.newData": "Data Baru",
+    "common.export": "Export",
     "common.delete": "Hapus",
     "common.cancel": "Batal",
     "common.close": "Tutup",
@@ -107,6 +108,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "suratJalan.page.description":
       "Page surat jalan disesuaikan dengan field schema backend: noSuratJalan, noPo, tanggal, namaCustomer, barang, kendaraan, dan tipe.",
     "suratJalan.table.title": "Tabel Surat Jalan",
+    "suratJalan.table.exportNoPoButton": "Export NoPO",
     "suratJalan.form.title": "Form Edit + Preview",
     "suratJalan.form.description":
       "Klik baris pada tabel untuk mengisi form dan melihat preview.",
@@ -114,6 +116,8 @@ export const messages: Record<Locale, MessageDictionary> = {
     "suratJalan.form.noPoSelectPlaceholder": "Pilih atau ketik NoPO...",
     "suratJalan.form.noPoNoOptions": "Belum ada NoPO yang cocok.",
     "suratJalan.form.noPoCreateLabel": "Gunakan \"{{value}}\" sebagai NoPO baru",
+    "suratJalan.form.customerLockedByNoPo":
+      "Nama customer mengikuti data NoPO yang dipilih dan tidak dapat diubah.",
     "suratJalan.form.items.title": "barang",
     "suratJalan.form.items.hint": "Isi nama dan jumlah. Baris kosong baru akan muncul otomatis.",
     "suratJalan.form.items.placeholder.name": "nama barang",
@@ -134,6 +138,14 @@ export const messages: Record<Locale, MessageDictionary> = {
       "Surat jalan \"{{noSuratJalan}}\" berhasil diperbarui.",
     "suratJalan.toast.deleteSuccess":
       "Surat jalan \"{{noSuratJalan}}\" berhasil dihapus.",
+    "suratJalan.postCreateModal.partialTitle": "Surat Jalan Berhasil Dibuat",
+    "suratJalan.postCreateModal.partialDescription":
+      "Surat jalan \"{{noSuratJalan}}\" (NoPO: {{noPo}}) bertipe partial. Anda dapat mengekspor surat jalan.",
+    "suratJalan.postCreateModal.nonPartialTitle": "Surat Jalan Non Partial Dibuat",
+    "suratJalan.postCreateModal.nonPartialDescription":
+      "Surat jalan \"{{noSuratJalan}}\" (NoPO: {{noPo}}) bertipe non partial. Anda dapat mengekspor surat jalan atau lanjut membuat invoice dari data NoPO ini.",
+    "suratJalan.postCreateModal.exportButton": "Export Surat Jalan",
+    "suratJalan.postCreateModal.createInvoiceButton": "Buat Invoice",
 
     "pembelian.page.description":
       "Page pembelian disesuaikan dengan field schema backend: tanggalNota, namaSupplier, noNpwp, noInvoice, hutang, ppn, lamaHutang, nilaiNota, tanggalJatuhTempo, dan tanggalBayar.",
@@ -231,6 +243,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "common.noData": "No data available.",
     "common.saveChanges": "Save Changes",
     "common.newData": "New Data",
+    "common.export": "Export",
     "common.delete": "Delete",
     "common.cancel": "Cancel",
     "common.close": "Close",
@@ -279,6 +292,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "suratJalan.page.description":
       "Delivery Note page aligned with backend schema fields: noSuratJalan, noPo, tanggal, customerName, barang, kendaraan, and tipe.",
     "suratJalan.table.title": "Delivery Note Table",
+    "suratJalan.table.exportNoPoButton": "Export noPo",
     "suratJalan.form.title": "Edit Form + Preview",
     "suratJalan.form.description":
       "Click a table row to fill the form and see the preview.",
@@ -287,6 +301,8 @@ export const messages: Record<Locale, MessageDictionary> = {
     "suratJalan.form.noPoSelectPlaceholder": "Select or type noPo...",
     "suratJalan.form.noPoNoOptions": "No matching noPo found.",
     "suratJalan.form.noPoCreateLabel": "Use \"{{value}}\" as a new noPo",
+    "suratJalan.form.customerLockedByNoPo":
+      "Customer follows the selected noPo data and cannot be changed.",
     "suratJalan.form.items.title": "Items",
     "suratJalan.form.items.hint":
       "Fill in item name and quantity. A new empty row will appear automatically.",
@@ -309,6 +325,14 @@ export const messages: Record<Locale, MessageDictionary> = {
       "Delivery note \"{{noSuratJalan}}\" has been updated successfully.",
     "suratJalan.toast.deleteSuccess":
       "Delivery note \"{{noSuratJalan}}\" has been deleted successfully.",
+    "suratJalan.postCreateModal.partialTitle": "Delivery Note Created",
+    "suratJalan.postCreateModal.partialDescription":
+      "Delivery note \"{{noSuratJalan}}\" (noPo: {{noPo}}) is partial. You can export this delivery note.",
+    "suratJalan.postCreateModal.nonPartialTitle": "Non Partial Delivery Note Created",
+    "suratJalan.postCreateModal.nonPartialDescription":
+      "Delivery note \"{{noSuratJalan}}\" (noPo: {{noPo}}) is non partial. You can export it or continue to create an invoice from this noPo data.",
+    "suratJalan.postCreateModal.exportButton": "Export Delivery Note",
+    "suratJalan.postCreateModal.createInvoiceButton": "Create Invoice",
 
     "pembelian.page.description":
       "Purchase page aligned with backend schema fields: tanggalNota, namaSupplier, noNpwp, noInvoice, hutang, ppn, lamaHutang, nilaiNota, tanggalJatuhTempo, and tanggalBayar.",

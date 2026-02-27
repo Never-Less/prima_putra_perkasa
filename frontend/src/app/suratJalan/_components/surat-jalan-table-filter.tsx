@@ -72,6 +72,27 @@ const toneStyles: Record<
   },
 };
 
+function escapeCsvValue(value: string) {
+  const text = String(value || "");
+
+  if (!/[",\r\n]/.test(text)) {
+    return text;
+  }
+
+  return `"${text.replace(/"/g, "\"\"")}"`;
+}
+
+function sanitizeFileName(value: string) {
+  const normalized = String(value || "")
+    .trim()
+    .replace(/[\\/:*?"<>|]/g, "-")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+
+  return normalized || "surat-jalan-export";
+}
+
 export function SuratJalanTableFilter({
   rows,
   selectedId,
@@ -111,11 +132,56 @@ export function SuratJalanTableFilter({
     }));
   }, [filteredRows]);
 
+  function exportRowsAsCsv(items: SuratJalanItem[], fileNameBase: string) {
+    if (typeof window === "undefined" || items.length === 0) {
+      return;
+    }
+
+    const header = [
+      "noSuratJalan",
+      "noPo",
+      "tanggal",
+      "namaCustomer",
+      "kendaraan",
+      "tipe",
+      "barang",
+    ];
+    const lines = [header.map(escapeCsvValue).join(",")];
+
+    items.forEach((row) => {
+      const customerLabel = resolveCustomerLabel?.(row.idCustomer) || row.idCustomer || "-";
+      const csvRow = [
+        row.noSuratJalan,
+        row.noPo,
+        formatTanggal(row.tanggal, locale),
+        customerLabel,
+        row.kendaraan,
+        row.tipe,
+        barangLabel(row.barang),
+      ];
+
+      lines.push(csvRow.map(escapeCsvValue).join(","));
+    });
+
+    const csvContent = `\uFEFF${lines.join("\r\n")}`;
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+
+    anchor.href = downloadUrl;
+    anchor.download = `${sanitizeFileName(fileNameBase)}.csv`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+    window.URL.revokeObjectURL(downloadUrl);
+  }
+
   return (
     <section className={`space-y-4 rounded-2xl border p-5 shadow-sm ${tone.section}`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className={`text-lg font-semibold ${tone.title}`}>{t("suratJalan.table.title")}</h2>
         <button
+          type="button"
           onClick={() => setFilters(defaultSuratJalanFilter)}
           className={`rounded-lg px-3 py-2 text-sm ${tone.resetButton}`}
         >
@@ -209,7 +275,23 @@ export function SuratJalanTableFilter({
               <p className="text-sm font-semibold text-slate-800">
                 {t("field.noPo")}: {group.noPo}
               </p>
-              <span className="text-xs text-slate-500">{t("common.totalData", { count: group.items.length })}</span>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs text-slate-500">
+                  {t("common.totalData", { count: group.items.length })}
+                </span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    exportRowsAsCsv(
+                      rows.filter((row) => row.noPo === group.noPo),
+                      `surat-jalan-${group.noPo}`
+                    )
+                  }
+                  className={`rounded-lg px-3 py-1.5 text-xs font-medium ${tone.actionInactive}`}
+                >
+                  {t("suratJalan.table.exportNoPoButton")}
+                </button>
+              </div>
             </div>
 
             <div className="overflow-x-auto">
@@ -249,14 +331,24 @@ export function SuratJalanTableFilter({
                         <td className={`whitespace-nowrap ${cellPadding} text-slate-600`}>{row.kendaraan}</td>
                         <td className={`whitespace-nowrap ${cellPadding} text-slate-600`}>{row.tipe}</td>
                         <td className={`whitespace-nowrap ${cellPadding}`}>
-                          <button
-                            onClick={() => onSelectRow?.(row)}
-                            className={`rounded-lg px-3 py-1.5 text-xs font-medium ${
-                              isSelected ? tone.actionActive : tone.actionInactive
-                            }`}
-                          >
-                            {isSelected ? t("common.selected") : t("common.selectRow")}
-                          </button>
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => onSelectRow?.(row)}
+                              className={`rounded-lg px-3 py-1.5 text-xs font-medium ${
+                                isSelected ? tone.actionActive : tone.actionInactive
+                              }`}
+                            >
+                              {isSelected ? t("common.selected") : t("common.selectRow")}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => exportRowsAsCsv([row], `surat-jalan-${row.noSuratJalan}`)}
+                              className={`rounded-lg px-3 py-1.5 text-xs font-medium ${tone.actionInactive}`}
+                            >
+                              {t("common.export")}
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );

@@ -1,14 +1,24 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { sampleInvoiceRows } from "./_lib/invoice";
+import {
+  consumeInvoicePrefill,
+  sampleInvoiceRows,
+  toInvoiceFormStateFromPrefill,
+  type InvoiceFormState,
+} from "./_lib/invoice";
 import { InvoiceEditForm } from "./_components/invoice-edit-form";
 import { InvoiceTableFilter } from "./_components/invoice-table-filter";
 import { useI18n } from "../_i18n/provider";
 
 export default function InvoicePage() {
   const { t } = useI18n();
+  const [prefillOnLoad] = useState(() => consumeInvoicePrefill());
   const [selectedId, setSelectedId] = useState("");
+  const [initialForm, setInitialForm] = useState<InvoiceFormState | null>(() =>
+    prefillOnLoad ? toInvoiceFormStateFromPrefill(prefillOnLoad) : null
+  );
+  const [initialFormKey, setInitialFormKey] = useState(() => (prefillOnLoad ? Date.now() : 0));
 
   const selectedRow = useMemo(() => {
     return sampleInvoiceRows.find((row) => row.id === selectedId);
@@ -27,13 +37,21 @@ export default function InvoicePage() {
         <InvoiceTableFilter
           rows={sampleInvoiceRows}
           selectedId={selectedId}
-          onSelectRow={(row) => setSelectedId(row.id)}
+          onSelectRow={(row) => {
+            setInitialForm(null);
+            setSelectedId(row.id);
+          }}
         />
 
         <InvoiceEditForm
-          key={selectedId || "new"}
+          key={`${selectedId || "new"}-${initialFormKey}`}
           item={selectedRow}
-          onNewData={() => setSelectedId("")}
+          initialForm={selectedRow ? undefined : initialForm || undefined}
+          onNewData={() => {
+            setInitialForm(null);
+            setInitialFormKey(Date.now());
+            setSelectedId("");
+          }}
         />
       </div>
     </main>

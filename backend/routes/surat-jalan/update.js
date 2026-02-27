@@ -93,6 +93,19 @@ router.put("/:id", async (req, res) => {
       }
     }
 
+    if (updates.noSuratJalan) {
+      const existingSuratJalan = await SuratJalan.findOne({
+        noSuratJalan: updates.noSuratJalan,
+        _id: { $ne: id },
+      })
+        .select("_id")
+        .lean();
+
+      if (existingSuratJalan) {
+        return res.status(409).json({ message: "noSuratJalan sudah digunakan" });
+      }
+    }
+
     const suratJalan = await SuratJalan.findByIdAndUpdate(id, updates, {
       new: true,
       runValidators: true,
@@ -107,6 +120,7 @@ router.put("/:id", async (req, res) => {
       {
         $set: {
           tipe: suratJalan.tipe,
+          idCustomer: suratJalan.idCustomer,
         },
       }
     );
@@ -115,7 +129,11 @@ router.put("/:id", async (req, res) => {
       message: "surat jalan updated",
       suratJalan: sanitizeSuratJalan(suratJalan),
     });
-  } catch (_error) {
+  } catch (error) {
+    if (error?.code === 11000 && error?.keyPattern?.noSuratJalan) {
+      return res.status(409).json({ message: "noSuratJalan sudah digunakan" });
+    }
+
     return res.status(500).json({ message: "failed to update surat jalan" });
   }
 });

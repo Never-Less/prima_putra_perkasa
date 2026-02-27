@@ -20,6 +20,7 @@ import { useI18n } from "../../_i18n/provider";
 
 type InvoiceEditFormProps = {
   item?: InvoiceItem;
+  initialForm?: InvoiceFormState;
   onNewData?: () => void;
 };
 
@@ -36,10 +37,17 @@ function createEmptyInvoiceFormState(): InvoiceFormState {
   };
 }
 
-export function InvoiceEditForm({ item, onNewData }: InvoiceEditFormProps) {
+export function InvoiceEditForm({ item, initialForm, onNewData }: InvoiceEditFormProps) {
   const { locale, t } = useI18n();
   const [form, setForm] = useState<InvoiceFormState>(() =>
-    item ? toInvoiceFormState(item) : createEmptyInvoiceFormState()
+    item
+      ? toInvoiceFormState(item)
+      : initialForm
+        ? {
+            ...initialForm,
+            barangRows: ensureTrailingEmptyInvoiceBarangRow(initialForm.barangRows),
+          }
+        : createEmptyInvoiceFormState()
   );
 
   const barangList = useMemo(() => invoiceBarangRowsToList(form.barangRows), [form.barangRows]);

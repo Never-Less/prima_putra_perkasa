@@ -41,6 +41,24 @@ router.post("/", async (req, res) => {
       return res.status(404).json({ message: "customer tidak ditemukan" });
     }
 
+    const existingNoPoSuratJalan = await SuratJalan.findOne({ noPo })
+      .select("idCustomer")
+      .lean();
+    if (existingNoPoSuratJalan) {
+      const existingIdCustomer = String(existingNoPoSuratJalan.idCustomer || "").trim();
+
+      if (existingIdCustomer && existingIdCustomer !== idCustomer) {
+        return res.status(409).json({
+          message: "noPo sudah terhubung ke customer lain",
+        });
+      }
+    }
+
+    const existingSuratJalan = await SuratJalan.findOne({ noSuratJalan }).select("_id").lean();
+    if (existingSuratJalan) {
+      return res.status(409).json({ message: "noSuratJalan sudah digunakan" });
+    }
+
     const suratJalan = await SuratJalan.create({
       noSuratJalan,
       noPo,
@@ -56,6 +74,7 @@ router.post("/", async (req, res) => {
       {
         $set: {
           tipe: tipe,
+          idCustomer: idCustomer,
         },
       }
     );
@@ -64,7 +83,11 @@ router.post("/", async (req, res) => {
       message: "surat jalan created",
       suratJalan: sanitizeSuratJalan(suratJalan),
     });
-  } catch (_error) {
+  } catch (error) {
+    if (error?.code === 11000 && error?.keyPattern?.noSuratJalan) {
+      return res.status(409).json({ message: "noSuratJalan sudah digunakan" });
+    }
+
     return res.status(500).json({ message: "failed to create surat jalan" });
   }
 });
