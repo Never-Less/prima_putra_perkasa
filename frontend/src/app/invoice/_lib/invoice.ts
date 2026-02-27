@@ -1,3 +1,5 @@
+import { requestApi } from "../../_lib/api-client";
+
 export type InvoiceBarang = {
   namaBarang: string;
   kuantitas: number;
@@ -65,6 +67,16 @@ export type InvoiceFilter = {
   tanggalDari: string;
   tanggalSampai: string;
 };
+
+type InvoiceListResponse = {
+  invoices?: unknown[];
+};
+
+type InvoiceResponse = {
+  invoice?: unknown;
+};
+
+type ResolveCustomerLabel = (customerId: string) => string;
 
 export const defaultInvoiceFilter: InvoiceFilter = {
   noInvoice: "",
@@ -182,6 +194,25 @@ function normalizeNoSuratJalanList(value: unknown) {
   return singleValue ? [singleValue] : [];
 }
 
+function parseCustomerId(value: unknown) {
+  if (typeof value === "string") {
+    return value.trim();
+  }
+
+  if (value && typeof value === "object") {
+    const customer = value as Record<string, unknown>;
+    const id = toText(customer.id || customer._id).trim();
+
+    if (id) {
+      return id;
+    }
+
+    return toText(customer.nama).trim();
+  }
+
+  return toText(value).trim();
+}
+
 function parseNumber(value: string) {
   const parsed = Number(value);
 
@@ -204,6 +235,63 @@ function parseNumberFromUnknown(value: unknown, fallback = 0) {
 
 function roundCurrency(value: number) {
   return Number(value.toFixed(2));
+}
+
+function toInvoiceBarang(value: unknown): InvoiceBarang | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const item = value as Record<string, unknown>;
+  const namaBarang = toText(item.namaBarang).trim();
+  const kuantitas = parseNumberFromUnknown(item.kuantitas);
+  const unit = toText(item.unit).trim();
+  const hargaSatuan = parseNumberFromUnknown(item.hargaSatuan);
+  const jumlah = parseNumberFromUnknown(item.jumlah, roundCurrency(kuantitas * hargaSatuan));
+
+  if (!namaBarang || !unit || kuantitas < 0 || hargaSatuan < 0 || jumlah < 0) {
+    return null;
+  }
+
+  return {
+    namaBarang,
+    kuantitas,
+    unit,
+    hargaSatuan,
+    jumlah,
+  };
+}
+
+function toInvoiceItem(value: unknown): InvoiceItem | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const row = value as Record<string, unknown>;
+  const id = toText(row.id || row._id).trim();
+
+  if (!id) {
+    return null;
+  }
+
+  const barang = Array.isArray(row.barang)
+    ? row.barang.map(toInvoiceBarang).filter((item): item is InvoiceBarang => Boolean(item))
+    : [];
+
+  return {
+    id: id,
+    tanggal: toText(row.tanggal).trim(),
+    noInvoice: toText(row.noInvoice).trim(),
+    noPo: toText(row.noPo).trim(),
+    noSuratJalan: normalizeNoSuratJalanList(row.noSuratJalan),
+    idCustomer: parseCustomerId(row.idCustomer),
+    barang: barang,
+    isPpn: Boolean(row.isPpn),
+    ppnRate: parseNumberFromUnknown(row.ppnRate, 11),
+    ppnAmount: parseNumberFromUnknown(row.ppnAmount),
+    subtotal: parseNumberFromUnknown(row.subtotal),
+    grandTotal: parseNumberFromUnknown(row.grandTotal),
+  };
 }
 
 function normalizePrefillBarang(value: unknown): InvoicePrefillBarang | null {
@@ -256,6 +344,59 @@ function toInvoicePrefillPayload(value: unknown): InvoicePrefillPayload | null {
     isPpn,
     ppnRate,
   };
+}
+
+function toNormalizedInvoicePayload(form: InvoiceFormState) {
+  const barang = invoiceBarangRowsToList(form.barangRows);
+  const noSuratJalan = invoiceNoSuratJalanTextToList(form.noSuratJalanText);
+  const ppnRateValue = parseNumber(form.ppnRate || "0");
+
+  return {
+    tanggal: toText(form.tanggal).trim(),
+    noInvoice: toText(form.noInvoice).trim(),
+    noPo: toText(form.noPo).trim(),
+    noSuratJalan: noSuratJalan,
+    idCustomer: toText(form.idCustomer).trim(),
+    barang: barang,
+    isPpn: form.isPpn,
+    ppnRate: Number.isFinite(ppnRateValue) ? ppnRateValue : 0,
+  };
+}
+
+export async function fetchInvoiceRows() {
+  const response = await requestApi<InvoiceListResponse>("/api/invoices");
+
+  if (!response || !Array.isArray(response.invoices)) {
+    return [];
+  }
+
+  return response.invoices.map(toInvoiceItem).filter((item): item is InvoiceItem => Boolean(item));
+}
+
+export async function createInvoice(form: InvoiceFormState) {
+  const payload = toNormalizedInvoicePayload(form);
+  const response = await requestApi<InvoiceResponse>("/api/invoices", {
+    method: "POST",
+    body: payload,
+  });
+
+  return toInvoiceItem(response?.invoice);
+}
+
+export async function updateInvoice(id: string, form: InvoiceFormState) {
+  const payload = toNormalizedInvoicePayload(form);
+  const response = await requestApi<InvoiceResponse>(`/api/invoices/${id}`, {
+    method: "PUT",
+    body: payload,
+  });
+
+  return toInvoiceItem(response?.invoice);
+}
+
+export async function deleteInvoice(id: string) {
+  await requestApi(`/api/invoices/${id}`, {
+    method: "DELETE",
+  });
 }
 
 export function formatTanggal(value: string, locale: Locale = "id") {
@@ -463,7 +604,11 @@ export function consumeInvoicePrefill() {
   }
 }
 
-export function filterInvoiceRows(rows: InvoiceItem[], filter: InvoiceFilter) {
+export function filterInvoiceRows(
+  rows: InvoiceItem[],
+  filter: InvoiceFilter,
+  resolveCustomerLabel?: ResolveCustomerLabel
+) {
   const fromDate = filter.tanggalDari ? new Date(filter.tanggalDari) : null;
   const toDate = filter.tanggalSampai ? new Date(filter.tanggalSampai) : null;
 
@@ -477,7 +622,8 @@ export function filterInvoiceRows(rows: InvoiceItem[], filter: InvoiceFilter) {
     const matchNoSuratJalan = normalize(invoiceNoSuratJalanListLabel(row.noSuratJalan)).includes(
       normalize(filter.noSuratJalan)
     );
-    const matchIdCustomer = normalize(row.idCustomer).includes(normalize(filter.idCustomer));
+    const customerLabel = resolveCustomerLabel ? resolveCustomerLabel(row.idCustomer) : row.idCustomer;
+    const matchIdCustomer = normalize(customerLabel).includes(normalize(filter.idCustomer));
 
     const matchPpn =
       !filter.isPpn ||

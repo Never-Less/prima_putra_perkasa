@@ -104,6 +104,18 @@ export const messages: Record<Locale, MessageDictionary> = {
     "invoice.form.items.placeholder.unit": "unit",
     "invoice.form.items.placeholder.price": "hargaSatuan",
     "invoice.preview.title": "Preview Invoice",
+    "invoice.apiLoadError": "Gagal memuat data invoice dari backend.",
+    "invoice.customerLoadError": "Gagal memuat pilihan customer untuk invoice.",
+    "invoice.mutationError": "Gagal memproses perubahan invoice.",
+    "invoice.confirmUpdateTitle": "Konfirmasi Ubah Invoice",
+    "invoice.confirmUpdateDescription":
+      "Simpan perubahan untuk invoice \"{{noInvoice}}\"?",
+    "invoice.confirmDeleteTitle": "Konfirmasi Hapus Invoice",
+    "invoice.confirmDeleteDescription":
+      "Invoice \"{{noInvoice}}\" akan dihapus permanen. Lanjutkan?",
+    "invoice.toast.createSuccess": "Invoice \"{{noInvoice}}\" berhasil ditambahkan.",
+    "invoice.toast.updateSuccess": "Invoice \"{{noInvoice}}\" berhasil diperbarui.",
+    "invoice.toast.deleteSuccess": "Invoice \"{{noInvoice}}\" berhasil dihapus.",
 
     "suratJalan.page.description":
       "Page surat jalan disesuaikan dengan field schema backend: noSuratJalan, noPo, tanggal, namaCustomer, barang, kendaraan, dan tipe.",
@@ -294,6 +306,18 @@ export const messages: Record<Locale, MessageDictionary> = {
     "invoice.form.items.placeholder.unit": "unit",
     "invoice.form.items.placeholder.price": "Unit Price",
     "invoice.preview.title": "Invoice Preview",
+    "invoice.apiLoadError": "Failed to load invoice data from backend.",
+    "invoice.customerLoadError": "Failed to load customer options for invoice.",
+    "invoice.mutationError": "Failed to process invoice changes.",
+    "invoice.confirmUpdateTitle": "Confirm Invoice Update",
+    "invoice.confirmUpdateDescription":
+      "Save changes for invoice \"{{noInvoice}}\"?",
+    "invoice.confirmDeleteTitle": "Confirm Invoice Deletion",
+    "invoice.confirmDeleteDescription":
+      "Invoice \"{{noInvoice}}\" will be deleted permanently. Continue?",
+    "invoice.toast.createSuccess": "Invoice \"{{noInvoice}}\" has been added successfully.",
+    "invoice.toast.updateSuccess": "Invoice \"{{noInvoice}}\" has been updated successfully.",
+    "invoice.toast.deleteSuccess": "Invoice \"{{noInvoice}}\" has been deleted successfully.",
 
     "suratJalan.page.description":
       "Delivery Note page aligned with backend schema fields: noSuratJalan, noPo, tanggal, customerName, barang, kendaraan, and tipe.",

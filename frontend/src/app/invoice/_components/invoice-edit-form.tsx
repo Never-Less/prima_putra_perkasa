@@ -15,13 +15,18 @@ import {
   type InvoiceFormState,
   type InvoiceItem,
 } from "../_lib/invoice";
-import { customerNameOptions } from "../../customer/_lib/customer";
 import { useI18n } from "../../_i18n/provider";
 
 type InvoiceEditFormProps = {
   item?: InvoiceItem;
   initialForm?: InvoiceFormState;
   onNewData?: () => void;
+  customerOptions?: Array<{ id: string; nama: string }>;
+  isSaving?: boolean;
+  isDeleting?: boolean;
+  actionErrorMessage?: string;
+  onSave?: (form: InvoiceFormState, selectedItem?: InvoiceItem) => Promise<void> | void;
+  onDelete?: (selectedItem: InvoiceItem) => Promise<void> | void;
 };
 
 function createEmptyInvoiceFormState(): InvoiceFormState {
@@ -37,7 +42,17 @@ function createEmptyInvoiceFormState(): InvoiceFormState {
   };
 }
 
-export function InvoiceEditForm({ item, initialForm, onNewData }: InvoiceEditFormProps) {
+export function InvoiceEditForm({
+  item,
+  initialForm,
+  onNewData,
+  customerOptions = [],
+  isSaving = false,
+  isDeleting = false,
+  actionErrorMessage = "",
+  onSave,
+  onDelete,
+}: InvoiceEditFormProps) {
   const { locale, t } = useI18n();
   const [form, setForm] = useState<InvoiceFormState>(() =>
     item
@@ -63,15 +78,33 @@ export function InvoiceEditForm({ item, initialForm, onNewData }: InvoiceEditFor
     return calculateInvoiceSummary(barangList, form.isPpn, normalizedPpnRate);
   }, [barangList, form.isPpn, form.ppnRate]);
 
-  const customerOptions = useMemo(() => {
-    const options = customerNameOptions.filter(Boolean);
+  const normalizedCustomerOptions = useMemo(() => {
+    const customerMap = new Map<string, string>();
 
-    if (form.idCustomer && !options.includes(form.idCustomer)) {
-      return [form.idCustomer, ...options];
+    customerOptions.forEach((customer) => {
+      const id = String(customer.id || "").trim();
+      const nama = String(customer.nama || "").trim();
+
+      if (!id) {
+        return;
+      }
+
+      customerMap.set(id, nama || id);
+    });
+
+    if (form.idCustomer && !customerMap.has(form.idCustomer)) {
+      customerMap.set(form.idCustomer, form.idCustomer);
     }
 
-    return options;
-  }, [form.idCustomer]);
+    return Array.from(customerMap.entries()).map(([id, nama]) => ({
+      id,
+      nama,
+    }));
+  }, [customerOptions, form.idCustomer]);
+  const customerLabelMap = useMemo(() => {
+    return new Map(normalizedCustomerOptions.map((customer) => [customer.id, customer.nama]));
+  }, [normalizedCustomerOptions]);
+  const previewCustomerLabel = customerLabelMap.get(form.idCustomer) || form.idCustomer || "-";
 
   function updateBarangRow(index: number, field: keyof InvoiceBarangFormRow, value: string) {
     setForm((prev) => {
@@ -151,12 +184,13 @@ export function InvoiceEditForm({ item, initialForm, onNewData }: InvoiceEditFor
               <select
                 value={form.idCustomer}
                 onChange={(event) => setForm((prev) => ({ ...prev, idCustomer: event.target.value }))}
+                disabled={isSaving || isDeleting}
                 className="mt-1 w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm shadow-sm"
               >
                 <option value="">-</option>
-                {customerOptions.map((customerName) => (
-                  <option key={customerName} value={customerName}>
-                    {customerName}
+                {normalizedCustomerOptions.map((customer) => (
+                  <option key={customer.id} value={customer.id}>
+                    {customer.nama}
                   </option>
                 ))}
               </select>
@@ -251,25 +285,49 @@ export function InvoiceEditForm({ item, initialForm, onNewData }: InvoiceEditFor
           </div>
 
           <div className="mt-3 flex flex-wrap gap-2">
-            <button className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600">
-              {t("common.saveChanges")}
+            <button
+              type="button"
+              onClick={() => void onSave?.(form, item)}
+              disabled={isSaving || isDeleting}
+              className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isSaving ? t("common.loading") : t("common.saveChanges")}
             </button>
             <button
+              type="button"
               onClick={() => {
                 onNewData?.();
                 setForm(createEmptyInvoiceFormState());
               }}
-              className="rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm text-sky-700 hover:bg-sky-50"
+              disabled={isSaving || isDeleting}
+              className="rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm text-sky-700 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {t("common.newData")}
             </button>
             <button
+              type="button"
               onClick={() => setForm(item ? toInvoiceFormState(item) : createEmptyInvoiceFormState())}
-              className="rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm text-sky-700 hover:bg-sky-50"
+              disabled={isSaving || isDeleting}
+              className="rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm text-sky-700 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {t("common.resetForm")}
             </button>
+            {item ? (
+              <button
+                type="button"
+                onClick={() => void onDelete?.(item)}
+                disabled={isSaving || isDeleting}
+                className="rounded-lg border border-red-300 bg-white px-4 py-2 text-sm text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isDeleting ? t("common.loading") : t("common.delete")}
+              </button>
+            ) : null}
           </div>
+          {actionErrorMessage ? (
+            <p className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              {actionErrorMessage}
+            </p>
+          ) : null}
         </div>
 
         <div className="rounded-xl border border-transparent bg-slate-100/70 p-4">
@@ -289,7 +347,7 @@ export function InvoiceEditForm({ item, initialForm, onNewData }: InvoiceEditFor
               {invoiceNoSuratJalanListLabel(noSuratJalanList)}
             </p>
             <p>
-              <span className="text-slate-500">{t("field.namaCustomer")}:</span> {form.idCustomer || "-"}
+              <span className="text-slate-500">{t("field.namaCustomer")}:</span> {previewCustomerLabel}
             </p>
             <p>
               <span className="text-slate-500">{t("field.isPpn")}:</span> {String(form.isPpn)}

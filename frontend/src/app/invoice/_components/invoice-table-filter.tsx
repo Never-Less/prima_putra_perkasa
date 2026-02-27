@@ -16,13 +16,22 @@ type InvoiceTableFilterProps = {
   rows: InvoiceItem[];
   selectedId?: string;
   onSelectRow?: (row: InvoiceItem) => void;
+  resolveCustomerLabel?: (customerId: string) => string;
 };
 
-export function InvoiceTableFilter({ rows, selectedId, onSelectRow }: InvoiceTableFilterProps) {
+export function InvoiceTableFilter({
+  rows,
+  selectedId,
+  onSelectRow,
+  resolveCustomerLabel,
+}: InvoiceTableFilterProps) {
   const { locale, t } = useI18n();
   const [filter, setFilter] = useState<InvoiceFilter>(defaultInvoiceFilter);
 
-  const filteredRows = useMemo(() => filterInvoiceRows(rows, filter), [filter, rows]);
+  const filteredRows = useMemo(
+    () => filterInvoiceRows(rows, filter, resolveCustomerLabel),
+    [filter, resolveCustomerLabel, rows]
+  );
 
   return (
     <section className="space-y-4 rounded-2xl border border-sky-200 bg-sky-50/40 p-5 shadow-sm">
@@ -129,8 +138,16 @@ export function InvoiceTableFilter({ rows, selectedId, onSelectRow }: InvoiceTab
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200 bg-white">
-            {filteredRows.map((row, index) => {
+            {filteredRows.length === 0 ? (
+              <tr>
+                <td colSpan={10} className="px-3 py-4 text-center text-slate-500">
+                  {t("common.noData")}
+                </td>
+              </tr>
+            ) : (
+              filteredRows.map((row, index) => {
               const isSelected = selectedId === row.id;
+              const customerLabel = resolveCustomerLabel?.(row.idCustomer) || row.idCustomer || "-";
 
               return (
                 <tr key={row.id} className={isSelected ? "bg-sky-100" : index % 2 ? "bg-sky-50/70" : undefined}>
@@ -141,7 +158,7 @@ export function InvoiceTableFilter({ rows, selectedId, onSelectRow }: InvoiceTab
                   <td className="px-3 py-2 text-slate-600">
                     {row.barang.map((barang) => barang.namaBarang).join(", ") || "-"}
                   </td>
-                  <td className="whitespace-nowrap px-3 py-2 text-slate-600">{row.idCustomer}</td>
+                  <td className="whitespace-nowrap px-3 py-2 text-slate-600">{customerLabel}</td>
                   <td className="whitespace-nowrap px-3 py-2 text-slate-600">{formatRupiah(row.subtotal, locale)}</td>
                   <td className="whitespace-nowrap px-3 py-2 text-slate-600">{formatRupiah(row.ppnAmount, locale)}</td>
                   <td className="whitespace-nowrap px-3 py-2 font-medium text-slate-800">{formatRupiah(row.grandTotal, locale)}</td>
@@ -159,7 +176,8 @@ export function InvoiceTableFilter({ rows, selectedId, onSelectRow }: InvoiceTab
                   </td>
                 </tr>
               );
-            })}
+            })
+            )}
           </tbody>
         </table>
       </div>

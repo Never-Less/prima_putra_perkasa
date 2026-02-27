@@ -237,13 +237,13 @@ export function FormPreviewStylePage() {
         tanggal: createdItem.tanggal,
         noPo: createdItem.noPo,
         noSuratJalan: Array.from(noSuratJalanSet.values()),
-        idCustomer: resolveCustomerLabel(createdItem.idCustomer),
+        idCustomer: createdItem.idCustomer,
         barang: barang,
         isPpn: true,
         ppnRate: 11,
       };
     },
-    [resolveCustomerLabel]
+    []
   );
 
   const executeSaveSuratJalan = useCallback(
