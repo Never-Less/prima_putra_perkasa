@@ -28,6 +28,7 @@ type ToastState = {
 };
 
 type PostCreateActionState = {
+  actionType: "create" | "update";
   createdItem: SuratJalanItem;
   invoicePrefill: InvoicePrefillPayload;
 };
@@ -253,9 +254,18 @@ export function FormPreviewStylePage() {
       try {
         if (selectedItem?.id) {
           const updatedItem = await updateSuratJalan(selectedItem.id, form);
-          await loadSuratJalanData({ showLoading: false });
-          setSelectedId(updatedItem?.id || selectedItem.id);
-          setPostCreateAction(null);
+          const refreshedRows = await loadSuratJalanData({ showLoading: false });
+          const currentUpdatedItem = updatedItem
+            ? refreshedRows.find((row) => row.id === updatedItem.id) || updatedItem
+            : undefined;
+          setSelectedId(currentUpdatedItem?.id || selectedItem.id);
+          if (currentUpdatedItem) {
+            setPostCreateAction({
+              actionType: "update",
+              createdItem: currentUpdatedItem,
+              invoicePrefill: buildInvoicePrefillFromNoPo(refreshedRows, currentUpdatedItem),
+            });
+          }
           showToast(
             t("suratJalan.toast.updateSuccess", {
               noSuratJalan: form.noSuratJalan || selectedItem.noSuratJalan || "-",
@@ -273,6 +283,7 @@ export function FormPreviewStylePage() {
         setSelectedId(currentCreatedItem?.id || "");
         if (currentCreatedItem) {
           setPostCreateAction({
+            actionType: "create",
             createdItem: currentCreatedItem,
             invoicePrefill: buildInvoicePrefillFromNoPo(refreshedRows, currentCreatedItem),
           });
@@ -406,17 +417,21 @@ export function FormPreviewStylePage() {
     }
 
     const isNonPartial = postCreateAction.createdItem.tipe === "non partial";
+    const messagePrefix =
+      postCreateAction.actionType === "update"
+        ? "suratJalan.postUpdateModal"
+        : "suratJalan.postCreateModal";
 
     return {
       title: isNonPartial
-        ? t("suratJalan.postCreateModal.nonPartialTitle")
-        : t("suratJalan.postCreateModal.partialTitle"),
+        ? t(`${messagePrefix}.nonPartialTitle`)
+        : t(`${messagePrefix}.partialTitle`),
       description: isNonPartial
-        ? t("suratJalan.postCreateModal.nonPartialDescription", {
+        ? t(`${messagePrefix}.nonPartialDescription`, {
             noSuratJalan: postCreateAction.createdItem.noSuratJalan || "-",
             noPo: postCreateAction.createdItem.noPo || "-",
           })
-        : t("suratJalan.postCreateModal.partialDescription", {
+        : t(`${messagePrefix}.partialDescription`, {
             noSuratJalan: postCreateAction.createdItem.noSuratJalan || "-",
             noPo: postCreateAction.createdItem.noPo || "-",
           }),

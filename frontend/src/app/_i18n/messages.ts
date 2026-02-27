@@ -144,6 +144,12 @@ export const messages: Record<Locale, MessageDictionary> = {
     "suratJalan.postCreateModal.nonPartialTitle": "Surat Jalan Non Partial Dibuat",
     "suratJalan.postCreateModal.nonPartialDescription":
       "Surat jalan \"{{noSuratJalan}}\" (NoPO: {{noPo}}) bertipe non partial. Anda dapat mengekspor surat jalan atau lanjut membuat invoice dari data NoPO ini.",
+    "suratJalan.postUpdateModal.partialTitle": "Surat Jalan Berhasil Diperbarui",
+    "suratJalan.postUpdateModal.partialDescription":
+      "Surat jalan \"{{noSuratJalan}}\" (NoPO: {{noPo}}) bertipe partial sudah diperbarui. Anda dapat mengekspor surat jalan.",
+    "suratJalan.postUpdateModal.nonPartialTitle": "Surat Jalan Non Partial Diperbarui",
+    "suratJalan.postUpdateModal.nonPartialDescription":
+      "Surat jalan \"{{noSuratJalan}}\" (NoPO: {{noPo}}) bertipe non partial sudah diperbarui. Anda dapat mengekspor surat jalan atau lanjut membuat invoice dari data NoPO ini.",
     "suratJalan.postCreateModal.exportButton": "Export Surat Jalan",
     "suratJalan.postCreateModal.createInvoiceButton": "Buat Invoice",
 
@@ -331,6 +337,12 @@ export const messages: Record<Locale, MessageDictionary> = {
     "suratJalan.postCreateModal.nonPartialTitle": "Non Partial Delivery Note Created",
     "suratJalan.postCreateModal.nonPartialDescription":
       "Delivery note \"{{noSuratJalan}}\" (noPo: {{noPo}}) is non partial. You can export it or continue to create an invoice from this noPo data.",
+    "suratJalan.postUpdateModal.partialTitle": "Delivery Note Updated",
+    "suratJalan.postUpdateModal.partialDescription":
+      "Delivery note \"{{noSuratJalan}}\" (noPo: {{noPo}}) is partial and has been updated. You can export this delivery note.",
+    "suratJalan.postUpdateModal.nonPartialTitle": "Non Partial Delivery Note Updated",
+    "suratJalan.postUpdateModal.nonPartialDescription":
+      "Delivery note \"{{noSuratJalan}}\" (noPo: {{noPo}}) is non partial and has been updated. You can export it or continue to create an invoice from this noPo data.",
     "suratJalan.postCreateModal.exportButton": "Export Delivery Note",
     "suratJalan.postCreateModal.createInvoiceButton": "Create Invoice",
 
