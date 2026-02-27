@@ -8,10 +8,26 @@ const barangSchema = new mongoose.Schema(
       trim: true,
       maxlength: 120,
     },
+    spesifikasi: {
+      type: String,
+      trim: true,
+      maxlength: 200,
+      default: null,
+      set(value) {
+        const text = String(value || "").trim();
+        return text || null;
+      },
+    },
     jumlah: {
       type: Number,
       required: true,
       min: 1,
+    },
+    unit: {
+      type: String,
+      trim: true,
+      maxlength: 50,
+      default: "",
     },
   },
   { _id: false }

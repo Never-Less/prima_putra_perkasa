@@ -42,15 +42,19 @@ function normalizeBarangList(barangInput) {
 
   for (const item of barangInput) {
     const nama = String(item?.nama || "").trim();
+    const spesifikasiText = String(item?.spesifikasi || "").trim();
     const jumlah = Number(item?.jumlah);
+    const unit = String(item?.unit || "").trim();
 
-    if (!nama || !Number.isFinite(jumlah) || jumlah <= 0) {
+    if (!nama || !Number.isFinite(jumlah) || jumlah <= 0 || !unit) {
       return null;
     }
 
     normalized.push({
       nama: nama,
+      spesifikasi: spesifikasiText || null,
       jumlah: jumlah,
+      unit: unit,
     });
   }
 

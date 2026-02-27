@@ -379,7 +379,7 @@ export function SuratJalanEditForm({
               <p className="text-xs text-slate-500">{t("suratJalan.form.items.hint")}</p>
               <div className="mt-2 space-y-2">
                 {form.barangRows.map((row, index) => (
-                  <div key={`barang-row-${index}`} className="grid gap-2 sm:grid-cols-[1.4fr_1fr]">
+                  <div key={`barang-row-${index}`} className="grid gap-2 sm:grid-cols-4">
                     <input
                       type="text"
                       value={row.nama}
@@ -388,11 +388,25 @@ export function SuratJalanEditForm({
                       className={barangInputClassName}
                     />
                     <input
+                      type="text"
+                      value={row.spesifikasi}
+                      placeholder={t("suratJalan.form.items.placeholder.spec")}
+                      onChange={(event) => updateBarangRow(index, "spesifikasi", event.target.value)}
+                      className={barangInputClassName}
+                    />
+                    <input
                       type="number"
                       min={0}
                       value={row.jumlah}
                       placeholder={t("suratJalan.form.items.placeholder.qty")}
                       onChange={(event) => updateBarangRow(index, "jumlah", event.target.value)}
+                      className={barangInputClassName}
+                    />
+                    <input
+                      type="text"
+                      value={row.unit}
+                      placeholder={t("suratJalan.form.items.placeholder.unit")}
+                      onChange={(event) => updateBarangRow(index, "unit", event.target.value)}
                       className={barangInputClassName}
                     />
                   </div>
@@ -478,7 +492,10 @@ export function SuratJalanEditForm({
               {previewBarang.length > 0 ? (
                 <ul className="space-y-1 text-sm text-slate-700">
                   {previewBarang.map((barang) => (
-                    <li key={`${barang.nama}-${barang.jumlah}`}>{barang.nama}: {barang.jumlah}</li>
+                    <li key={`${barang.nama}-${barang.spesifikasi || "-"}-${barang.jumlah}-${barang.unit || "-"}`}>
+                      {barang.spesifikasi ? `${barang.nama} (${barang.spesifikasi})` : barang.nama}: {barang.jumlah}{" "}
+                      {barang.unit || "-"}
+                    </li>
                   ))}
                 </ul>
               ) : (

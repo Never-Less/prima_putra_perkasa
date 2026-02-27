@@ -5,12 +5,16 @@ type Locale = "id" | "en";
 
 export type SuratJalanBarang = {
   nama: string;
+  spesifikasi: string | null;
   jumlah: number;
+  unit: string;
 };
 
 export type SuratJalanBarangFormRow = {
   nama: string;
+  spesifikasi: string;
   jumlah: string;
+  unit: string;
 };
 
 export type SuratJalanItem = {
@@ -113,7 +117,9 @@ function toSuratJalanBarang(value: unknown): SuratJalanBarang | null {
 
   const barang = value as Record<string, unknown>;
   const nama = toText(barang.nama).trim();
+  const spesifikasi = toText(barang.spesifikasi).trim() || null;
   const jumlah = toNumber(barang.jumlah, 0);
+  const unit = toText(barang.unit).trim();
 
   if (!nama || jumlah <= 0) {
     return null;
@@ -121,7 +127,9 @@ function toSuratJalanBarang(value: unknown): SuratJalanBarang | null {
 
   return {
     nama,
+    spesifikasi,
     jumlah,
+    unit,
   };
 }
 
@@ -236,7 +244,13 @@ export function barangLabel(items: SuratJalanBarang[]) {
     return "-";
   }
 
-  return items.map((item) => `${item.nama} (${item.jumlah})`).join(", ");
+  return items
+    .map((item) => {
+      const namaWithSpec = item.spesifikasi ? `${item.nama} (${item.spesifikasi})` : item.nama;
+      const qtyWithUnit = item.unit ? `${item.jumlah} ${item.unit}` : String(item.jumlah);
+      return `${namaWithSpec}: ${qtyWithUnit}`;
+    })
+    .join(", ");
 }
 
 export function filterSuratJalanRows(
@@ -289,7 +303,9 @@ export function toFormState(item: SuratJalanItem): SuratJalanFormState {
     barangRows: ensureTrailingEmptyBarangRow(
       item.barang.map((barang) => ({
         nama: barang.nama,
+        spesifikasi: barang.spesifikasi || "",
         jumlah: String(barang.jumlah),
+        unit: barang.unit || "",
       }))
     ),
   };
@@ -298,18 +314,24 @@ export function toFormState(item: SuratJalanItem): SuratJalanFormState {
 export function createEmptyBarangRow(): SuratJalanBarangFormRow {
   return {
     nama: "",
+    spesifikasi: "",
     jumlah: "",
+    unit: "",
   };
 }
 
 export function isBarangRowFilled(row: SuratJalanBarangFormRow) {
-  return Boolean(row.nama.trim() || row.jumlah.trim());
+  return Boolean(
+    row.nama.trim() || row.spesifikasi.trim() || row.jumlah.trim() || row.unit.trim()
+  );
 }
 
 export function ensureTrailingEmptyBarangRow(rows: SuratJalanBarangFormRow[]) {
   const normalizedRows = rows.map((row) => ({
     nama: String(row.nama || ""),
+    spesifikasi: String(row.spesifikasi || ""),
     jumlah: String(row.jumlah || ""),
+    unit: String(row.unit || ""),
   }));
 
   if (normalizedRows.length === 0) {
@@ -337,12 +359,16 @@ export function barangRowsToList(rows: SuratJalanBarangFormRow[]) {
   return rows
     .map((row) => {
       const nama = row.nama.trim();
+      const spesifikasi = row.spesifikasi.trim() || null;
       const jumlahParsed = Number(row.jumlah.trim());
+      const unit = row.unit.trim();
 
       return {
         nama,
+        spesifikasi,
         jumlah: Number.isFinite(jumlahParsed) ? jumlahParsed : 0,
+        unit,
       };
     })
-    .filter((barang) => barang.nama && barang.jumlah > 0);
+    .filter((barang) => barang.nama && barang.jumlah > 0 && barang.unit);
 }

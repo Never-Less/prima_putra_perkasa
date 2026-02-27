@@ -93,6 +93,20 @@ function sanitizeFileName(value: string) {
   return normalized || "surat-jalan-export";
 }
 
+function truncateText(value: string, maxLength = 70) {
+  const text = String(value || "");
+
+  if (text.length <= maxLength) {
+    return text;
+  }
+
+  if (maxLength <= 3) {
+    return ".".repeat(Math.max(0, maxLength));
+  }
+
+  return `${text.slice(0, maxLength - 3)}...`;
+}
+
 export function SuratJalanTableFilter({
   rows,
   selectedId,
@@ -312,6 +326,8 @@ export function SuratJalanTableFilter({
                     const isSelected = selectedId === row.id;
                     const useStripedRow = tableStyle === "striped" && index % 2 === 1;
                     const customerLabel = resolveCustomerLabel?.(row.idCustomer) || row.idCustomer || "-";
+                    const barangText = barangLabel(row.barang);
+                    const truncatedBarangText = truncateText(barangText);
                     const rowClassName = isSelected
                       ? tone.selectedRow
                       : useStripedRow
@@ -327,7 +343,9 @@ export function SuratJalanTableFilter({
                           {formatTanggal(row.tanggal, locale)}
                         </td>
                         <td className={`whitespace-nowrap ${cellPadding} text-slate-600`}>{customerLabel}</td>
-                        <td className={`${cellPadding} text-slate-600`}>{barangLabel(row.barang)}</td>
+                        <td className={`${cellPadding} text-slate-600`} title={barangText}>
+                          {truncatedBarangText}
+                        </td>
                         <td className={`whitespace-nowrap ${cellPadding} text-slate-600`}>{row.kendaraan}</td>
                         <td className={`whitespace-nowrap ${cellPadding} text-slate-600`}>{row.tipe}</td>
                         <td className={`whitespace-nowrap ${cellPadding}`}>
