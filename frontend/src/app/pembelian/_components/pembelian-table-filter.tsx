@@ -219,8 +219,8 @@ export function PembelianTableFilter({
         ) : null}
 
         {groupedRows.map((group) => (
-          <div key={group.noInvoice} className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-slate-50 px-3 py-2">
+          <div key={group.noInvoice} className="overflow-hidden rounded-xl border border-sky-300 bg-white shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-sky-200 bg-sky-100/90 px-3 py-2">
               <p className="text-sm font-semibold text-slate-800">
                 {t("field.noInvoice")}: {group.noInvoice}
               </p>
@@ -231,7 +231,7 @@ export function PembelianTableFilter({
 
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm">
-                <thead className="bg-sky-100 text-left text-sky-800">
+                <thead className="bg-sky-800 text-left text-white">
                   <tr>
                     <th className="px-3 py-2 font-medium">{t("field.tanggalNota")}</th>
                     <th className="px-3 py-2 font-medium">{t("field.namaSupplier")}</th>
@@ -240,7 +240,7 @@ export function PembelianTableFilter({
                     <th className="px-3 py-2 font-medium">{t("field.ppn")}</th>
                     <th className="px-3 py-2 font-medium">
                       <span>{t("field.lamaHutang")}</span>
-                      <span className="block text-xs font-normal text-sky-700">{t("pembelian.lamaHutang.note")}</span>
+                      <span className="block text-xs font-normal text-sky-100">{t("pembelian.lamaHutang.note")}</span>
                     </th>
                     <th className="px-3 py-2 font-medium">{t("field.nilaiNota")}</th>
                     <th className="px-3 py-2 font-medium">{t("field.tanggalJatuhTempo")}</th>

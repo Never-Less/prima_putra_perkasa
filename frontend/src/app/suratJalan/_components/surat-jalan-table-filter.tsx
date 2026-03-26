@@ -29,6 +29,8 @@ const toneStyles: Record<
     section: string;
     title: string;
     subtitle: string;
+    groupCard: string;
+    groupHeader: string;
     header: string;
     selectedRow: string;
     stripedRow: string;
@@ -41,7 +43,9 @@ const toneStyles: Record<
     section: "border-slate-200 bg-white",
     title: "text-slate-900",
     subtitle: "text-slate-700",
-    header: "bg-slate-100 text-slate-600",
+    groupCard: "border-slate-300 bg-slate-50/80 shadow-sm",
+    groupHeader: "border-slate-200 bg-slate-100",
+    header: "bg-slate-800 text-white",
     selectedRow: "bg-slate-100",
     stripedRow: "bg-slate-50",
     actionActive: "bg-slate-900 text-white",
@@ -52,7 +56,9 @@ const toneStyles: Record<
     section: "border-sky-200 bg-sky-50/40",
     title: "text-sky-900",
     subtitle: "text-sky-800",
-    header: "bg-sky-100 text-sky-800",
+    groupCard: "border-sky-300 bg-white shadow-sm",
+    groupHeader: "border-sky-200 bg-sky-100/90",
+    header: "bg-sky-800 text-white",
     selectedRow: "bg-sky-100",
     stripedRow: "bg-sky-50/70",
     actionActive: "bg-sky-700 text-white",
@@ -63,7 +69,9 @@ const toneStyles: Record<
     section: "border-emerald-200 bg-emerald-50/40",
     title: "text-emerald-900",
     subtitle: "text-emerald-800",
-    header: "bg-emerald-100 text-emerald-800",
+    groupCard: "border-emerald-300 bg-white shadow-sm",
+    groupHeader: "border-emerald-200 bg-emerald-100/90",
+    header: "bg-emerald-800 text-white",
     selectedRow: "bg-emerald-100",
     stripedRow: "bg-emerald-50/70",
     actionActive: "bg-emerald-700 text-white",
@@ -284,8 +292,8 @@ export function SuratJalanTableFilter({
 
       <div className="space-y-4">
         {groupedRows.map((group) => (
-          <div key={group.noPo} className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-slate-50 px-3 py-2">
+          <div key={group.noPo} className={`overflow-hidden rounded-xl border ${tone.groupCard}`}>
+            <div className={`flex flex-wrap items-center justify-between gap-2 border-b px-3 py-2 ${tone.groupHeader}`}>
               <p className="text-sm font-semibold text-slate-800">
                 {t("field.noPo")}: {group.noPo}
               </p>
