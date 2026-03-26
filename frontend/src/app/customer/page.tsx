@@ -269,10 +269,10 @@ export default function CustomerPage() {
 
   return (
     <>
-      <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <section className="rounded-2xl border border-sky-100 bg-gradient-to-r from-sky-50 to-white p-5 shadow-sm">
-          <h1 className="text-2xl font-semibold text-slate-900">{t("nav.customer")}</h1>
-          <p className="mt-1 text-sm text-slate-600">
+      <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+        <section className="rounded-2xl border border-sky-100 bg-gradient-to-r from-sky-50 to-white p-4 shadow-sm dark:border-slate-800 dark:from-slate-900 dark:to-slate-950 sm:p-5">
+          <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100 sm:text-2xl">{t("nav.customer")}</h1>
+          <p className="mt-1 max-w-3xl text-sm text-slate-600 dark:text-slate-300">
             {t("customer.page.description")}
           </p>
         </section>
@@ -281,11 +281,11 @@ export default function CustomerPage() {
           {isLoading ? <ApiLoadingState /> : null}
 
           {!isLoading && errorMessage ? (
-            <section className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            <section className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/50 dark:text-red-200">
               <p>{errorMessage}</p>
               <button
                 onClick={() => void loadCustomers()}
-                className="mt-3 rounded-lg border border-red-300 bg-white px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-100"
+                className="mt-3 rounded-lg border border-red-300 bg-white px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-100 dark:border-red-900 dark:bg-slate-900 dark:text-red-200 dark:hover:bg-red-950/40"
               >
                 {t("common.retry")}
               </button>

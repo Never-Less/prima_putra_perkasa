@@ -457,12 +457,12 @@ export function FormPreviewStylePage() {
         {isLoading ? <ApiLoadingState /> : null}
 
         {!isLoading && errorMessage ? (
-          <section className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          <section className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/50 dark:text-red-200">
             <p>{errorMessage}</p>
             <button
               type="button"
               onClick={() => void loadSuratJalanData()}
-              className="mt-3 rounded-lg border border-red-300 bg-white px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-100"
+              className="mt-3 rounded-lg border border-red-300 bg-white px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-100 dark:border-red-900 dark:bg-slate-900 dark:text-red-200 dark:hover:bg-red-950/40"
             >
               {t("common.retry")}
             </button>

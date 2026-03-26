@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ThemeToggle } from "./_components/theme-toggle";
 import { useI18n } from "./_i18n/provider";
 
 export default function HomePage() {
@@ -34,15 +35,20 @@ export default function HomePage() {
   ];
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      <section className="rounded-2xl border border-white/60 bg-white/70 p-6 shadow-sm backdrop-blur-sm">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-          {t("brand.name")}
-        </p>
-        <h1 className="mt-2 text-3xl font-semibold text-slate-900">{t("home.title")}</h1>
-        <p className="mt-2 text-sm text-slate-600 sm:text-base">
-          {t("home.description")}
-        </p>
+    <main className="mx-auto min-h-screen w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+      <section className="rounded-2xl border border-white/60 bg-white/70 p-5 shadow-sm backdrop-blur-sm dark:border-slate-800 dark:bg-slate-950/80 sm:p-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+              {t("brand.name")}
+            </p>
+            <h1 className="mt-2 text-2xl font-semibold text-slate-900 dark:text-slate-100 sm:text-3xl">{t("home.title")}</h1>
+            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300 sm:text-base">
+              {t("home.description")}
+            </p>
+          </div>
+          <ThemeToggle className="sm:self-start" />
+        </div>
       </section>
 
       <section className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -50,11 +56,11 @@ export default function HomePage() {
           <Link
             key={route.href}
             href={route.href}
-            className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+            className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-slate-800 dark:bg-slate-950 sm:p-5"
           >
-            <h2 className="text-xl font-semibold text-slate-900">{route.title}</h2>
-            <p className="mt-2 text-sm text-slate-600">{route.description}</p>
-            <p className="mt-4 text-sm font-medium text-slate-800">{route.cta}</p>
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 sm:text-xl">{route.title}</h2>
+            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{route.description}</p>
+            <p className="mt-4 text-sm font-medium text-slate-800 dark:text-sky-300">{route.cta}</p>
           </Link>
         ))}
       </section>

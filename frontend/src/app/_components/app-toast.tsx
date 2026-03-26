@@ -43,14 +43,14 @@ export function AppToast({
   const role = isSuccess ? "status" : "alert";
 
   return (
-    <div className="pointer-events-none fixed bottom-4 right-4 z-[80] w-full max-w-sm sm:bottom-6 sm:right-6">
+    <div className="pointer-events-none fixed bottom-4 left-4 right-4 z-[80] w-auto sm:bottom-6 sm:left-auto sm:right-6 sm:w-full sm:max-w-sm">
       <div
         role={role}
         aria-live="polite"
         className={`toast-enter pointer-events-auto rounded-xl border px-4 py-3 shadow-lg ${
           isSuccess
-            ? "border-emerald-300 bg-emerald-50 text-emerald-900"
-            : "border-red-300 bg-red-50 text-red-900"
+            ? "border-emerald-300 bg-emerald-50 text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-100"
+            : "border-red-300 bg-red-50 text-red-900 dark:border-red-900 dark:bg-red-950/60 dark:text-red-100"
         }`}
       >
         <div className="flex items-start justify-between gap-3">
@@ -60,8 +60,8 @@ export function AppToast({
             onClick={onClose}
             className={`rounded-md border px-2 py-1 text-xs ${
               isSuccess
-                ? "border-emerald-400 bg-white text-emerald-900 hover:bg-emerald-100"
-                : "border-red-400 bg-white text-red-900 hover:bg-red-100"
+                ? "border-emerald-400 bg-white text-emerald-900 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-slate-900 dark:text-emerald-100 dark:hover:bg-emerald-950/60"
+                : "border-red-400 bg-white text-red-900 hover:bg-red-100 dark:border-red-800 dark:bg-slate-900 dark:text-red-100 dark:hover:bg-red-950/60"
             }`}
           >
             {closeLabel}

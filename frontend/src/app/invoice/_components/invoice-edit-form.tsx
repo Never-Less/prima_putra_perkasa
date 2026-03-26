@@ -127,65 +127,65 @@ export function InvoiceEditForm({
   }
 
   return (
-    <section className="rounded-2xl border border-sky-200 bg-sky-50/40 p-5 shadow-sm">
+    <section className="rounded-2xl border border-sky-200 bg-sky-50/40 p-5 shadow-sm dark:border-sky-900/70 dark:bg-slate-950/85">
       <div className="mb-3">
-        <h2 className="text-lg font-semibold text-sky-900">{t("invoice.form.title")}</h2>
-        <p className="text-sm text-sky-800">
+        <h2 className="text-lg font-semibold text-sky-900 dark:text-sky-100">{t("invoice.form.title")}</h2>
+        <p className="text-sm text-sky-800 dark:text-sky-200">
           {t("invoice.form.description")}
         </p>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-xl border border-transparent bg-slate-100/80 p-4">
+        <div className="rounded-xl border border-sky-100 bg-white/85 p-4 dark:border-slate-800 dark:bg-slate-900/70">
           <div className="grid gap-3 sm:grid-cols-2">
-            <label className="text-sm text-slate-700">
+            <label className="text-sm text-slate-700 dark:text-slate-200">
               {t("field.tanggal")}
               <input
                 type="date"
                 value={form.tanggal}
                 onChange={(event) => setForm((prev) => ({ ...prev, tanggal: event.target.value }))}
-                className="mt-1 w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm shadow-sm"
+                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               />
             </label>
 
-            <label className="text-sm text-slate-700">
+            <label className="text-sm text-slate-700 dark:text-slate-200">
               {t("field.noInvoice")}
               <input
                 value={form.noInvoice}
                 onChange={(event) => setForm((prev) => ({ ...prev, noInvoice: event.target.value }))}
-                className="mt-1 w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm shadow-sm"
+                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               />
             </label>
 
-            <label className="text-sm text-slate-700">
+            <label className="text-sm text-slate-700 dark:text-slate-200">
               {t("field.noPo")}
               <input
                 value={form.noPo}
                 onChange={(event) => setForm((prev) => ({ ...prev, noPo: event.target.value }))}
-                className="mt-1 w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm shadow-sm"
+                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               />
             </label>
 
-            <label className="text-sm text-slate-700">
+            <label className="text-sm text-slate-700 dark:text-slate-200">
               {t("field.noSuratJalan")}
-              <p className="mt-1 text-xs text-slate-500">{t("invoice.form.noSuratJalanHint")}</p>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("invoice.form.noSuratJalanHint")}</p>
               <textarea
                 rows={3}
                 value={form.noSuratJalanText}
                 onChange={(event) =>
                   setForm((prev) => ({ ...prev, noSuratJalanText: event.target.value }))
                 }
-                className="mt-1 w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm shadow-sm"
+                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               />
             </label>
 
-            <label className="text-sm text-slate-700 sm:col-span-2">
+            <label className="text-sm text-slate-700 dark:text-slate-200 sm:col-span-2">
               {t("field.namaCustomer")}
               <select
                 value={form.idCustomer}
                 onChange={(event) => setForm((prev) => ({ ...prev, idCustomer: event.target.value }))}
                 disabled={isSaving || isDeleting}
-                className="mt-1 w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm shadow-sm"
+                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               >
                 <option value="">-</option>
                 {normalizedCustomerOptions.map((customer) => (
@@ -196,7 +196,7 @@ export function InvoiceEditForm({
               </select>
             </label>
 
-            <label className="text-sm text-slate-700">
+            <label className="text-sm text-slate-700 dark:text-slate-200">
               {t("field.isPpn")}
               <select
                 value={String(form.isPpn)}
@@ -206,14 +206,14 @@ export function InvoiceEditForm({
                     isPpn: event.target.value === "true",
                   }))
                 }
-                className="mt-1 w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm shadow-sm"
+                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               >
                 <option value="true">{t("common.true")}</option>
                 <option value="false">{t("common.false")}</option>
               </select>
             </label>
 
-            <label className="text-sm text-slate-700">
+            <label className="text-sm text-slate-700 dark:text-slate-200">
               {t("field.ppnRate")}
               <input
                 type="number"
@@ -221,13 +221,13 @@ export function InvoiceEditForm({
                 max={100}
                 value={form.ppnRate}
                 onChange={(event) => setForm((prev) => ({ ...prev, ppnRate: event.target.value }))}
-                className="mt-1 w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm shadow-sm"
+                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               />
             </label>
 
-            <div className="text-sm text-slate-700 sm:col-span-2">
+            <div className="text-sm text-slate-700 dark:text-slate-200 sm:col-span-2">
               <p>{t("invoice.form.items.title")}</p>
-              <p className="text-xs text-slate-500">{t("invoice.form.items.hint")}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">{t("invoice.form.items.hint")}</p>
               <div className="mt-2 space-y-2">
                 {form.barangRows.map((row, index) => {
                   const kuantitas = Number(row.kuantitas || "0");
@@ -246,7 +246,7 @@ export function InvoiceEditForm({
                         value={row.namaBarang}
                         placeholder={t("invoice.form.items.placeholder.name")}
                         onChange={(event) => updateBarangRow(index, "namaBarang", event.target.value)}
-                        className="w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm shadow-sm"
+                        className="w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                       />
                       <input
                         type="number"
@@ -254,14 +254,14 @@ export function InvoiceEditForm({
                         value={row.kuantitas}
                         placeholder={t("invoice.form.items.placeholder.qty")}
                         onChange={(event) => updateBarangRow(index, "kuantitas", event.target.value)}
-                        className="w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm shadow-sm"
+                        className="w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                       />
                       <input
                         type="text"
                         value={row.unit}
                         placeholder={t("invoice.form.items.placeholder.unit")}
                         onChange={(event) => updateBarangRow(index, "unit", event.target.value)}
-                        className="w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm shadow-sm"
+                        className="w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                       />
                       <input
                         type="number"
@@ -269,13 +269,13 @@ export function InvoiceEditForm({
                         value={row.hargaSatuan}
                         placeholder={t("invoice.form.items.placeholder.price")}
                         onChange={(event) => updateBarangRow(index, "hargaSatuan", event.target.value)}
-                        className="w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm shadow-sm"
+                        className="w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                       />
                       <input
                         type="text"
                         value={Number.isFinite(jumlah) ? formatRupiah(jumlah, locale) : formatRupiah(0, locale)}
                         readOnly
-                        className="w-full rounded-lg border border-transparent bg-slate-100 px-3 py-2 text-sm text-slate-600"
+                        className="w-full rounded-lg border border-sky-100 bg-sky-100/70 px-3 py-2 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
                       />
                     </div>
                   );
@@ -284,12 +284,12 @@ export function InvoiceEditForm({
             </div>
           </div>
 
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="mt-3 grid gap-2 sm:flex sm:flex-wrap">
             <button
               type="button"
               onClick={() => void onSave?.(form, item)}
               disabled={isSaving || isDeleting}
-              className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-sky-500 dark:text-slate-950 dark:hover:bg-sky-400 sm:w-auto"
             >
               {isSaving ? t("common.loading") : t("common.saveChanges")}
             </button>
@@ -300,7 +300,7 @@ export function InvoiceEditForm({
                 setForm(createEmptyInvoiceFormState());
               }}
               disabled={isSaving || isDeleting}
-              className="rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm text-sky-700 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm text-sky-700 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800 sm:w-auto"
             >
               {t("common.newData")}
             </button>
@@ -308,7 +308,7 @@ export function InvoiceEditForm({
               type="button"
               onClick={() => setForm(item ? toInvoiceFormState(item) : createEmptyInvoiceFormState())}
               disabled={isSaving || isDeleting}
-              className="rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm text-sky-700 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm text-sky-700 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800 sm:w-auto"
             >
               {t("common.resetForm")}
             </button>
@@ -317,52 +317,52 @@ export function InvoiceEditForm({
                 type="button"
                 onClick={() => void onDelete?.(item)}
                 disabled={isSaving || isDeleting}
-                className="rounded-lg border border-red-300 bg-white px-4 py-2 text-sm text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                className="w-full rounded-lg border border-red-300 bg-white px-4 py-2 text-sm text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-900 dark:bg-slate-900 dark:text-red-300 dark:hover:bg-red-950/40 sm:w-auto"
               >
                 {isDeleting ? t("common.loading") : t("common.delete")}
               </button>
             ) : null}
           </div>
           {actionErrorMessage ? (
-            <p className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            <p className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/50 dark:text-red-200">
               {actionErrorMessage}
             </p>
           ) : null}
         </div>
 
-        <div className="rounded-xl border border-transparent bg-slate-100/70 p-4">
-          <p className="text-sm font-semibold text-slate-900">{t("invoice.preview.title")}</p>
-          <div className="mt-3 space-y-1 text-sm text-slate-700">
+        <div className="rounded-xl border border-sky-100 bg-sky-100/50 p-4 dark:border-slate-800 dark:bg-slate-900/60">
+          <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t("invoice.preview.title")}</p>
+          <div className="mt-3 space-y-1 text-sm text-slate-700 dark:text-slate-200">
             <p>
-              <span className="text-slate-500">{t("field.tanggal")}:</span> {formatTanggal(form.tanggal, locale)}
+              <span className="text-slate-500 dark:text-slate-400">{t("field.tanggal")}:</span> {formatTanggal(form.tanggal, locale)}
             </p>
             <p>
-              <span className="text-slate-500">{t("field.noInvoice")}:</span> {form.noInvoice || "-"}
+              <span className="text-slate-500 dark:text-slate-400">{t("field.noInvoice")}:</span> {form.noInvoice || "-"}
             </p>
             <p>
-              <span className="text-slate-500">{t("field.noPo")}:</span> {form.noPo || "-"}
+              <span className="text-slate-500 dark:text-slate-400">{t("field.noPo")}:</span> {form.noPo || "-"}
             </p>
             <p>
-              <span className="text-slate-500">{t("field.noSuratJalan")}:</span>{" "}
+              <span className="text-slate-500 dark:text-slate-400">{t("field.noSuratJalan")}:</span>{" "}
               {invoiceNoSuratJalanListLabel(noSuratJalanList)}
             </p>
             <p>
-              <span className="text-slate-500">{t("field.namaCustomer")}:</span> {previewCustomerLabel}
+              <span className="text-slate-500 dark:text-slate-400">{t("field.namaCustomer")}:</span> {previewCustomerLabel}
             </p>
             <p>
-              <span className="text-slate-500">{t("field.isPpn")}:</span> {String(form.isPpn)}
+              <span className="text-slate-500 dark:text-slate-400">{t("field.isPpn")}:</span> {String(form.isPpn)}
             </p>
             <p>
-              <span className="text-slate-500">{t("field.ppnRate")}:</span> {form.ppnRate || "0"}%
+              <span className="text-slate-500 dark:text-slate-400">{t("field.ppnRate")}:</span> {form.ppnRate || "0"}%
             </p>
           </div>
 
-          <div className="mt-3 rounded-lg border border-transparent bg-white p-3 shadow-sm">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.15em] text-slate-500">
+          <div className="mt-3 rounded-lg border border-sky-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.15em] text-slate-500 dark:text-slate-400">
               {t("field.barang")}
             </p>
             {barangList.length > 0 ? (
-              <ul className="space-y-1 text-sm text-slate-700">
+              <ul className="space-y-1 text-sm text-slate-700 dark:text-slate-200">
                 {barangList.map((barang, index) => (
                   <li key={`preview-barang-${index}`}>
                     {barang.namaBarang}: {barang.kuantitas} {barang.unit} x{" "}
@@ -371,19 +371,19 @@ export function InvoiceEditForm({
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-slate-500">{t("common.noItems")}</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">{t("common.noItems")}</p>
             )}
           </div>
 
-          <div className="mt-3 rounded-lg border border-dashed border-slate-300 bg-white p-3">
-            <p className="text-sm text-slate-700">
-              <span className="text-slate-500">{t("field.subtotal")}:</span> {formatRupiah(summary.subtotal, locale)}
+          <div className="mt-3 rounded-lg border border-dashed border-sky-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800">
+            <p className="text-sm text-slate-700 dark:text-slate-200">
+              <span className="text-slate-500 dark:text-slate-400">{t("field.subtotal")}:</span> {formatRupiah(summary.subtotal, locale)}
             </p>
-            <p className="text-sm text-slate-700">
-              <span className="text-slate-500">{t("field.ppnAmount")}:</span> {formatRupiah(summary.ppnAmount, locale)}
+            <p className="text-sm text-slate-700 dark:text-slate-200">
+              <span className="text-slate-500 dark:text-slate-400">{t("field.ppnAmount")}:</span> {formatRupiah(summary.ppnAmount, locale)}
             </p>
-            <p className="text-sm font-semibold text-slate-900">
-              <span className="text-slate-500">{t("field.grandTotal")}:</span> {formatRupiah(summary.grandTotal, locale)}
+            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+              <span className="text-slate-500 dark:text-slate-400">{t("field.grandTotal")}:</span> {formatRupiah(summary.grandTotal, locale)}
             </p>
           </div>
         </div>

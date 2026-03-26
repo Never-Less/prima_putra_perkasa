@@ -108,61 +108,61 @@ export function PembelianEditForm({
   const previewInvoiceLabel = invoiceLabelMap.get(effectiveIdInvoice) || effectiveIdInvoice || "-";
 
   return (
-    <section className="rounded-2xl border border-sky-200 bg-sky-50/40 p-5 shadow-sm">
+    <section className="rounded-2xl border border-sky-200 bg-sky-50/40 p-5 shadow-sm dark:border-sky-900/70 dark:bg-slate-950/85">
       <div className="mb-3">
-        <h2 className="text-lg font-semibold text-sky-900">{t("pembelian.form.title")}</h2>
-        <p className="text-sm text-sky-800">{t("pembelian.form.description")}</p>
+        <h2 className="text-lg font-semibold text-sky-900 dark:text-sky-100">{t("pembelian.form.title")}</h2>
+        <p className="text-sm text-sky-800 dark:text-sky-200">{t("pembelian.form.description")}</p>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-xl border border-transparent bg-slate-100/80 p-4">
+        <div className="rounded-xl border border-sky-100 bg-white/85 p-4 dark:border-slate-800 dark:bg-slate-900/70">
           <div className="grid gap-3 sm:grid-cols-2">
-            <label className="text-sm text-slate-700">
+            <label className="text-sm text-slate-700 dark:text-slate-200">
               {t("field.tanggalNota")}
               <input
                 type="date"
                 value={form.tanggalNota}
                 onChange={(event) => setForm((prev) => ({ ...prev, tanggalNota: event.target.value }))}
-                className="mt-1 w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm shadow-sm"
+                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               />
             </label>
 
-            <label className="text-sm text-slate-700">
+            <label className="text-sm text-slate-700 dark:text-slate-200">
               {t("field.nilaiNota")}
               <input
                 type="number"
                 min={0}
                 value={form.nilaiNota}
                 onChange={(event) => setForm((prev) => ({ ...prev, nilaiNota: event.target.value }))}
-                className="mt-1 w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm shadow-sm"
+                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               />
             </label>
 
-            <label className="text-sm text-slate-700 sm:col-span-2">
+            <label className="text-sm text-slate-700 dark:text-slate-200 sm:col-span-2">
               {t("field.namaSupplier")}
               <input
                 value={form.namaSupplier}
                 onChange={(event) => setForm((prev) => ({ ...prev, namaSupplier: event.target.value }))}
-                className="mt-1 w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm shadow-sm"
+                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               />
             </label>
 
-            <label className="text-sm text-slate-700">
+            <label className="text-sm text-slate-700 dark:text-slate-200">
               {t("field.noNpwp")}
               <input
                 value={form.noNpwp}
                 onChange={(event) => setForm((prev) => ({ ...prev, noNpwp: event.target.value }))}
-                className="mt-1 w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm shadow-sm"
+                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               />
             </label>
 
-            <label className="text-sm text-slate-700">
+            <label className="text-sm text-slate-700 dark:text-slate-200">
               {t("field.noInvoice")}
               <select
                 value={effectiveIdInvoice}
                 onChange={(event) => setForm((prev) => ({ ...prev, idInvoice: event.target.value }))}
                 disabled={normalizedInvoiceOptions.length === 0}
-                className="mt-1 w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm shadow-sm"
+                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               >
                 {normalizedInvoiceOptions.length === 0 ? (
                   <option value="">{t("common.noData")}</option>
@@ -176,7 +176,7 @@ export function PembelianEditForm({
               </select>
             </label>
 
-            <label className="text-sm text-slate-700">
+            <label className="text-sm text-slate-700 dark:text-slate-200">
               {t("field.hutang")}
               <select
                 value={String(form.hutang)}
@@ -190,14 +190,14 @@ export function PembelianEditForm({
                     tanggalJatuhTempo: isHutang ? prev.tanggalJatuhTempo : "",
                   }));
                 }}
-                className="mt-1 w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm shadow-sm"
+                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               >
                 <option value="true">{t("common.true")}</option>
                 <option value="false">{t("common.false")}</option>
               </select>
             </label>
 
-            <label className="text-sm text-slate-700">
+            <label className="text-sm text-slate-700 dark:text-slate-200">
               {t("field.ppn")}
               <select
                 value={String(form.ppn)}
@@ -207,27 +207,27 @@ export function PembelianEditForm({
                     ppn: event.target.value === "true",
                   }))
                 }
-                className="mt-1 w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm shadow-sm"
+                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               >
                 <option value="true">{t("common.true")}</option>
                 <option value="false">{t("common.false")}</option>
               </select>
             </label>
 
-            <label className="text-sm text-slate-700">
+            <label className="text-sm text-slate-700 dark:text-slate-200">
               {t("field.lamaHutang")}
-              <p className="mt-1 text-xs text-slate-500">{t("pembelian.lamaHutang.note")}</p>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("pembelian.lamaHutang.note")}</p>
               <input
                 type="number"
                 min={0}
                 value={form.lamaHutang}
                 disabled={!form.hutang}
                 onChange={(event) => setForm((prev) => ({ ...prev, lamaHutang: event.target.value }))}
-                className="mt-1 h-10 w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm shadow-sm disabled:cursor-not-allowed disabled:bg-slate-100"
+                className="mt-1 h-10 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm disabled:cursor-not-allowed disabled:bg-sky-100/70 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
               />
             </label>
 
-            <label className="text-sm text-slate-700">
+            <label className="text-sm text-slate-700 dark:text-slate-200">
               {t("field.tanggalJatuhTempo")}
               <p aria-hidden="true" className="mt-1 text-xs text-transparent select-none">
                 {t("pembelian.lamaHutang.note")}
@@ -239,27 +239,27 @@ export function PembelianEditForm({
                 onChange={(event) =>
                   setForm((prev) => ({ ...prev, tanggalJatuhTempo: event.target.value }))
                 }
-                className="mt-1 h-10 w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm shadow-sm disabled:cursor-not-allowed disabled:bg-slate-100"
+                className="mt-1 h-10 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm disabled:cursor-not-allowed disabled:bg-sky-100/70 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
               />
             </label>
 
-            <label className="text-sm text-slate-700">
+            <label className="text-sm text-slate-700 dark:text-slate-200">
               {t("field.tanggalBayar")}
               <input
                 type="date"
                 value={form.tanggalBayar}
                 onChange={(event) => setForm((prev) => ({ ...prev, tanggalBayar: event.target.value }))}
-                className="mt-1 w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm shadow-sm"
+                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               />
             </label>
           </div>
 
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="mt-3 grid gap-2 sm:flex sm:flex-wrap">
             <button
               type="button"
               onClick={() => void onSave?.({ ...form, idInvoice: effectiveIdInvoice }, item)}
               disabled={isSaving || isDeleting}
-              className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-sky-500 dark:text-slate-950 dark:hover:bg-sky-400 sm:w-auto"
             >
               {isSaving ? t("common.loading") : t("common.saveChanges")}
             </button>
@@ -270,7 +270,7 @@ export function PembelianEditForm({
                 onNewData?.();
                 setForm(createEmptyPembelianFormState(invoiceOptions));
               }}
-              className="rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm text-sky-700 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm text-sky-700 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800 sm:w-auto"
             >
               {t("common.newData")}
             </button>
@@ -298,7 +298,7 @@ export function PembelianEditForm({
 
                 setForm(createEmptyPembelianFormState(invoiceOptions));
               }}
-              className="rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm text-sky-700 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm text-sky-700 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800 sm:w-auto"
             >
               {t("common.resetForm")}
             </button>
@@ -307,57 +307,57 @@ export function PembelianEditForm({
                 type="button"
                 onClick={() => void onDelete?.(item)}
                 disabled={isSaving || isDeleting}
-                className="rounded-lg border border-red-300 bg-white px-4 py-2 text-sm text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                className="w-full rounded-lg border border-red-300 bg-white px-4 py-2 text-sm text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-900 dark:bg-slate-900 dark:text-red-300 dark:hover:bg-red-950/40 sm:w-auto"
               >
                 {isDeleting ? t("common.loading") : t("common.delete")}
               </button>
             ) : null}
           </div>
           {actionErrorMessage ? (
-            <p className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            <p className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/50 dark:text-red-200">
               {actionErrorMessage}
             </p>
           ) : null}
         </div>
 
-        <div className="rounded-xl border border-transparent bg-slate-100/70 p-4">
-          <p className="text-sm font-semibold text-slate-900">{t("pembelian.preview.title")}</p>
-          <div className="mt-3 space-y-1 text-sm text-slate-700">
+        <div className="rounded-xl border border-sky-100 bg-sky-100/50 p-4 dark:border-slate-800 dark:bg-slate-900/60">
+          <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t("pembelian.preview.title")}</p>
+          <div className="mt-3 space-y-1 text-sm text-slate-700 dark:text-slate-200">
             <p>
-              <span className="text-slate-500">{t("field.tanggalNota")}:</span>{" "}
+              <span className="text-slate-500 dark:text-slate-400">{t("field.tanggalNota")}:</span>{" "}
               {formatTanggal(form.tanggalNota, locale)}
             </p>
             <p>
-              <span className="text-slate-500">{t("field.namaSupplier")}:</span> {form.namaSupplier || "-"}
+              <span className="text-slate-500 dark:text-slate-400">{t("field.namaSupplier")}:</span> {form.namaSupplier || "-"}
             </p>
             <p>
-              <span className="text-slate-500">{t("field.noNpwp")}:</span> {form.noNpwp || "-"}
+              <span className="text-slate-500 dark:text-slate-400">{t("field.noNpwp")}:</span> {form.noNpwp || "-"}
             </p>
             <p>
-              <span className="text-slate-500">{t("field.noInvoice")}:</span> {previewInvoiceLabel}
+              <span className="text-slate-500 dark:text-slate-400">{t("field.noInvoice")}:</span> {previewInvoiceLabel}
             </p>
             <p>
-              <span className="text-slate-500">{t("field.hutang")}:</span>{" "}
+              <span className="text-slate-500 dark:text-slate-400">{t("field.hutang")}:</span>{" "}
               {form.hutang ? t("common.true") : t("common.false")}
             </p>
             <p>
-              <span className="text-slate-500">{t("field.ppn")}:</span>{" "}
+              <span className="text-slate-500 dark:text-slate-400">{t("field.ppn")}:</span>{" "}
               {form.ppn ? t("common.true") : t("common.false")}
             </p>
             <p>
-              <span className="text-slate-500">{t("field.lamaHutang")}:</span>{" "}
+              <span className="text-slate-500 dark:text-slate-400">{t("field.lamaHutang")}:</span>{" "}
               {form.hutang ? form.lamaHutang || "0" : "0"}
             </p>
             <p>
-              <span className="text-slate-500">{t("field.nilaiNota")}:</span>{" "}
+              <span className="text-slate-500 dark:text-slate-400">{t("field.nilaiNota")}:</span>{" "}
               {formatRupiah(Number(form.nilaiNota || "0"), locale)}
             </p>
             <p>
-              <span className="text-slate-500">{t("field.tanggalJatuhTempo")}:</span>{" "}
+              <span className="text-slate-500 dark:text-slate-400">{t("field.tanggalJatuhTempo")}:</span>{" "}
               {formatTanggal(form.tanggalJatuhTempo || null, locale)}
             </p>
             <p>
-              <span className="text-slate-500">{t("field.tanggalBayar")}:</span>{" "}
+              <span className="text-slate-500 dark:text-slate-400">{t("field.tanggalBayar")}:</span>{" "}
               {formatTanggal(form.tanggalBayar || null, locale)}
             </p>
           </div>

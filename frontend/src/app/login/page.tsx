@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiRequestError, requestApi } from "../_lib/api-client";
 import { useI18n } from "../_i18n/provider";
+import { ThemeToggle } from "../_components/theme-toggle";
 import {
   getStoredAccessToken,
   isAccessTokenExpired,
@@ -101,34 +102,39 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      <section className="mx-auto w-full max-w-md rounded-2xl border border-sky-200 bg-sky-50/40 p-6 shadow-sm">
-        <h1 className="text-2xl font-semibold text-slate-900">{t("login.title")}</h1>
-        <p className="mt-2 text-sm text-slate-600">{t("login.description")}</p>
+    <main className="mx-auto min-h-screen w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+      <section className="mx-auto w-full max-w-md rounded-2xl border border-sky-200 bg-sky-50/40 p-5 shadow-sm dark:border-sky-900/70 dark:bg-slate-950/85 sm:p-6">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100 sm:text-2xl">{t("login.title")}</h1>
+            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{t("login.description")}</p>
+          </div>
+          <ThemeToggle />
+        </div>
 
         <form onSubmit={handleSubmit} className="mt-5 space-y-4">
-          <label className="block text-sm text-slate-700">
+          <label className="block text-sm text-slate-700 dark:text-slate-200">
             {t("field.username")}
             <input
               autoFocus
               value={username}
               onChange={(event) => setUsername(event.target.value)}
-              className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
 
-          <label className="block text-sm text-slate-700">
+          <label className="block text-sm text-slate-700 dark:text-slate-200">
             {t("field.password")}
             <input
               type="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
 
           {errorMessage ? (
-            <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/50 dark:text-red-200">
               {errorMessage}
             </p>
           ) : null}
@@ -136,7 +142,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+            className="w-full rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-70 dark:bg-sky-500 dark:text-slate-950 dark:hover:bg-sky-400"
           >
             {isLoading ? t("common.loading") : t("login.submit")}
           </button>

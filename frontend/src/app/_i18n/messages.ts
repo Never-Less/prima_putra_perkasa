@@ -16,6 +16,8 @@ export const messages: Record<Locale, MessageDictionary> = {
     "nav.suratJalan": "Surat Jalan",
     "nav.invoice": "Invoice",
     "nav.pembelian": "Pembelian",
+    "nav.menu": "Menu",
+    "nav.theme": "Tema",
     "nav.logout": "Logout",
     "nav.sidebar.subtitle": "Dashboard Surat Jalan",
     "nav.language": "Bahasa",
@@ -67,6 +69,8 @@ export const messages: Record<Locale, MessageDictionary> = {
     "common.loading": "Memuat...",
     "common.true": "true",
     "common.false": "false",
+    "theme.light": "Terang",
+    "theme.dark": "Gelap",
 
     "customer.page.description":
       "Page customer disesuaikan dengan field schema backend: nama, alamat, dan atasNama.",
@@ -247,6 +251,8 @@ export const messages: Record<Locale, MessageDictionary> = {
     "nav.suratJalan": "Delivery Note",
     "nav.invoice": "Invoice",
     "nav.pembelian": "Purchase",
+    "nav.menu": "Menu",
+    "nav.theme": "Theme",
     "nav.logout": "Logout",
     "nav.sidebar.subtitle": "Delivery Dashboard",
     "nav.language": "Language",
@@ -298,6 +304,8 @@ export const messages: Record<Locale, MessageDictionary> = {
     "common.loading": "Loading...",
     "common.true": "true",
     "common.false": "false",
+    "theme.light": "Light",
+    "theme.dark": "Dark",
 
     "customer.page.description":
       "Customer page aligned with backend schema fields: nama, alamat, and atasNama.",

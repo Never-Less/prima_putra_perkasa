@@ -39,52 +39,52 @@ export function CustomerEditForm({
   );
 
   return (
-    <section className="rounded-2xl border border-sky-200 bg-sky-50/40 p-5 shadow-sm">
+    <section className="rounded-2xl border border-sky-200 bg-sky-50/40 p-5 shadow-sm dark:border-sky-900/70 dark:bg-slate-950/85">
       <div className="mb-3">
-        <h2 className="text-lg font-semibold text-sky-900">{t("customer.form.title")}</h2>
-        <p className="text-sm text-sky-800">
+        <h2 className="text-lg font-semibold text-sky-900 dark:text-sky-100">{t("customer.form.title")}</h2>
+        <p className="text-sm text-sky-800 dark:text-sky-200">
           {t("customer.form.description")}
         </p>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-xl border border-transparent bg-slate-100/80 p-4">
+        <div className="rounded-xl border border-sky-100 bg-white/85 p-4 dark:border-slate-800 dark:bg-slate-900/70">
           <div className="grid gap-3">
-            <label className="text-sm text-slate-700">
+            <label className="text-sm text-slate-700 dark:text-slate-200">
               {t("field.nama")}
               <input
                 value={form.nama}
                 onChange={(event) => setForm((prev) => ({ ...prev, nama: event.target.value }))}
-                className="mt-1 w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm shadow-sm"
+                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               />
             </label>
 
-            <label className="text-sm text-slate-700">
+            <label className="text-sm text-slate-700 dark:text-slate-200">
               {t("field.alamat")}
               <textarea
                 rows={4}
                 value={form.alamat}
                 onChange={(event) => setForm((prev) => ({ ...prev, alamat: event.target.value }))}
-                className="mt-1 w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm shadow-sm"
+                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               />
             </label>
 
-            <label className="text-sm text-slate-700">
+            <label className="text-sm text-slate-700 dark:text-slate-200">
               {t("field.atasNama")}
               <input
                 value={form.atasNama}
                 onChange={(event) => setForm((prev) => ({ ...prev, atasNama: event.target.value }))}
-                className="mt-1 w-full rounded-lg border border-transparent bg-white px-3 py-2 text-sm shadow-sm"
+                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               />
             </label>
           </div>
 
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="mt-3 grid gap-2 sm:flex sm:flex-wrap">
             <button
               type="button"
               onClick={() => void onSave?.(form, item)}
               disabled={!canManageCustomer || isSaving || isDeleting}
-              className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-sky-500 dark:text-slate-950 dark:hover:bg-sky-400 sm:w-auto"
             >
               {isSaving ? t("common.loading") : t("common.saveChanges")}
             </button>
@@ -95,7 +95,7 @@ export function CustomerEditForm({
                 onNewData?.();
                 setForm(createEmptyCustomerFormState());
               }}
-              className="rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm text-sky-700 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm text-sky-700 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800 sm:w-auto"
             >
               {t("common.newData")}
             </button>
@@ -105,7 +105,7 @@ export function CustomerEditForm({
               onClick={() =>
                 setForm(item ? toCustomerFormState(item) : createEmptyCustomerFormState())
               }
-              className="rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm text-sky-700 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm text-sky-700 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800 sm:w-auto"
             >
               {t("common.resetForm")}
             </button>
@@ -114,33 +114,33 @@ export function CustomerEditForm({
                 type="button"
                 onClick={() => void onDelete?.(item)}
                 disabled={!canManageCustomer || isSaving || isDeleting}
-                className="rounded-lg border border-red-300 bg-white px-4 py-2 text-sm text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                className="w-full rounded-lg border border-red-300 bg-white px-4 py-2 text-sm text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-900 dark:bg-slate-900 dark:text-red-300 dark:hover:bg-red-950/40 sm:w-auto"
               >
                 {isDeleting ? t("common.loading") : t("common.delete")}
               </button>
             ) : null}
           </div>
           {!canManageCustomer ? (
-            <p className="mt-3 text-xs text-amber-700">{t("customer.adminOnlyAction")}</p>
+            <p className="mt-3 text-xs text-amber-700 dark:text-amber-300">{t("customer.adminOnlyAction")}</p>
           ) : null}
           {actionErrorMessage ? (
-            <p className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            <p className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/50 dark:text-red-200">
               {actionErrorMessage}
             </p>
           ) : null}
         </div>
 
-        <div className="rounded-xl border border-transparent bg-slate-100/70 p-4">
-          <p className="text-sm font-semibold text-slate-900">{t("customer.preview.title")}</p>
-          <div className="mt-3 space-y-2 text-sm text-slate-700">
+        <div className="rounded-xl border border-sky-100 bg-sky-100/50 p-4 dark:border-slate-800 dark:bg-slate-900/60">
+          <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t("customer.preview.title")}</p>
+          <div className="mt-3 space-y-2 text-sm text-slate-700 dark:text-slate-200">
             <p>
-              <span className="text-slate-500">{t("field.nama")}:</span> {form.nama || "-"}
+              <span className="text-slate-500 dark:text-slate-400">{t("field.nama")}:</span> {form.nama || "-"}
             </p>
             <p>
-              <span className="text-slate-500">{t("field.alamat")}:</span> {form.alamat || "-"}
+              <span className="text-slate-500 dark:text-slate-400">{t("field.alamat")}:</span> {form.alamat || "-"}
             </p>
             <p>
-              <span className="text-slate-500">{t("field.atasNama")}:</span> {form.atasNama || "-"}
+              <span className="text-slate-500 dark:text-slate-400">{t("field.atasNama")}:</span> {form.atasNama || "-"}
             </p>
           </div>
         </div>

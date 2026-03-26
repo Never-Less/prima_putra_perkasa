@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { SingleValue } from "react-select";
+import type { SingleValue, StylesConfig } from "react-select";
 import CreatableSelect from "react-select/creatable";
 import {
   barangRowsToList,
@@ -14,6 +14,7 @@ import {
   type SuratJalanItem,
 } from "../_lib/surat-jalan";
 import { useI18n } from "../../_i18n/provider";
+import { useTheme } from "../../_theme/provider";
 
 type ColorTone = "slate" | "sky" | "emerald";
 type FormStyle = "default" | "outlined" | "soft";
@@ -52,28 +53,28 @@ const toneStyles: Record<
   }
 > = {
   slate: {
-    section: "border-slate-200 bg-white",
-    title: "text-slate-900",
-    subtitle: "text-slate-600",
-    primaryButton: "bg-slate-900 text-white hover:bg-slate-700",
-    resetButton: "border border-slate-300 bg-white text-slate-700 hover:bg-slate-100",
-    label: "text-slate-700",
+    section: "border-sky-200 bg-sky-50/40 dark:border-slate-800 dark:bg-slate-950/85",
+    title: "text-sky-900 dark:text-slate-100",
+    subtitle: "text-sky-800 dark:text-slate-300",
+    primaryButton: "bg-sky-700 text-white hover:bg-sky-600 dark:bg-sky-500 dark:text-slate-950 dark:hover:bg-sky-400",
+    resetButton: "border border-sky-200 bg-white text-sky-700 hover:bg-sky-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800",
+    label: "text-sky-800 dark:text-slate-200",
   },
   sky: {
-    section: "border-sky-200 bg-sky-50/40",
-    title: "text-sky-900",
-    subtitle: "text-sky-800",
-    primaryButton: "bg-sky-700 text-white hover:bg-sky-600",
-    resetButton: "border border-sky-300 bg-white text-sky-700 hover:bg-sky-50",
-    label: "text-sky-800",
+    section: "border-sky-200 bg-sky-50/40 dark:border-sky-900/70 dark:bg-slate-950/85",
+    title: "text-sky-900 dark:text-sky-100",
+    subtitle: "text-sky-800 dark:text-sky-200",
+    primaryButton: "bg-sky-700 text-white hover:bg-sky-600 dark:bg-sky-500 dark:text-slate-950 dark:hover:bg-sky-400",
+    resetButton: "border border-sky-300 bg-white text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800",
+    label: "text-sky-800 dark:text-sky-200",
   },
   emerald: {
-    section: "border-emerald-200 bg-emerald-50/40",
-    title: "text-emerald-900",
-    subtitle: "text-emerald-800",
-    primaryButton: "bg-emerald-700 text-white hover:bg-emerald-600",
-    resetButton: "border border-emerald-300 bg-white text-emerald-700 hover:bg-emerald-50",
-    label: "text-emerald-800",
+    section: "border-emerald-200 bg-emerald-50/40 dark:border-emerald-900/70 dark:bg-slate-950/85",
+    title: "text-emerald-900 dark:text-emerald-100",
+    subtitle: "text-emerald-800 dark:text-emerald-200",
+    primaryButton: "bg-emerald-700 text-white hover:bg-emerald-600 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400",
+    resetButton: "border border-emerald-300 bg-white text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:bg-slate-900 dark:text-emerald-200 dark:hover:bg-slate-800",
+    label: "text-emerald-800 dark:text-emerald-200",
   },
 };
 
@@ -87,22 +88,22 @@ const formStyles: Record<
   }
 > = {
   default: {
-    formCard: "rounded-xl border border-slate-200 bg-slate-50 p-4",
-    previewCard: "rounded-xl border border-slate-200 bg-white p-4",
-    previewBarangBox: "rounded-lg border border-dashed border-slate-300 bg-slate-50 p-3",
-    input: "border border-slate-300 bg-white",
+    formCard: "rounded-xl border border-sky-100 bg-white/85 p-4 dark:border-slate-800 dark:bg-slate-900/70",
+    previewCard: "rounded-xl border border-sky-100 bg-sky-100/50 p-4 dark:border-slate-800 dark:bg-slate-900/60",
+    previewBarangBox: "rounded-lg border border-sky-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900",
+    input: "border border-sky-100 bg-white text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100",
   },
   outlined: {
-    formCard: "rounded-xl border-2 border-dashed border-slate-300 bg-white p-4",
-    previewCard: "rounded-xl border-2 border-dashed border-slate-300 bg-white p-4",
-    previewBarangBox: "rounded-lg border-2 border-dashed border-slate-300 bg-white p-3",
-    input: "border-2 border-slate-300 bg-white",
+    formCard: "rounded-xl border-2 border-dashed border-sky-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900/70",
+    previewCard: "rounded-xl border-2 border-dashed border-sky-200 bg-sky-100/45 p-4 dark:border-slate-700 dark:bg-slate-900/60",
+    previewBarangBox: "rounded-lg border-2 border-dashed border-sky-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900",
+    input: "border-2 border-sky-200 bg-white text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100",
   },
   soft: {
-    formCard: "rounded-xl border border-transparent bg-slate-100/80 p-4",
-    previewCard: "rounded-xl border border-transparent bg-slate-100/70 p-4",
-    previewBarangBox: "rounded-lg border border-transparent bg-white p-3 shadow-sm",
-    input: "border border-transparent bg-white shadow-sm",
+    formCard: "rounded-xl border border-sky-100 bg-white/85 p-4 dark:border-slate-800 dark:bg-slate-900/70",
+    previewCard: "rounded-xl border border-sky-100 bg-sky-100/50 p-4 dark:border-slate-800 dark:bg-slate-900/60",
+    previewBarangBox: "rounded-lg border border-sky-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-800",
+    input: "border border-sky-100 bg-white shadow-sm text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100",
   },
 };
 
@@ -136,6 +137,7 @@ export function SuratJalanEditForm({
   formStyle = "default",
 }: SuratJalanEditFormProps) {
   const { locale, t } = useI18n();
+  const { theme } = useTheme();
   const [form, setForm] = useState<SuratJalanFormState>(() =>
     item ? toFormState(item) : createEmptySuratJalanFormState()
   );
@@ -143,6 +145,68 @@ export function SuratJalanEditForm({
   const style = formStyles[formStyle];
   const inputClassName = `mt-1 w-full rounded-lg px-3 py-2 text-sm ${style.input}`;
   const barangInputClassName = `w-full rounded-lg px-3 py-2 text-sm ${style.input}`;
+  const noPoSelectStyles = useMemo<StylesConfig<NoPoSelectOption, false>>(() => {
+    const isDark = theme === "dark";
+
+    return {
+      control: (base, state) => ({
+        ...base,
+        minHeight: 42,
+        borderRadius: 10,
+        borderColor: state.isFocused
+          ? isDark
+            ? "#38bdf8"
+            : "#0ea5e9"
+          : isDark
+            ? "#334155"
+            : "#cbd5e1",
+        backgroundColor: isDark ? "#1e293b" : "#ffffff",
+        boxShadow: state.isFocused
+          ? `0 0 0 1px ${isDark ? "#38bdf8" : "#0ea5e9"}`
+          : "none",
+        "&:hover": {
+          borderColor: isDark ? "#38bdf8" : "#0ea5e9",
+        },
+      }),
+      menu: (base) => ({
+        ...base,
+        borderRadius: 12,
+        overflow: "hidden",
+        backgroundColor: isDark ? "#0f172a" : "#ffffff",
+      }),
+      menuList: (base) => ({
+        ...base,
+        backgroundColor: isDark ? "#0f172a" : "#ffffff",
+      }),
+      option: (base, state) => ({
+        ...base,
+        backgroundColor: state.isSelected
+          ? isDark
+            ? "#38bdf8"
+            : "#0ea5e9"
+          : state.isFocused
+            ? isDark
+              ? "#1e293b"
+              : "#e0f2fe"
+            : isDark
+              ? "#0f172a"
+              : "#ffffff",
+        color: state.isSelected ? (isDark ? "#020617" : "#ffffff") : isDark ? "#e2e8f0" : "#0f172a",
+      }),
+      input: (base) => ({
+        ...base,
+        color: isDark ? "#e2e8f0" : "#0f172a",
+      }),
+      singleValue: (base) => ({
+        ...base,
+        color: isDark ? "#e2e8f0" : "#0f172a",
+      }),
+      placeholder: (base) => ({
+        ...base,
+        color: isDark ? "#94a3b8" : "#64748b",
+      }),
+    };
+  }, [theme]);
 
   const previewBarang = useMemo(() => barangRowsToList(form.barangRows), [form.barangRows]);
   const normalizedNoPoOptions = useMemo(() => {
@@ -302,6 +366,7 @@ export function SuratJalanEditForm({
                       value: inputValue,
                     })
                   }
+                  styles={noPoSelectStyles}
                   onChange={handleNoPoChange}
                   onCreateOption={(inputValue) =>
                     setForm((prev) => ({
@@ -351,7 +416,7 @@ export function SuratJalanEditForm({
                 ))}
               </select>
               {isCustomerLockedByNoPo ? (
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                   {t("suratJalan.form.customerLockedByNoPo")}
                 </p>
               ) : null}
@@ -376,7 +441,7 @@ export function SuratJalanEditForm({
 
             <div className={`text-sm sm:col-span-2 ${tone.label}`}>
               <p>{t("suratJalan.form.items.title")}</p>
-              <p className="text-xs text-slate-500">{t("suratJalan.form.items.hint")}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">{t("suratJalan.form.items.hint")}</p>
               <div className="mt-2 space-y-2">
                 {form.barangRows.map((row, index) => (
                   <div key={`barang-row-${index}`} className="grid gap-2 sm:grid-cols-4">
@@ -415,12 +480,12 @@ export function SuratJalanEditForm({
             </div>
           </div>
 
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="mt-3 grid gap-2 sm:flex sm:flex-wrap">
             <button
               type="button"
               onClick={() => void onSave?.({ ...form, idCustomer: effectiveIdCustomer }, item)}
               disabled={isSaving || isDeleting}
-              className={`rounded-lg px-4 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-60 ${tone.primaryButton}`}
+              className={`w-full rounded-lg px-4 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto ${tone.primaryButton}`}
             >
               {isSaving ? t("common.loading") : t("common.saveChanges")}
             </button>
@@ -431,7 +496,7 @@ export function SuratJalanEditForm({
                 onNewData?.();
                 setForm(createEmptySuratJalanFormState());
               }}
-              className={`rounded-lg px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60 ${tone.resetButton}`}
+              className={`w-full rounded-lg px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto ${tone.resetButton}`}
             >
               {t("common.newData")}
             </button>
@@ -439,7 +504,7 @@ export function SuratJalanEditForm({
               type="button"
               disabled={isSaving || isDeleting}
               onClick={() => setForm(item ? toFormState(item) : createEmptySuratJalanFormState())}
-              className={`rounded-lg px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60 ${tone.resetButton}`}
+              className={`w-full rounded-lg px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto ${tone.resetButton}`}
             >
               {t("common.resetForm")}
             </button>
@@ -448,14 +513,14 @@ export function SuratJalanEditForm({
                 type="button"
                 onClick={() => void onDelete?.(item)}
                 disabled={isSaving || isDeleting}
-                className="rounded-lg border border-red-300 bg-white px-4 py-2 text-sm text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                className="w-full rounded-lg border border-red-300 bg-white px-4 py-2 text-sm text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-900 dark:bg-slate-900 dark:text-red-300 dark:hover:bg-red-950/40 sm:w-auto"
               >
                 {isDeleting ? t("common.loading") : t("common.delete")}
               </button>
             ) : null}
           </div>
           {actionErrorMessage ? (
-            <p className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            <p className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/50 dark:text-red-200">
               {actionErrorMessage}
             </p>
           ) : null}
@@ -463,34 +528,34 @@ export function SuratJalanEditForm({
 
         {showPreview ? (
           <div className={style.previewCard}>
-            <p className="text-sm font-semibold text-slate-900">{t("suratJalan.preview.title")}</p>
-            <div className="mt-3 space-y-1 text-sm text-slate-700">
+            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t("suratJalan.preview.title")}</p>
+            <div className="mt-3 space-y-1 text-sm text-slate-700 dark:text-slate-200">
               <p>
-                <span className="text-slate-500">{t("field.noSuratJalan")}:</span> {form.noSuratJalan || "-"}
+                <span className="text-slate-500 dark:text-slate-400">{t("field.noSuratJalan")}:</span> {form.noSuratJalan || "-"}
               </p>
               <p>
-                <span className="text-slate-500">{t("field.noPo")}:</span> {form.noPo || "-"}
+                <span className="text-slate-500 dark:text-slate-400">{t("field.noPo")}:</span> {form.noPo || "-"}
               </p>
               <p>
-                <span className="text-slate-500">{t("field.tanggal")}:</span> {formatTanggal(form.tanggal, locale)}
+                <span className="text-slate-500 dark:text-slate-400">{t("field.tanggal")}:</span> {formatTanggal(form.tanggal, locale)}
               </p>
               <p>
-                <span className="text-slate-500">{t("field.namaCustomer")}:</span> {previewCustomerLabel}
+                <span className="text-slate-500 dark:text-slate-400">{t("field.namaCustomer")}:</span> {previewCustomerLabel}
               </p>
               <p>
-                <span className="text-slate-500">{t("field.kendaraan")}:</span> {form.kendaraan || "-"}
+                <span className="text-slate-500 dark:text-slate-400">{t("field.kendaraan")}:</span> {form.kendaraan || "-"}
               </p>
               <p>
-                <span className="text-slate-500">{t("field.tipe")}:</span> {form.tipe}
+                <span className="text-slate-500 dark:text-slate-400">{t("field.tipe")}:</span> {form.tipe}
               </p>
             </div>
 
             <div className={`mt-3 ${style.previewBarangBox}`}>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.15em] text-slate-500">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.15em] text-slate-500 dark:text-slate-400">
                 {t("field.barang")}
               </p>
               {previewBarang.length > 0 ? (
-                <ul className="space-y-1 text-sm text-slate-700">
+                <ul className="space-y-1 text-sm text-slate-700 dark:text-slate-200">
                   {previewBarang.map((barang) => (
                     <li key={`${barang.nama}-${barang.spesifikasi || "-"}-${barang.jumlah}-${barang.unit || "-"}`}>
                       {barang.spesifikasi ? `${barang.nama} (${barang.spesifikasi})` : barang.nama}: {barang.jumlah}{" "}
@@ -499,7 +564,7 @@ export function SuratJalanEditForm({
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-slate-500">{t("common.noItems")}</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">{t("common.noItems")}</p>
               )}
             </div>
           </div>
