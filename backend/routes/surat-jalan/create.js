@@ -10,6 +10,7 @@ const router = express.Router();
 router.post("/", async (req, res) => {
   const noSuratJalan = String(req.body.noSuratJalan || "").trim();
   const noPo = String(req.body.noPo || "").trim();
+  const kodeDepartemen = String(req.body.kodeDepartemen || "").trim();
   const tanggal = parseDate(req.body.tanggal);
   const idCustomer = String(req.body.idCustomer || "").trim();
   const barang = normalizeBarangList(req.body.barang);
@@ -62,6 +63,7 @@ router.post("/", async (req, res) => {
     const suratJalan = await SuratJalan.create({
       noSuratJalan,
       noPo,
+      kodeDepartemen,
       tanggal: tanggal,
       idCustomer,
       barang: barang,

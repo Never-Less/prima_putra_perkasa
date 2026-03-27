@@ -111,6 +111,7 @@ function createEmptySuratJalanFormState(): SuratJalanFormState {
   return {
     noSuratJalan: "",
     noPo: "",
+    kodeDepartemen: "",
     tanggal: "",
     idCustomer: "",
     kendaraan: "",
@@ -392,6 +393,20 @@ export function SuratJalanEditForm({
             </label>
 
             <label className={`text-sm ${tone.label}`}>
+              {t("field.kodeDepartemen")}
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                {t("common.optional")}
+              </p>
+              <input
+                value={form.kodeDepartemen}
+                onChange={(event) =>
+                  setForm((prev) => ({ ...prev, kodeDepartemen: event.target.value }))
+                }
+                className={inputClassName}
+              />
+            </label>
+
+            <label className={`text-sm ${tone.label}`}>
               {t("field.kendaraan")}
               <input
                 value={form.kendaraan}
@@ -538,6 +553,10 @@ export function SuratJalanEditForm({
               </p>
               <p>
                 <span className="text-slate-500 dark:text-slate-400">{t("field.tanggal")}:</span> {formatTanggal(form.tanggal, locale)}
+              </p>
+              <p>
+                <span className="text-slate-500 dark:text-slate-400">{t("field.kodeDepartemen")}:</span>{" "}
+                {form.kodeDepartemen || "-"}
               </p>
               <p>
                 <span className="text-slate-500 dark:text-slate-400">{t("field.namaCustomer")}:</span> {previewCustomerLabel}

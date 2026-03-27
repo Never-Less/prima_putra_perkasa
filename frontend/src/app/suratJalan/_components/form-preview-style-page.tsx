@@ -205,7 +205,14 @@ export function FormPreviewStylePage() {
       const sameNoPoRows = allRows.filter((row) => row.noPo === createdItem.noPo);
       const sourceRows = sameNoPoRows.length > 0 ? sameNoPoRows : [createdItem];
       const noSuratJalanSet = new Set<string>();
-      const barangMap = new Map<string, number>();
+      const barangMap = new Map<
+        string,
+        {
+          namaBarang: string;
+          kuantitas: number;
+          unit: string;
+        }
+      >();
 
       sourceRows.forEach((row) => {
         const noSuratJalan = String(row.noSuratJalan || "").trim();
@@ -215,22 +222,32 @@ export function FormPreviewStylePage() {
         }
 
         row.barang.forEach((barang) => {
-          const namaBarang = String(barang.nama || "").trim();
+          const nama = String(barang.nama || "").trim();
+          const spesifikasi = String(barang.spesifikasi || "").trim();
+          const unit = String(barang.unit || "").trim();
+          const namaBarang = spesifikasi ? `${nama} (${spesifikasi})` : nama;
 
           if (!namaBarang) {
             return;
           }
 
-          const jumlahSaatIni = barangMap.get(namaBarang) || 0;
-          barangMap.set(namaBarang, jumlahSaatIni + Number(barang.jumlah || 0));
+          const identityKey = `${namaBarang.toLowerCase()}::${unit.toLowerCase()}`;
+          const existingItem = barangMap.get(identityKey);
+
+          if (existingItem) {
+            existingItem.kuantitas += Number(barang.jumlah || 0);
+            return;
+          }
+
+          barangMap.set(identityKey, {
+            namaBarang,
+            kuantitas: Number(barang.jumlah || 0),
+            unit,
+          });
         });
       });
 
-      const barang = Array.from(barangMap.entries())
-        .map(([namaBarang, kuantitas]) => ({
-          namaBarang,
-          kuantitas,
-        }))
+      const barang = Array.from(barangMap.values())
         .filter((item) => item.kuantitas > 0);
 
       return {

@@ -3,6 +3,7 @@ function sanitizeSuratJalan(suratJalan) {
     id: suratJalan._id,
     noSuratJalan: suratJalan.noSuratJalan,
     noPo: suratJalan.noPo,
+    kodeDepartemen: suratJalan.kodeDepartemen,
     tanggal: suratJalan.tanggal,
     idCustomer: suratJalan.idCustomer,
     barang: suratJalan.barang,

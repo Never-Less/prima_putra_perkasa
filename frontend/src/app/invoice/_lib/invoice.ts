@@ -46,6 +46,7 @@ export type InvoiceFormState = {
 export type InvoicePrefillBarang = {
   namaBarang: string;
   kuantitas: number;
+  unit: string;
 };
 
 export type InvoicePrefillPayload = {
@@ -68,12 +69,34 @@ export type InvoiceFilter = {
   tanggalSampai: string;
 };
 
+export type InvoiceSuratJalanBarangOption = {
+  nama: string;
+  spesifikasi: string;
+  jumlah: number;
+  unit: string;
+};
+
+export type InvoiceSuratJalanRowOption = {
+  noSuratJalan: string;
+  barang: InvoiceSuratJalanBarangOption[];
+};
+
+export type InvoiceSuratJalanOption = {
+  noPo: string;
+  idCustomer: string;
+  noSuratJalan: InvoiceSuratJalanRowOption[];
+};
+
 type InvoiceListResponse = {
   invoices?: unknown[];
 };
 
 type InvoiceResponse = {
   invoice?: unknown;
+};
+
+type InvoiceSuratJalanOptionsResponse = {
+  noPoOptions?: unknown[];
 };
 
 type ResolveCustomerLabel = (customerId: string) => string;
@@ -194,6 +217,90 @@ function normalizeNoSuratJalanList(value: unknown) {
   return singleValue ? [singleValue] : [];
 }
 
+function toInvoiceSuratJalanBarangOption(value: unknown): InvoiceSuratJalanBarangOption | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const item = value as Record<string, unknown>;
+  const nama = toText(item.nama).trim();
+  const spesifikasi = toText(item.spesifikasi).trim();
+  const jumlah = parseNumberFromUnknown(item.jumlah);
+  const unit = toText(item.unit).trim();
+
+  if (!nama || jumlah <= 0) {
+    return null;
+  }
+
+  return {
+    nama,
+    spesifikasi,
+    jumlah,
+    unit,
+  };
+}
+
+function toInvoiceSuratJalanRowOption(value: unknown): InvoiceSuratJalanRowOption | null {
+  if (typeof value === "string") {
+    const noSuratJalan = value.trim();
+
+    if (!noSuratJalan) {
+      return null;
+    }
+
+    return {
+      noSuratJalan,
+      barang: [],
+    };
+  }
+
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const item = value as Record<string, unknown>;
+  const noSuratJalan = toText(item.noSuratJalan).trim();
+  const barang = Array.isArray(item.barang)
+    ? item.barang
+        .map(toInvoiceSuratJalanBarangOption)
+        .filter((barangItem): barangItem is InvoiceSuratJalanBarangOption => Boolean(barangItem))
+    : [];
+
+  if (!noSuratJalan) {
+    return null;
+  }
+
+  return {
+    noSuratJalan,
+    barang,
+  };
+}
+
+function toInvoiceSuratJalanOption(value: unknown): InvoiceSuratJalanOption | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const option = value as Record<string, unknown>;
+  const noPo = toText(option.noPo).trim();
+  const idCustomer = parseCustomerId(option.idCustomer);
+  const noSuratJalan = Array.isArray(option.noSuratJalan)
+    ? option.noSuratJalan
+        .map(toInvoiceSuratJalanRowOption)
+        .filter((item): item is InvoiceSuratJalanRowOption => Boolean(item))
+    : [];
+
+  if (!noPo || noSuratJalan.length === 0) {
+    return null;
+  }
+
+  return {
+    noPo,
+    idCustomer,
+    noSuratJalan,
+  };
+}
+
 function parseCustomerId(value: unknown) {
   if (typeof value === "string") {
     return value.trim();
@@ -302,6 +409,7 @@ function normalizePrefillBarang(value: unknown): InvoicePrefillBarang | null {
   const item = value as Record<string, unknown>;
   const namaBarang = toText(item.namaBarang).trim();
   const kuantitas = parseNumberFromUnknown(item.kuantitas);
+  const unit = toText(item.unit).trim();
 
   if (!namaBarang || kuantitas <= 0) {
     return null;
@@ -310,6 +418,7 @@ function normalizePrefillBarang(value: unknown): InvoicePrefillBarang | null {
   return {
     namaBarang,
     kuantitas,
+    unit,
   };
 }
 
@@ -371,6 +480,18 @@ export async function fetchInvoiceRows() {
   }
 
   return response.invoices.map(toInvoiceItem).filter((item): item is InvoiceItem => Boolean(item));
+}
+
+export async function fetchInvoiceSuratJalanOptions() {
+  const response = await requestApi<InvoiceSuratJalanOptionsResponse>("/api/surat-jalan/invoice-options");
+
+  if (!response || !Array.isArray(response.noPoOptions)) {
+    return [];
+  }
+
+  return response.noPoOptions
+    .map(toInvoiceSuratJalanOption)
+    .filter((item): item is InvoiceSuratJalanOption => Boolean(item));
 }
 
 export async function createInvoice(form: InvoiceFormState) {
@@ -500,6 +621,98 @@ export function ensureTrailingEmptyInvoiceBarangRow(rows: InvoiceBarangFormRow[]
   return normalizedRows;
 }
 
+function formatInvoiceBarangNameFromSuratJalan(nama: string, spesifikasi: string) {
+  const normalizedNama = toText(nama).trim();
+  const normalizedSpesifikasi = toText(spesifikasi).trim();
+
+  if (!normalizedNama) {
+    return "";
+  }
+
+  if (!normalizedSpesifikasi) {
+    return normalizedNama;
+  }
+
+  return `${normalizedNama} (${normalizedSpesifikasi})`;
+}
+
+function createInvoiceBarangIdentityKey(namaBarang: string, unit: string) {
+  return `${normalize(namaBarang)}::${normalize(unit)}`;
+}
+
+export function buildInvoiceBarangRowsFromSuratJalanSelection(
+  suratJalanOptions: InvoiceSuratJalanOption[],
+  noPo: string,
+  selectedNoSuratJalan: string[],
+  currentRows: InvoiceBarangFormRow[] = []
+) {
+  const normalizedNoPo = toText(noPo).trim();
+  const selectedSet = new Set(normalizeNoSuratJalanList(selectedNoSuratJalan));
+
+  if (!normalizedNoPo || selectedSet.size === 0) {
+    return ensureTrailingEmptyInvoiceBarangRow([createEmptyInvoiceBarangRow()]);
+  }
+
+  const selectedNoPoOption = suratJalanOptions.find((option) => option.noPo === normalizedNoPo);
+
+  if (!selectedNoPoOption) {
+    return ensureTrailingEmptyInvoiceBarangRow([createEmptyInvoiceBarangRow()]);
+  }
+
+  const hargaSatuanMap = new Map<string, string>();
+
+  currentRows.forEach((row) => {
+    const namaBarang = toText(row.namaBarang).trim();
+    const unit = toText(row.unit).trim();
+
+    if (!namaBarang || !unit) {
+      return;
+    }
+
+    const identityKey = createInvoiceBarangIdentityKey(namaBarang, unit);
+
+    if (!hargaSatuanMap.has(identityKey)) {
+      hargaSatuanMap.set(identityKey, toText(row.hargaSatuan).trim());
+    }
+  });
+
+  const barangMap = new Map<string, InvoiceBarangFormRow>();
+
+  selectedNoPoOption.noSuratJalan.forEach((suratJalan) => {
+    if (!selectedSet.has(suratJalan.noSuratJalan)) {
+      return;
+    }
+
+    suratJalan.barang.forEach((barang) => {
+      const namaBarang = formatInvoiceBarangNameFromSuratJalan(barang.nama, barang.spesifikasi);
+      const unit = toText(barang.unit).trim();
+      const identityKey = createInvoiceBarangIdentityKey(namaBarang, unit);
+      const existingItem = barangMap.get(identityKey);
+
+      if (existingItem) {
+        const currentQty = parseNumber(existingItem.kuantitas);
+        existingItem.kuantitas = String(currentQty + barang.jumlah);
+        return;
+      }
+
+      barangMap.set(identityKey, {
+        namaBarang,
+        kuantitas: String(barang.jumlah),
+        unit,
+        hargaSatuan: hargaSatuanMap.get(identityKey) || "",
+      });
+    });
+  });
+
+  const rows = Array.from(barangMap.values());
+
+  if (rows.length === 0) {
+    return ensureTrailingEmptyInvoiceBarangRow([createEmptyInvoiceBarangRow()]);
+  }
+
+  return ensureTrailingEmptyInvoiceBarangRow(rows);
+}
+
 export function invoiceBarangRowsToList(rows: InvoiceBarangFormRow[]): InvoiceBarang[] {
   return rows
     .map((row) => {
@@ -558,7 +771,7 @@ export function toInvoiceFormStateFromPrefill(prefill: InvoicePrefillPayload): I
     prefill.barang.map((item) => ({
       namaBarang: item.namaBarang,
       kuantitas: String(item.kuantitas),
-      unit: "",
+      unit: item.unit,
       hargaSatuan: "",
     }))
   );

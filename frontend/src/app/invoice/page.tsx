@@ -16,11 +16,13 @@ import {
   consumeInvoicePrefill,
   createInvoice,
   fetchInvoiceRows,
+  fetchInvoiceSuratJalanOptions,
   toInvoiceFormStateFromPrefill,
   updateInvoice,
   deleteInvoice,
   type InvoiceFormState,
   type InvoiceItem,
+  type InvoiceSuratJalanOption,
 } from "./_lib/invoice";
 
 type ToastState = {
@@ -39,6 +41,7 @@ export default function InvoicePage() {
   const router = useRouter();
   const [rows, setRows] = useState<InvoiceItem[]>([]);
   const [customerRows, setCustomerRows] = useState<CustomerItem[]>([]);
+  const [suratJalanOptions, setSuratJalanOptions] = useState<InvoiceSuratJalanOption[]>([]);
   const [selectedId, setSelectedId] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -130,9 +133,24 @@ export default function InvoicePage() {
     }
   }, [showToast, t]);
 
+  const loadSuratJalanOptions = useCallback(async () => {
+    try {
+      const options = await fetchInvoiceSuratJalanOptions();
+      setSuratJalanOptions(options);
+    } catch (error) {
+      setSuratJalanOptions([]);
+
+      if (error instanceof ApiRequestError) {
+        showToast(error.message || t("invoice.suratJalanLoadError"), "error");
+      } else {
+        showToast(t("invoice.suratJalanLoadError"), "error");
+      }
+    }
+  }, [showToast, t]);
+
   useEffect(() => {
-    void Promise.all([loadInvoices(), loadCustomerOptions()]);
-  }, [loadCustomerOptions, loadInvoices]);
+    void Promise.all([loadInvoices(), loadCustomerOptions(), loadSuratJalanOptions()]);
+  }, [loadCustomerOptions, loadInvoices, loadSuratJalanOptions]);
 
   const selectedRow = useMemo(() => {
     return rows.find((row) => row.id === selectedId);
@@ -425,6 +443,7 @@ export default function InvoicePage() {
                 item={selectedRow}
                 initialForm={selectedRow ? undefined : initialForm || undefined}
                 customerOptions={customerOptions}
+                suratJalanOptions={suratJalanOptions}
                 isSaving={isSaving}
                 isDeleting={isDeleting}
                 actionErrorMessage={actionErrorMessage}

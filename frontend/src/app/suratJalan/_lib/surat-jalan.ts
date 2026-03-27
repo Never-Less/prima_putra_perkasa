@@ -21,6 +21,7 @@ export type SuratJalanItem = {
   id: string;
   noSuratJalan: string;
   noPo: string;
+  kodeDepartemen: string;
   tanggal: string;
   idCustomer: string;
   barang: SuratJalanBarang[];
@@ -33,6 +34,7 @@ export type SuratJalanItem = {
 export type SuratJalanFilter = {
   noSuratJalan: string;
   noPo: string;
+  kodeDepartemen: string;
   idCustomer: string;
   kendaraan: string;
   tipe: "" | SuratJalanTipe;
@@ -43,6 +45,7 @@ export type SuratJalanFilter = {
 export type SuratJalanFormState = {
   noSuratJalan: string;
   noPo: string;
+  kodeDepartemen: string;
   tanggal: string;
   idCustomer: string;
   kendaraan: string;
@@ -63,6 +66,7 @@ type ResolveCustomerLabel = (customerId: string) => string;
 export const defaultSuratJalanFilter: SuratJalanFilter = {
   noSuratJalan: "",
   noPo: "",
+  kodeDepartemen: "",
   idCustomer: "",
   kendaraan: "",
   tipe: "",
@@ -153,6 +157,7 @@ function toSuratJalanItem(value: unknown): SuratJalanItem | null {
     id,
     noSuratJalan: toText(row.noSuratJalan).trim(),
     noPo: toText(row.noPo).trim(),
+    kodeDepartemen: toText(row.kodeDepartemen).trim(),
     tanggal: toText(row.tanggal).trim(),
     idCustomer: parseCustomerId(row.idCustomer),
     barang: barangList,
@@ -167,6 +172,7 @@ function toNormalizedSuratJalanPayload(form: SuratJalanFormState) {
   return {
     noSuratJalan: toText(form.noSuratJalan).trim(),
     noPo: toText(form.noPo).trim(),
+    kodeDepartemen: toText(form.kodeDepartemen).trim(),
     tanggal: toText(form.tanggal).trim(),
     idCustomer: toText(form.idCustomer).trim(),
     barang: barangRowsToList(form.barangRows),
@@ -268,6 +274,9 @@ export function filterSuratJalanRows(
   return rows.filter((row) => {
     const noSuratJalanMatch = normalize(row.noSuratJalan).includes(normalize(filters.noSuratJalan));
     const noPoMatch = normalize(row.noPo).includes(normalize(filters.noPo));
+    const kodeDepartemenMatch = normalize(row.kodeDepartemen).includes(
+      normalize(filters.kodeDepartemen)
+    );
     const customerLabel = resolveCustomerLabel ? resolveCustomerLabel(row.idCustomer) : row.idCustomer;
     const idCustomerMatch = normalize(customerLabel).includes(normalize(filters.idCustomer));
     const kendaraanMatch = normalize(row.kendaraan).includes(normalize(filters.kendaraan));
@@ -283,6 +292,7 @@ export function filterSuratJalanRows(
     return (
       noSuratJalanMatch &&
       noPoMatch &&
+      kodeDepartemenMatch &&
       idCustomerMatch &&
       kendaraanMatch &&
       tipeMatch &&
@@ -296,6 +306,7 @@ export function toFormState(item: SuratJalanItem): SuratJalanFormState {
   return {
     noSuratJalan: item.noSuratJalan,
     noPo: item.noPo,
+    kodeDepartemen: item.kodeDepartemen,
     tanggal: toInputDate(item.tanggal),
     idCustomer: item.idCustomer,
     kendaraan: item.kendaraan,

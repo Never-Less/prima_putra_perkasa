@@ -49,6 +49,12 @@ const suratJalanSchema = new mongoose.Schema(
       trim: true,
       maxlength: 100,
     },
+    kodeDepartemen: {
+      type: String,
+      trim: true,
+      maxlength: 100,
+      default: "",
+    },
     tanggal: {
       type: Date,
       required: true,

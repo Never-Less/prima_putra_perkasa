@@ -170,6 +170,7 @@ export function SuratJalanTableFilter({
     const header = [
       "noSuratJalan",
       "noPo",
+      "kodeDepartemen",
       "tanggal",
       "namaCustomer",
       "kendaraan",
@@ -183,6 +184,7 @@ export function SuratJalanTableFilter({
       const csvRow = [
         row.noSuratJalan,
         row.noPo,
+        row.kodeDepartemen,
         formatTanggal(row.tanggal, locale),
         customerLabel,
         row.kendaraan,
@@ -236,6 +238,17 @@ export function SuratJalanTableFilter({
             <input
               value={filters.noPo}
               onChange={(event) => setFilters((prev) => ({ ...prev, noPo: event.target.value }))}
+              className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+            />
+          </label>
+
+          <label className="text-sm text-slate-700 dark:text-slate-200">
+            {t("field.kodeDepartemen")}
+            <input
+              value={filters.kodeDepartemen}
+              onChange={(event) =>
+                setFilters((prev) => ({ ...prev, kodeDepartemen: event.target.value }))
+              }
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
@@ -354,6 +367,10 @@ export function SuratJalanTableFilter({
                     <dl className="mt-4 space-y-3 text-sm">
                       <div className="grid gap-3 sm:grid-cols-2">
                         <div>
+                          <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.kodeDepartemen")}</dt>
+                          <dd className="mt-1 text-slate-700 dark:text-slate-200">{row.kodeDepartemen || "-"}</dd>
+                        </div>
+                        <div>
                           <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.namaCustomer")}</dt>
                           <dd className="mt-1 text-slate-700 dark:text-slate-200">{customerLabel}</dd>
                         </div>
@@ -398,6 +415,7 @@ export function SuratJalanTableFilter({
                     <tr>
                       <th className={`${cellPadding} font-medium`}>{t("field.noSuratJalan")}</th>
                       <th className={`${cellPadding} font-medium`}>{t("field.tanggal")}</th>
+                      <th className={`${cellPadding} font-medium`}>{t("field.kodeDepartemen")}</th>
                       <th className={`${cellPadding} font-medium`}>{t("field.namaCustomer")}</th>
                       <th className={`${cellPadding} font-medium`}>{t("field.barang")}</th>
                       <th className={`${cellPadding} font-medium`}>{t("field.kendaraan")}</th>
@@ -425,6 +443,9 @@ export function SuratJalanTableFilter({
                           </td>
                           <td className={`whitespace-nowrap ${cellPadding} text-slate-600 dark:text-slate-300`}>
                             {formatTanggal(row.tanggal, locale)}
+                          </td>
+                          <td className={`whitespace-nowrap ${cellPadding} text-slate-600 dark:text-slate-300`}>
+                            {row.kodeDepartemen || "-"}
                           </td>
                           <td className={`whitespace-nowrap ${cellPadding} text-slate-600 dark:text-slate-300`}>{customerLabel}</td>
                           <td className={`${cellPadding} text-slate-600 dark:text-slate-300`} title={barangText}>

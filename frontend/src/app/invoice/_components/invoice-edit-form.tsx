@@ -1,27 +1,38 @@
 "use client";
 
+import Select, { type MultiValue, type SingleValue, type StylesConfig } from "react-select";
 import { useMemo, useState } from "react";
 import {
+  buildInvoiceBarangRowsFromSuratJalanSelection,
   calculateInvoiceSummary,
   createEmptyInvoiceBarangRow,
   ensureTrailingEmptyInvoiceBarangRow,
   formatRupiah,
   formatTanggal,
   invoiceNoSuratJalanListLabel,
+  invoiceNoSuratJalanListToText,
   invoiceNoSuratJalanTextToList,
   invoiceBarangRowsToList,
   toInvoiceFormState,
   type InvoiceBarangFormRow,
   type InvoiceFormState,
   type InvoiceItem,
+  type InvoiceSuratJalanOption,
 } from "../_lib/invoice";
 import { useI18n } from "../../_i18n/provider";
+import { useTheme } from "../../_theme/provider";
+
+type SelectOption = {
+  value: string;
+  label: string;
+};
 
 type InvoiceEditFormProps = {
   item?: InvoiceItem;
   initialForm?: InvoiceFormState;
   onNewData?: () => void;
   customerOptions?: Array<{ id: string; nama: string }>;
+  suratJalanOptions?: InvoiceSuratJalanOption[];
   isSaving?: boolean;
   isDeleting?: boolean;
   actionErrorMessage?: string;
@@ -47,6 +58,7 @@ export function InvoiceEditForm({
   initialForm,
   onNewData,
   customerOptions = [],
+  suratJalanOptions = [],
   isSaving = false,
   isDeleting = false,
   actionErrorMessage = "",
@@ -54,6 +66,7 @@ export function InvoiceEditForm({
   onDelete,
 }: InvoiceEditFormProps) {
   const { locale, t } = useI18n();
+  const { theme } = useTheme();
   const [form, setForm] = useState<InvoiceFormState>(() =>
     item
       ? toInvoiceFormState(item)
@@ -70,6 +83,76 @@ export function InvoiceEditForm({
     () => invoiceNoSuratJalanTextToList(form.noSuratJalanText),
     [form.noSuratJalanText]
   );
+  const isDark = theme === "dark";
+  const selectStyles = useMemo<StylesConfig<SelectOption, boolean>>(
+    () => ({
+      control: (base, state) => ({
+        ...base,
+        minHeight: 42,
+        borderRadius: 10,
+        borderColor: state.isFocused ? (isDark ? "#38bdf8" : "#7dd3fc") : isDark ? "#334155" : "#bae6fd",
+        backgroundColor: isDark ? "#1e293b" : "#ffffff",
+        boxShadow: state.isFocused ? `0 0 0 1px ${isDark ? "#38bdf8" : "#0ea5e9"}` : "none",
+        "&:hover": {
+          borderColor: isDark ? "#38bdf8" : "#0ea5e9",
+        },
+      }),
+      menu: (base) => ({
+        ...base,
+        borderRadius: 12,
+        overflow: "hidden",
+        backgroundColor: isDark ? "#0f172a" : "#ffffff",
+      }),
+      menuList: (base) => ({
+        ...base,
+        backgroundColor: isDark ? "#0f172a" : "#ffffff",
+      }),
+      option: (base, state) => ({
+        ...base,
+        backgroundColor: state.isSelected
+          ? isDark
+            ? "#38bdf8"
+            : "#0ea5e9"
+          : state.isFocused
+            ? isDark
+              ? "#1e293b"
+              : "#e0f2fe"
+            : isDark
+              ? "#0f172a"
+              : "#ffffff",
+        color: state.isSelected ? (isDark ? "#020617" : "#ffffff") : isDark ? "#e2e8f0" : "#0f172a",
+      }),
+      input: (base) => ({
+        ...base,
+        color: isDark ? "#e2e8f0" : "#0f172a",
+      }),
+      singleValue: (base) => ({
+        ...base,
+        color: isDark ? "#e2e8f0" : "#0f172a",
+      }),
+      placeholder: (base) => ({
+        ...base,
+        color: isDark ? "#94a3b8" : "#64748b",
+      }),
+      multiValue: (base) => ({
+        ...base,
+        backgroundColor: isDark ? "#334155" : "#e0f2fe",
+      }),
+      multiValueLabel: (base) => ({
+        ...base,
+        color: isDark ? "#e2e8f0" : "#0c4a6e",
+      }),
+      multiValueRemove: (base) => ({
+        ...base,
+        color: isDark ? "#cbd5e1" : "#0369a1",
+        ":hover": {
+          backgroundColor: isDark ? "#475569" : "#bae6fd",
+          color: isDark ? "#ffffff" : "#0c4a6e",
+        },
+      }),
+    }),
+    [isDark]
+  );
 
   const summary = useMemo(() => {
     const ppnRateNumber = Number(form.ppnRate || "0");
@@ -77,7 +160,98 @@ export function InvoiceEditForm({
 
     return calculateInvoiceSummary(barangList, form.isPpn, normalizedPpnRate);
   }, [barangList, form.isPpn, form.ppnRate]);
+  const normalizedSuratJalanOptions = useMemo(() => {
+    const optionMap = new Map<string, InvoiceSuratJalanOption>();
 
+    suratJalanOptions.forEach((option) => {
+      const noPo = String(option.noPo || "").trim();
+      const idCustomer = String(option.idCustomer || "").trim();
+      const noSuratJalanValues = Array.isArray(option.noSuratJalan)
+        ? option.noSuratJalan
+            .map((item) => ({
+              noSuratJalan: String(item.noSuratJalan || "").trim(),
+              barang: Array.isArray(item.barang) ? item.barang : [],
+            }))
+            .filter((item) => item.noSuratJalan)
+        : [];
+
+      if (!noPo || noSuratJalanValues.length === 0) {
+        return;
+      }
+
+      const existingOption = optionMap.get(noPo);
+
+      if (!existingOption) {
+        optionMap.set(noPo, {
+          noPo,
+          idCustomer,
+          noSuratJalan: noSuratJalanValues,
+        });
+        return;
+      }
+
+      const rowMap = new Map(
+        existingOption.noSuratJalan.map((item) => [item.noSuratJalan, item] as const)
+      );
+
+      noSuratJalanValues.forEach((value) => {
+        rowMap.set(value.noSuratJalan, value);
+      });
+
+      optionMap.set(noPo, {
+        noPo,
+        idCustomer: existingOption.idCustomer || idCustomer,
+        noSuratJalan: Array.from(rowMap.values()),
+      });
+    });
+
+    if (form.noPo) {
+      const existingOption = optionMap.get(form.noPo);
+
+      if (!existingOption) {
+        optionMap.set(form.noPo, {
+          noPo: form.noPo,
+          idCustomer: form.idCustomer,
+          noSuratJalan: noSuratJalanList.map((value) => ({
+            noSuratJalan: value,
+            barang: [],
+          })),
+        });
+      } else {
+        const rowMap = new Map(
+          existingOption.noSuratJalan.map((item) => [item.noSuratJalan, item] as const)
+        );
+
+        noSuratJalanList.forEach((value) => {
+          if (!rowMap.has(value)) {
+            rowMap.set(value, {
+              noSuratJalan: value,
+              barang: [],
+            });
+          }
+        });
+
+        optionMap.set(form.noPo, {
+          noPo: existingOption.noPo,
+          idCustomer: existingOption.idCustomer || form.idCustomer,
+          noSuratJalan: Array.from(rowMap.values()),
+        });
+      }
+    }
+
+    return Array.from(optionMap.entries())
+      .map(([, option]) => ({
+        ...option,
+        noSuratJalan: [...option.noSuratJalan].sort((left, right) =>
+          left.noSuratJalan.localeCompare(right.noSuratJalan)
+        ),
+      }))
+      .sort((left, right) => left.noPo.localeCompare(right.noPo));
+  }, [form.idCustomer, form.noPo, noSuratJalanList, suratJalanOptions]);
+  const selectedNoPoData = useMemo(() => {
+    return normalizedSuratJalanOptions.find((option) => option.noPo === form.noPo) || null;
+  }, [form.noPo, normalizedSuratJalanOptions]);
+  const effectiveIdCustomer = selectedNoPoData?.idCustomer || form.idCustomer;
   const normalizedCustomerOptions = useMemo(() => {
     const customerMap = new Map<string, string>();
 
@@ -92,19 +266,54 @@ export function InvoiceEditForm({
       customerMap.set(id, nama || id);
     });
 
-    if (form.idCustomer && !customerMap.has(form.idCustomer)) {
-      customerMap.set(form.idCustomer, form.idCustomer);
+    if (effectiveIdCustomer && !customerMap.has(effectiveIdCustomer)) {
+      customerMap.set(effectiveIdCustomer, effectiveIdCustomer);
     }
 
     return Array.from(customerMap.entries()).map(([id, nama]) => ({
       id,
       nama,
     }));
-  }, [customerOptions, form.idCustomer]);
+  }, [customerOptions, effectiveIdCustomer]);
   const customerLabelMap = useMemo(() => {
     return new Map(normalizedCustomerOptions.map((customer) => [customer.id, customer.nama]));
   }, [normalizedCustomerOptions]);
-  const previewCustomerLabel = customerLabelMap.get(form.idCustomer) || form.idCustomer || "-";
+  const previewCustomerLabel = customerLabelMap.get(effectiveIdCustomer) || effectiveIdCustomer || "-";
+  const noPoSelectOptions = useMemo<SelectOption[]>(() => {
+    return normalizedSuratJalanOptions.map((option) => ({
+      value: option.noPo,
+      label: option.noPo,
+    }));
+  }, [normalizedSuratJalanOptions]);
+  const selectedNoPoOption = useMemo<SelectOption | null>(() => {
+    const noPo = String(form.noPo || "").trim();
+
+    if (!noPo) {
+      return null;
+    }
+
+    return (
+      noPoSelectOptions.find((option) => option.value === noPo) || {
+        value: noPo,
+        label: noPo,
+      }
+    );
+  }, [form.noPo, noPoSelectOptions]);
+  const availableNoSuratJalanOptions = useMemo<SelectOption[]>(() => {
+    const values = selectedNoPoData?.noSuratJalan || [];
+
+    return values.map((value) => ({
+      value: value.noSuratJalan,
+      label: value.noSuratJalan,
+    }));
+  }, [selectedNoPoData]);
+  const selectedNoSuratJalanOptions = useMemo<SelectOption[]>(() => {
+    return noSuratJalanList.map((value) => ({
+      value,
+      label: value,
+    }));
+  }, [noSuratJalanList]);
+  const isCustomerAutoSelected = Boolean(form.noPo && selectedNoPoData?.idCustomer);
 
   function updateBarangRow(index: number, field: keyof InvoiceBarangFormRow, value: string) {
     setForm((prev) => {
@@ -124,6 +333,48 @@ export function InvoiceEditForm({
         barangRows: ensureTrailingEmptyInvoiceBarangRow(nextRows),
       };
     });
+  }
+
+  function handleNoPoChange(option: SingleValue<SelectOption>) {
+    const nextNoPo = String(option?.value || "").trim();
+
+    setForm((prev) => {
+      const selectedOption = normalizedSuratJalanOptions.find((item) => item.noPo === nextNoPo);
+      const allowedValues = new Set(
+        (selectedOption?.noSuratJalan || []).map((item) => item.noSuratJalan)
+      );
+      const nextNoSuratJalan = invoiceNoSuratJalanTextToList(prev.noSuratJalanText).filter((value) =>
+        allowedValues.has(value)
+      );
+
+      return {
+        ...prev,
+        noPo: nextNoPo,
+        noSuratJalanText: invoiceNoSuratJalanListToText(nextNoSuratJalan),
+        idCustomer: nextNoPo ? selectedOption?.idCustomer || "" : "",
+        barangRows: buildInvoiceBarangRowsFromSuratJalanSelection(
+          normalizedSuratJalanOptions,
+          nextNoPo,
+          nextNoSuratJalan,
+          prev.barangRows
+        ),
+      };
+    });
+  }
+
+  function handleNoSuratJalanChange(options: MultiValue<SelectOption>) {
+    const nextValues = options.map((option) => option.value);
+
+    setForm((prev) => ({
+      ...prev,
+      noSuratJalanText: invoiceNoSuratJalanListToText(nextValues),
+      barangRows: buildInvoiceBarangRowsFromSuratJalanSelection(
+        normalizedSuratJalanOptions,
+        prev.noPo,
+        nextValues,
+        prev.barangRows
+      ),
+    }));
   }
 
   return (
@@ -159,33 +410,55 @@ export function InvoiceEditForm({
 
             <label className="text-sm text-slate-700 dark:text-slate-200">
               {t("field.noPo")}
-              <input
-                value={form.noPo}
-                onChange={(event) => setForm((prev) => ({ ...prev, noPo: event.target.value }))}
-                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-              />
+              <div className="mt-1">
+                <Select<SelectOption, false>
+                  inputId="invoice-no-po-select"
+                  value={selectedNoPoOption}
+                  options={noPoSelectOptions}
+                  isClearable={true}
+                  isDisabled={isSaving || isDeleting}
+                  placeholder={t("invoice.form.noPoSelectPlaceholder")}
+                  noOptionsMessage={() => t("invoice.form.noPoNoOptions")}
+                  styles={selectStyles}
+                  onChange={handleNoPoChange}
+                />
+              </div>
             </label>
 
             <label className="text-sm text-slate-700 dark:text-slate-200">
               {t("field.noSuratJalan")}
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("invoice.form.noSuratJalanHint")}</p>
-              <textarea
-                rows={3}
-                value={form.noSuratJalanText}
-                onChange={(event) =>
-                  setForm((prev) => ({ ...prev, noSuratJalanText: event.target.value }))
-                }
-                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-              />
+              <div className="mt-1">
+                <Select<SelectOption, true>
+                  inputId="invoice-no-surat-jalan-select"
+                  isMulti={true}
+                  value={selectedNoSuratJalanOptions}
+                  options={availableNoSuratJalanOptions}
+                  isDisabled={isSaving || isDeleting || !form.noPo}
+                  placeholder={
+                    form.noPo
+                      ? t("invoice.form.noSuratJalanSelectPlaceholder")
+                      : t("invoice.form.noSuratJalanDisabledHint")
+                  }
+                  noOptionsMessage={() => t("invoice.form.noSuratJalanNoOptions")}
+                  styles={selectStyles}
+                  onChange={handleNoSuratJalanChange}
+                />
+              </div>
             </label>
 
             <label className="text-sm text-slate-700 dark:text-slate-200 sm:col-span-2">
               {t("field.namaCustomer")}
+              {isCustomerAutoSelected ? (
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                  {t("invoice.form.customerAutoHint")}
+                </p>
+              ) : null}
               <select
-                value={form.idCustomer}
+                value={effectiveIdCustomer}
                 onChange={(event) => setForm((prev) => ({ ...prev, idCustomer: event.target.value }))}
-                disabled={isSaving || isDeleting}
-                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                disabled={isSaving || isDeleting || isCustomerAutoSelected}
+                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
               >
                 <option value="">-</option>
                 {normalizedCustomerOptions.map((customer) => (
@@ -287,7 +560,17 @@ export function InvoiceEditForm({
           <div className="mt-3 grid gap-2 sm:flex sm:flex-wrap">
             <button
               type="button"
-              onClick={() => void onSave?.(form, item)}
+              onClick={() =>
+                void onSave?.(
+                  effectiveIdCustomer !== form.idCustomer
+                    ? {
+                        ...form,
+                        idCustomer: effectiveIdCustomer,
+                      }
+                    : form,
+                  item
+                )
+              }
               disabled={isSaving || isDeleting}
               className="w-full rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-sky-500 dark:text-slate-950 dark:hover:bg-sky-400 sm:w-auto"
             >

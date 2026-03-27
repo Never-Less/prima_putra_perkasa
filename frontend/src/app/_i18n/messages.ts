@@ -56,6 +56,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "common.filterResult": "Hasil filter: {{count}} data",
     "common.totalData": "Total data: {{count}}",
     "common.all": "Semua",
+    "common.optional": "Opsional",
     "common.retry": "Coba Lagi",
     "common.noData": "Belum ada data.",
     "common.saveChanges": "Simpan Perubahan",
@@ -99,7 +100,13 @@ export const messages: Record<Locale, MessageDictionary> = {
     "invoice.form.title": "Form Edit + Preview Invoice",
     "invoice.form.description":
       "Field disesuaikan dengan schema backend invoice. Nilai subtotal, ppnAmount, dan grandTotal dihitung otomatis.",
-    "invoice.form.noSuratJalanHint": "Isi 1 noSuratJalan per baris.",
+    "invoice.form.noPoSelectPlaceholder": "Pilih noPo...",
+    "invoice.form.noPoNoOptions": "Belum ada noPo dari surat jalan.",
+    "invoice.form.customerAutoHint": "Customer diisi otomatis dari noPo yang dipilih.",
+    "invoice.form.noSuratJalanHint": "Pilih satu atau lebih noSuratJalan berdasarkan noPo.",
+    "invoice.form.noSuratJalanSelectPlaceholder": "Pilih noSuratJalan...",
+    "invoice.form.noSuratJalanNoOptions": "Belum ada noSuratJalan untuk noPo ini.",
+    "invoice.form.noSuratJalanDisabledHint": "Pilih noPo terlebih dahulu.",
     "invoice.form.items.title": "barang (namaBarang, kuantitas, unit, hargaSatuan)",
     "invoice.form.items.hint":
       "Baris kosong baru akan muncul otomatis saat baris terakhir mulai diisi.",
@@ -110,6 +117,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "invoice.preview.title": "Preview Invoice",
     "invoice.apiLoadError": "Gagal memuat data invoice dari backend.",
     "invoice.customerLoadError": "Gagal memuat pilihan customer untuk invoice.",
+    "invoice.suratJalanLoadError": "Gagal memuat pilihan surat jalan untuk invoice.",
     "invoice.mutationError": "Gagal memproses perubahan invoice.",
     "invoice.confirmUpdateTitle": "Konfirmasi Ubah Invoice",
     "invoice.confirmUpdateDescription":
@@ -130,7 +138,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "invoice.postSaveModal.createPembelianButton": "Buat Pembelian Baru",
 
     "suratJalan.page.description":
-      "Page surat jalan disesuaikan dengan field schema backend: noSuratJalan, noPo, tanggal, namaCustomer, barang, kendaraan, dan tipe.",
+      "Page surat jalan disesuaikan dengan field schema backend: noSuratJalan, noPo, kodeDepartemen, tanggal, namaCustomer, barang, kendaraan, dan tipe.",
     "suratJalan.table.title": "Tabel Surat Jalan",
     "suratJalan.table.exportNoPoButton": "Export NoPO",
     "suratJalan.form.title": "Form Edit + Preview",
@@ -212,6 +220,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "field.noInvoice": "noInvoice",
     "field.tanggal": "tanggal",
     "field.noPo": "noPo",
+    "field.kodeDepartemen": "kodeDepartemen",
     "field.noSuratJalan": "noSuratJalan",
     "field.idCustomer": "idCustomer",
     "field.namaCustomer": "nama Customer",
@@ -291,6 +300,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "common.filterResult": "Filtered result: {{count}} rows",
     "common.totalData": "Total rows: {{count}}",
     "common.all": "All",
+    "common.optional": "Optional",
     "common.retry": "Retry",
     "common.noData": "No data available.",
     "common.saveChanges": "Save Changes",
@@ -334,7 +344,13 @@ export const messages: Record<Locale, MessageDictionary> = {
     "invoice.form.title": "Edit Form + Invoice Preview",
     "invoice.form.description":
       "Fields are aligned with invoice backend schema. subtotal, ppnAmount, and grandTotal are auto-calculated.",
-    "invoice.form.noSuratJalanHint": "Enter one noSuratJalan per line.",
+    "invoice.form.noPoSelectPlaceholder": "Select noPo...",
+    "invoice.form.noPoNoOptions": "No noPo options from delivery notes yet.",
+    "invoice.form.customerAutoHint": "Customer is filled automatically from the selected noPo.",
+    "invoice.form.noSuratJalanHint": "Select one or more noSuratJalan based on noPo.",
+    "invoice.form.noSuratJalanSelectPlaceholder": "Select noSuratJalan...",
+    "invoice.form.noSuratJalanNoOptions": "No noSuratJalan available for this noPo.",
+    "invoice.form.noSuratJalanDisabledHint": "Select noPo first.",
     "invoice.form.items.title": "Items (ItemName, Quantity, unit, UnitPrice)",
     "invoice.form.items.hint": "A new empty row is added when the last row starts being filled.",
     "invoice.form.items.placeholder.name": "Item name",
@@ -344,6 +360,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "invoice.preview.title": "Invoice Preview",
     "invoice.apiLoadError": "Failed to load invoice data from backend.",
     "invoice.customerLoadError": "Failed to load customer options for invoice.",
+    "invoice.suratJalanLoadError": "Failed to load delivery note options for invoice.",
     "invoice.mutationError": "Failed to process invoice changes.",
     "invoice.confirmUpdateTitle": "Confirm Invoice Update",
     "invoice.confirmUpdateDescription":
@@ -364,7 +381,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "invoice.postSaveModal.createPembelianButton": "Create New Purchase",
 
     "suratJalan.page.description":
-      "Delivery Note page aligned with backend schema fields: noSuratJalan, noPo, tanggal, customerName, barang, kendaraan, and tipe.",
+      "Delivery Note page aligned with backend schema fields: noSuratJalan, noPo, kodeDepartemen, tanggal, customerName, barang, kendaraan, and tipe.",
     "suratJalan.table.title": "Delivery Note Table",
     "suratJalan.table.exportNoPoButton": "Export noPo",
     "suratJalan.form.title": "Edit Form + Preview",
@@ -448,6 +465,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "field.noInvoice": "noInvoice",
     "field.tanggal": "Date",
     "field.noPo": "noPo",
+    "field.kodeDepartemen": "departmentCode",
     "field.noSuratJalan": "noSuratJalan",
     "field.idCustomer": "idCustomer",
     "field.namaCustomer": "Customer Name",

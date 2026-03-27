@@ -2,6 +2,7 @@ const express = require("express");
 
 const { requireAuth } = require("../../middlewares/auth");
 const createRoute = require("./create");
+const invoiceOptionsRoute = require("./invoice-options");
 const getByIdRoute = require("./get-by-id");
 const listRoute = require("./list");
 const removeRoute = require("./remove");
@@ -12,6 +13,7 @@ const router = express.Router();
 router.use(requireAuth);
 
 router.use(createRoute);
+router.use(invoiceOptionsRoute);
 router.use(listRoute);
 router.use(getByIdRoute);
 router.use(updateRoute);
