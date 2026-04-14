@@ -21,6 +21,9 @@ type InvoiceTableFilterProps = {
   resolveCustomerLabel?: (customerId: string) => string;
 };
 
+const clampedCellClassName =
+  "overflow-hidden break-words [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]";
+
 export function InvoiceTableFilter({
   rows,
   selectedId,
@@ -225,7 +228,19 @@ export function InvoiceTableFilter({
       <div className="hidden md:block">
         <div className="overflow-hidden rounded-xl border border-sky-300 bg-white shadow-sm dark:border-sky-900/70 dark:bg-slate-900">
           <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
+            <table className="min-w-[1490px] table-fixed text-sm">
+              <colgroup>
+                <col style={{ width: "130px" }} />
+                <col style={{ width: "110px" }} />
+                <col style={{ width: "140px" }} />
+                <col style={{ width: "150px" }} />
+                <col style={{ width: "320px" }} />
+                <col style={{ width: "240px" }} />
+                <col style={{ width: "110px" }} />
+                <col style={{ width: "110px" }} />
+                <col style={{ width: "120px" }} />
+                <col style={{ width: "160px" }} />
+              </colgroup>
               <thead className="bg-sky-800 text-left text-white dark:bg-sky-950">
                 <tr>
                   <th className="px-3 py-2 font-medium">{t("field.noInvoice")}</th>
@@ -251,19 +266,25 @@ export function InvoiceTableFilter({
                   filteredRows.map((row, index) => {
                     const isSelected = selectedId === row.id;
                     const customerLabel = resolveCustomerLabel?.(row.idCustomer) || row.idCustomer || "-";
+                    const barangText =
+                      row.barang
+                        .map((barang) => formatInvoiceBarangLabel(barang.namaBarang, barang.spesifikasi))
+                        .join(", ") || "-";
 
                     return (
                       <tr key={row.id} className={isSelected ? "bg-sky-100 dark:bg-sky-950/40" : index % 2 ? "bg-sky-50/70 dark:bg-slate-950/40" : undefined}>
                         <td className="whitespace-nowrap px-3 py-2 font-medium text-slate-800 dark:text-slate-100">{row.noInvoice}</td>
                         <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{formatTanggal(row.tanggal, locale)}</td>
                         <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{row.noPo}</td>
-                        <td className="px-3 py-2 text-slate-600 dark:text-slate-300">{invoiceNoSuratJalanListLabel(row.noSuratJalan)}</td>
-                        <td className="px-3 py-2 text-slate-600 dark:text-slate-300">
-                          {row.barang
-                            .map((barang) => formatInvoiceBarangLabel(barang.namaBarang, barang.spesifikasi))
-                            .join(", ") || "-"}
+                        <td className="px-3 py-2 text-slate-600 dark:text-slate-300" title={invoiceNoSuratJalanListLabel(row.noSuratJalan)}>
+                          <div className={clampedCellClassName}>{invoiceNoSuratJalanListLabel(row.noSuratJalan)}</div>
                         </td>
-                        <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{customerLabel}</td>
+                        <td className="px-3 py-2 text-slate-600 dark:text-slate-300" title={barangText}>
+                          <div className={clampedCellClassName}>{barangText}</div>
+                        </td>
+                        <td className="px-3 py-2 text-slate-600 dark:text-slate-300" title={customerLabel}>
+                          <div className={clampedCellClassName}>{customerLabel}</div>
+                        </td>
                         <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{formatRupiah(row.subtotal, locale)}</td>
                         <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{formatRupiah(row.ppnAmount, locale)}</td>
                         <td className="whitespace-nowrap px-3 py-2 font-medium text-slate-800 dark:text-slate-100">{formatRupiah(row.grandTotal, locale)}</td>

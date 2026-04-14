@@ -110,19 +110,8 @@ function sanitizeFileName(value: string) {
   return normalized || "surat-jalan-export";
 }
 
-function truncateText(value: string, maxLength = 70) {
-  const text = String(value || "");
-
-  if (text.length <= maxLength) {
-    return text;
-  }
-
-  if (maxLength <= 3) {
-    return ".".repeat(Math.max(0, maxLength));
-  }
-
-  return `${text.slice(0, maxLength - 3)}...`;
-}
+const clampedCellClassName =
+  "overflow-hidden break-words [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]";
 
 export function SuratJalanTableFilter({
   rows,
@@ -412,7 +401,17 @@ export function SuratJalanTableFilter({
 
             <div className="hidden md:block">
               <div className="overflow-x-auto">
-                <table className={`min-w-full ${tableText}`}>
+                <table className={`min-w-[1370px] table-fixed ${tableText}`}>
+                  <colgroup>
+                    <col style={{ width: "140px" }} />
+                    <col style={{ width: "110px" }} />
+                    <col style={{ width: "150px" }} />
+                    <col style={{ width: "230px" }} />
+                    <col style={{ width: "340px" }} />
+                    <col style={{ width: "130px" }} />
+                    <col style={{ width: "120px" }} />
+                    <col style={{ width: "180px" }} />
+                  </colgroup>
                   <thead className={`${tone.header} text-left`}>
                     <tr>
                       <th className={`${cellPadding} font-medium`}>{t("field.noSuratJalan")}</th>
@@ -431,7 +430,6 @@ export function SuratJalanTableFilter({
                       const useStripedRow = tableStyle === "striped" && index % 2 === 1;
                       const customerLabel = resolveCustomerLabel?.(row.idCustomer) || row.idCustomer || "-";
                       const barangText = barangLabel(row.barang);
-                      const truncatedBarangText = truncateText(barangText);
                       const rowClassName = isSelected
                         ? tone.selectedRow
                         : useStripedRow
@@ -449,9 +447,11 @@ export function SuratJalanTableFilter({
                           <td className={`whitespace-nowrap ${cellPadding} text-slate-600 dark:text-slate-300`}>
                             {row.kodeDepartemen || "-"}
                           </td>
-                          <td className={`whitespace-nowrap ${cellPadding} text-slate-600 dark:text-slate-300`}>{customerLabel}</td>
+                          <td className={`${cellPadding} text-slate-600 dark:text-slate-300`} title={customerLabel}>
+                            <div className={clampedCellClassName}>{customerLabel}</div>
+                          </td>
                           <td className={`${cellPadding} text-slate-600 dark:text-slate-300`} title={barangText}>
-                            {truncatedBarangText}
+                            <div className={clampedCellClassName}>{barangText}</div>
                           </td>
                           <td className={`whitespace-nowrap ${cellPadding} text-slate-600 dark:text-slate-300`}>{row.kendaraan}</td>
                           <td className={`whitespace-nowrap ${cellPadding} text-slate-600 dark:text-slate-300`}>{row.tipe}</td>

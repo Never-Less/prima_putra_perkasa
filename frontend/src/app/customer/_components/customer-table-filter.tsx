@@ -15,6 +15,9 @@ type CustomerTableFilterProps = {
   onSelectRow?: (row: CustomerItem) => void;
 };
 
+const clampedCellClassName =
+  "overflow-hidden break-words [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]";
+
 export function CustomerTableFilter({ rows, selectedId, onSelectRow }: CustomerTableFilterProps) {
   const { t } = useI18n();
   const [filter, setFilter] = useState<CustomerFilter>(defaultCustomerFilter);
@@ -141,7 +144,14 @@ export function CustomerTableFilter({ rows, selectedId, onSelectRow }: CustomerT
       <div className="hidden md:block">
         <div className="overflow-hidden rounded-xl border border-sky-300 bg-white shadow-sm dark:border-sky-900/70 dark:bg-slate-900">
           <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
+            <table className="min-w-[1020px] table-fixed text-sm">
+              <colgroup>
+                <col style={{ width: "190px" }} />
+                <col style={{ width: "380px" }} />
+                <col style={{ width: "170px" }} />
+                <col style={{ width: "220px" }} />
+                <col style={{ width: "120px" }} />
+              </colgroup>
               <thead className="bg-sky-800 text-left text-white dark:bg-sky-950">
                 <tr>
                   <th className="px-3 py-2 font-medium">{t("field.nama")}</th>
@@ -165,9 +175,13 @@ export function CustomerTableFilter({ rows, selectedId, onSelectRow }: CustomerT
                     return (
                       <tr key={row.id} className={isSelected ? "bg-sky-100 dark:bg-sky-950/40" : index % 2 ? "bg-sky-50/70 dark:bg-slate-950/40" : undefined}>
                         <td className="whitespace-nowrap px-3 py-2 font-medium text-slate-800 dark:text-slate-100">{row.nama}</td>
-                        <td className="px-3 py-2 text-slate-600 dark:text-slate-300">{row.alamat}</td>
+                        <td className="px-3 py-2 text-slate-600 dark:text-slate-300" title={row.alamat || "-"}>
+                          <div className={clampedCellClassName}>{row.alamat || "-"}</div>
+                        </td>
                         <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{row.npwp || "-"}</td>
-                        <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{row.atasNama}</td>
+                        <td className="px-3 py-2 text-slate-600 dark:text-slate-300" title={row.atasNama || "-"}>
+                          <div className={clampedCellClassName}>{row.atasNama || "-"}</div>
+                        </td>
                         <td className="whitespace-nowrap px-3 py-2">
                           <button
                             type="button"

@@ -341,12 +341,9 @@ export function InvoiceEditForm({
 
     setForm((prev) => {
       const selectedOption = normalizedSuratJalanOptions.find((item) => item.noPo === nextNoPo);
-      const allowedValues = new Set(
-        (selectedOption?.noSuratJalan || []).map((item) => item.noSuratJalan)
-      );
-      const nextNoSuratJalan = invoiceNoSuratJalanTextToList(prev.noSuratJalanText).filter((value) =>
-        allowedValues.has(value)
-      );
+      const nextNoSuratJalan = nextNoPo
+        ? (selectedOption?.noSuratJalan || []).map((item) => item.noSuratJalan)
+        : [];
 
       return {
         ...prev,

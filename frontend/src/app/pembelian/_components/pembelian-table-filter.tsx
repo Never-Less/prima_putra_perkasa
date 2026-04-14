@@ -18,6 +18,9 @@ type PembelianTableFilterProps = {
   resolveInvoiceLabel?: (invoiceId: string) => string;
 };
 
+const clampedCellClassName =
+  "overflow-hidden break-words [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]";
+
 export function PembelianTableFilter({
   rows,
   selectedId,
@@ -309,7 +312,19 @@ export function PembelianTableFilter({
 
             <div className="hidden md:block">
               <div className="overflow-x-auto">
-                <table className="min-w-full text-sm">
+                <table className="min-w-[1240px] table-fixed text-sm">
+                  <colgroup>
+                    <col style={{ width: "110px" }} />
+                    <col style={{ width: "250px" }} />
+                    <col style={{ width: "160px" }} />
+                    <col style={{ width: "80px" }} />
+                    <col style={{ width: "80px" }} />
+                    <col style={{ width: "110px" }} />
+                    <col style={{ width: "120px" }} />
+                    <col style={{ width: "130px" }} />
+                    <col style={{ width: "130px" }} />
+                    <col style={{ width: "120px" }} />
+                  </colgroup>
                   <thead className="bg-sky-800 text-left text-white dark:bg-sky-950">
                     <tr>
                       <th className="px-3 py-2 font-medium">{t("field.tanggalNota")}</th>
@@ -339,8 +354,8 @@ export function PembelianTableFilter({
                           <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">
                             {formatTanggal(row.tanggalNota, locale)}
                           </td>
-                          <td className="whitespace-nowrap px-3 py-2 font-medium text-slate-800 dark:text-slate-100">
-                            {row.namaSupplier}
+                          <td className="px-3 py-2 font-medium text-slate-800 dark:text-slate-100" title={row.namaSupplier || "-"}>
+                            <div className={clampedCellClassName}>{row.namaSupplier || "-"}</div>
                           </td>
                           <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{row.noNpwp || "-"}</td>
                           <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">
