@@ -193,6 +193,17 @@ export async function fetchSuratJalanRows() {
     .filter((item): item is SuratJalanItem => Boolean(item));
 }
 
+export async function fetchSuratJalanById(id: string) {
+  const suratJalanId = toText(id).trim();
+
+  if (!suratJalanId) {
+    return null;
+  }
+
+  const response = await requestApi<SuratJalanResponse>(`/api/surat-jalan/${suratJalanId}`);
+  return toSuratJalanItem(response?.suratJalan);
+}
+
 export async function createSuratJalan(form: SuratJalanFormState) {
   const payload = toNormalizedSuratJalanPayload(form);
   const response = await requestApi<SuratJalanResponse>("/api/surat-jalan", {

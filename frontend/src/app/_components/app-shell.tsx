@@ -13,14 +13,20 @@ function isLoginPath(pathname: string) {
   return pathname === "/login" || pathname.startsWith("/login/");
 }
 
+function isChromelessPath(pathname: string) {
+  return pathname.startsWith("/suratJalan/export/") || pathname.startsWith("/invoice/export/");
+}
+
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const isLoginRoute = isLoginPath(pathname);
+  const isChromelessRoute = isChromelessPath(pathname);
+  const hideAppChrome = isLoginRoute || isChromelessRoute;
 
   return (
     <PrivateRouteGuard key={pathname}>
-      {isLoginRoute ? null : <AppNavbar />}
-      <div className={isLoginRoute ? "" : "lg:pl-64"}>{children}</div>
+      {hideAppChrome ? null : <AppNavbar />}
+      <div className={hideAppChrome ? "" : "lg:pl-64"}>{children}</div>
     </PrivateRouteGuard>
   );
 }

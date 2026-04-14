@@ -4,6 +4,7 @@ export type CustomerItem = {
   id: string;
   nama: string;
   alamat: string;
+  npwp: string;
   atasNama: string;
   createdAt: string;
   updatedAt: string;
@@ -12,18 +13,21 @@ export type CustomerItem = {
 export type CustomerFilter = {
   nama: string;
   alamat: string;
+  npwp: string;
   atasNama: string;
 };
 
 export type CustomerFormState = {
   nama: string;
   alamat: string;
+  npwp: string;
   atasNama: string;
 };
 
 export const defaultCustomerFilter: CustomerFilter = {
   nama: "",
   alamat: "",
+  npwp: "",
   atasNama: "",
 };
 
@@ -69,6 +73,7 @@ function toCustomerItem(value: unknown): CustomerItem | null {
     id,
     nama: toText(row.nama).trim(),
     alamat: toText(row.alamat).trim(),
+    npwp: toText(row.npwp).trim(),
     atasNama: toText(row.atasNama).trim(),
     createdAt: toText(row.createdAt).trim(),
     updatedAt: toText(row.updatedAt).trim(),
@@ -79,6 +84,7 @@ function toNormalizedCustomerPayload(form: CustomerFormState) {
   return {
     nama: toText(form.nama).trim(),
     alamat: toText(form.alamat).trim(),
+    npwp: toText(form.npwp).trim(),
     atasNama: toText(form.atasNama).trim(),
   };
 }
@@ -91,6 +97,17 @@ export async function fetchCustomerRows() {
   }
 
   return response.customers.map(toCustomerItem).filter((row): row is CustomerItem => Boolean(row));
+}
+
+export async function fetchCustomerById(id: string) {
+  const customerId = toText(id).trim();
+
+  if (!customerId) {
+    return null;
+  }
+
+  const response = await requestApi<CustomerResponse>(`/api/customers/${customerId}`);
+  return toCustomerItem(response?.customer);
 }
 
 export async function createCustomer(form: CustomerFormState) {
@@ -138,9 +155,10 @@ export function filterCustomerRows(rows: CustomerItem[], filter: CustomerFilter)
   return rows.filter((row) => {
     const matchNama = normalize(row.nama).includes(normalize(filter.nama));
     const matchAlamat = normalize(row.alamat).includes(normalize(filter.alamat));
+    const matchNpwp = normalize(row.npwp).includes(normalize(filter.npwp));
     const matchAtasNama = normalize(row.atasNama).includes(normalize(filter.atasNama));
 
-    return matchNama && matchAlamat && matchAtasNama;
+    return matchNama && matchAlamat && matchNpwp && matchAtasNama;
   });
 }
 
@@ -148,6 +166,7 @@ export function toCustomerFormState(item: CustomerItem): CustomerFormState {
   return {
     nama: item.nama,
     alamat: item.alamat,
+    npwp: item.npwp,
     atasNama: item.atasNama,
   };
 }

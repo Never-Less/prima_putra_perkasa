@@ -397,6 +397,16 @@ export default function InvoicePage() {
     router.push("/pembelian");
   }, [postSaveAction, router]);
 
+  const handleExportInvoice = useCallback((invoiceId: string) => {
+    const id = String(invoiceId || "").trim();
+
+    if (!id || typeof window === "undefined") {
+      return;
+    }
+
+    window.open(`/invoice/export/${id}`, "_blank", "noopener,noreferrer");
+  }, []);
+
   const showDataSection = !isLoading && (rows.length > 0 || !errorMessage);
 
   return (
@@ -429,6 +439,7 @@ export default function InvoicePage() {
                 rows={rows}
                 selectedId={selectedId}
                 resolveCustomerLabel={resolveCustomerLabel}
+                onExportRow={(row) => handleExportInvoice(row.id)}
                 onSelectRow={(row) => {
                   setActionErrorMessage("");
                   setToast(null);
@@ -483,7 +494,7 @@ export default function InvoicePage() {
         exportLabel={t("invoice.postSaveModal.exportButton")}
         createPembelianLabel={t("invoice.postSaveModal.createPembelianButton")}
         closeLabel={t("common.close")}
-        onExport={() => undefined}
+        onExport={() => handleExportInvoice(postSaveAction?.invoice.id || "")}
         onCreatePembelian={handleCreatePembelianFromPostSave}
         onClose={() => setPostSaveAction(null)}
       />

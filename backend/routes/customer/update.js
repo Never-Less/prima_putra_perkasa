@@ -24,6 +24,10 @@ router.put("/:id", requireRole("admin"), async (req, res) => {
     updates.alamat = String(req.body.alamat || "").trim();
   }
 
+  if (req.body.npwp !== undefined) {
+    updates.npwp = String(req.body.npwp || "").trim();
+  }
+
   if (req.body.atasNama !== undefined) {
     updates.atasNama = String(req.body.atasNama || "").trim();
   }

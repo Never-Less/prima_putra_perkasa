@@ -10,6 +10,7 @@ router.post("/", requireRole("admin"), async (req, res) => {
   try {
     const nama = String(req.body.nama || "").trim();
     const alamat = String(req.body.alamat || "").trim();
+    const npwp = String(req.body.npwp || "").trim();
     const atasNama = String(req.body.atasNama || "").trim();
 
     if (!nama || !alamat || !atasNama) {
@@ -21,6 +22,7 @@ router.post("/", requireRole("admin"), async (req, res) => {
     const customer = await Customer.create({
       nama: nama,
       alamat: alamat,
+      npwp: npwp,
       atasNama: atasNama,
     });
 

@@ -7,6 +7,7 @@ import {
   calculateInvoiceSummary,
   createEmptyInvoiceBarangRow,
   ensureTrailingEmptyInvoiceBarangRow,
+  formatInvoiceBarangLabel,
   formatRupiah,
   formatTanggal,
   invoiceNoSuratJalanListLabel,
@@ -512,13 +513,20 @@ export function InvoiceEditForm({
                   return (
                     <div
                       key={`invoice-barang-row-${index}`}
-                      className="grid gap-2 sm:grid-cols-[1.2fr_0.8fr_0.8fr_1fr_1fr]"
+                      className="grid gap-2 sm:grid-cols-[1.1fr_1.1fr_0.7fr_0.7fr_1fr_1fr]"
                     >
                       <input
                         type="text"
                         value={row.namaBarang}
                         placeholder={t("invoice.form.items.placeholder.name")}
                         onChange={(event) => updateBarangRow(index, "namaBarang", event.target.value)}
+                        className="w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                      />
+                      <input
+                        type="text"
+                        value={row.spesifikasi}
+                        placeholder={t("invoice.form.items.placeholder.spec")}
+                        onChange={(event) => updateBarangRow(index, "spesifikasi", event.target.value)}
                         className="w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                       />
                       <input
@@ -648,7 +656,7 @@ export function InvoiceEditForm({
               <ul className="space-y-1 text-sm text-slate-700 dark:text-slate-200">
                 {barangList.map((barang, index) => (
                   <li key={`preview-barang-${index}`}>
-                    {barang.namaBarang}: {barang.kuantitas} {barang.unit} x{" "}
+                    {formatInvoiceBarangLabel(barang.namaBarang, barang.spesifikasi)}: {barang.kuantitas} {barang.unit} x{" "}
                     {formatRupiah(barang.hargaSatuan, locale)} = {formatRupiah(barang.jumlah, locale)}
                   </li>
                 ))}

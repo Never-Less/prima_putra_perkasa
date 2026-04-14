@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import {
   defaultInvoiceFilter,
   filterInvoiceRows,
+  formatInvoiceBarangLabel,
   formatRupiah,
   formatTanggal,
   invoiceNoSuratJalanListLabel,
@@ -16,34 +17,15 @@ type InvoiceTableFilterProps = {
   rows: InvoiceItem[];
   selectedId?: string;
   onSelectRow?: (row: InvoiceItem) => void;
+  onExportRow?: (row: InvoiceItem) => void;
   resolveCustomerLabel?: (customerId: string) => string;
 };
-
-function escapeCsvValue(value: string) {
-  const text = String(value || "");
-
-  if (!/[",\r\n]/.test(text)) {
-    return text;
-  }
-
-  return `"${text.replace(/"/g, "\"\"")}"`;
-}
-
-function sanitizeFileName(value: string) {
-  const normalized = String(value || "")
-    .trim()
-    .replace(/[\\/:*?"<>|]/g, "-")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
-
-  return normalized || "invoice-export";
-}
 
 export function InvoiceTableFilter({
   rows,
   selectedId,
   onSelectRow,
+  onExportRow,
   resolveCustomerLabel,
 }: InvoiceTableFilterProps) {
   const { locale, t } = useI18n();
@@ -53,65 +35,6 @@ export function InvoiceTableFilter({
     () => filterInvoiceRows(rows, filter, resolveCustomerLabel),
     [filter, resolveCustomerLabel, rows]
   );
-
-  function exportInvoiceRowAsCsv(row: InvoiceItem) {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    const customerLabel = resolveCustomerLabel?.(row.idCustomer) || row.idCustomer || "-";
-    const barangText = row.barang
-      .map((barang) =>
-        [
-          barang.namaBarang,
-          barang.kuantitas,
-          barang.unit,
-          barang.hargaSatuan,
-          barang.jumlah,
-        ].join("|")
-      )
-      .join(";");
-
-    const header = [
-      "noInvoice",
-      "tanggal",
-      "noPo",
-      "noSuratJalan",
-      "namaCustomer",
-      "isPpn",
-      "ppnRate",
-      "subtotal",
-      "ppnAmount",
-      "grandTotal",
-      "barang",
-    ];
-    const bodyRow = [
-      row.noInvoice,
-      formatTanggal(row.tanggal, locale),
-      row.noPo,
-      invoiceNoSuratJalanListLabel(row.noSuratJalan),
-      customerLabel,
-      String(row.isPpn),
-      String(row.ppnRate),
-      String(row.subtotal),
-      String(row.ppnAmount),
-      String(row.grandTotal),
-      barangText,
-    ];
-    const csvContent = `\uFEFF${header.map(escapeCsvValue).join(",")}\r\n${bodyRow
-      .map(escapeCsvValue)
-      .join(",")}`;
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const downloadUrl = window.URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-
-    anchor.href = downloadUrl;
-    anchor.download = `${sanitizeFileName(`invoice-${row.noInvoice}`)}.csv`;
-    document.body.appendChild(anchor);
-    anchor.click();
-    document.body.removeChild(anchor);
-    window.URL.revokeObjectURL(downloadUrl);
-  }
 
   return (
     <section className="space-y-4 rounded-2xl border border-sky-200 bg-sky-50/40 p-5 shadow-sm dark:border-sky-900/70 dark:bg-slate-950/85">
@@ -252,7 +175,9 @@ export function InvoiceTableFilter({
                   <div>
                     <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.barang")}</dt>
                     <dd className="mt-1 break-words text-slate-700 dark:text-slate-200">
-                      {row.barang.map((barang) => barang.namaBarang).join(", ") || "-"}
+                      {row.barang
+                        .map((barang) => formatInvoiceBarangLabel(barang.namaBarang, barang.spesifikasi))
+                        .join(", ") || "-"}
                     </dd>
                   </div>
                   <div className="grid gap-3 sm:grid-cols-3">
@@ -285,7 +210,7 @@ export function InvoiceTableFilter({
                   </button>
                   <button
                     type="button"
-                    onClick={() => exportInvoiceRowAsCsv(row)}
+                    onClick={() => onExportRow?.(row)}
                     className="w-full rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm font-medium text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
                   >
                     {t("common.export")}
@@ -334,7 +259,9 @@ export function InvoiceTableFilter({
                         <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{row.noPo}</td>
                         <td className="px-3 py-2 text-slate-600 dark:text-slate-300">{invoiceNoSuratJalanListLabel(row.noSuratJalan)}</td>
                         <td className="px-3 py-2 text-slate-600 dark:text-slate-300">
-                          {row.barang.map((barang) => barang.namaBarang).join(", ") || "-"}
+                          {row.barang
+                            .map((barang) => formatInvoiceBarangLabel(barang.namaBarang, barang.spesifikasi))
+                            .join(", ") || "-"}
                         </td>
                         <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{customerLabel}</td>
                         <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{formatRupiah(row.subtotal, locale)}</td>
@@ -355,7 +282,7 @@ export function InvoiceTableFilter({
                             </button>
                             <button
                               type="button"
-                              onClick={() => exportInvoiceRowAsCsv(row)}
+                              onClick={() => onExportRow?.(row)}
                             className="rounded-lg border border-sky-200 bg-white px-3 py-1.5 text-xs font-medium text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
                           >
                             {t("common.export")}

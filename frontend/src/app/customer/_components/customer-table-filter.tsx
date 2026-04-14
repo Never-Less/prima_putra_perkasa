@@ -35,7 +35,7 @@ export function CustomerTableFilter({ rows, selectedId, onSelectRow }: CustomerT
 
       <div>
         <p className="mb-2 text-sm font-medium text-sky-800 dark:text-sky-200">{t("common.filterByField")}</p>
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.nama")}
             <input
@@ -50,6 +50,15 @@ export function CustomerTableFilter({ rows, selectedId, onSelectRow }: CustomerT
             <input
               value={filter.alamat}
               onChange={(event) => setFilter((prev) => ({ ...prev, alamat: event.target.value }))}
+              className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+            />
+          </label>
+
+          <label className="text-sm text-slate-700 dark:text-slate-200">
+            {t("field.npwp")}
+            <input
+              value={filter.npwp}
+              onChange={(event) => setFilter((prev) => ({ ...prev, npwp: event.target.value }))}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
@@ -103,6 +112,10 @@ export function CustomerTableFilter({ rows, selectedId, onSelectRow }: CustomerT
                     <dd className="mt-1 whitespace-pre-wrap text-slate-700 dark:text-slate-200">{row.alamat || "-"}</dd>
                   </div>
                   <div>
+                    <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.npwp")}</dt>
+                    <dd className="mt-1 text-slate-700 dark:text-slate-200">{row.npwp || "-"}</dd>
+                  </div>
+                  <div>
                     <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.atasNama")}</dt>
                     <dd className="mt-1 text-slate-700 dark:text-slate-200">{row.atasNama || "-"}</dd>
                   </div>
@@ -133,6 +146,7 @@ export function CustomerTableFilter({ rows, selectedId, onSelectRow }: CustomerT
                 <tr>
                   <th className="px-3 py-2 font-medium">{t("field.nama")}</th>
                   <th className="px-3 py-2 font-medium">{t("field.alamat")}</th>
+                  <th className="px-3 py-2 font-medium">{t("field.npwp")}</th>
                   <th className="px-3 py-2 font-medium">{t("field.atasNama")}</th>
                   <th className="px-3 py-2 font-medium">{t("common.action")}</th>
                 </tr>
@@ -140,7 +154,7 @@ export function CustomerTableFilter({ rows, selectedId, onSelectRow }: CustomerT
               <tbody className="divide-y divide-slate-200 bg-white dark:divide-slate-800 dark:bg-slate-900">
                 {filteredRows.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-3 py-4 text-center text-slate-500 dark:text-slate-400">
+                    <td colSpan={5} className="px-3 py-4 text-center text-slate-500 dark:text-slate-400">
                       {t("common.noData")}
                     </td>
                   </tr>
@@ -152,6 +166,7 @@ export function CustomerTableFilter({ rows, selectedId, onSelectRow }: CustomerT
                       <tr key={row.id} className={isSelected ? "bg-sky-100 dark:bg-sky-950/40" : index % 2 ? "bg-sky-50/70 dark:bg-slate-950/40" : undefined}>
                         <td className="whitespace-nowrap px-3 py-2 font-medium text-slate-800 dark:text-slate-100">{row.nama}</td>
                         <td className="px-3 py-2 text-slate-600 dark:text-slate-300">{row.alamat}</td>
+                        <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{row.npwp || "-"}</td>
                         <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{row.atasNama}</td>
                         <td className="whitespace-nowrap px-3 py-2">
                           <button

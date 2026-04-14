@@ -51,6 +51,7 @@ function normalizeBarangList(barangInput) {
 
   for (const item of barangInput) {
     const namaBarang = String(item?.namaBarang || "").trim();
+    const spesifikasi = String(item?.spesifikasi || "").trim();
     const kuantitas = parseNumber(item?.kuantitas);
     const unit = String(item?.unit || "").trim();
     const hargasatuan = parseNumber(item?.hargaSatuan);
@@ -71,6 +72,7 @@ function normalizeBarangList(barangInput) {
 
     normalized.push({
       namaBarang: namaBarang,
+      spesifikasi: spesifikasi,
       kuantitas: kuantitas,
       unit: unit,
       hargaSatuan: hargasatuan,

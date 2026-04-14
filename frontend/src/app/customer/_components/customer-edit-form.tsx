@@ -19,6 +19,7 @@ function createEmptyCustomerFormState(): CustomerFormState {
   return {
     nama: "",
     alamat: "",
+    npwp: "",
     atasNama: "",
   };
 }
@@ -65,6 +66,15 @@ export function CustomerEditForm({
                 rows={4}
                 value={form.alamat}
                 onChange={(event) => setForm((prev) => ({ ...prev, alamat: event.target.value }))}
+                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+              />
+            </label>
+
+            <label className="text-sm text-slate-700 dark:text-slate-200">
+              {t("field.npwp")}
+              <input
+                value={form.npwp}
+                onChange={(event) => setForm((prev) => ({ ...prev, npwp: event.target.value }))}
                 className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               />
             </label>
@@ -138,6 +148,9 @@ export function CustomerEditForm({
             </p>
             <p>
               <span className="text-slate-500 dark:text-slate-400">{t("field.alamat")}:</span> {form.alamat || "-"}
+            </p>
+            <p>
+              <span className="text-slate-500 dark:text-slate-400">{t("field.npwp")}:</span> {form.npwp || "-"}
             </p>
             <p>
               <span className="text-slate-500 dark:text-slate-400">{t("field.atasNama")}:</span> {form.atasNama || "-"}

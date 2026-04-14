@@ -14,6 +14,12 @@ const customerSchema = new mongoose.Schema(
       trim: true,
       maxlength: 500,
     },
+    npwp: {
+      type: String,
+      trim: true,
+      maxlength: 100,
+      default: "",
+    },
     atasNama: {
       type: String,
       required: true,

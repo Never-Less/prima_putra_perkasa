@@ -2,6 +2,7 @@ import { requestApi } from "../../_lib/api-client";
 
 export type InvoiceBarang = {
   namaBarang: string;
+  spesifikasi: string;
   kuantitas: number;
   unit: string;
   hargaSatuan: number;
@@ -27,6 +28,7 @@ export type InvoiceItem = {
 
 export type InvoiceBarangFormRow = {
   namaBarang: string;
+  spesifikasi: string;
   kuantitas: string;
   unit: string;
   hargaSatuan: string;
@@ -45,6 +47,7 @@ export type InvoiceFormState = {
 
 export type InvoicePrefillBarang = {
   namaBarang: string;
+  spesifikasi: string;
   kuantitas: number;
   unit: string;
 };
@@ -124,6 +127,7 @@ export const sampleInvoiceRows: InvoiceItem[] = [
     barang: [
       {
         namaBarang: "Semen Curah",
+        spesifikasi: "",
         kuantitas: 120,
         unit: "zak",
         hargaSatuan: 75000,
@@ -131,6 +135,7 @@ export const sampleInvoiceRows: InvoiceItem[] = [
       },
       {
         namaBarang: "Pasir Halus",
+        spesifikasi: "",
         kuantitas: 40,
         unit: "m3",
         hargaSatuan: 300000,
@@ -153,6 +158,7 @@ export const sampleInvoiceRows: InvoiceItem[] = [
     barang: [
       {
         namaBarang: "Besi Beton",
+        spesifikasi: "",
         kuantitas: 80,
         unit: "batang",
         hargaSatuan: 95000,
@@ -175,6 +181,7 @@ export const sampleInvoiceRows: InvoiceItem[] = [
     barang: [
       {
         namaBarang: "Cat Primer",
+        spesifikasi: "",
         kuantitas: 24,
         unit: "kaleng",
         hargaSatuan: 150000,
@@ -351,6 +358,7 @@ function toInvoiceBarang(value: unknown): InvoiceBarang | null {
 
   const item = value as Record<string, unknown>;
   const namaBarang = toText(item.namaBarang).trim();
+  const spesifikasi = toText(item.spesifikasi).trim();
   const kuantitas = parseNumberFromUnknown(item.kuantitas);
   const unit = toText(item.unit).trim();
   const hargaSatuan = parseNumberFromUnknown(item.hargaSatuan);
@@ -362,6 +370,7 @@ function toInvoiceBarang(value: unknown): InvoiceBarang | null {
 
   return {
     namaBarang,
+    spesifikasi,
     kuantitas,
     unit,
     hargaSatuan,
@@ -408,6 +417,7 @@ function normalizePrefillBarang(value: unknown): InvoicePrefillBarang | null {
 
   const item = value as Record<string, unknown>;
   const namaBarang = toText(item.namaBarang).trim();
+  const spesifikasi = toText(item.spesifikasi).trim();
   const kuantitas = parseNumberFromUnknown(item.kuantitas);
   const unit = toText(item.unit).trim();
 
@@ -417,6 +427,7 @@ function normalizePrefillBarang(value: unknown): InvoicePrefillBarang | null {
 
   return {
     namaBarang,
+    spesifikasi,
     kuantitas,
     unit,
   };
@@ -480,6 +491,17 @@ export async function fetchInvoiceRows() {
   }
 
   return response.invoices.map(toInvoiceItem).filter((item): item is InvoiceItem => Boolean(item));
+}
+
+export async function fetchInvoiceById(id: string) {
+  const invoiceId = toText(id).trim();
+
+  if (!invoiceId) {
+    return null;
+  }
+
+  const response = await requestApi<InvoiceResponse>(`/api/invoices/${invoiceId}`);
+  return toInvoiceItem(response?.invoice);
 }
 
 export async function fetchInvoiceSuratJalanOptions() {
@@ -580,6 +602,7 @@ export function toInputDate(value: string) {
 export function createEmptyInvoiceBarangRow(): InvoiceBarangFormRow {
   return {
     namaBarang: "",
+    spesifikasi: "",
     kuantitas: "",
     unit: "",
     hargaSatuan: "",
@@ -588,13 +611,18 @@ export function createEmptyInvoiceBarangRow(): InvoiceBarangFormRow {
 
 export function isInvoiceBarangRowFilled(row: InvoiceBarangFormRow) {
   return Boolean(
-    row.namaBarang.trim() || row.kuantitas.trim() || row.unit.trim() || row.hargaSatuan.trim()
+    row.namaBarang.trim() ||
+      row.spesifikasi.trim() ||
+      row.kuantitas.trim() ||
+      row.unit.trim() ||
+      row.hargaSatuan.trim()
   );
 }
 
 export function ensureTrailingEmptyInvoiceBarangRow(rows: InvoiceBarangFormRow[]) {
   const normalizedRows = rows.map((row) => ({
     namaBarang: String(row.namaBarang || ""),
+    spesifikasi: String(row.spesifikasi || ""),
     kuantitas: String(row.kuantitas || ""),
     unit: String(row.unit || ""),
     hargaSatuan: String(row.hargaSatuan || ""),
@@ -621,23 +649,29 @@ export function ensureTrailingEmptyInvoiceBarangRow(rows: InvoiceBarangFormRow[]
   return normalizedRows;
 }
 
-function formatInvoiceBarangNameFromSuratJalan(nama: string, spesifikasi: string) {
-  const normalizedNama = toText(nama).trim();
+export function formatInvoiceBarangLabel(namaBarang: string, spesifikasi = "") {
+  const normalizedNamaBarang = toText(namaBarang).trim();
   const normalizedSpesifikasi = toText(spesifikasi).trim();
 
-  if (!normalizedNama) {
+  if (!normalizedNamaBarang) {
     return "";
   }
 
   if (!normalizedSpesifikasi) {
-    return normalizedNama;
+    return normalizedNamaBarang;
   }
 
-  return `${normalizedNama} (${normalizedSpesifikasi})`;
+  return `${normalizedNamaBarang} (${normalizedSpesifikasi})`;
 }
 
-function createInvoiceBarangIdentityKey(namaBarang: string, unit: string) {
-  return `${normalize(namaBarang)}::${normalize(unit)}`;
+function normalizeInvoiceBarangIdentityPart(value: string) {
+  return normalize(value).replace(/\s+/g, " ");
+}
+
+function createInvoiceBarangIdentityKey(namaBarang: string, spesifikasi: string, unit: string) {
+  return `${normalizeInvoiceBarangIdentityPart(namaBarang)}::${normalizeInvoiceBarangIdentityPart(
+    spesifikasi
+  )}::${normalizeInvoiceBarangIdentityPart(unit)}`;
 }
 
 export function buildInvoiceBarangRowsFromSuratJalanSelection(
@@ -663,13 +697,14 @@ export function buildInvoiceBarangRowsFromSuratJalanSelection(
 
   currentRows.forEach((row) => {
     const namaBarang = toText(row.namaBarang).trim();
+    const spesifikasi = toText(row.spesifikasi).trim();
     const unit = toText(row.unit).trim();
 
     if (!namaBarang || !unit) {
       return;
     }
 
-    const identityKey = createInvoiceBarangIdentityKey(namaBarang, unit);
+    const identityKey = createInvoiceBarangIdentityKey(namaBarang, spesifikasi, unit);
 
     if (!hargaSatuanMap.has(identityKey)) {
       hargaSatuanMap.set(identityKey, toText(row.hargaSatuan).trim());
@@ -684,9 +719,10 @@ export function buildInvoiceBarangRowsFromSuratJalanSelection(
     }
 
     suratJalan.barang.forEach((barang) => {
-      const namaBarang = formatInvoiceBarangNameFromSuratJalan(barang.nama, barang.spesifikasi);
+      const namaBarang = toText(barang.nama).trim();
+      const spesifikasi = toText(barang.spesifikasi).trim();
       const unit = toText(barang.unit).trim();
-      const identityKey = createInvoiceBarangIdentityKey(namaBarang, unit);
+      const identityKey = createInvoiceBarangIdentityKey(namaBarang, spesifikasi, unit);
       const existingItem = barangMap.get(identityKey);
 
       if (existingItem) {
@@ -697,6 +733,7 @@ export function buildInvoiceBarangRowsFromSuratJalanSelection(
 
       barangMap.set(identityKey, {
         namaBarang,
+        spesifikasi,
         kuantitas: String(barang.jumlah),
         unit,
         hargaSatuan: hargaSatuanMap.get(identityKey) || "",
@@ -717,6 +754,7 @@ export function invoiceBarangRowsToList(rows: InvoiceBarangFormRow[]): InvoiceBa
   return rows
     .map((row) => {
       const namaBarang = row.namaBarang.trim();
+      const spesifikasi = row.spesifikasi.trim();
       const kuantitas = parseNumber(row.kuantitas.trim());
       const hargaSatuan = parseNumber(row.hargaSatuan.trim());
       const unit = row.unit.trim();
@@ -724,6 +762,7 @@ export function invoiceBarangRowsToList(rows: InvoiceBarangFormRow[]): InvoiceBa
 
       return {
         namaBarang: namaBarang,
+        spesifikasi: spesifikasi,
         kuantitas: kuantitas,
         unit: unit,
         hargaSatuan: hargaSatuan,
@@ -757,6 +796,7 @@ export function toInvoiceFormState(item: InvoiceItem): InvoiceFormState {
     barangRows: ensureTrailingEmptyInvoiceBarangRow(
       item.barang.map((barang) => ({
         namaBarang: barang.namaBarang,
+        spesifikasi: barang.spesifikasi,
         kuantitas: String(barang.kuantitas),
         unit: barang.unit,
         hargaSatuan: String(barang.hargaSatuan),
@@ -770,6 +810,7 @@ export function toInvoiceFormStateFromPrefill(prefill: InvoicePrefillPayload): I
   const barangRows = ensureTrailingEmptyInvoiceBarangRow(
     prefill.barang.map((item) => ({
       namaBarang: item.namaBarang,
+      spesifikasi: item.spesifikasi,
       kuantitas: String(item.kuantitas),
       unit: item.unit,
       hargaSatuan: "",

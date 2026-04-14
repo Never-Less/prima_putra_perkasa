@@ -18,6 +18,7 @@ type SuratJalanTableFilterProps = {
   rows: SuratJalanItem[];
   selectedId?: string;
   onSelectRow?: (row: SuratJalanItem) => void;
+  onExportRow?: (row: SuratJalanItem) => void;
   resolveCustomerLabel?: (customerId: string) => string;
   colorTone?: ColorTone;
   tableStyle?: TableStyle;
@@ -127,6 +128,7 @@ export function SuratJalanTableFilter({
   rows,
   selectedId,
   onSelectRow,
+  onExportRow,
   resolveCustomerLabel,
   colorTone = "slate",
   tableStyle = "default",
@@ -397,7 +399,7 @@ export function SuratJalanTableFilter({
                       </button>
                       <button
                         type="button"
-                        onClick={() => exportRowsAsCsv([row], `surat-jalan-${row.noSuratJalan}`)}
+                        onClick={() => onExportRow?.(row)}
                         className={`w-full rounded-lg px-3 py-2 text-sm font-medium ${tone.actionInactive}`}
                       >
                         {t("common.export")}
@@ -466,7 +468,7 @@ export function SuratJalanTableFilter({
                               </button>
                               <button
                                 type="button"
-                                onClick={() => exportRowsAsCsv([row], `surat-jalan-${row.noSuratJalan}`)}
+                                onClick={() => onExportRow?.(row)}
                                 className={`rounded-lg px-3 py-1.5 text-xs font-medium ${tone.actionInactive}`}
                               >
                                 {t("common.export")}

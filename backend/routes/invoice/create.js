@@ -40,7 +40,7 @@ router.post("/", async (req, res) => {
   if (!barang) {
     return res.status(400).json({
       message:
-        "barang harus array minimal 1 item (namaBarang, kuantitas, unit, hargaSatuan, jumlah)",
+        "barang harus array minimal 1 item (namaBarang, spesifikasi, kuantitas, unit, hargaSatuan, jumlah)",
     });
   }
 

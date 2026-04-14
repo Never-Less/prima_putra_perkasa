@@ -209,6 +209,7 @@ export function FormPreviewStylePage() {
         string,
         {
           namaBarang: string;
+          spesifikasi: string;
           kuantitas: number;
           unit: string;
         }
@@ -225,13 +226,12 @@ export function FormPreviewStylePage() {
           const nama = String(barang.nama || "").trim();
           const spesifikasi = String(barang.spesifikasi || "").trim();
           const unit = String(barang.unit || "").trim();
-          const namaBarang = spesifikasi ? `${nama} (${spesifikasi})` : nama;
 
-          if (!namaBarang) {
+          if (!nama) {
             return;
           }
 
-          const identityKey = `${namaBarang.toLowerCase()}::${unit.toLowerCase()}`;
+          const identityKey = `${nama.toLowerCase()}::${spesifikasi.toLowerCase()}::${unit.toLowerCase()}`;
           const existingItem = barangMap.get(identityKey);
 
           if (existingItem) {
@@ -240,7 +240,8 @@ export function FormPreviewStylePage() {
           }
 
           barangMap.set(identityKey, {
-            namaBarang,
+            namaBarang: nama,
+            spesifikasi,
             kuantitas: Number(barang.jumlah || 0),
             unit,
           });
@@ -466,6 +467,16 @@ export function FormPreviewStylePage() {
     router.push("/invoice");
   }, [postCreateAction, router]);
 
+  const handleExportSuratJalan = useCallback((suratJalanId: string) => {
+    const id = String(suratJalanId || "").trim();
+
+    if (!id || typeof window === "undefined") {
+      return;
+    }
+
+    window.open(`/suratJalan/export/${id}`, "_blank", "noopener,noreferrer");
+  }, []);
+
   const showDataSection = !isLoading && (rows.length > 0 || !errorMessage);
 
   return (
@@ -497,6 +508,7 @@ export function FormPreviewStylePage() {
                 setPostCreateAction(null);
                 setSelectedId(row.id);
               }}
+              onExportRow={(row) => handleExportSuratJalan(row.id)}
               resolveCustomerLabel={resolveCustomerLabel}
               colorTone="sky"
               tableStyle="compact"
@@ -549,7 +561,7 @@ export function FormPreviewStylePage() {
         exportLabel={t("suratJalan.postCreateModal.exportButton")}
         createInvoiceLabel={t("suratJalan.postCreateModal.createInvoiceButton")}
         closeLabel={t("common.close")}
-        onExport={() => undefined}
+        onExport={() => handleExportSuratJalan(postCreateAction?.createdItem.id || "")}
         onCreateInvoice={handleCreateInvoiceFromPostCreate}
         onClose={() => setPostCreateAction(null)}
       />
