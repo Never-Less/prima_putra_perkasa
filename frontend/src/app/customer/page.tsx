@@ -4,15 +4,19 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiLoadingState } from "../_components/api-loading-state";
 import { AppToast } from "../_components/app-toast";
 import { ConfirmationModal } from "../_components/confirmation-modal";
+import { useDebouncedValue } from "../_hooks/use-debounced-value";
 import { ApiRequestError } from "../_lib/api-client";
+import { type ServerPaginationMeta } from "../_lib/pagination";
 import { CustomerEditForm } from "./_components/customer-edit-form";
 import { CustomerTableFilter } from "./_components/customer-table-filter";
 import {
   createCustomer,
+  defaultCustomerFilter,
   deleteCustomer,
   fetchCurrentUserRole,
-  fetchCustomerRows,
+  fetchCustomerList,
   updateCustomer,
+  type CustomerFilter,
   type CustomerFormState,
   type CustomerItem,
 } from "./_lib/customer";
@@ -27,6 +31,18 @@ type ToastState = {
 export default function CustomerPage() {
   const { t } = useI18n();
   const [rows, setRows] = useState<CustomerItem[]>([]);
+  const [filter, setFilter] = useState<CustomerFilter>(defaultCustomerFilter);
+  const [paginationQuery, setPaginationQuery] = useState({
+    page: 1,
+    limit: 10,
+  });
+  const [pagination, setPagination] = useState<ServerPaginationMeta>({
+    page: 1,
+    limit: 10,
+    totalItems: 0,
+    totalPages: 1,
+  });
+  const [filteredCount, setFilteredCount] = useState(0);
   const [selectedId, setSelectedId] = useState("");
   const [userRole, setUserRole] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -47,6 +63,7 @@ export default function CustomerPage() {
       }
     | null
   >(null);
+  const debouncedFilter = useDebouncedValue(filter);
 
   const canManageCustomer = userRole === "admin";
 
@@ -68,9 +85,15 @@ export default function CustomerPage() {
     setErrorMessage("");
 
     try {
-      const customerRows = await fetchCustomerRows();
+        const customerResult = await fetchCustomerList({
+        ...debouncedFilter,
+        ...paginationQuery,
+      });
+      const customerRows = customerResult.items;
 
       setRows(customerRows);
+      setPagination(customerResult.pagination);
+      setFilteredCount(customerResult.totalRows);
       setSelectedId((prevSelectedId) => {
         if (customerRows.some((row) => row.id === prevSelectedId)) {
           return prevSelectedId;
@@ -80,6 +103,12 @@ export default function CustomerPage() {
       });
     } catch (error) {
       setRows([]);
+      setPagination((prevPagination) => ({
+        ...prevPagination,
+        totalItems: 0,
+        totalPages: 1,
+      }));
+      setFilteredCount(0);
       setSelectedId("");
 
       if (error instanceof ApiRequestError) {
@@ -93,7 +122,7 @@ export default function CustomerPage() {
         setIsLoading(false);
       }
     }
-  }, [t]);
+  }, [debouncedFilter, paginationQuery, t]);
 
   const loadCurrentUserRole = useCallback(async () => {
     try {
@@ -105,8 +134,48 @@ export default function CustomerPage() {
   }, []);
 
   useEffect(() => {
-    void Promise.all([loadCustomers(), loadCurrentUserRole()]);
-  }, [loadCustomers, loadCurrentUserRole]);
+    void loadCustomers();
+  }, [loadCustomers]);
+
+  useEffect(() => {
+    void loadCurrentUserRole();
+  }, [loadCurrentUserRole]);
+
+  const handleFilterChange = useCallback(
+    <K extends keyof CustomerFilter,>(key: K, value: CustomerFilter[K]) => {
+      setFilter((prevFilter) => ({
+        ...prevFilter,
+        [key]: value,
+      }));
+      setPaginationQuery((prevQuery) => ({
+        ...prevQuery,
+        page: 1,
+      }));
+    },
+    []
+  );
+
+  const handleResetFilter = useCallback(() => {
+    setFilter(defaultCustomerFilter);
+    setPaginationQuery((prevQuery) => ({
+      ...prevQuery,
+      page: 1,
+    }));
+  }, []);
+
+  const handlePageChange = useCallback((page: number) => {
+    setPaginationQuery((prevQuery) => ({
+      ...prevQuery,
+      page,
+    }));
+  }, []);
+
+  const handlePageSizeChange = useCallback((limit: number) => {
+    setPaginationQuery({
+      page: 1,
+      limit,
+    });
+  }, []);
 
   const selectedRow = useMemo(() => {
     return rows.find((row) => row.id === selectedId);
@@ -296,7 +365,14 @@ export default function CustomerPage() {
             <>
               <CustomerTableFilter
                 rows={rows}
+                filter={filter}
+                filteredCount={filteredCount}
+                pagination={pagination}
                 selectedId={selectedId}
+                onFilterChange={handleFilterChange}
+                onResetFilter={handleResetFilter}
+                onPageChange={handlePageChange}
+                onPageSizeChange={handlePageSizeChange}
                 onSelectRow={(row) => {
                   setActionErrorMessage("");
                   setToast(null);

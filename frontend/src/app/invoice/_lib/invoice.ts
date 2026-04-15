@@ -1,4 +1,10 @@
 import { requestApi } from "../../_lib/api-client";
+import {
+  buildListQueryString,
+  normalizeServerPaginationMeta,
+  type PaginationQueryState,
+  type ServerListResult,
+} from "../../_lib/pagination";
 
 export type InvoiceBarang = {
   namaBarang: string;
@@ -72,6 +78,8 @@ export type InvoiceFilter = {
   tanggalSampai: string;
 };
 
+export type InvoiceListQuery = InvoiceFilter & PaginationQueryState;
+
 export type InvoiceSuratJalanBarangOption = {
   nama: string;
   spesifikasi: string;
@@ -92,6 +100,10 @@ export type InvoiceSuratJalanOption = {
 
 type InvoiceListResponse = {
   invoices?: unknown[];
+  pagination?: unknown;
+  summary?: {
+    totalRows?: unknown;
+  };
 };
 
 type InvoiceResponse = {
@@ -491,6 +503,35 @@ export async function fetchInvoiceRows() {
   }
 
   return response.invoices.map(toInvoiceItem).filter((item): item is InvoiceItem => Boolean(item));
+}
+
+export async function fetchInvoiceList(query: InvoiceListQuery): Promise<ServerListResult<InvoiceItem>> {
+  const requestPath = `/api/invoices${buildListQueryString({
+    noInvoice: query.noInvoice,
+    noPo: query.noPo,
+    noSuratJalan: query.noSuratJalan,
+    idCustomer: query.idCustomer,
+    isPpn: query.isPpn,
+    tanggalDari: query.tanggalDari,
+    tanggalSampai: query.tanggalSampai,
+    page: query.page,
+    limit: query.limit,
+  })}`;
+  const response = await requestApi<InvoiceListResponse>(requestPath);
+  const items = Array.isArray(response?.invoices)
+    ? response.invoices.map(toInvoiceItem).filter((item): item is InvoiceItem => Boolean(item))
+    : [];
+  const pagination = normalizeServerPaginationMeta(response?.pagination, {
+    page: query.page,
+    limit: query.limit,
+  });
+  const totalRows = Number(response?.summary?.totalRows);
+
+  return {
+    items,
+    pagination,
+    totalRows: Number.isFinite(totalRows) && totalRows >= 0 ? totalRows : pagination.totalItems,
+  };
 }
 
 export async function fetchInvoiceById(id: string) {

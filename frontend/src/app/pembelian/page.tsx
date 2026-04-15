@@ -4,16 +4,20 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiLoadingState } from "../_components/api-loading-state";
 import { AppToast } from "../_components/app-toast";
 import { ConfirmationModal } from "../_components/confirmation-modal";
+import { useDebouncedValue } from "../_hooks/use-debounced-value";
 import { ApiRequestError } from "../_lib/api-client";
+import { type ServerPaginationMeta } from "../_lib/pagination";
 import { PembelianEditForm } from "./_components/pembelian-edit-form";
 import { PembelianTableFilter } from "./_components/pembelian-table-filter";
 import {
   consumePembelianPrefill,
   createPembelian,
+  defaultPembelianFilter,
   deletePembelian,
-  fetchPembelianRows,
+  fetchPembelianList,
   toPembelianFormStateFromPrefill,
   updatePembelian,
+  type PembelianFilter,
   type PembelianFormState,
   type PembelianInvoiceOption,
   type PembelianItem,
@@ -30,6 +34,18 @@ type ToastState = {
 export default function PembelianPage() {
   const { t } = useI18n();
   const [rows, setRows] = useState<PembelianItem[]>([]);
+  const [filter, setFilter] = useState<PembelianFilter>(defaultPembelianFilter);
+  const [paginationQuery, setPaginationQuery] = useState({
+    page: 1,
+    limit: 5,
+  });
+  const [pagination, setPagination] = useState<ServerPaginationMeta>({
+    page: 1,
+    limit: 5,
+    totalItems: 0,
+    totalPages: 1,
+  });
+  const [filteredCount, setFilteredCount] = useState(0);
   const [invoiceOptions, setInvoiceOptions] = useState<PembelianInvoiceOption[]>([]);
   const [prefillOnLoad] = useState(() => consumePembelianPrefill());
   const [selectedId, setSelectedId] = useState("");
@@ -55,6 +71,7 @@ export default function PembelianPage() {
       }
     | null
   >(null);
+  const debouncedFilter = useDebouncedValue(filter);
 
   const showToast = useCallback((message: string, variant: ToastState["variant"]) => {
     setToast({
@@ -75,8 +92,14 @@ export default function PembelianPage() {
       setErrorMessage("");
 
       try {
-        const pembelianRows = await fetchPembelianRows();
+        const pembelianResult = await fetchPembelianList({
+          ...debouncedFilter,
+          ...paginationQuery,
+        });
+        const pembelianRows = pembelianResult.items;
         setRows(pembelianRows);
+        setPagination(pembelianResult.pagination);
+        setFilteredCount(pembelianResult.totalRows);
         setSelectedId((prevSelectedId) => {
           if (pembelianRows.some((row) => row.id === prevSelectedId)) {
             return prevSelectedId;
@@ -86,6 +109,12 @@ export default function PembelianPage() {
         });
       } catch (error) {
         setRows([]);
+        setPagination((prevPagination) => ({
+          ...prevPagination,
+          totalItems: 0,
+          totalPages: 1,
+        }));
+        setFilteredCount(0);
         setSelectedId("");
 
         if (error instanceof ApiRequestError) {
@@ -100,7 +129,7 @@ export default function PembelianPage() {
         }
       }
     },
-    [t]
+    [debouncedFilter, paginationQuery, t]
   );
 
   const loadInvoiceOptions = useCallback(async () => {
@@ -141,8 +170,48 @@ export default function PembelianPage() {
   }, [prefillOnLoad, showToast, t]);
 
   useEffect(() => {
-    void Promise.all([loadPembelianRows(), loadInvoiceOptions()]);
-  }, [loadInvoiceOptions, loadPembelianRows]);
+    void loadPembelianRows();
+  }, [loadPembelianRows]);
+
+  useEffect(() => {
+    void loadInvoiceOptions();
+  }, [loadInvoiceOptions]);
+
+  const handleFilterChange = useCallback(
+    <K extends keyof PembelianFilter,>(key: K, value: PembelianFilter[K]) => {
+      setFilter((prevFilter) => ({
+        ...prevFilter,
+        [key]: value,
+      }));
+      setPaginationQuery((prevQuery) => ({
+        ...prevQuery,
+        page: 1,
+      }));
+    },
+    []
+  );
+
+  const handleResetFilter = useCallback(() => {
+    setFilter(defaultPembelianFilter);
+    setPaginationQuery((prevQuery) => ({
+      ...prevQuery,
+      page: 1,
+    }));
+  }, []);
+
+  const handlePageChange = useCallback((page: number) => {
+    setPaginationQuery((prevQuery) => ({
+      ...prevQuery,
+      page,
+    }));
+  }, []);
+
+  const handlePageSizeChange = useCallback((limit: number) => {
+    setPaginationQuery({
+      page: 1,
+      limit,
+    });
+  }, []);
 
   const selectedRow = useMemo(() => {
     return rows.find((row) => row.id === selectedId);
@@ -355,8 +424,15 @@ export default function PembelianPage() {
             <>
               <PembelianTableFilter
                 rows={rows}
+                filter={filter}
+                filteredCount={filteredCount}
+                pagination={pagination}
                 selectedId={selectedId}
                 resolveInvoiceLabel={resolveInvoiceLabel}
+                onFilterChange={handleFilterChange}
+                onResetFilter={handleResetFilter}
+                onPageChange={handlePageChange}
+                onPageSizeChange={handlePageSizeChange}
                 onSelectRow={(row) => {
                   setActionErrorMessage("");
                   setToast(null);

@@ -6,16 +6,22 @@ import { ApiLoadingState } from "../../_components/api-loading-state";
 import { AppToast } from "../../_components/app-toast";
 import { ConfirmationModal } from "../../_components/confirmation-modal";
 import { saveInvoicePrefill, type InvoicePrefillPayload } from "../../invoice/_lib/invoice";
+import { useDebouncedValue } from "../../_hooks/use-debounced-value";
 import { ApiRequestError } from "../../_lib/api-client";
+import { type ServerPaginationMeta } from "../../_lib/pagination";
 import { useI18n } from "../../_i18n/provider";
 import { fetchCustomerRows, type CustomerItem } from "../../customer/_lib/customer";
 import {
   createSuratJalan,
+  defaultSuratJalanFilter,
   deleteSuratJalan,
-  fetchSuratJalanRows,
+  fetchSuratJalanList,
+  fetchSuratJalanNoPoOptions,
   updateSuratJalan,
+  type SuratJalanFilter,
   type SuratJalanFormState,
   type SuratJalanItem,
+  type SuratJalanNoPoOption,
 } from "../_lib/surat-jalan";
 import { PostCreateActionModal } from "./post-create-action-modal";
 import { SuratJalanEditForm } from "./surat-jalan-edit-form";
@@ -37,7 +43,20 @@ export function FormPreviewStylePage() {
   const { t } = useI18n();
   const router = useRouter();
   const [rows, setRows] = useState<SuratJalanItem[]>([]);
+  const [filter, setFilter] = useState<SuratJalanFilter>(defaultSuratJalanFilter);
+  const [paginationQuery, setPaginationQuery] = useState({
+    page: 1,
+    limit: 5,
+  });
+  const [pagination, setPagination] = useState<ServerPaginationMeta>({
+    page: 1,
+    limit: 5,
+    totalItems: 0,
+    totalPages: 1,
+  });
+  const [filteredCount, setFilteredCount] = useState(0);
   const [customerRows, setCustomerRows] = useState<CustomerItem[]>([]);
+  const [noPoOptionRows, setNoPoOptionRows] = useState<SuratJalanNoPoOption[]>([]);
   const [selectedId, setSelectedId] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -58,6 +77,7 @@ export function FormPreviewStylePage() {
       }
     | null
   >(null);
+  const debouncedFilter = useDebouncedValue(filter);
 
   const showToast = useCallback((message: string, variant: ToastState["variant"]) => {
     setToast({
@@ -78,8 +98,14 @@ export function FormPreviewStylePage() {
       setErrorMessage("");
 
       try {
-        const suratJalanRows = await fetchSuratJalanRows();
+        const suratJalanResult = await fetchSuratJalanList({
+          ...debouncedFilter,
+          ...paginationQuery,
+        });
+        const suratJalanRows = suratJalanResult.items;
         setRows(suratJalanRows);
+        setPagination(suratJalanResult.pagination);
+        setFilteredCount(suratJalanResult.totalRows);
         setSelectedId((prevSelectedId) => {
           if (suratJalanRows.some((row) => row.id === prevSelectedId)) {
             return prevSelectedId;
@@ -91,6 +117,12 @@ export function FormPreviewStylePage() {
         return suratJalanRows;
       } catch (error) {
         setRows([]);
+        setPagination((prevPagination) => ({
+          ...prevPagination,
+          totalItems: 0,
+          totalPages: 1,
+        }));
+        setFilteredCount(0);
         setSelectedId("");
 
         if (error instanceof ApiRequestError) {
@@ -106,7 +138,7 @@ export function FormPreviewStylePage() {
         }
       }
     },
-    [t]
+    [debouncedFilter, paginationQuery, t]
   );
 
   const loadCustomerOptions = useCallback(async () => {
@@ -124,9 +156,64 @@ export function FormPreviewStylePage() {
     }
   }, [showToast, t]);
 
+  const loadNoPoOptions = useCallback(async () => {
+    try {
+      const options = await fetchSuratJalanNoPoOptions();
+      setNoPoOptionRows(options);
+    } catch (error) {
+      setNoPoOptionRows([]);
+
+      if (error instanceof ApiRequestError) {
+        showToast(error.message || t("suratJalan.apiLoadError"), "error");
+      } else {
+        showToast(t("suratJalan.apiLoadError"), "error");
+      }
+    }
+  }, [showToast, t]);
+
   useEffect(() => {
-    void Promise.all([loadSuratJalanData(), loadCustomerOptions()]);
-  }, [loadCustomerOptions, loadSuratJalanData]);
+    void loadSuratJalanData();
+  }, [loadSuratJalanData]);
+
+  useEffect(() => {
+    void Promise.all([loadCustomerOptions(), loadNoPoOptions()]);
+  }, [loadCustomerOptions, loadNoPoOptions]);
+
+  const handleFilterChange = useCallback(
+    <K extends keyof SuratJalanFilter,>(key: K, value: SuratJalanFilter[K]) => {
+      setFilter((prevFilter) => ({
+        ...prevFilter,
+        [key]: value,
+      }));
+      setPaginationQuery((prevQuery) => ({
+        ...prevQuery,
+        page: 1,
+      }));
+    },
+    []
+  );
+
+  const handleResetFilter = useCallback(() => {
+    setFilter(defaultSuratJalanFilter);
+    setPaginationQuery((prevQuery) => ({
+      ...prevQuery,
+      page: 1,
+    }));
+  }, []);
+
+  const handlePageChange = useCallback((page: number) => {
+    setPaginationQuery((prevQuery) => ({
+      ...prevQuery,
+      page,
+    }));
+  }, []);
+
+  const handlePageSizeChange = useCallback((limit: number) => {
+    setPaginationQuery({
+      page: 1,
+      limit,
+    });
+  }, []);
 
   const selectedRow = useMemo(() => {
     return rows.find((row) => row.id === selectedId);
@@ -169,24 +256,12 @@ export function FormPreviewStylePage() {
     }));
   }, [customerRows]);
   const noPoOptions = useMemo(() => {
-    const noPoSet = new Set<string>();
-
-    rows.forEach((row) => {
-      const noPo = String(row.noPo || "").trim();
-
-      if (!noPo) {
-        return;
-      }
-
-      noPoSet.add(noPo);
-    });
-
-    return Array.from(noPoSet.values());
-  }, [rows]);
+    return noPoOptionRows.map((row) => row.noPo);
+  }, [noPoOptionRows]);
   const noPoCustomerMap = useMemo(() => {
     const map: Record<string, string> = {};
 
-    rows.forEach((row) => {
+    noPoOptionRows.forEach((row) => {
       const noPo = String(row.noPo || "").trim();
       const idCustomer = String(row.idCustomer || "").trim();
 
@@ -198,7 +273,7 @@ export function FormPreviewStylePage() {
     });
 
     return map;
-  }, [rows]);
+  }, [noPoOptionRows]);
 
   const buildInvoicePrefillFromNoPo = useCallback(
     (allRows: SuratJalanItem[], createdItem: SuratJalanItem): InvoicePrefillPayload => {
@@ -501,7 +576,14 @@ export function FormPreviewStylePage() {
           <>
             <SuratJalanTableFilter
               rows={rows}
+              filter={filter}
+              filteredCount={filteredCount}
+              pagination={pagination}
               selectedId={selectedId}
+              onFilterChange={handleFilterChange}
+              onResetFilter={handleResetFilter}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
               onSelectRow={(row) => {
                 setActionErrorMessage("");
                 setToast(null);

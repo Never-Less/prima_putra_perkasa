@@ -1,35 +1,46 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import {
-  defaultCustomerFilter,
-  filterCustomerRows,
-  type CustomerFilter,
-  type CustomerItem,
-} from "../_lib/customer";
+import { PaginationControls } from "../../_components/pagination-controls";
+import { type ServerPaginationMeta } from "../../_lib/pagination";
+import { type CustomerFilter, type CustomerItem } from "../_lib/customer";
 import { useI18n } from "../../_i18n/provider";
 
 type CustomerTableFilterProps = {
   rows: CustomerItem[];
+  filter: CustomerFilter;
+  filteredCount: number;
+  pagination: ServerPaginationMeta;
   selectedId?: string;
   onSelectRow?: (row: CustomerItem) => void;
+  onFilterChange: <K extends keyof CustomerFilter>(key: K, value: CustomerFilter[K]) => void;
+  onResetFilter: () => void;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (pageSize: number) => void;
 };
 
 const clampedCellClassName =
   "overflow-hidden break-words [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]";
 
-export function CustomerTableFilter({ rows, selectedId, onSelectRow }: CustomerTableFilterProps) {
+export function CustomerTableFilter({
+  rows,
+  filter,
+  filteredCount,
+  pagination,
+  selectedId,
+  onSelectRow,
+  onFilterChange,
+  onResetFilter,
+  onPageChange,
+  onPageSizeChange,
+}: CustomerTableFilterProps) {
   const { t } = useI18n();
-  const [filter, setFilter] = useState<CustomerFilter>(defaultCustomerFilter);
-
-  const filteredRows = useMemo(() => filterCustomerRows(rows, filter), [filter, rows]);
 
   return (
     <section className="space-y-4 rounded-2xl border border-sky-200 bg-sky-50/40 p-5 shadow-sm dark:border-sky-900/70 dark:bg-slate-950/85">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-lg font-semibold text-sky-900 dark:text-sky-100">{t("customer.table.title")}</h2>
         <button
-          onClick={() => setFilter(defaultCustomerFilter)}
+          onClick={onResetFilter}
           className="rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
         >
           {t("common.resetFilter")}
@@ -43,7 +54,7 @@ export function CustomerTableFilter({ rows, selectedId, onSelectRow }: CustomerT
             {t("field.nama")}
             <input
               value={filter.nama}
-              onChange={(event) => setFilter((prev) => ({ ...prev, nama: event.target.value }))}
+              onChange={(event) => onFilterChange("nama", event.target.value)}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
@@ -52,7 +63,7 @@ export function CustomerTableFilter({ rows, selectedId, onSelectRow }: CustomerT
             {t("field.alamat")}
             <input
               value={filter.alamat}
-              onChange={(event) => setFilter((prev) => ({ ...prev, alamat: event.target.value }))}
+              onChange={(event) => onFilterChange("alamat", event.target.value)}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
@@ -61,7 +72,7 @@ export function CustomerTableFilter({ rows, selectedId, onSelectRow }: CustomerT
             {t("field.npwp")}
             <input
               value={filter.npwp}
-              onChange={(event) => setFilter((prev) => ({ ...prev, npwp: event.target.value }))}
+              onChange={(event) => onFilterChange("npwp", event.target.value)}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
@@ -70,7 +81,7 @@ export function CustomerTableFilter({ rows, selectedId, onSelectRow }: CustomerT
             {t("field.atasNama")}
             <input
               value={filter.atasNama}
-              onChange={(event) => setFilter((prev) => ({ ...prev, atasNama: event.target.value }))}
+              onChange={(event) => onFilterChange("atasNama", event.target.value)}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
@@ -78,12 +89,12 @@ export function CustomerTableFilter({ rows, selectedId, onSelectRow }: CustomerT
       </div>
 
       <div className="space-y-3 md:hidden">
-        {filteredRows.length === 0 ? (
+        {rows.length === 0 ? (
           <div className="rounded-xl border border-sky-200 bg-white px-4 py-5 text-center text-sm text-slate-500 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
             {t("common.noData")}
           </div>
         ) : (
-          filteredRows.map((row) => {
+          rows.map((row) => {
             const isSelected = selectedId === row.id;
 
             return (
@@ -162,14 +173,14 @@ export function CustomerTableFilter({ rows, selectedId, onSelectRow }: CustomerT
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 bg-white dark:divide-slate-800 dark:bg-slate-900">
-                {filteredRows.length === 0 ? (
+                {rows.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="px-3 py-4 text-center text-slate-500 dark:text-slate-400">
                       {t("common.noData")}
                     </td>
                   </tr>
                 ) : (
-                  filteredRows.map((row, index) => {
+                  rows.map((row, index) => {
                     const isSelected = selectedId === row.id;
 
                     return (
@@ -205,7 +216,18 @@ export function CustomerTableFilter({ rows, selectedId, onSelectRow }: CustomerT
         </div>
       </div>
 
-      <p className="text-sm text-slate-500 dark:text-slate-400">{t("common.filterResult", { count: filteredRows.length })}</p>
+      <PaginationControls
+        currentPage={pagination.page}
+        totalPages={pagination.totalPages}
+        totalItems={pagination.totalItems}
+        pageSize={pagination.limit}
+        from={rows.length === 0 ? 0 : (pagination.page - 1) * pagination.limit + 1}
+        to={rows.length === 0 ? 0 : (pagination.page - 1) * pagination.limit + rows.length}
+        onPageChange={onPageChange}
+        onPageSizeChange={onPageSizeChange}
+      />
+
+      <p className="text-sm text-slate-500 dark:text-slate-400">{t("common.filterResult", { count: filteredCount })}</p>
     </section>
   );
 }

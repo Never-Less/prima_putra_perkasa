@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import { ApiLoadingState } from "../_components/api-loading-state";
 import { AppToast } from "../_components/app-toast";
 import { ConfirmationModal } from "../_components/confirmation-modal";
+import { useDebouncedValue } from "../_hooks/use-debounced-value";
 import { ApiRequestError } from "../_lib/api-client";
+import { type ServerPaginationMeta } from "../_lib/pagination";
 import { useI18n } from "../_i18n/provider";
 import { fetchCustomerRows, type CustomerItem } from "../customer/_lib/customer";
 import { savePembelianPrefill } from "../pembelian/_lib/pembelian";
@@ -15,11 +17,13 @@ import { InvoiceTableFilter } from "./_components/invoice-table-filter";
 import {
   consumeInvoicePrefill,
   createInvoice,
-  fetchInvoiceRows,
+  defaultInvoiceFilter,
+  fetchInvoiceList,
   fetchInvoiceSuratJalanOptions,
   toInvoiceFormStateFromPrefill,
   updateInvoice,
   deleteInvoice,
+  type InvoiceFilter,
   type InvoiceFormState,
   type InvoiceItem,
   type InvoiceSuratJalanOption,
@@ -40,6 +44,18 @@ export default function InvoicePage() {
   const { t } = useI18n();
   const router = useRouter();
   const [rows, setRows] = useState<InvoiceItem[]>([]);
+  const [filter, setFilter] = useState<InvoiceFilter>(defaultInvoiceFilter);
+  const [paginationQuery, setPaginationQuery] = useState({
+    page: 1,
+    limit: 10,
+  });
+  const [pagination, setPagination] = useState<ServerPaginationMeta>({
+    page: 1,
+    limit: 10,
+    totalItems: 0,
+    totalPages: 1,
+  });
+  const [filteredCount, setFilteredCount] = useState(0);
   const [customerRows, setCustomerRows] = useState<CustomerItem[]>([]);
   const [suratJalanOptions, setSuratJalanOptions] = useState<InvoiceSuratJalanOption[]>([]);
   const [selectedId, setSelectedId] = useState("");
@@ -67,6 +83,7 @@ export default function InvoicePage() {
       }
     | null
   >(null);
+  const debouncedFilter = useDebouncedValue(filter);
 
   const showToast = useCallback((message: string, variant: ToastState["variant"]) => {
     setToast({
@@ -87,8 +104,14 @@ export default function InvoicePage() {
       setErrorMessage("");
 
       try {
-        const invoiceRows = await fetchInvoiceRows();
+        const invoiceResult = await fetchInvoiceList({
+          ...debouncedFilter,
+          ...paginationQuery,
+        });
+        const invoiceRows = invoiceResult.items;
         setRows(invoiceRows);
+        setPagination(invoiceResult.pagination);
+        setFilteredCount(invoiceResult.totalRows);
         setSelectedId((prevSelectedId) => {
           if (invoiceRows.some((row) => row.id === prevSelectedId)) {
             return prevSelectedId;
@@ -100,6 +123,12 @@ export default function InvoicePage() {
         return invoiceRows;
       } catch (error) {
         setRows([]);
+        setPagination((prevPagination) => ({
+          ...prevPagination,
+          totalItems: 0,
+          totalPages: 1,
+        }));
+        setFilteredCount(0);
         setSelectedId("");
 
         if (error instanceof ApiRequestError) {
@@ -115,7 +144,7 @@ export default function InvoicePage() {
         }
       }
     },
-    [t]
+    [debouncedFilter, paginationQuery, t]
   );
 
   const loadCustomerOptions = useCallback(async () => {
@@ -149,8 +178,48 @@ export default function InvoicePage() {
   }, [showToast, t]);
 
   useEffect(() => {
-    void Promise.all([loadInvoices(), loadCustomerOptions(), loadSuratJalanOptions()]);
-  }, [loadCustomerOptions, loadInvoices, loadSuratJalanOptions]);
+    void loadInvoices();
+  }, [loadInvoices]);
+
+  useEffect(() => {
+    void Promise.all([loadCustomerOptions(), loadSuratJalanOptions()]);
+  }, [loadCustomerOptions, loadSuratJalanOptions]);
+
+  const handleFilterChange = useCallback(
+    <K extends keyof InvoiceFilter,>(key: K, value: InvoiceFilter[K]) => {
+      setFilter((prevFilter) => ({
+        ...prevFilter,
+        [key]: value,
+      }));
+      setPaginationQuery((prevQuery) => ({
+        ...prevQuery,
+        page: 1,
+      }));
+    },
+    []
+  );
+
+  const handleResetFilter = useCallback(() => {
+    setFilter(defaultInvoiceFilter);
+    setPaginationQuery((prevQuery) => ({
+      ...prevQuery,
+      page: 1,
+    }));
+  }, []);
+
+  const handlePageChange = useCallback((page: number) => {
+    setPaginationQuery((prevQuery) => ({
+      ...prevQuery,
+      page,
+    }));
+  }, []);
+
+  const handlePageSizeChange = useCallback((limit: number) => {
+    setPaginationQuery({
+      page: 1,
+      limit,
+    });
+  }, []);
 
   const selectedRow = useMemo(() => {
     return rows.find((row) => row.id === selectedId);
@@ -437,8 +506,15 @@ export default function InvoicePage() {
             <>
               <InvoiceTableFilter
                 rows={rows}
+                filter={filter}
+                filteredCount={filteredCount}
+                pagination={pagination}
                 selectedId={selectedId}
                 resolveCustomerLabel={resolveCustomerLabel}
+                onFilterChange={handleFilterChange}
+                onResetFilter={handleResetFilter}
+                onPageChange={handlePageChange}
+                onPageSizeChange={handlePageSizeChange}
                 onExportRow={(row) => handleExportInvoice(row.id)}
                 onSelectRow={(row) => {
                   setActionErrorMessage("");

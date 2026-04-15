@@ -1,4 +1,10 @@
 import { requestApi } from "../../_lib/api-client";
+import {
+  buildListQueryString,
+  normalizeServerPaginationMeta,
+  type PaginationQueryState,
+  type ServerListResult,
+} from "../../_lib/pagination";
 
 export type CustomerItem = {
   id: string;
@@ -24,6 +30,8 @@ export type CustomerFormState = {
   atasNama: string;
 };
 
+export type CustomerListQuery = CustomerFilter & PaginationQueryState;
+
 export const defaultCustomerFilter: CustomerFilter = {
   nama: "",
   alamat: "",
@@ -33,6 +41,10 @@ export const defaultCustomerFilter: CustomerFilter = {
 
 type CustomerListResponse = {
   customers?: unknown[];
+  pagination?: unknown;
+  summary?: {
+    totalRows?: unknown;
+  };
 };
 
 type CustomerResponse = {
@@ -97,6 +109,32 @@ export async function fetchCustomerRows() {
   }
 
   return response.customers.map(toCustomerItem).filter((row): row is CustomerItem => Boolean(row));
+}
+
+export async function fetchCustomerList(query: CustomerListQuery): Promise<ServerListResult<CustomerItem>> {
+  const requestPath = `/api/customers${buildListQueryString({
+    nama: query.nama,
+    alamat: query.alamat,
+    npwp: query.npwp,
+    atasNama: query.atasNama,
+    page: query.page,
+    limit: query.limit,
+  })}`;
+  const response = await requestApi<CustomerListResponse>(requestPath);
+  const items = Array.isArray(response?.customers)
+    ? response.customers.map(toCustomerItem).filter((row): row is CustomerItem => Boolean(row))
+    : [];
+  const pagination = normalizeServerPaginationMeta(response?.pagination, {
+    page: query.page,
+    limit: query.limit,
+  });
+  const totalRows = Number(response?.summary?.totalRows);
+
+  return {
+    items,
+    pagination,
+    totalRows: Number.isFinite(totalRows) && totalRows >= 0 ? totalRows : pagination.totalItems,
+  };
 }
 
 export async function fetchCustomerById(id: string) {

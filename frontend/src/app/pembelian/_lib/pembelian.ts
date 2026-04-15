@@ -1,4 +1,10 @@
 import { requestApi } from "../../_lib/api-client";
+import {
+  buildListQueryString,
+  normalizeServerPaginationMeta,
+  type PaginationQueryState,
+  type ServerListResult,
+} from "../../_lib/pagination";
 
 type Locale = "id" | "en";
 
@@ -50,6 +56,8 @@ export type PembelianFormState = {
   tanggalBayar: string;
 };
 
+export type PembelianListQuery = PembelianFilter & PaginationQueryState;
+
 export type PembelianPrefillPayload = {
   tanggalNota?: string;
   idInvoice?: string;
@@ -60,6 +68,11 @@ export type PembelianPrefillPayload = {
 
 type PembelianListResponse = {
   pembelians?: unknown[];
+  pagination?: unknown;
+  summary?: {
+    totalRows?: unknown;
+    totalGroups?: unknown;
+  };
 };
 
 type PembelianResponse = {
@@ -268,6 +281,43 @@ export async function fetchPembelianRows() {
   return response.pembelians
     .map(toPembelianItem)
     .filter((item): item is PembelianItem => Boolean(item));
+}
+
+export async function fetchPembelianList(
+  query: PembelianListQuery
+): Promise<ServerListResult<PembelianItem>> {
+  const requestPath = `/api/pembelian${buildListQueryString({
+    namaSupplier: query.namaSupplier,
+    noNpwp: query.noNpwp,
+    noInvoice: query.noInvoice,
+    hutang: query.hutang,
+    ppn: query.ppn,
+    tanggalNotaDari: query.tanggalNotaDari,
+    tanggalNotaSampai: query.tanggalNotaSampai,
+    tanggalBayarDari: query.tanggalBayarDari,
+    tanggalBayarSampai: query.tanggalBayarSampai,
+    nilaiNotaMin: query.nilaiNotaMin,
+    nilaiNotaMax: query.nilaiNotaMax,
+    page: query.page,
+    limit: query.limit,
+  })}`;
+  const response = await requestApi<PembelianListResponse>(requestPath);
+  const items = Array.isArray(response?.pembelians)
+    ? response.pembelians
+        .map(toPembelianItem)
+        .filter((item): item is PembelianItem => Boolean(item))
+    : [];
+  const pagination = normalizeServerPaginationMeta(response?.pagination, {
+    page: query.page,
+    limit: query.limit,
+  });
+  const totalRows = Number(response?.summary?.totalRows);
+
+  return {
+    items,
+    pagination,
+    totalRows: Number.isFinite(totalRows) && totalRows >= 0 ? totalRows : items.length,
+  };
 }
 
 export async function createPembelian(form: PembelianFormState) {

@@ -1,9 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { PaginationControls } from "../../_components/pagination-controls";
+import { type ServerPaginationMeta } from "../../_lib/pagination";
 import {
-  defaultPembelianFilter,
-  filterPembelianRows,
   formatRupiah,
   formatTanggal,
   type PembelianFilter,
@@ -13,9 +12,16 @@ import { useI18n } from "../../_i18n/provider";
 
 type PembelianTableFilterProps = {
   rows: PembelianItem[];
+  filter: PembelianFilter;
+  filteredCount: number;
+  pagination: ServerPaginationMeta;
   selectedId?: string;
   onSelectRow?: (row: PembelianItem) => void;
   resolveInvoiceLabel?: (invoiceId: string) => string;
+  onFilterChange: <K extends keyof PembelianFilter>(key: K, value: PembelianFilter[K]) => void;
+  onResetFilter: () => void;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (pageSize: number) => void;
 };
 
 const clampedCellClassName =
@@ -23,21 +29,22 @@ const clampedCellClassName =
 
 export function PembelianTableFilter({
   rows,
+  filter,
+  filteredCount,
+  pagination,
   selectedId,
   onSelectRow,
   resolveInvoiceLabel,
+  onFilterChange,
+  onResetFilter,
+  onPageChange,
+  onPageSizeChange,
 }: PembelianTableFilterProps) {
   const { locale, t } = useI18n();
-  const [filter, setFilter] = useState<PembelianFilter>(defaultPembelianFilter);
-
-  const filteredRows = useMemo(
-    () => filterPembelianRows(rows, filter, resolveInvoiceLabel),
-    [filter, resolveInvoiceLabel, rows]
-  );
-  const groupedRows = useMemo(() => {
+  const groupedRows = (() => {
     const groupMap = new Map<string, PembelianItem[]>();
 
-    filteredRows.forEach((row) => {
+    rows.forEach((row) => {
       const key = resolveInvoiceLabel?.(row.idInvoice) || row.idInvoice || "-";
       const existingRows = groupMap.get(key);
 
@@ -53,7 +60,7 @@ export function PembelianTableFilter({
       noInvoice,
       items,
     }));
-  }, [filteredRows, resolveInvoiceLabel]);
+  })();
 
   return (
     <section className="space-y-4 rounded-2xl border border-sky-200 bg-sky-50/40 p-5 shadow-sm dark:border-sky-900/70 dark:bg-slate-950/85">
@@ -61,7 +68,7 @@ export function PembelianTableFilter({
         <h2 className="text-lg font-semibold text-sky-900 dark:text-sky-100">{t("pembelian.table.title")}</h2>
         <button
           type="button"
-          onClick={() => setFilter(defaultPembelianFilter)}
+          onClick={onResetFilter}
           className="rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
         >
           {t("common.resetFilter")}
@@ -75,9 +82,7 @@ export function PembelianTableFilter({
             {t("field.namaSupplier")}
             <input
               value={filter.namaSupplier}
-              onChange={(event) =>
-                setFilter((prev) => ({ ...prev, namaSupplier: event.target.value }))
-              }
+              onChange={(event) => onFilterChange("namaSupplier", event.target.value)}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
@@ -86,7 +91,7 @@ export function PembelianTableFilter({
             {t("field.noNpwp")}
             <input
               value={filter.noNpwp}
-              onChange={(event) => setFilter((prev) => ({ ...prev, noNpwp: event.target.value }))}
+              onChange={(event) => onFilterChange("noNpwp", event.target.value)}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
@@ -95,9 +100,7 @@ export function PembelianTableFilter({
             {t("field.noInvoice")}
             <input
               value={filter.noInvoice}
-              onChange={(event) =>
-                setFilter((prev) => ({ ...prev, noInvoice: event.target.value }))
-              }
+              onChange={(event) => onFilterChange("noInvoice", event.target.value)}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
@@ -107,10 +110,7 @@ export function PembelianTableFilter({
             <select
               value={filter.hutang}
               onChange={(event) =>
-                setFilter((prev) => ({
-                  ...prev,
-                  hutang: event.target.value as PembelianFilter["hutang"],
-                }))
+                onFilterChange("hutang", event.target.value as PembelianFilter["hutang"])
               }
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             >
@@ -125,10 +125,7 @@ export function PembelianTableFilter({
             <select
               value={filter.ppn}
               onChange={(event) =>
-                setFilter((prev) => ({
-                  ...prev,
-                  ppn: event.target.value as PembelianFilter["ppn"],
-                }))
+                onFilterChange("ppn", event.target.value as PembelianFilter["ppn"])
               }
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             >
@@ -143,9 +140,7 @@ export function PembelianTableFilter({
             <input
               type="date"
               value={filter.tanggalNotaDari}
-              onChange={(event) =>
-                setFilter((prev) => ({ ...prev, tanggalNotaDari: event.target.value }))
-              }
+              onChange={(event) => onFilterChange("tanggalNotaDari", event.target.value)}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
@@ -155,9 +150,7 @@ export function PembelianTableFilter({
             <input
               type="date"
               value={filter.tanggalNotaSampai}
-              onChange={(event) =>
-                setFilter((prev) => ({ ...prev, tanggalNotaSampai: event.target.value }))
-              }
+              onChange={(event) => onFilterChange("tanggalNotaSampai", event.target.value)}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
@@ -167,9 +160,7 @@ export function PembelianTableFilter({
             <input
               type="date"
               value={filter.tanggalBayarDari}
-              onChange={(event) =>
-                setFilter((prev) => ({ ...prev, tanggalBayarDari: event.target.value }))
-              }
+              onChange={(event) => onFilterChange("tanggalBayarDari", event.target.value)}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
@@ -179,9 +170,7 @@ export function PembelianTableFilter({
             <input
               type="date"
               value={filter.tanggalBayarSampai}
-              onChange={(event) =>
-                setFilter((prev) => ({ ...prev, tanggalBayarSampai: event.target.value }))
-              }
+              onChange={(event) => onFilterChange("tanggalBayarSampai", event.target.value)}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
@@ -192,9 +181,7 @@ export function PembelianTableFilter({
               type="number"
               min={0}
               value={filter.nilaiNotaMin}
-              onChange={(event) =>
-                setFilter((prev) => ({ ...prev, nilaiNotaMin: event.target.value }))
-              }
+              onChange={(event) => onFilterChange("nilaiNotaMin", event.target.value)}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
@@ -205,9 +192,7 @@ export function PembelianTableFilter({
               type="number"
               min={0}
               value={filter.nilaiNotaMax}
-              onChange={(event) =>
-                setFilter((prev) => ({ ...prev, nilaiNotaMax: event.target.value }))
-              }
+              onChange={(event) => onFilterChange("nilaiNotaMax", event.target.value)}
               className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
@@ -398,7 +383,24 @@ export function PembelianTableFilter({
         ))}
       </div>
 
-      <p className="text-sm text-slate-500 dark:text-slate-400">{t("common.filterResult", { count: filteredRows.length })}</p>
+      <PaginationControls
+        currentPage={pagination.page}
+        totalPages={pagination.totalPages}
+        totalItems={pagination.totalItems}
+        pageSize={pagination.limit}
+        from={groupedRows.length === 0 ? 0 : (pagination.page - 1) * pagination.limit + 1}
+        to={groupedRows.length === 0 ? 0 : (pagination.page - 1) * pagination.limit + groupedRows.length}
+        onPageChange={onPageChange}
+        onPageSizeChange={onPageSizeChange}
+        pageSizeOptions={[3, 5, 10, 20]}
+      />
+
+      <p className="text-sm text-slate-500 dark:text-slate-400">
+        {t("common.filterResultGrouped", {
+          rows: filteredCount,
+          groups: pagination.totalItems,
+        })}
+      </p>
     </section>
   );
 }

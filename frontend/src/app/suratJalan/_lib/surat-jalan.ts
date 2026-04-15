@@ -1,4 +1,10 @@
 import { requestApi } from "../../_lib/api-client";
+import {
+  buildListQueryString,
+  normalizeServerPaginationMeta,
+  type PaginationQueryState,
+  type ServerListResult,
+} from "../../_lib/pagination";
 
 export type SuratJalanTipe = "partial" | "non partial";
 type Locale = "id" | "en";
@@ -53,12 +59,28 @@ export type SuratJalanFormState = {
   barangRows: SuratJalanBarangFormRow[];
 };
 
+export type SuratJalanListQuery = SuratJalanFilter & PaginationQueryState;
+
+export type SuratJalanNoPoOption = {
+  noPo: string;
+  idCustomer: string;
+};
+
 type SuratJalanListResponse = {
   suratJalan?: unknown[];
+  pagination?: unknown;
+  summary?: {
+    totalRows?: unknown;
+    totalGroups?: unknown;
+  };
 };
 
 type SuratJalanResponse = {
   suratJalan?: unknown;
+};
+
+type SuratJalanNoPoOptionsResponse = {
+  noPoOptions?: unknown[];
 };
 
 type ResolveCustomerLabel = (customerId: string) => string;
@@ -112,6 +134,25 @@ function parseCustomerId(value: unknown) {
   }
 
   return toText(value).trim();
+}
+
+function toSuratJalanNoPoOption(value: unknown): SuratJalanNoPoOption | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const item = value as Record<string, unknown>;
+  const noPo = toText(item.noPo).trim();
+  const idCustomer = parseCustomerId(item.idCustomer);
+
+  if (!noPo) {
+    return null;
+  }
+
+  return {
+    noPo,
+    idCustomer,
+  };
 }
 
 function toSuratJalanBarang(value: unknown): SuratJalanBarang | null {
@@ -191,6 +232,52 @@ export async function fetchSuratJalanRows() {
   return response.suratJalan
     .map(toSuratJalanItem)
     .filter((item): item is SuratJalanItem => Boolean(item));
+}
+
+export async function fetchSuratJalanNoPoOptions() {
+  const response = await requestApi<SuratJalanNoPoOptionsResponse>("/api/surat-jalan/no-po-options");
+
+  if (!response || !Array.isArray(response.noPoOptions)) {
+    return [];
+  }
+
+  return response.noPoOptions
+    .map(toSuratJalanNoPoOption)
+    .filter((item): item is SuratJalanNoPoOption => Boolean(item));
+}
+
+export async function fetchSuratJalanList(
+  query: SuratJalanListQuery
+): Promise<ServerListResult<SuratJalanItem>> {
+  const requestPath = `/api/surat-jalan${buildListQueryString({
+    noSuratJalan: query.noSuratJalan,
+    noPo: query.noPo,
+    kodeDepartemen: query.kodeDepartemen,
+    idCustomer: query.idCustomer,
+    kendaraan: query.kendaraan,
+    tipe: query.tipe,
+    tanggalDari: query.tanggalDari,
+    tanggalSampai: query.tanggalSampai,
+    page: query.page,
+    limit: query.limit,
+  })}`;
+  const response = await requestApi<SuratJalanListResponse>(requestPath);
+  const items = Array.isArray(response?.suratJalan)
+    ? response.suratJalan
+        .map(toSuratJalanItem)
+        .filter((item): item is SuratJalanItem => Boolean(item))
+    : [];
+  const pagination = normalizeServerPaginationMeta(response?.pagination, {
+    page: query.page,
+    limit: query.limit,
+  });
+  const totalRows = Number(response?.summary?.totalRows);
+
+  return {
+    items,
+    pagination,
+    totalRows: Number.isFinite(totalRows) && totalRows >= 0 ? totalRows : items.length,
+  };
 }
 
 export async function fetchSuratJalanById(id: string) {

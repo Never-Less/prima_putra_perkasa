@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { PaginationControls } from "../../_components/pagination-controls";
+import { type ServerPaginationMeta } from "../../_lib/pagination";
 import {
   barangLabel,
-  defaultSuratJalanFilter,
-  filterSuratJalanRows,
   formatTanggal,
   type SuratJalanFilter,
   type SuratJalanItem,
@@ -16,10 +16,17 @@ type TableStyle = "default" | "striped" | "compact";
 
 type SuratJalanTableFilterProps = {
   rows: SuratJalanItem[];
+  filter: SuratJalanFilter;
+  filteredCount: number;
+  pagination: ServerPaginationMeta;
   selectedId?: string;
   onSelectRow?: (row: SuratJalanItem) => void;
   onExportRow?: (row: SuratJalanItem) => void;
   resolveCustomerLabel?: (customerId: string) => string;
+  onFilterChange: <K extends keyof SuratJalanFilter>(key: K, value: SuratJalanFilter[K]) => void;
+  onResetFilter: () => void;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (pageSize: number) => void;
   colorTone?: ColorTone;
   tableStyle?: TableStyle;
 };
@@ -96,7 +103,7 @@ function escapeCsvValue(value: string) {
     return text;
   }
 
-  return `"${text.replace(/"/g, "\"\"")}"`;
+  return `"${text.replace(/"/g, '""')}"`;
 }
 
 function sanitizeFileName(value: string) {
@@ -115,27 +122,28 @@ const clampedCellClassName =
 
 export function SuratJalanTableFilter({
   rows,
+  filter,
+  filteredCount,
+  pagination,
   selectedId,
   onSelectRow,
   onExportRow,
   resolveCustomerLabel,
+  onFilterChange,
+  onResetFilter,
+  onPageChange,
+  onPageSizeChange,
   colorTone = "slate",
   tableStyle = "default",
 }: SuratJalanTableFilterProps) {
   const { locale, t } = useI18n();
-  const [filters, setFilters] = useState<SuratJalanFilter>(defaultSuratJalanFilter);
   const tone = toneStyles[colorTone];
   const cellPadding = tableStyle === "compact" ? "px-2 py-1.5" : "px-3 py-2";
   const tableText = tableStyle === "compact" ? "text-xs" : "text-sm";
-
-  const filteredRows = useMemo(
-    () => filterSuratJalanRows(rows, filters, resolveCustomerLabel),
-    [filters, resolveCustomerLabel, rows]
-  );
   const groupedRows = useMemo(() => {
     const groupMap = new Map<string, SuratJalanItem[]>();
 
-    filteredRows.forEach((row) => {
+    rows.forEach((row) => {
       const key = row.noPo || "-";
       const existingRows = groupMap.get(key);
 
@@ -151,7 +159,7 @@ export function SuratJalanTableFilter({
       noPo,
       items,
     }));
-  }, [filteredRows]);
+  }, [rows]);
 
   function exportRowsAsCsv(items: SuratJalanItem[], fileNameBase: string) {
     if (typeof window === "undefined" || items.length === 0) {
@@ -205,7 +213,7 @@ export function SuratJalanTableFilter({
         <h2 className={`text-lg font-semibold ${tone.title}`}>{t("suratJalan.table.title")}</h2>
         <button
           type="button"
-          onClick={() => setFilters(defaultSuratJalanFilter)}
+          onClick={onResetFilter}
           className={`rounded-lg px-3 py-2 text-sm ${tone.resetButton}`}
         >
           {t("common.resetFilter")}
@@ -218,8 +226,8 @@ export function SuratJalanTableFilter({
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.noSuratJalan")}
             <input
-              value={filters.noSuratJalan}
-              onChange={(event) => setFilters((prev) => ({ ...prev, noSuratJalan: event.target.value }))}
+              value={filter.noSuratJalan}
+              onChange={(event) => onFilterChange("noSuratJalan", event.target.value)}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
@@ -227,8 +235,8 @@ export function SuratJalanTableFilter({
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.noPo")}
             <input
-              value={filters.noPo}
-              onChange={(event) => setFilters((prev) => ({ ...prev, noPo: event.target.value }))}
+              value={filter.noPo}
+              onChange={(event) => onFilterChange("noPo", event.target.value)}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
@@ -236,10 +244,8 @@ export function SuratJalanTableFilter({
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.kodeDepartemen")}
             <input
-              value={filters.kodeDepartemen}
-              onChange={(event) =>
-                setFilters((prev) => ({ ...prev, kodeDepartemen: event.target.value }))
-              }
+              value={filter.kodeDepartemen}
+              onChange={(event) => onFilterChange("kodeDepartemen", event.target.value)}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
@@ -247,8 +253,8 @@ export function SuratJalanTableFilter({
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.namaCustomer")}
             <input
-              value={filters.idCustomer}
-              onChange={(event) => setFilters((prev) => ({ ...prev, idCustomer: event.target.value }))}
+              value={filter.idCustomer}
+              onChange={(event) => onFilterChange("idCustomer", event.target.value)}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
@@ -256,8 +262,8 @@ export function SuratJalanTableFilter({
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.kendaraan")}
             <input
-              value={filters.kendaraan}
-              onChange={(event) => setFilters((prev) => ({ ...prev, kendaraan: event.target.value }))}
+              value={filter.kendaraan}
+              onChange={(event) => onFilterChange("kendaraan", event.target.value)}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
@@ -265,12 +271,9 @@ export function SuratJalanTableFilter({
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.tipe")}
             <select
-              value={filters.tipe}
+              value={filter.tipe}
               onChange={(event) =>
-                setFilters((prev) => ({
-                  ...prev,
-                  tipe: event.target.value as SuratJalanFilter["tipe"],
-                }))
+                onFilterChange("tipe", event.target.value as SuratJalanFilter["tipe"])
               }
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             >
@@ -284,8 +287,8 @@ export function SuratJalanTableFilter({
             {t("field.tanggalDari")}
             <input
               type="date"
-              value={filters.tanggalDari}
-              onChange={(event) => setFilters((prev) => ({ ...prev, tanggalDari: event.target.value }))}
+              value={filter.tanggalDari}
+              onChange={(event) => onFilterChange("tanggalDari", event.target.value)}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
@@ -294,8 +297,8 @@ export function SuratJalanTableFilter({
             {t("field.tanggalSampai")}
             <input
               type="date"
-              value={filters.tanggalSampai}
-              onChange={(event) => setFilters((prev) => ({ ...prev, tanggalSampai: event.target.value }))}
+              value={filter.tanggalSampai}
+              onChange={(event) => onFilterChange("tanggalSampai", event.target.value)}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
@@ -303,6 +306,12 @@ export function SuratJalanTableFilter({
       </div>
 
       <div className="space-y-4">
+        {groupedRows.length === 0 ? (
+          <div className="rounded-xl border border-sky-200 bg-white px-3 py-4 text-center text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
+            {t("common.noData")}
+          </div>
+        ) : null}
+
         {groupedRows.map((group) => (
           <div key={group.noPo} className={`overflow-hidden rounded-xl border ${tone.groupCard}`}>
             <div className={`flex flex-wrap items-center justify-between gap-2 border-b px-3 py-2 ${tone.groupHeader}`}>
@@ -315,12 +324,7 @@ export function SuratJalanTableFilter({
                 </span>
                 <button
                   type="button"
-                  onClick={() =>
-                    exportRowsAsCsv(
-                      rows.filter((row) => row.noPo === group.noPo),
-                      `surat-jalan-${group.noPo}`
-                    )
-                  }
+                  onClick={() => exportRowsAsCsv(group.items, `surat-jalan-${group.noPo}`)}
                   className={`rounded-lg px-3 py-1.5 text-xs font-medium ${tone.actionInactive}`}
                 >
                   {t("suratJalan.table.exportNoPoButton")}
@@ -486,7 +490,24 @@ export function SuratJalanTableFilter({
         ))}
       </div>
 
-      <p className="text-sm text-slate-500 dark:text-slate-400">{t("common.filterResult", { count: filteredRows.length })}</p>
+      <PaginationControls
+        currentPage={pagination.page}
+        totalPages={pagination.totalPages}
+        totalItems={pagination.totalItems}
+        pageSize={pagination.limit}
+        from={groupedRows.length === 0 ? 0 : (pagination.page - 1) * pagination.limit + 1}
+        to={groupedRows.length === 0 ? 0 : (pagination.page - 1) * pagination.limit + groupedRows.length}
+        onPageChange={onPageChange}
+        onPageSizeChange={onPageSizeChange}
+        pageSizeOptions={[3, 5, 10, 20]}
+      />
+
+      <p className="text-sm text-slate-500 dark:text-slate-400">
+        {t("common.filterResultGrouped", {
+          rows: filteredCount,
+          groups: pagination.totalItems,
+        })}
+      </p>
     </section>
   );
 }
