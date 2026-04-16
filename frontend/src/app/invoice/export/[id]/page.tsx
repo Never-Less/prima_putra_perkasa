@@ -21,7 +21,7 @@ const meiloonCustomerName = "PT. MEILOON TECHNOLOGY INDONESIA";
 
 const paymentProfile = {
   nama: "CV. PRIMA PUTRA PERKASA",
-  rekening: "588-5119-945",
+  rekening: "588-511-9945",
   bank: "BCA (CABANG LTC GLODOK)",
 };
 
@@ -598,6 +598,34 @@ export default function InvoiceExportPage() {
     return `${rate}/${rate + 1}`;
   }, [invoice?.ppnRate]);
 
+  const meiloonPpnRate = useMemo(() => {
+    if (!invoice?.isPpn) {
+      return Number(invoice?.ppnRate || 0);
+    }
+
+    const rate = Number(invoice?.ppnRate || 0);
+
+    if (rate <= 0) {
+      return 0;
+    }
+
+    return rate + 1;
+  }, [invoice?.isPpn, invoice?.ppnRate]);
+
+  const meiloonPpnAmount = useMemo(() => {
+    if (!invoice?.isPpn) {
+      return 0;
+    }
+
+    const rate = Number(invoice?.ppnRate || 0);
+
+    if (rate <= 0) {
+      return roundCurrency(Number(invoice?.ppnAmount || 0));
+    }
+
+    return roundCurrency((dppValue * (rate + 1)) / 100);
+  }, [dppValue, invoice?.isPpn, invoice?.ppnAmount, invoice?.ppnRate]);
+
   return (
     <>
       <style jsx global>{`
@@ -750,9 +778,9 @@ export default function InvoiceExportPage() {
                       </div>
                       <div className="grid grid-cols-[1fr_120px] border-b border-black text-[12px] font-bold last:border-b-0">
                         <div className="border-r border-black px-2 py-1">
-                          {t("invoice.export.summary.ppn", { rate: invoice.ppnRate })}
+                          {t("invoice.export.summary.ppn", { rate: meiloonPpnRate })}
                         </div>
-                        <div className="px-2 py-1 text-right">{formatPlainNumber(Number(invoice.ppnAmount || 0))}</div>
+                        <div className="px-2 py-1 text-right">{formatPlainNumber(meiloonPpnAmount)}</div>
                       </div>
                       <div className="grid grid-cols-[1fr_120px] text-[12px] font-bold">
                         <div className="border-r border-black px-2 py-1">{t("invoice.export.summary.total")}</div>
@@ -760,9 +788,9 @@ export default function InvoiceExportPage() {
                       </div>
                     </div>
 
-                    <div className="pt-4 text-right">
+                    <div className="ml-auto w-[200px] pt-4 text-center">
                       <p className="text-[14px] font-bold">{t("invoice.export.signature.regards")}</p>
-                      <div className="mt-[72px] ml-auto w-[118px] border-t-[1.5px] border-black" />
+                      <div className="mt-[72px] w-full border-t-[1.5px] border-black" />
                     </div>
                   </div>
                 </div>
@@ -822,9 +850,9 @@ export default function InvoiceExportPage() {
                         </div>
                         <div className="grid grid-cols-[1fr_120px] border-b border-black text-[12px] font-bold last:border-b-0">
                           <div className="border-r border-black px-2 py-1">
-                            {t("invoice.export.summary.ppn", { rate: invoice.ppnRate })}
+                            {t("invoice.export.summary.ppn", { rate: meiloonPpnRate })}
                           </div>
-                          <div className="px-2 py-1 text-right">{formatPlainNumber(Number(invoice.ppnAmount || 0))}</div>
+                          <div className="px-2 py-1 text-right">{formatPlainNumber(meiloonPpnAmount)}</div>
                         </div>
                         <div className="grid grid-cols-[1fr_120px] text-[12px] font-bold">
                           <div className="border-r border-black px-2 py-1">{t("invoice.export.summary.total")}</div>
@@ -832,9 +860,9 @@ export default function InvoiceExportPage() {
                         </div>
                       </div>
 
-                      <div className="pt-4 text-right">
+                      <div className="ml-auto w-[200px] pt-4 text-center">
                         <p className="text-[14px] font-bold">{t("invoice.export.signature.regards")}</p>
-                        <div className="mt-[72px] ml-auto w-[118px] border-t-[1.5px] border-black" />
+                        <div className="mt-[72px] w-full border-t-[1.5px] border-black" />
                       </div>
                     </div>
                   </div>
@@ -954,9 +982,9 @@ export default function InvoiceExportPage() {
                       </div>
                     </div>
 
-                    <div className="pt-1 text-center">
+                    <div className="ml-auto w-[200px] pt-1 text-center">
                       <p className="text-[14px] font-bold">{t("invoice.export.signature.regards")}</p>
-                      <div className="mt-[62px] ml-auto w-[118px] border-t-[1.5px] border-black" />
+                      <div className="mt-[62px] w-full border-t-[1.5px] border-black" />
                     </div>
                   </div>
                 </div>
@@ -1020,9 +1048,9 @@ export default function InvoiceExportPage() {
                         </div>
                       </div>
 
-                      <div className="pt-1 text-center">
+                      <div className="ml-auto w-[200px] pt-1 text-center">
                         <p className="text-[14px] font-bold">{t("invoice.export.signature.regards")}</p>
-                        <div className="mt-[62px] ml-auto w-[118px] border-t-[1.5px] border-black" />
+                        <div className="mt-[62px] w-full border-t-[1.5px] border-black" />
                       </div>
                     </div>
                   </div>
