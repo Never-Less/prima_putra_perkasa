@@ -45,6 +45,8 @@ export function InvoiceTableFilter({
   onPageSizeChange,
 }: InvoiceTableFilterProps) {
   const { locale, t } = useI18n();
+  const filterPlaceholder = (fieldKey: string) =>
+    t("common.placeholder.filter", { field: t(fieldKey) });
 
   return (
     <section className="space-y-4 rounded-2xl border border-sky-200 bg-sky-50/40 p-5 shadow-sm dark:border-sky-900/70 dark:bg-slate-950/85">
@@ -66,6 +68,7 @@ export function InvoiceTableFilter({
             <input
               value={filter.noInvoice}
               onChange={(event) => onFilterChange("noInvoice", event.target.value)}
+              placeholder={filterPlaceholder("field.noInvoice")}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
@@ -75,6 +78,7 @@ export function InvoiceTableFilter({
             <input
               value={filter.noPo}
               onChange={(event) => onFilterChange("noPo", event.target.value)}
+              placeholder={filterPlaceholder("field.noPo")}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
@@ -84,6 +88,7 @@ export function InvoiceTableFilter({
             <input
               value={filter.noSuratJalan}
               onChange={(event) => onFilterChange("noSuratJalan", event.target.value)}
+              placeholder={filterPlaceholder("field.noSuratJalan")}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
@@ -93,6 +98,7 @@ export function InvoiceTableFilter({
             <input
               value={filter.idCustomer}
               onChange={(event) => onFilterChange("idCustomer", event.target.value)}
+              placeholder={filterPlaceholder("field.namaCustomer")}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>

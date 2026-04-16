@@ -34,6 +34,8 @@ export function CustomerTableFilter({
   onPageSizeChange,
 }: CustomerTableFilterProps) {
   const { t } = useI18n();
+  const filterPlaceholder = (fieldKey: string) =>
+    t("common.placeholder.filter", { field: t(fieldKey) });
 
   return (
     <section className="space-y-4 rounded-2xl border border-sky-200 bg-sky-50/40 p-5 shadow-sm dark:border-sky-900/70 dark:bg-slate-950/85">
@@ -55,6 +57,7 @@ export function CustomerTableFilter({
             <input
               value={filter.nama}
               onChange={(event) => onFilterChange("nama", event.target.value)}
+              placeholder={filterPlaceholder("field.nama")}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
@@ -64,6 +67,7 @@ export function CustomerTableFilter({
             <input
               value={filter.alamat}
               onChange={(event) => onFilterChange("alamat", event.target.value)}
+              placeholder={filterPlaceholder("field.alamat")}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
@@ -73,6 +77,7 @@ export function CustomerTableFilter({
             <input
               value={filter.npwp}
               onChange={(event) => onFilterChange("npwp", event.target.value)}
+              placeholder={filterPlaceholder("field.npwp")}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
@@ -82,6 +87,7 @@ export function CustomerTableFilter({
             <input
               value={filter.atasNama}
               onChange={(event) => onFilterChange("atasNama", event.target.value)}
+              placeholder={filterPlaceholder("field.atasNama")}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>

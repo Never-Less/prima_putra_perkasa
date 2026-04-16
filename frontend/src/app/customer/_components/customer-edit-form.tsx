@@ -35,6 +35,8 @@ export function CustomerEditForm({
   onDelete,
 }: CustomerEditFormProps) {
   const { t } = useI18n();
+  const inputPlaceholder = (fieldKey: string) =>
+    t("common.placeholder.input", { field: t(fieldKey) });
   const [form, setForm] = useState<CustomerFormState>(() =>
     item ? toCustomerFormState(item) : createEmptyCustomerFormState()
   );
@@ -56,6 +58,7 @@ export function CustomerEditForm({
               <input
                 value={form.nama}
                 onChange={(event) => setForm((prev) => ({ ...prev, nama: event.target.value }))}
+                placeholder={inputPlaceholder("field.nama")}
                 className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               />
             </label>
@@ -66,6 +69,7 @@ export function CustomerEditForm({
                 rows={4}
                 value={form.alamat}
                 onChange={(event) => setForm((prev) => ({ ...prev, alamat: event.target.value }))}
+                placeholder={inputPlaceholder("field.alamat")}
                 className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               />
             </label>
@@ -75,6 +79,7 @@ export function CustomerEditForm({
               <input
                 value={form.npwp}
                 onChange={(event) => setForm((prev) => ({ ...prev, npwp: event.target.value }))}
+                placeholder={inputPlaceholder("field.npwp")}
                 className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               />
             </label>
@@ -84,6 +89,7 @@ export function CustomerEditForm({
               <input
                 value={form.atasNama}
                 onChange={(event) => setForm((prev) => ({ ...prev, atasNama: event.target.value }))}
+                placeholder={inputPlaceholder("field.atasNama")}
                 className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               />
             </label>

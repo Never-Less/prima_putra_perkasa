@@ -137,6 +137,8 @@ export function SuratJalanTableFilter({
   tableStyle = "default",
 }: SuratJalanTableFilterProps) {
   const { locale, t } = useI18n();
+  const filterPlaceholder = (fieldKey: string) =>
+    t("common.placeholder.filter", { field: t(fieldKey) });
   const tone = toneStyles[colorTone];
   const cellPadding = tableStyle === "compact" ? "px-2 py-1.5" : "px-3 py-2";
   const tableText = tableStyle === "compact" ? "text-xs" : "text-sm";
@@ -228,6 +230,7 @@ export function SuratJalanTableFilter({
             <input
               value={filter.noSuratJalan}
               onChange={(event) => onFilterChange("noSuratJalan", event.target.value)}
+              placeholder={filterPlaceholder("field.noSuratJalan")}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
@@ -237,6 +240,7 @@ export function SuratJalanTableFilter({
             <input
               value={filter.noPo}
               onChange={(event) => onFilterChange("noPo", event.target.value)}
+              placeholder={filterPlaceholder("field.noPo")}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
@@ -246,6 +250,7 @@ export function SuratJalanTableFilter({
             <input
               value={filter.kodeDepartemen}
               onChange={(event) => onFilterChange("kodeDepartemen", event.target.value)}
+              placeholder={filterPlaceholder("field.kodeDepartemen")}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
@@ -255,6 +260,7 @@ export function SuratJalanTableFilter({
             <input
               value={filter.idCustomer}
               onChange={(event) => onFilterChange("idCustomer", event.target.value)}
+              placeholder={filterPlaceholder("field.namaCustomer")}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
@@ -264,6 +270,7 @@ export function SuratJalanTableFilter({
             <input
               value={filter.kendaraan}
               onChange={(event) => onFilterChange("kendaraan", event.target.value)}
+              placeholder={filterPlaceholder("field.kendaraan")}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>

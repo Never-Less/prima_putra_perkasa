@@ -68,6 +68,10 @@ export function InvoiceEditForm({
 }: InvoiceEditFormProps) {
   const { locale, t } = useI18n();
   const { theme } = useTheme();
+  const inputPlaceholder = (fieldKey: string) =>
+    t("common.placeholder.input", { field: t(fieldKey) });
+  const selectPlaceholder = (fieldKey: string) =>
+    t("common.placeholder.select", { field: t(fieldKey) });
   const [form, setForm] = useState<InvoiceFormState>(() =>
     item
       ? toInvoiceFormState(item)
@@ -402,6 +406,7 @@ export function InvoiceEditForm({
               <input
                 value={form.noInvoice}
                 onChange={(event) => setForm((prev) => ({ ...prev, noInvoice: event.target.value }))}
+                placeholder={inputPlaceholder("field.noInvoice")}
                 className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               />
             </label>
@@ -458,7 +463,7 @@ export function InvoiceEditForm({
                 disabled={isSaving || isDeleting || isCustomerAutoSelected}
                 className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
               >
-                <option value="">-</option>
+                <option value="">{selectPlaceholder("field.namaCustomer")}</option>
                 {normalizedCustomerOptions.map((customer) => (
                   <option key={customer.id} value={customer.id}>
                     {customer.nama}
@@ -492,6 +497,7 @@ export function InvoiceEditForm({
                 max={100}
                 value={form.ppnRate}
                 onChange={(event) => setForm((prev) => ({ ...prev, ppnRate: event.target.value }))}
+                placeholder={inputPlaceholder("field.ppnRate")}
                 className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               />
             </label>

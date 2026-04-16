@@ -139,6 +139,10 @@ export function SuratJalanEditForm({
 }: SuratJalanEditFormProps) {
   const { locale, t } = useI18n();
   const { theme } = useTheme();
+  const inputPlaceholder = (fieldKey: string) =>
+    t("common.placeholder.input", { field: t(fieldKey) });
+  const selectPlaceholder = (fieldKey: string) =>
+    t("common.placeholder.select", { field: t(fieldKey) });
   const [form, setForm] = useState<SuratJalanFormState>(() =>
     item ? toFormState(item) : createEmptySuratJalanFormState()
   );
@@ -347,6 +351,7 @@ export function SuratJalanEditForm({
               <input
                 value={form.noSuratJalan}
                 onChange={(event) => setForm((prev) => ({ ...prev, noSuratJalan: event.target.value }))}
+                placeholder={inputPlaceholder("field.noSuratJalan")}
                 className={inputClassName}
               />
             </label>
@@ -402,6 +407,7 @@ export function SuratJalanEditForm({
                 onChange={(event) =>
                   setForm((prev) => ({ ...prev, kodeDepartemen: event.target.value }))
                 }
+                placeholder={inputPlaceholder("field.kodeDepartemen")}
                 className={inputClassName}
               />
             </label>
@@ -411,6 +417,7 @@ export function SuratJalanEditForm({
               <input
                 value={form.kendaraan}
                 onChange={(event) => setForm((prev) => ({ ...prev, kendaraan: event.target.value }))}
+                placeholder={inputPlaceholder("field.kendaraan")}
                 className={inputClassName}
               />
             </label>
@@ -423,7 +430,7 @@ export function SuratJalanEditForm({
                 disabled={isSaving || isDeleting || isCustomerLockedByNoPo}
                 className={inputClassName}
               >
-                <option value="">-</option>
+                <option value="">{selectPlaceholder("field.namaCustomer")}</option>
                 {normalizedCustomerOptions.map((customer) => (
                   <option key={customer.id} value={customer.id}>
                     {customer.nama}

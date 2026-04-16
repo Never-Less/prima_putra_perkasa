@@ -58,6 +58,8 @@ export function PembelianEditForm({
   onDelete,
 }: PembelianEditFormProps) {
   const { locale, t } = useI18n();
+  const inputPlaceholder = (fieldKey: string) =>
+    t("common.placeholder.input", { field: t(fieldKey) });
   const [form, setForm] = useState<PembelianFormState>(() =>
     item
       ? (() => {
@@ -134,6 +136,7 @@ export function PembelianEditForm({
                 min={0}
                 value={form.nilaiNota}
                 onChange={(event) => setForm((prev) => ({ ...prev, nilaiNota: event.target.value }))}
+                placeholder={inputPlaceholder("field.nilaiNota")}
                 className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               />
             </label>
@@ -143,6 +146,7 @@ export function PembelianEditForm({
               <input
                 value={form.namaSupplier}
                 onChange={(event) => setForm((prev) => ({ ...prev, namaSupplier: event.target.value }))}
+                placeholder={inputPlaceholder("field.namaSupplier")}
                 className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               />
             </label>
@@ -152,6 +156,7 @@ export function PembelianEditForm({
               <input
                 value={form.noNpwp}
                 onChange={(event) => setForm((prev) => ({ ...prev, noNpwp: event.target.value }))}
+                placeholder={inputPlaceholder("field.noNpwp")}
                 className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               />
             </label>
@@ -223,6 +228,7 @@ export function PembelianEditForm({
                 value={form.lamaHutang}
                 disabled={!form.hutang}
                 onChange={(event) => setForm((prev) => ({ ...prev, lamaHutang: event.target.value }))}
+                placeholder={inputPlaceholder("field.lamaHutang")}
                 className="mt-1 h-10 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm disabled:cursor-not-allowed disabled:bg-sky-100/70 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
               />
             </label>

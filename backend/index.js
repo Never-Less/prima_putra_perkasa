@@ -13,6 +13,7 @@ const authRoutes = require("./routes/auth");
 const customerRoutes = require("./routes/customer");
 const invoiceRoutes = require("./routes/invoice");
 const pembelianRoutes = require("./routes/pembelian");
+const purchaseOrderRoutes = require("./routes/purchase-order");
 const suratJalanRoutes = require("./routes/surat-jalan");
 
 const app = express();
@@ -46,6 +47,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/customers", customerRoutes);
 app.use("/api/invoices", invoiceRoutes);
 app.use("/api/pembelian", pembelianRoutes);
+app.use("/api/purchase-orders", purchaseOrderRoutes);
 app.use("/api/surat-jalan", suratJalanRoutes);
 
 app.use((error, _req, res, next) => {

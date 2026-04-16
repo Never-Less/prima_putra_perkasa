@@ -27,6 +27,12 @@ export default function HomePage() {
       cta: t("home.route.invoice.cta"),
     },
     {
+      href: "/purchaseOrder",
+      title: t("home.route.purchaseOrder.title"),
+      description: t("home.route.purchaseOrder.description"),
+      cta: t("home.route.purchaseOrder.cta"),
+    },
+    {
       href: "/pembelian",
       title: t("home.route.pembelian.title"),
       description: t("home.route.pembelian.description"),
@@ -51,7 +57,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         {routes.map((route) => (
           <Link
             key={route.href}

@@ -41,6 +41,8 @@ export function PembelianTableFilter({
   onPageSizeChange,
 }: PembelianTableFilterProps) {
   const { locale, t } = useI18n();
+  const filterPlaceholder = (fieldKey: string) =>
+    t("common.placeholder.filter", { field: t(fieldKey) });
   const groupedRows = (() => {
     const groupMap = new Map<string, PembelianItem[]>();
 
@@ -83,6 +85,7 @@ export function PembelianTableFilter({
             <input
               value={filter.namaSupplier}
               onChange={(event) => onFilterChange("namaSupplier", event.target.value)}
+              placeholder={filterPlaceholder("field.namaSupplier")}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
@@ -92,6 +95,7 @@ export function PembelianTableFilter({
             <input
               value={filter.noNpwp}
               onChange={(event) => onFilterChange("noNpwp", event.target.value)}
+              placeholder={filterPlaceholder("field.noNpwp")}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
@@ -101,6 +105,7 @@ export function PembelianTableFilter({
             <input
               value={filter.noInvoice}
               onChange={(event) => onFilterChange("noInvoice", event.target.value)}
+              placeholder={filterPlaceholder("field.noInvoice")}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
@@ -182,6 +187,7 @@ export function PembelianTableFilter({
               min={0}
               value={filter.nilaiNotaMin}
               onChange={(event) => onFilterChange("nilaiNotaMin", event.target.value)}
+              placeholder={filterPlaceholder("field.nilaiNotaMin")}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
@@ -193,6 +199,7 @@ export function PembelianTableFilter({
               min={0}
               value={filter.nilaiNotaMax}
               onChange={(event) => onFilterChange("nilaiNotaMax", event.target.value)}
+              placeholder={filterPlaceholder("field.nilaiNotaMax")}
               className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
