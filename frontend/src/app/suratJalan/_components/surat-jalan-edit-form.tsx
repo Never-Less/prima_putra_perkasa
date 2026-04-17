@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Select from "react-select";
 import type { SingleValue, StylesConfig } from "react-select";
-import CreatableSelect from "react-select/creatable";
 import {
   barangRowsToList,
   createEmptyBarangRow,
@@ -359,7 +359,7 @@ export function SuratJalanEditForm({
             <label className={`text-sm ${tone.label}`}>
               {t("field.noPo")}
               <div className="mt-1">
-                <CreatableSelect
+                <Select
                   inputId="surat-jalan-no-po-select"
                   value={selectedNoPoOption}
                   options={noPoSelectOptions}
@@ -367,22 +367,8 @@ export function SuratJalanEditForm({
                   isDisabled={isSaving || isDeleting}
                   placeholder={t("suratJalan.form.noPoSelectPlaceholder")}
                   noOptionsMessage={() => t("suratJalan.form.noPoNoOptions")}
-                  formatCreateLabel={(inputValue) =>
-                    t("suratJalan.form.noPoCreateLabel", {
-                      value: inputValue,
-                    })
-                  }
                   styles={noPoSelectStyles}
                   onChange={handleNoPoChange}
-                  onCreateOption={(inputValue) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      noPo: String(inputValue || "").trim(),
-                      idCustomer:
-                        normalizedNoPoCustomerMap.get(String(inputValue || "").trim()) ||
-                        prev.idCustomer,
-                    }))
-                  }
                 />
               </div>
             </label>

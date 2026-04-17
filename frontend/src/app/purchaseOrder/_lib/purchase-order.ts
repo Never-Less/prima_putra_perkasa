@@ -77,6 +77,30 @@ type PurchaseOrderOptionsResponse = {
   invoiceOptions?: unknown[];
 };
 
+function buildPurchaseOrderListQueryString(
+  query: Partial<PurchaseOrderListQuery>,
+  options: { includePagination?: boolean } = {}
+) {
+  const { includePagination = true } = options;
+
+  return buildListQueryString({
+    noPo: query.noPo,
+    namaCustomer: query.namaCustomer,
+    noInvoice: query.noInvoice,
+    isPaid: query.isPaid,
+    tanggalPoDari: query.tanggalPoDari,
+    tanggalPoSampai: query.tanggalPoSampai,
+    tanggalBayarDari: query.tanggalBayarDari,
+    tanggalBayarSampai: query.tanggalBayarSampai,
+    tanggalKirimDari: query.tanggalKirimDari,
+    tanggalKirimSampai: query.tanggalKirimSampai,
+    nominalPoMin: query.nominalPoMin,
+    nominalPoMax: query.nominalPoMax,
+    page: includePagination ? query.page : undefined,
+    limit: includePagination ? query.limit : undefined,
+  });
+}
+
 export const defaultPurchaseOrderFilter: PurchaseOrderFilter = {
   noPo: "",
   namaCustomer: "",
@@ -214,22 +238,7 @@ function toNormalizedPurchaseOrderPayload(form: PurchaseOrderFormState) {
 export async function fetchPurchaseOrderList(
   query: PurchaseOrderListQuery
 ): Promise<ServerListResult<PurchaseOrderItem>> {
-  const requestPath = `/api/purchase-orders${buildListQueryString({
-    noPo: query.noPo,
-    namaCustomer: query.namaCustomer,
-    noInvoice: query.noInvoice,
-    isPaid: query.isPaid,
-    tanggalPoDari: query.tanggalPoDari,
-    tanggalPoSampai: query.tanggalPoSampai,
-    tanggalBayarDari: query.tanggalBayarDari,
-    tanggalBayarSampai: query.tanggalBayarSampai,
-    tanggalKirimDari: query.tanggalKirimDari,
-    tanggalKirimSampai: query.tanggalKirimSampai,
-    nominalPoMin: query.nominalPoMin,
-    nominalPoMax: query.nominalPoMax,
-    page: query.page,
-    limit: query.limit,
-  })}`;
+  const requestPath = `/api/purchase-orders${buildPurchaseOrderListQueryString(query)}`;
   const response = await requestApi<PurchaseOrderListResponse>(requestPath);
   const items = Array.isArray(response?.purchaseOrders)
     ? response.purchaseOrders
@@ -247,6 +256,19 @@ export async function fetchPurchaseOrderList(
     pagination,
     totalRows: Number.isFinite(totalRows) && totalRows >= 0 ? totalRows : pagination.totalItems,
   };
+}
+
+export async function fetchPurchaseOrderExportRows(query: PurchaseOrderFilter) {
+  const requestPath = `/api/purchase-orders${buildPurchaseOrderListQueryString(query, {
+    includePagination: false,
+  })}`;
+  const response = await requestApi<PurchaseOrderListResponse>(requestPath);
+
+  return Array.isArray(response?.purchaseOrders)
+    ? response.purchaseOrders
+        .map(toPurchaseOrderItem)
+        .filter((item): item is PurchaseOrderItem => Boolean(item))
+    : [];
 }
 
 export async function fetchPurchaseOrderOptions() {

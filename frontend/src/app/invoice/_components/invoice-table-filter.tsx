@@ -20,6 +20,7 @@ type InvoiceTableFilterProps = {
   selectedId?: string;
   onSelectRow?: (row: InvoiceItem) => void;
   onExportRow?: (row: InvoiceItem) => void;
+  onExportPage?: () => void;
   resolveCustomerLabel?: (customerId: string) => string;
   onFilterChange: <K extends keyof InvoiceFilter>(key: K, value: InvoiceFilter[K]) => void;
   onResetFilter: () => void;
@@ -38,6 +39,7 @@ export function InvoiceTableFilter({
   selectedId,
   onSelectRow,
   onExportRow,
+  onExportPage,
   resolveCustomerLabel,
   onFilterChange,
   onResetFilter,
@@ -52,12 +54,22 @@ export function InvoiceTableFilter({
     <section className="space-y-4 rounded-2xl border border-sky-200 bg-sky-50/40 p-5 shadow-sm dark:border-sky-900/70 dark:bg-slate-950/85">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-lg font-semibold text-sky-900 dark:text-sky-100">{t("invoice.table.title")}</h2>
-        <button
-          onClick={onResetFilter}
-          className="rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
-        >
-          {t("common.resetFilter")}
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={onExportPage}
+            className="rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
+          >
+            {t("invoice.exportPage.openButton")}
+          </button>
+          <button
+            type="button"
+            onClick={onResetFilter}
+            className="rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
+          >
+            {t("common.resetFilter")}
+          </button>
+        </div>
       </div>
 
       <div>

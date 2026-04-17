@@ -291,6 +291,25 @@ export async function fetchSuratJalanById(id: string) {
   return toSuratJalanItem(response?.suratJalan);
 }
 
+export async function fetchSuratJalanByNoPo(noPo: string) {
+  const suratJalanNoPo = toText(noPo).trim();
+
+  if (!suratJalanNoPo) {
+    return [];
+  }
+
+  const requestPath = `/api/surat-jalan/by-no-po?noPo=${encodeURIComponent(suratJalanNoPo)}`;
+  const response = await requestApi<SuratJalanListResponse>(requestPath);
+
+  if (!Array.isArray(response?.suratJalan)) {
+    return [];
+  }
+
+  return response.suratJalan
+    .map(toSuratJalanItem)
+    .filter((item): item is SuratJalanItem => Boolean(item));
+}
+
 export async function createSuratJalan(form: SuratJalanFormState) {
   const payload = toNormalizedSuratJalanPayload(form);
   const response = await requestApi<SuratJalanResponse>("/api/surat-jalan", {

@@ -258,6 +258,22 @@ export function FormPreviewStylePage() {
   const noPoOptions = useMemo(() => {
     return noPoOptionRows.map((row) => row.noPo);
   }, [noPoOptionRows]);
+
+  const handleExportSuratJalanByNoPo = useCallback((rawNoPo: string) => {
+    const noPo = String(rawNoPo || "").trim();
+
+    if (!noPo || typeof window === "undefined") {
+      return;
+    }
+
+    const searchParams = new URLSearchParams({ noPo });
+    window.open(
+      `/suratJalan/export/no-po?${searchParams.toString()}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
+  }, []);
+
   const noPoCustomerMap = useMemo(() => {
     const map: Record<string, string> = {};
 
@@ -591,6 +607,7 @@ export function FormPreviewStylePage() {
                 setSelectedId(row.id);
               }}
               onExportRow={(row) => handleExportSuratJalan(row.id)}
+              onExportNoPo={handleExportSuratJalanByNoPo}
               resolveCustomerLabel={resolveCustomerLabel}
               colorTone="sky"
               tableStyle="compact"

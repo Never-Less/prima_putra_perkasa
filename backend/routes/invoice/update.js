@@ -2,6 +2,7 @@ const express = require("express");
 
 const { Customer } = require("../../models/Customer");
 const { Invoice } = require("../../models/Invoice");
+const { syncPurchaseOrderByNoPo } = require("../../utils/sync-purchase-order-from-invoice");
 const { sanitizeInvoice } = require("./sanitize-invoice");
 const {
   calculateGrandTotal,
@@ -151,6 +152,19 @@ router.put("/:id", async (req, res) => {
 
     if (!invoice) {
       return res.status(404).json({ message: "invoice not found" });
+    }
+
+    const noPoSet = new Set([
+      String(existingInvoice.noPo || "").trim(),
+      String(invoice.noPo || "").trim(),
+    ]);
+
+    for (const noPoValue of noPoSet) {
+      if (!noPoValue) {
+        continue;
+      }
+
+      await syncPurchaseOrderByNoPo(noPoValue);
     }
 
     return res.json({

@@ -14,7 +14,12 @@ function isLoginPath(pathname: string) {
 }
 
 function isChromelessPath(pathname: string) {
-  return pathname.startsWith("/suratJalan/export/") || pathname.startsWith("/invoice/export/");
+  return (
+    pathname.startsWith("/suratJalan/export/") ||
+    pathname === "/invoice/export" ||
+    pathname.startsWith("/invoice/export/") ||
+    pathname.startsWith("/purchaseOrder/export")
+  );
 }
 
 export function AppShell({ children }: AppShellProps) {

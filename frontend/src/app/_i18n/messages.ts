@@ -114,6 +114,21 @@ export const messages: Record<Locale, MessageDictionary> = {
     "invoice.page.description":
       "Kelola data invoice, pilih surat jalan, lalu hitung subtotal, PPN, dan grand total secara otomatis.",
     "invoice.table.title": "Tabel Invoice",
+    "invoice.exportPage.openButton": "Export Data",
+    "invoice.exportPage.title": "Export Invoice",
+    "invoice.exportPage.description":
+      "Halaman ini menampilkan seluruh data invoice sesuai filter aktif dan siap dicetak.",
+    "invoice.exportPage.activeFilters": "Filter Aktif",
+    "invoice.exportPage.allData": "Semua data",
+    "invoice.exportPage.empty":
+      "Tidak ada data invoice yang cocok dengan filter ini.",
+    "invoice.exportPage.totalRows": "Total data: {{count}}",
+    "invoice.exportPage.loadError": "Gagal memuat data export invoice.",
+    "invoice.exportPage.customerFactoryLabel": "Nama Customer (Pabrik)",
+    "invoice.exportPage.subtotalDppLabel": "Subtotal (DPP)",
+    "invoice.exportPage.ppnLabel": "PPN",
+    "invoice.exportPage.totalInvoiceLabel": "Total (Nilai Invoice)",
+    "invoice.exportPage.grandTotalRowLabel": "Grand Total",
     "invoice.form.title": "Form dan Preview Invoice",
     "invoice.form.description":
       "Lengkapi data invoice, pilih No. PO dan surat jalan terkait, lalu biarkan sistem menghitung total secara otomatis.",
@@ -245,9 +260,17 @@ export const messages: Record<Locale, MessageDictionary> = {
     "suratJalan.postCreateModal.createInvoiceButton": "Buat Invoice",
     "suratJalan.export.previewTitle": "Preview Export Surat Jalan",
     "suratJalan.export.previewDescription": "Halaman ini disiapkan untuk print atau simpan ke PDF.",
+    "suratJalan.export.noPoPreviewTitle": "Preview Export Surat Jalan No. PO",
+    "suratJalan.export.noPoPreviewDescription":
+      "Halaman ini menampilkan {{count}} surat jalan untuk No. PO {{noPo}} dan siap dicetak.",
     "suratJalan.export.invalidId": "ID surat jalan tidak valid.",
+    "suratJalan.export.invalidNoPo": "No. PO tidak valid.",
     "suratJalan.export.notFound": "Data surat jalan tidak ditemukan.",
     "suratJalan.export.loadError": "Gagal memuat data export surat jalan.",
+    "suratJalan.export.noPoNotFound":
+      "Tidak ada surat jalan yang ditemukan untuk No. PO ini.",
+    "suratJalan.export.loadNoPoError":
+      "Gagal memuat data export surat jalan berdasarkan No. PO.",
     "suratJalan.export.tanggalLabel": "TANGGAL",
     "suratJalan.export.kepadaLabel": "Kepada,",
     "suratJalan.export.attnLabel": "ATTN",
@@ -305,7 +328,20 @@ export const messages: Record<Locale, MessageDictionary> = {
       "Lengkapi data purchase order, lalu pilih customer dan invoice terkait dari data yang tersedia.",
     "purchaseOrder.form.customerPlaceholder": "Pilih customer",
     "purchaseOrder.form.invoicePlaceholder": "Pilih invoice (opsional)",
+    "purchaseOrder.form.autoFilledFromInvoice":
+      "Diisi otomatis saat invoice dibuat.",
+    "purchaseOrder.status.paid": "Lunas",
+    "purchaseOrder.status.unpaid": "Belum Lunas",
     "purchaseOrder.preview.title": "Preview Purchase Order",
+    "purchaseOrder.exportPage.openButton": "Export Data",
+    "purchaseOrder.exportPage.title": "Export Purchase Order",
+    "purchaseOrder.exportPage.description":
+      "Halaman ini menampilkan seluruh data purchase order sesuai filter aktif dan siap dicetak.",
+    "purchaseOrder.exportPage.activeFilters": "Filter Aktif",
+    "purchaseOrder.exportPage.allData": "Semua data",
+    "purchaseOrder.exportPage.empty":
+      "Tidak ada data purchase order yang cocok dengan filter ini.",
+    "purchaseOrder.exportPage.totalRows": "Total data: {{count}}",
     "purchaseOrder.apiLoadError": "Gagal memuat data purchase order dari backend.",
     "purchaseOrder.optionsLoadError": "Gagal memuat pilihan customer dan invoice untuk purchase order.",
     "purchaseOrder.mutationError": "Gagal memproses perubahan purchase order.",
@@ -478,6 +514,21 @@ export const messages: Record<Locale, MessageDictionary> = {
     "invoice.page.description":
       "Manage invoices, select delivery notes, and calculate subtotal, VAT, and grand total automatically.",
     "invoice.table.title": "Invoice Table",
+    "invoice.exportPage.openButton": "Export Data",
+    "invoice.exportPage.title": "Invoice Export",
+    "invoice.exportPage.description":
+      "This page shows all invoice data that matches the active filters and is ready to print.",
+    "invoice.exportPage.activeFilters": "Active Filters",
+    "invoice.exportPage.allData": "All data",
+    "invoice.exportPage.empty":
+      "No invoice data matches the current filters.",
+    "invoice.exportPage.totalRows": "Total rows: {{count}}",
+    "invoice.exportPage.loadError": "Failed to load invoice export data.",
+    "invoice.exportPage.customerFactoryLabel": "Customer Name (Factory)",
+    "invoice.exportPage.subtotalDppLabel": "Subtotal (DPP)",
+    "invoice.exportPage.ppnLabel": "VAT",
+    "invoice.exportPage.totalInvoiceLabel": "Total (Invoice Value)",
+    "invoice.exportPage.grandTotalRowLabel": "Grand Total",
     "invoice.form.title": "Invoice Form and Preview",
     "invoice.form.description":
       "Complete the invoice details, choose the related PO and delivery notes, and let the system calculate totals automatically.",
@@ -610,9 +661,17 @@ export const messages: Record<Locale, MessageDictionary> = {
     "suratJalan.postCreateModal.createInvoiceButton": "Create Invoice",
     "suratJalan.export.previewTitle": "Delivery Note Export Preview",
     "suratJalan.export.previewDescription": "This page is prepared for print or save to PDF.",
+    "suratJalan.export.noPoPreviewTitle": "PO Delivery Note Export Preview",
+    "suratJalan.export.noPoPreviewDescription":
+      "This page shows {{count}} delivery notes for PO No. {{noPo}} and is ready to print.",
     "suratJalan.export.invalidId": "Invalid delivery note ID.",
+    "suratJalan.export.invalidNoPo": "Invalid PO number.",
     "suratJalan.export.notFound": "Delivery note data was not found.",
     "suratJalan.export.loadError": "Failed to load delivery note export data.",
+    "suratJalan.export.noPoNotFound":
+      "No delivery note data was found for this PO number.",
+    "suratJalan.export.loadNoPoError":
+      "Failed to load delivery note export data by PO number.",
     "suratJalan.export.tanggalLabel": "DATE",
     "suratJalan.export.kepadaLabel": "To,",
     "suratJalan.export.attnLabel": "ATTN",
@@ -670,7 +729,20 @@ export const messages: Record<Locale, MessageDictionary> = {
       "Complete the purchase order data, then choose the related customer and invoice from the available data.",
     "purchaseOrder.form.customerPlaceholder": "Select customer",
     "purchaseOrder.form.invoicePlaceholder": "Select invoice (optional)",
+    "purchaseOrder.form.autoFilledFromInvoice":
+      "Filled automatically when the invoice is created.",
+    "purchaseOrder.status.paid": "Paid",
+    "purchaseOrder.status.unpaid": "Unpaid",
     "purchaseOrder.preview.title": "Purchase Order Preview",
+    "purchaseOrder.exportPage.openButton": "Export Data",
+    "purchaseOrder.exportPage.title": "Purchase Order Export",
+    "purchaseOrder.exportPage.description":
+      "This page shows all purchase order data that matches the active filters and is ready to print.",
+    "purchaseOrder.exportPage.activeFilters": "Active Filters",
+    "purchaseOrder.exportPage.allData": "All data",
+    "purchaseOrder.exportPage.empty":
+      "No purchase order data matches the current filters.",
+    "purchaseOrder.exportPage.totalRows": "Total rows: {{count}}",
     "purchaseOrder.apiLoadError": "Failed to load purchase order data from backend.",
     "purchaseOrder.optionsLoadError": "Failed to load customer and invoice options for purchase order.",
     "purchaseOrder.mutationError": "Failed to process purchase order changes.",

@@ -534,6 +534,25 @@ export async function fetchInvoiceList(query: InvoiceListQuery): Promise<ServerL
   };
 }
 
+export async function fetchInvoiceExportRows(query: InvoiceFilter) {
+  const requestPath = `/api/invoices${buildListQueryString({
+    noInvoice: query.noInvoice,
+    noPo: query.noPo,
+    noSuratJalan: query.noSuratJalan,
+    idCustomer: query.idCustomer,
+    isPpn: query.isPpn,
+    tanggalDari: query.tanggalDari,
+    tanggalSampai: query.tanggalSampai,
+  })}`;
+  const response = await requestApi<InvoiceListResponse>(requestPath);
+
+  if (!Array.isArray(response?.invoices)) {
+    return [];
+  }
+
+  return response.invoices.map(toInvoiceItem).filter((item): item is InvoiceItem => Boolean(item));
+}
+
 export async function fetchInvoiceById(id: string) {
   const invoiceId = toText(id).trim();
 

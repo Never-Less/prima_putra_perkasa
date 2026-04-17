@@ -22,6 +22,7 @@ type SuratJalanTableFilterProps = {
   selectedId?: string;
   onSelectRow?: (row: SuratJalanItem) => void;
   onExportRow?: (row: SuratJalanItem) => void;
+  onExportNoPo?: (noPo: string) => void;
   resolveCustomerLabel?: (customerId: string) => string;
   onFilterChange: <K extends keyof SuratJalanFilter>(key: K, value: SuratJalanFilter[K]) => void;
   onResetFilter: () => void;
@@ -96,27 +97,6 @@ const toneStyles: Record<
   },
 };
 
-function escapeCsvValue(value: string) {
-  const text = String(value || "");
-
-  if (!/[",\r\n]/.test(text)) {
-    return text;
-  }
-
-  return `"${text.replace(/"/g, '""')}"`;
-}
-
-function sanitizeFileName(value: string) {
-  const normalized = String(value || "")
-    .trim()
-    .replace(/[\\/:*?"<>|]/g, "-")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
-
-  return normalized || "surat-jalan-export";
-}
-
 const clampedCellClassName =
   "overflow-hidden break-words [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]";
 
@@ -128,6 +108,7 @@ export function SuratJalanTableFilter({
   selectedId,
   onSelectRow,
   onExportRow,
+  onExportNoPo,
   resolveCustomerLabel,
   onFilterChange,
   onResetFilter,
@@ -162,52 +143,6 @@ export function SuratJalanTableFilter({
       items,
     }));
   }, [rows]);
-
-  function exportRowsAsCsv(items: SuratJalanItem[], fileNameBase: string) {
-    if (typeof window === "undefined" || items.length === 0) {
-      return;
-    }
-
-    const header = [
-      "noSuratJalan",
-      "noPo",
-      "kodeDepartemen",
-      "tanggal",
-      "namaCustomer",
-      "kendaraan",
-      "tipe",
-      "barang",
-    ];
-    const lines = [header.map(escapeCsvValue).join(",")];
-
-    items.forEach((row) => {
-      const customerLabel = resolveCustomerLabel?.(row.idCustomer) || row.idCustomer || "-";
-      const csvRow = [
-        row.noSuratJalan,
-        row.noPo,
-        row.kodeDepartemen,
-        formatTanggal(row.tanggal, locale),
-        customerLabel,
-        row.kendaraan,
-        row.tipe,
-        barangLabel(row.barang),
-      ];
-
-      lines.push(csvRow.map(escapeCsvValue).join(","));
-    });
-
-    const csvContent = `\uFEFF${lines.join("\r\n")}`;
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const downloadUrl = window.URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-
-    anchor.href = downloadUrl;
-    anchor.download = `${sanitizeFileName(fileNameBase)}.csv`;
-    document.body.appendChild(anchor);
-    anchor.click();
-    document.body.removeChild(anchor);
-    window.URL.revokeObjectURL(downloadUrl);
-  }
 
   return (
     <section className={`space-y-4 rounded-2xl border p-5 shadow-sm ${tone.section}`}>
@@ -331,7 +266,7 @@ export function SuratJalanTableFilter({
                 </span>
                 <button
                   type="button"
-                  onClick={() => exportRowsAsCsv(group.items, `surat-jalan-${group.noPo}`)}
+                  onClick={() => onExportNoPo?.(group.noPo)}
                   className={`rounded-lg px-3 py-1.5 text-xs font-medium ${tone.actionInactive}`}
                 >
                   {t("suratJalan.table.exportNoPoButton")}

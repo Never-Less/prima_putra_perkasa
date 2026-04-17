@@ -2,6 +2,7 @@ const express = require("express");
 
 const { Customer } = require("../../models/Customer");
 const { Invoice } = require("../../models/Invoice");
+const { syncPurchaseOrderByNoPo } = require("../../utils/sync-purchase-order-from-invoice");
 const { sanitizeInvoice } = require("./sanitize-invoice");
 const {
   calculateGrandTotal,
@@ -79,6 +80,8 @@ router.post("/", async (req, res) => {
       subtotal: subtotal,
       grandTotal: grandTotal,
     });
+
+    await syncPurchaseOrderByNoPo(invoice.noPo);
 
     return res.status(201).json({
       message: "invoice created",

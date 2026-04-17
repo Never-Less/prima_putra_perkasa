@@ -1,12 +1,12 @@
 const express = require("express");
 
-const { SuratJalan } = require("../../models/SuratJalan");
+const { PurchaseOrder } = require("../../models/PurchaseOrder");
 
 const router = express.Router();
 
 router.get("/no-po-options", async (_req, res) => {
   try {
-    const optionRows = await SuratJalan.aggregate([
+    const optionRows = await PurchaseOrder.aggregate([
       {
         $match: {
           noPo: { $exists: true, $ne: null },
@@ -15,7 +15,7 @@ router.get("/no-po-options", async (_req, res) => {
       {
         $group: {
           _id: "$noPo",
-          idCustomer: { $first: "$idCustomer" },
+          idCustomer: { $first: "$namaCustomer" },
         },
       },
       {

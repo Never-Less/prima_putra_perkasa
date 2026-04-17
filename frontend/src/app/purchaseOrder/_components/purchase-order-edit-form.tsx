@@ -51,6 +51,8 @@ export function PurchaseOrderEditForm({
   const { locale, t } = useI18n();
   const inputPlaceholder = (fieldKey: string) =>
     t("common.placeholder.input", { field: t(fieldKey) });
+  const paidLabel = t("purchaseOrder.status.paid");
+  const unpaidLabel = t("purchaseOrder.status.unpaid");
   const [form, setForm] = useState<PurchaseOrderFormState>(() =>
     item ? toPurchaseOrderFormState(item) : createEmptyPurchaseOrderFormState()
   );
@@ -139,8 +141,8 @@ export function PurchaseOrderEditForm({
                 }}
                 className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               >
-                <option value="true">{t("common.true")}</option>
-                <option value="false">{t("common.false")}</option>
+                <option value="true">{paidLabel}</option>
+                <option value="false">{unpaidLabel}</option>
               </select>
             </label>
 
@@ -157,20 +159,27 @@ export function PurchaseOrderEditForm({
 
             <label className="text-sm text-slate-700 dark:text-slate-200">
               {t("field.tanggalKirim")}
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                {t("purchaseOrder.form.autoFilledFromInvoice")}
+              </p>
               <input
                 type="date"
                 value={form.tanggalKirim}
-                onChange={(event) => setForm((prev) => ({ ...prev, tanggalKirim: event.target.value }))}
-                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                disabled={true}
+                readOnly={true}
+                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm disabled:cursor-not-allowed disabled:bg-sky-100/70 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
               />
             </label>
 
             <label className="text-sm text-slate-700 dark:text-slate-200 sm:col-span-2">
               {t("field.noInvoice")}
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                {t("purchaseOrder.form.autoFilledFromInvoice")}
+              </p>
               <select
                 value={form.noInvoice}
-                onChange={(event) => setForm((prev) => ({ ...prev, noInvoice: event.target.value }))}
-                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                disabled={true}
+                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm disabled:cursor-not-allowed disabled:bg-sky-100/70 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
               >
                 <option value="">{t("purchaseOrder.form.invoicePlaceholder")}</option>
                 {invoiceOptions.map((option) => (
@@ -244,7 +253,8 @@ export function PurchaseOrderEditForm({
               <span className="text-slate-500 dark:text-slate-400">{t("field.nominalPo")}:</span> {formatRupiah(Number(form.nominalPo || "0"), locale)}
             </p>
             <p>
-              <span className="text-slate-500 dark:text-slate-400">{t("field.isPaid")}:</span> {form.isPaid ? t("common.true") : t("common.false")}
+              <span className="text-slate-500 dark:text-slate-400">{t("field.isPaid")}:</span>{" "}
+              {form.isPaid ? paidLabel : unpaidLabel}
             </p>
             <p>
               <span className="text-slate-500 dark:text-slate-400">{t("field.tanggalBayar")}:</span> {formatTanggal(form.tanggalBayar || null, locale)}

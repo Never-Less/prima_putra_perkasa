@@ -1,21 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ApiLoadingState } from "../../../_components/api-loading-state";
 import { ApiRequestError } from "../../../_lib/api-client";
 import { useI18n } from "../../../_i18n/provider";
 import { fetchCustomerById, type CustomerItem } from "../../../customer/_lib/customer";
-import { fetchSuratJalanById, type SuratJalanItem } from "../../_lib/surat-jalan";
+import { fetchSuratJalanByNoPo, type SuratJalanItem } from "../../_lib/surat-jalan";
 import { SuratJalanExportDocument } from "../_components/surat-jalan-export-document";
 
-export default function SuratJalanExportPage() {
+export default function SuratJalanNoPoExportPage() {
   const { t } = useI18n();
   const router = useRouter();
-  const params = useParams<{ id: string }>();
-  const suratJalanId = String(params?.id || "").trim();
-  const [suratJalan, setSuratJalan] = useState<SuratJalanItem | null>(null);
-  const [customer, setCustomer] = useState<CustomerItem | null>(null);
+  const searchParams = useSearchParams();
+  const noPo = useMemo(() => String(searchParams.get("noPo") || "").trim(), [searchParams]);
+  const [rows, setRows] = useState<SuratJalanItem[]>([]);
+  const [customerMap, setCustomerMap] = useState<Map<string, CustomerItem>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -23,9 +23,9 @@ export default function SuratJalanExportPage() {
     let mounted = true;
 
     async function loadExportData() {
-      if (!suratJalanId) {
+      if (!noPo) {
         if (mounted) {
-          setErrorMessage(t("suratJalan.export.invalidId"));
+          setErrorMessage(t("suratJalan.export.invalidNoPo"));
           setIsLoading(false);
         }
         return;
@@ -35,41 +35,59 @@ export default function SuratJalanExportPage() {
       setErrorMessage("");
 
       try {
-        const suratJalanData = await fetchSuratJalanById(suratJalanId);
-
-        if (!suratJalanData) {
-          if (mounted) {
-            setErrorMessage(t("suratJalan.export.notFound"));
-            setIsLoading(false);
-          }
-          return;
-        }
-
-        let customerData: CustomerItem | null = null;
-
-        if (suratJalanData.idCustomer) {
-          try {
-            customerData = await fetchCustomerById(suratJalanData.idCustomer);
-          } catch {
-            customerData = null;
-          }
-        }
+        const suratJalanRows = await fetchSuratJalanByNoPo(noPo);
 
         if (!mounted) {
           return;
         }
 
-        setSuratJalan(suratJalanData);
-        setCustomer(customerData);
+        if (suratJalanRows.length === 0) {
+          setRows([]);
+          setCustomerMap(new Map());
+          setErrorMessage(t("suratJalan.export.noPoNotFound"));
+          setIsLoading(false);
+          return;
+        }
+
+        const customerIds = Array.from(
+          new Set(
+            suratJalanRows
+              .map((row) => String(row.idCustomer || "").trim())
+              .filter(Boolean)
+          )
+        );
+        const customerResults = await Promise.allSettled(
+          customerIds.map(async (customerId) => ({
+            customerId,
+            customer: await fetchCustomerById(customerId),
+          }))
+        );
+
+        if (!mounted) {
+          return;
+        }
+
+        const nextCustomerMap = new Map<string, CustomerItem>();
+
+        customerResults.forEach((result) => {
+          if (result.status !== "fulfilled" || !result.value.customer) {
+            return;
+          }
+
+          nextCustomerMap.set(result.value.customerId, result.value.customer);
+        });
+
+        setRows(suratJalanRows);
+        setCustomerMap(nextCustomerMap);
       } catch (error) {
         if (!mounted) {
           return;
         }
 
         if (error instanceof ApiRequestError) {
-          setErrorMessage(error.message || t("suratJalan.export.loadError"));
+          setErrorMessage(error.message || t("suratJalan.export.loadNoPoError"));
         } else {
-          setErrorMessage(t("suratJalan.export.loadError"));
+          setErrorMessage(t("suratJalan.export.loadNoPoError"));
         }
       } finally {
         if (mounted) {
@@ -83,7 +101,7 @@ export default function SuratJalanExportPage() {
     return () => {
       mounted = false;
     };
-  }, [suratJalanId, t]);
+  }, [noPo, t]);
 
   useEffect(() => {
     if (typeof document === "undefined") {
@@ -91,16 +109,15 @@ export default function SuratJalanExportPage() {
     }
 
     const previousTitle = document.title;
-    const noSuratJalan = String(suratJalan?.noSuratJalan || "").trim();
 
-    if (noSuratJalan) {
-      document.title = noSuratJalan;
+    if (noPo) {
+      document.title = `surat-jalan-${noPo}`;
     }
 
     return () => {
       document.title = previousTitle;
     };
-  }, [suratJalan?.noSuratJalan]);
+  }, [noPo]);
 
   function handleClosePage() {
     window.close();
@@ -136,8 +153,15 @@ export default function SuratJalanExportPage() {
       <main className="min-h-screen bg-slate-200/60 px-3 py-4 print:bg-white print:px-0 print:py-0">
         <div className="mx-auto flex w-full max-w-[210mm] items-center justify-between gap-3 pb-4 print:hidden">
           <div>
-            <h1 className="text-lg font-semibold text-slate-900">{t("suratJalan.export.previewTitle")}</h1>
-            <p className="text-sm text-slate-600">{t("suratJalan.export.previewDescription")}</p>
+            <h1 className="text-lg font-semibold text-slate-900">
+              {t("suratJalan.export.noPoPreviewTitle")}
+            </h1>
+            <p className="text-sm text-slate-600">
+              {t("suratJalan.export.noPoPreviewDescription", {
+                noPo: noPo || "-",
+                count: rows.length,
+              })}
+            </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <button
@@ -165,9 +189,24 @@ export default function SuratJalanExportPage() {
           <section className="mx-auto max-w-[210mm] rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 print:hidden">
             <p>{errorMessage}</p>
           </section>
-        ) : suratJalan ? (
-          <SuratJalanExportDocument suratJalan={suratJalan} customer={customer} />
-        ) : null}
+        ) : (
+          <div className="space-y-4 print:space-y-0">
+            {rows.map((row, index) => (
+              <div
+                key={row.id}
+                style={{
+                  breakAfter: index < rows.length - 1 ? "page" : "auto",
+                }}
+                className="print:break-inside-avoid"
+              >
+                <SuratJalanExportDocument
+                  suratJalan={row}
+                  customer={customerMap.get(row.idCustomer) || null}
+                />
+              </div>
+            ))}
+          </div>
+        )}
       </main>
     </>
   );

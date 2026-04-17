@@ -189,6 +189,26 @@ export default function PurchaseOrderPage() {
     });
   }, []);
 
+  const handleOpenExportPage = useCallback(() => {
+    const searchParams = new URLSearchParams();
+
+    Object.entries(filter).forEach(([key, value]) => {
+      const normalizedValue = String(value || "").trim();
+
+      if (!normalizedValue) {
+        return;
+      }
+
+      searchParams.set(key, normalizedValue);
+    });
+
+    const targetPath = searchParams.toString()
+      ? `/purchaseOrder/export?${searchParams.toString()}`
+      : "/purchaseOrder/export";
+
+    window.open(targetPath, "_blank", "noopener,noreferrer");
+  }, [filter]);
+
   const selectedRow = useMemo(() => {
     return rows.find((row) => row.id === selectedId);
   }, [rows, selectedId]);
@@ -407,6 +427,7 @@ export default function PurchaseOrderPage() {
                 selectedId={selectedId}
                 resolveCustomerLabel={resolveCustomerLabel}
                 resolveInvoiceLabel={resolveInvoiceLabel}
+                onExportPage={handleOpenExportPage}
                 onFilterChange={handleFilterChange}
                 onResetFilter={handleResetFilter}
                 onPageChange={handlePageChange}

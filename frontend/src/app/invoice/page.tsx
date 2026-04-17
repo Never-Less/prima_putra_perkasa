@@ -476,6 +476,26 @@ export default function InvoicePage() {
     window.open(`/invoice/export/${id}`, "_blank", "noopener,noreferrer");
   }, []);
 
+  const handleOpenExportPage = useCallback(() => {
+    const searchParams = new URLSearchParams();
+
+    Object.entries(filter).forEach(([key, value]) => {
+      const normalizedValue = String(value || "").trim();
+
+      if (!normalizedValue) {
+        return;
+      }
+
+      searchParams.set(key, normalizedValue);
+    });
+
+    const targetPath = searchParams.toString()
+      ? `/invoice/export?${searchParams.toString()}`
+      : "/invoice/export";
+
+    window.open(targetPath, "_blank", "noopener,noreferrer");
+  }, [filter]);
+
   const showDataSection = !isLoading && (rows.length > 0 || !errorMessage);
 
   return (
@@ -516,6 +536,7 @@ export default function InvoicePage() {
                 onPageChange={handlePageChange}
                 onPageSizeChange={handlePageSizeChange}
                 onExportRow={(row) => handleExportInvoice(row.id)}
+                onExportPage={handleOpenExportPage}
                 onSelectRow={(row) => {
                   setActionErrorMessage("");
                   setToast(null);

@@ -19,6 +19,7 @@ type PurchaseOrderTableFilterProps = {
   resolveCustomerLabel?: (customerId: string) => string;
   resolveInvoiceLabel?: (invoiceId: string) => string;
   onSelectRow?: (row: PurchaseOrderItem) => void;
+  onExportPage?: () => void;
   onFilterChange: <K extends keyof PurchaseOrderFilter>(key: K, value: PurchaseOrderFilter[K]) => void;
   onResetFilter: () => void;
   onPageChange: (page: number) => void;
@@ -37,6 +38,7 @@ export function PurchaseOrderTableFilter({
   resolveCustomerLabel,
   resolveInvoiceLabel,
   onSelectRow,
+  onExportPage,
   onFilterChange,
   onResetFilter,
   onPageChange,
@@ -45,18 +47,29 @@ export function PurchaseOrderTableFilter({
   const { locale, t } = useI18n();
   const filterPlaceholder = (fieldKey: string) =>
     t("common.placeholder.filter", { field: t(fieldKey) });
+  const paidLabel = t("purchaseOrder.status.paid");
+  const unpaidLabel = t("purchaseOrder.status.unpaid");
 
   return (
     <section className="space-y-4 rounded-2xl border border-sky-200 bg-sky-50/40 p-5 shadow-sm dark:border-sky-900/70 dark:bg-slate-950/85">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-lg font-semibold text-sky-900 dark:text-sky-100">{t("purchaseOrder.table.title")}</h2>
-        <button
-          type="button"
-          onClick={onResetFilter}
-          className="rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
-        >
-          {t("common.resetFilter")}
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={onExportPage}
+            className="rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
+          >
+            {t("purchaseOrder.exportPage.openButton")}
+          </button>
+          <button
+            type="button"
+            onClick={onResetFilter}
+            className="rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
+          >
+            {t("common.resetFilter")}
+          </button>
+        </div>
       </div>
 
       <div>
@@ -100,8 +113,8 @@ export function PurchaseOrderTableFilter({
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             >
               <option value="">{t("common.all")}</option>
-              <option value="true">{t("common.true")}</option>
-              <option value="false">{t("common.false")}</option>
+              <option value="true">{paidLabel}</option>
+              <option value="false">{unpaidLabel}</option>
             </select>
           </label>
 
@@ -230,7 +243,7 @@ export function PurchaseOrderTableFilter({
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div>
                     <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.isPaid")}</dt>
-                    <dd className="mt-1 text-slate-700 dark:text-slate-200">{row.isPaid ? t("common.true") : t("common.false")}</dd>
+                    <dd className="mt-1 text-slate-700 dark:text-slate-200">{row.isPaid ? paidLabel : unpaidLabel}</dd>
                   </div>
                   <div>
                     <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.noInvoice")}</dt>
@@ -316,7 +329,7 @@ export function PurchaseOrderTableFilter({
                       <div className={clampedCellClassName}>{customerLabel}</div>
                     </td>
                     <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{formatRupiah(row.nominalPo, locale)}</td>
-                    <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{row.isPaid ? t("common.true") : t("common.false")}</td>
+                    <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{row.isPaid ? paidLabel : unpaidLabel}</td>
                     <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{formatTanggal(row.tanggalBayar, locale)}</td>
                     <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{formatTanggal(row.tanggalKirim, locale)}</td>
                     <td className="px-3 py-2 text-slate-600 dark:text-slate-300" title={invoiceLabel}>
