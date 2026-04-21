@@ -65,6 +65,34 @@ export default function PurchaseOrderExportPage() {
       ["field.nominalPoMax", filter.nominalPoMax],
     ].filter((entry) => Boolean(String(entry[1] || "").trim()));
   }, [filter, paidLabel, unpaidLabel]);
+  const factoryBillingRows = useMemo(() => {
+    const groupedRows = new Map<string, { namaCustomer: string; totalNominal: number }>();
+
+    for (const row of rows) {
+      const customerLabel = customerLabelMap.get(row.namaCustomer) || row.namaCustomer || "-";
+      const groupKey = row.namaCustomer || customerLabel;
+      const currentGroup = groupedRows.get(groupKey);
+
+      if (currentGroup) {
+        currentGroup.totalNominal += row.nominalPo;
+        continue;
+      }
+
+      groupedRows.set(groupKey, {
+        namaCustomer: customerLabel,
+        totalNominal: row.nominalPo,
+      });
+    }
+
+    return Array.from(groupedRows.values()).sort((left, right) =>
+      left.namaCustomer.localeCompare(right.namaCustomer, locale === "en" ? "en" : "id", {
+        sensitivity: "base",
+      })
+    );
+  }, [customerLabelMap, locale, rows]);
+  const factoryBillingGrandTotal = useMemo(() => {
+    return factoryBillingRows.reduce((total, row) => total + row.totalNominal, 0);
+  }, [factoryBillingRows]);
 
   useEffect(() => {
     const previousTitle = document.title;
@@ -176,108 +204,178 @@ export default function PurchaseOrderExportPage() {
           ) : null}
 
           {!isLoading && !errorMessage ? (
-            <section className="space-y-4 rounded-2xl bg-white p-4 shadow-sm print:rounded-none print:p-0 print:shadow-none">
-              <div className="space-y-2">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h2 className="text-base font-semibold text-slate-900">
-                    {t("purchaseOrder.exportPage.activeFilters")}
-                  </h2>
-                  <span className="text-sm text-slate-500">
-                    {t("purchaseOrder.exportPage.totalRows", { count: rows.length })}
-                  </span>
+            <>
+              <section className="space-y-4 rounded-2xl bg-white p-4 shadow-sm print:rounded-none print:p-0 print:shadow-none">
+                <div className="space-y-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h2 className="text-base font-semibold text-slate-900">
+                      {t("purchaseOrder.exportPage.activeFilters")}
+                    </h2>
+                    <span className="text-sm text-slate-500">
+                      {t("purchaseOrder.exportPage.totalRows", { count: rows.length })}
+                    </span>
+                  </div>
+
+                  {activeFilterEntries.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {activeFilterEntries.map(([fieldKey, value]) => (
+                        <span
+                          key={`${fieldKey}-${value}`}
+                          className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs text-sky-800"
+                        >
+                          {t(fieldKey)}: {value}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-slate-600">{t("purchaseOrder.exportPage.allData")}</p>
+                  )}
                 </div>
 
-                {activeFilterEntries.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {activeFilterEntries.map(([fieldKey, value]) => (
-                      <span
-                        key={`${fieldKey}-${value}`}
-                        className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs text-sky-800"
-                      >
-                        {t(fieldKey)}: {value}
-                      </span>
-                    ))}
+                {rows.length === 0 ? (
+                  <div className="rounded-xl border border-slate-200 px-4 py-6 text-center text-sm text-slate-500">
+                    {t("purchaseOrder.exportPage.empty")}
                   </div>
                 ) : (
-                  <p className="text-sm text-slate-600">{t("purchaseOrder.exportPage.allData")}</p>
+                  <div className="overflow-x-auto border border-slate-300 print:overflow-visible">
+                    <table className="w-full table-fixed border-collapse text-sm text-slate-800 print:text-[11px]">
+                      <colgroup>
+                        <col style={{ width: "13%" }} />
+                        <col style={{ width: "11%" }} />
+                        <col style={{ width: "19%" }} />
+                        <col style={{ width: "11%" }} />
+                        <col style={{ width: "9%" }} />
+                        <col style={{ width: "12%" }} />
+                        <col style={{ width: "12%" }} />
+                        <col style={{ width: "13%" }} />
+                      </colgroup>
+                      <thead className="bg-slate-100">
+                        <tr>
+                          <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">{t("field.noPo")}</th>
+                          <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">{t("field.tanggalPo")}</th>
+                          <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">{t("field.namaCustomer")}</th>
+                          <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">{t("field.nominalPo")}</th>
+                          <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">{t("field.isPaid")}</th>
+                          <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">{t("field.tanggalBayar")}</th>
+                          <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">{t("field.tanggalKirim")}</th>
+                          <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">{t("field.noInvoice")}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rows.map((row, index) => {
+                          const customerLabel =
+                            customerLabelMap.get(row.namaCustomer) || row.namaCustomer || "-";
+                          const invoiceLabel =
+                            invoiceLabelMap.get(row.noInvoice) || row.noInvoice || "-";
+                          const paidCellClassName = row.isPaid
+                            ? "bg-emerald-100 text-emerald-900"
+                            : "bg-rose-100 text-rose-900";
+
+                          return (
+                            <tr key={row.id} className={index % 2 ? "bg-slate-50" : "bg-white"}>
+                              <td className="border border-slate-300 px-3 py-2 align-top break-words print:px-2 print:py-1.5">
+                                {row.noPo || "-"}
+                              </td>
+                              <td className="border border-slate-300 px-3 py-2 align-top break-words print:px-2 print:py-1.5">
+                                {formatTanggal(row.tanggalPo, locale)}
+                              </td>
+                              <td className="border border-slate-300 px-3 py-2 align-top break-words print:px-2 print:py-1.5">
+                                {customerLabel}
+                              </td>
+                              <td className="border border-slate-300 px-3 py-2 align-top break-words print:px-2 print:py-1.5">
+                                {formatRupiah(row.nominalPo, locale)}
+                              </td>
+                              <td
+                                className={`border border-slate-300 px-3 py-2 align-top break-words font-medium print:px-2 print:py-1.5 ${paidCellClassName}`}
+                              >
+                                {row.isPaid ? paidLabel : unpaidLabel}
+                              </td>
+                              <td className="border border-slate-300 px-3 py-2 align-top break-words print:px-2 print:py-1.5">
+                                {formatTanggal(row.tanggalBayar, locale)}
+                              </td>
+                              <td className="border border-slate-300 px-3 py-2 align-top break-words print:px-2 print:py-1.5">
+                                {formatTanggal(row.tanggalKirim, locale)}
+                              </td>
+                              <td className="border border-slate-300 px-3 py-2 align-top break-words print:px-2 print:py-1.5">
+                                {invoiceLabel}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
-              </div>
+              </section>
 
-              {rows.length === 0 ? (
-                <div className="rounded-xl border border-slate-200 px-4 py-6 text-center text-sm text-slate-500">
-                  {t("purchaseOrder.exportPage.empty")}
-                </div>
-              ) : (
-                <div className="overflow-x-auto border border-slate-300 print:overflow-visible">
-                  <table className="w-full table-fixed border-collapse text-sm text-slate-800 print:text-[11px]">
-                    <colgroup>
-                      <col style={{ width: "13%" }} />
-                      <col style={{ width: "11%" }} />
-                      <col style={{ width: "19%" }} />
-                      <col style={{ width: "11%" }} />
-                      <col style={{ width: "9%" }} />
-                      <col style={{ width: "12%" }} />
-                      <col style={{ width: "12%" }} />
-                      <col style={{ width: "13%" }} />
-                    </colgroup>
-                    <thead className="bg-slate-100">
-                      <tr>
-                        <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">{t("field.noPo")}</th>
-                        <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">{t("field.tanggalPo")}</th>
-                        <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">{t("field.namaCustomer")}</th>
-                        <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">{t("field.nominalPo")}</th>
-                        <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">{t("field.isPaid")}</th>
-                        <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">{t("field.tanggalBayar")}</th>
-                        <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">{t("field.tanggalKirim")}</th>
-                        <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">{t("field.noInvoice")}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {rows.map((row, index) => {
-                        const customerLabel =
-                          customerLabelMap.get(row.namaCustomer) || row.namaCustomer || "-";
-                        const invoiceLabel =
-                          invoiceLabelMap.get(row.noInvoice) || row.noInvoice || "-";
-                        const paidCellClassName = row.isPaid
-                          ? "bg-emerald-100 text-emerald-900"
-                          : "bg-rose-100 text-rose-900";
+              {rows.length > 0 ? (
+                <section className="space-y-4 rounded-2xl bg-white p-4 shadow-sm print:break-before-page print:rounded-none print:p-0 print:shadow-none">
+                  <div className="space-y-1">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <h2 className="text-lg font-semibold uppercase tracking-wide text-slate-900 print:text-[18px]">
+                        {t("purchaseOrder.exportPage.factoryBillingTitle")}
+                      </h2>
+                      <span className="text-sm text-slate-500">
+                        {t("purchaseOrder.exportPage.factoryBillingTotalCustomers", {
+                          count: factoryBillingRows.length,
+                        })}
+                      </span>
+                    </div>
+                    <p className="text-sm text-slate-600">
+                      {t("purchaseOrder.exportPage.factoryBillingDescription")}
+                    </p>
+                  </div>
 
-                        return (
-                          <tr key={row.id} className={index % 2 ? "bg-slate-50" : "bg-white"}>
-                            <td className="border border-slate-300 px-3 py-2 align-top break-words print:px-2 print:py-1.5">
-                              {row.noPo || "-"}
+                  <div className="overflow-x-auto border border-slate-300 print:overflow-visible">
+                    <table className="w-full border-collapse text-sm text-slate-800 print:text-[11px]">
+                      <colgroup>
+                        <col style={{ width: "10%" }} />
+                        <col style={{ width: "60%" }} />
+                        <col style={{ width: "30%" }} />
+                      </colgroup>
+                      <thead className="bg-slate-100">
+                        <tr>
+                          <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">
+                            {t("invoice.export.table.no")}
+                          </th>
+                          <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">
+                            {t("purchaseOrder.exportPage.factoryBillingCustomerColumn")}
+                          </th>
+                          <th className="border border-slate-300 px-3 py-2 text-right font-semibold print:px-2 print:py-1.5">
+                            {t("purchaseOrder.exportPage.factoryBillingAmountColumn")}
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {factoryBillingRows.map((row, index) => (
+                          <tr key={`${row.namaCustomer}-${index}`} className={index % 2 ? "bg-slate-50" : "bg-white"}>
+                            <td className="border border-slate-300 px-3 py-2 align-top print:px-2 print:py-1.5">
+                              {index + 1}
                             </td>
                             <td className="border border-slate-300 px-3 py-2 align-top break-words print:px-2 print:py-1.5">
-                              {formatTanggal(row.tanggalPo, locale)}
+                              {row.namaCustomer}
                             </td>
-                            <td className="border border-slate-300 px-3 py-2 align-top break-words print:px-2 print:py-1.5">
-                              {customerLabel}
-                            </td>
-                            <td className="border border-slate-300 px-3 py-2 align-top break-words print:px-2 print:py-1.5">
-                              {formatRupiah(row.nominalPo, locale)}
-                            </td>
-                            <td
-                              className={`border border-slate-300 px-3 py-2 align-top break-words font-medium print:px-2 print:py-1.5 ${paidCellClassName}`}
-                            >
-                              {row.isPaid ? paidLabel : unpaidLabel}
-                            </td>
-                            <td className="border border-slate-300 px-3 py-2 align-top break-words print:px-2 print:py-1.5">
-                              {formatTanggal(row.tanggalBayar, locale)}
-                            </td>
-                            <td className="border border-slate-300 px-3 py-2 align-top break-words print:px-2 print:py-1.5">
-                              {formatTanggal(row.tanggalKirim, locale)}
-                            </td>
-                            <td className="border border-slate-300 px-3 py-2 align-top break-words print:px-2 print:py-1.5">
-                              {invoiceLabel}
+                            <td className="border border-slate-300 px-3 py-2 text-right align-top print:px-2 print:py-1.5">
+                              {formatRupiah(row.totalNominal, locale)}
                             </td>
                           </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </section>
+                        ))}
+                      </tbody>
+                      <tfoot>
+                        <tr className="bg-slate-100 font-semibold">
+                          <td className="border border-slate-300 px-3 py-2 print:px-2 print:py-1.5" colSpan={2}>
+                            {t("purchaseOrder.exportPage.factoryBillingGrandTotal")}
+                          </td>
+                          <td className="border border-slate-300 px-3 py-2 text-right print:px-2 print:py-1.5">
+                            {formatRupiah(factoryBillingGrandTotal, locale)}
+                          </td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                </section>
+              ) : null}
+            </>
           ) : null}
         </div>
       </main>

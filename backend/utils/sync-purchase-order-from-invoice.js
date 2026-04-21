@@ -31,7 +31,7 @@ async function syncPurchaseOrderByNoPo(noPoValue) {
       tanggal: -1,
       createdAt: -1,
     })
-    .select("_id tanggal")
+    .select("_id tanggal grandTotal")
     .lean();
 
   if (!latestInvoice) {
@@ -58,6 +58,10 @@ async function syncPurchaseOrderByNoPo(noPoValue) {
       $set: {
         tanggalKirim: latestInvoice.tanggal || null,
         noInvoice: latestInvoice._id,
+        nominalPo:
+          typeof latestInvoice.grandTotal === "number" && Number.isFinite(latestInvoice.grandTotal)
+            ? latestInvoice.grandTotal
+            : 0,
       },
     }
   );

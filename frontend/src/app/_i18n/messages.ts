@@ -330,6 +330,8 @@ export const messages: Record<Locale, MessageDictionary> = {
     "purchaseOrder.form.invoicePlaceholder": "Pilih invoice (opsional)",
     "purchaseOrder.form.autoFilledFromInvoice":
       "Diisi otomatis saat invoice dibuat.",
+    "purchaseOrder.form.nominalReplacedFromInvoice":
+      "Saat invoice dibuat atau diperbarui, nominal PO akan diganti otomatis dengan grand total invoice (termasuk PPN).",
     "purchaseOrder.status.paid": "Lunas",
     "purchaseOrder.status.unpaid": "Belum Lunas",
     "purchaseOrder.preview.title": "Preview Purchase Order",
@@ -342,6 +344,13 @@ export const messages: Record<Locale, MessageDictionary> = {
     "purchaseOrder.exportPage.empty":
       "Tidak ada data purchase order yang cocok dengan filter ini.",
     "purchaseOrder.exportPage.totalRows": "Total data: {{count}}",
+    "purchaseOrder.exportPage.factoryBillingTitle": "Daftar Tagihan Pabrik",
+    "purchaseOrder.exportPage.factoryBillingDescription":
+      "Ringkasan ini mengelompokkan nama customer pabrik dan menjumlahkan nominal tagihan dari hasil filter aktif.",
+    "purchaseOrder.exportPage.factoryBillingTotalCustomers": "Total pabrik: {{count}}",
+    "purchaseOrder.exportPage.factoryBillingCustomerColumn": "Nama Customer (Daftar Tagihan Pabrik)",
+    "purchaseOrder.exportPage.factoryBillingAmountColumn": "Jumlah Tagihan",
+    "purchaseOrder.exportPage.factoryBillingGrandTotal": "Grand Total Tagihan",
     "purchaseOrder.apiLoadError": "Gagal memuat data purchase order dari backend.",
     "purchaseOrder.optionsLoadError": "Gagal memuat pilihan customer dan invoice untuk purchase order.",
     "purchaseOrder.mutationError": "Gagal memproses perubahan purchase order.",
@@ -731,6 +740,8 @@ export const messages: Record<Locale, MessageDictionary> = {
     "purchaseOrder.form.invoicePlaceholder": "Select invoice (optional)",
     "purchaseOrder.form.autoFilledFromInvoice":
       "Filled automatically when the invoice is created.",
+    "purchaseOrder.form.nominalReplacedFromInvoice":
+      "When an invoice is created or updated, the PO amount will be replaced automatically with the invoice grand total (including VAT).",
     "purchaseOrder.status.paid": "Paid",
     "purchaseOrder.status.unpaid": "Unpaid",
     "purchaseOrder.preview.title": "Purchase Order Preview",
@@ -743,6 +754,13 @@ export const messages: Record<Locale, MessageDictionary> = {
     "purchaseOrder.exportPage.empty":
       "No purchase order data matches the current filters.",
     "purchaseOrder.exportPage.totalRows": "Total rows: {{count}}",
+    "purchaseOrder.exportPage.factoryBillingTitle": "Factory Billing List",
+    "purchaseOrder.exportPage.factoryBillingDescription":
+      "This summary groups factory customer names and totals the billed nominal values from the active filter result.",
+    "purchaseOrder.exportPage.factoryBillingTotalCustomers": "Total factories: {{count}}",
+    "purchaseOrder.exportPage.factoryBillingCustomerColumn": "Customer Name (Factory Billing List)",
+    "purchaseOrder.exportPage.factoryBillingAmountColumn": "Billing Amount",
+    "purchaseOrder.exportPage.factoryBillingGrandTotal": "Grand Billing Total",
     "purchaseOrder.apiLoadError": "Failed to load purchase order data from backend.",
     "purchaseOrder.optionsLoadError": "Failed to load customer and invoice options for purchase order.",
     "purchaseOrder.mutationError": "Failed to process purchase order changes.",

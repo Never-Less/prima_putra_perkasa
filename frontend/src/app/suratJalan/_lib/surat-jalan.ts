@@ -1,4 +1,5 @@
 import { requestApi } from "../../_lib/api-client";
+import { formatAppDate, parseAppDate, parseAppDateRangeEnd, parseAppDateRangeStart, toInputDateValue } from "../../_lib/date";
 import {
   buildListQueryString,
   normalizeServerPaginationMeta,
@@ -337,29 +338,11 @@ export async function deleteSuratJalan(id: string) {
 }
 
 export function formatTanggal(value: string, locale: Locale = "id") {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "-";
-  }
-
-  const dateLocale = locale === "en" ? "en-US" : "id-ID";
-
-  return date.toLocaleDateString(dateLocale, {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+  return formatAppDate(value, locale);
 }
 
 export function toInputDate(value: string) {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-
-  return date.toISOString().slice(0, 10);
+  return toInputDateValue(value);
 }
 
 export function barangLabel(items: SuratJalanBarang[]) {
@@ -381,12 +364,8 @@ export function filterSuratJalanRows(
   filters: SuratJalanFilter,
   resolveCustomerLabel?: ResolveCustomerLabel
 ) {
-  const fromDate = filters.tanggalDari ? new Date(filters.tanggalDari) : null;
-  const toDate = filters.tanggalSampai ? new Date(filters.tanggalSampai) : null;
-
-  if (toDate) {
-    toDate.setHours(23, 59, 59, 999);
-  }
+  const fromDate = parseAppDateRangeStart(filters.tanggalDari);
+  const toDate = parseAppDateRangeEnd(filters.tanggalSampai);
 
   return rows.filter((row) => {
     const noSuratJalanMatch = normalize(row.noSuratJalan).includes(normalize(filters.noSuratJalan));
@@ -400,11 +379,9 @@ export function filterSuratJalanRows(
 
     const tipeMatch = !filters.tipe || row.tipe === filters.tipe;
 
-    const rowDate = new Date(row.tanggal);
-    const hasValidDate = !Number.isNaN(rowDate.getTime());
-
-    const fromDateMatch = !fromDate || (hasValidDate && rowDate >= fromDate);
-    const toDateMatch = !toDate || (hasValidDate && rowDate <= toDate);
+    const rowDate = parseAppDate(row.tanggal);
+    const fromDateMatch = !fromDate || Boolean(rowDate && rowDate >= fromDate);
+    const toDateMatch = !toDate || Boolean(rowDate && rowDate <= toDate);
 
     return (
       noSuratJalanMatch &&

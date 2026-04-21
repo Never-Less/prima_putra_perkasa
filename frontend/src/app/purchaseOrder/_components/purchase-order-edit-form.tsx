@@ -116,6 +116,9 @@ export function PurchaseOrderEditForm({
 
             <label className="text-sm text-slate-700 dark:text-slate-200">
               {t("field.nominalPo")}
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                {t("purchaseOrder.form.nominalReplacedFromInvoice")}
+              </p>
               <input
                 type="number"
                 min={0}

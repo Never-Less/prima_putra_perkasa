@@ -1,5 +1,12 @@
 import { requestApi } from "../../_lib/api-client";
 import {
+  formatAppDate,
+  parseAppDate,
+  parseAppDateRangeEnd,
+  parseAppDateRangeStart,
+  toInputDateValue,
+} from "../../_lib/date";
+import {
   buildListQueryString,
   normalizeServerPaginationMeta,
   type PaginationQueryState,
@@ -179,27 +186,11 @@ function parseFilterNumber(value: string) {
 }
 
 function parseDateRangeStart(value: string) {
-  if (!value) {
-    return null;
-  }
-
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date;
+  return parseAppDateRangeStart(value);
 }
 
 function parseDateRangeEnd(value: string) {
-  if (!value) {
-    return null;
-  }
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return null;
-  }
-
-  date.setHours(23, 59, 59, 999);
-  return date;
+  return parseAppDateRangeEnd(value);
 }
 
 function isDateWithinRange(value: string | null, fromDate: Date | null, toDate: Date | null) {
@@ -211,9 +202,9 @@ function isDateWithinRange(value: string | null, fromDate: Date | null, toDate: 
     return false;
   }
 
-  const targetDate = new Date(value);
+  const targetDate = parseAppDate(value);
 
-  if (Number.isNaN(targetDate.getTime())) {
+  if (!targetDate) {
     return false;
   }
 
@@ -347,23 +338,7 @@ export async function deletePembelian(id: string) {
 }
 
 export function formatTanggal(value: string | null, locale: Locale = "id") {
-  if (!value) {
-    return "-";
-  }
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "-";
-  }
-
-  const dateLocale = locale === "en" ? "en-US" : "id-ID";
-
-  return date.toLocaleDateString(dateLocale, {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+  return formatAppDate(value, locale);
 }
 
 export function formatRupiah(value: number, locale: Locale = "id") {
@@ -377,17 +352,7 @@ export function formatRupiah(value: number, locale: Locale = "id") {
 }
 
 export function toInputDate(value: string | null) {
-  if (!value) {
-    return "";
-  }
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-
-  return date.toISOString().slice(0, 10);
+  return toInputDateValue(value);
 }
 
 export function toPembelianFormState(item: PembelianItem): PembelianFormState {

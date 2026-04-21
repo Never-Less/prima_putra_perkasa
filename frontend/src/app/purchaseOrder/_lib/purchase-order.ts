@@ -1,4 +1,5 @@
 import { requestApi } from "../../_lib/api-client";
+import { formatAppDate, toInputDateValue } from "../../_lib/date";
 import {
   buildListQueryString,
   normalizeServerPaginationMeta,
@@ -313,23 +314,7 @@ export async function deletePurchaseOrder(id: string) {
 }
 
 export function formatTanggal(value: string | null, locale: Locale = "id") {
-  if (!value) {
-    return "-";
-  }
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "-";
-  }
-
-  const dateLocale = locale === "en" ? "en-US" : "id-ID";
-
-  return date.toLocaleDateString(dateLocale, {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+  return formatAppDate(value, locale);
 }
 
 export function formatRupiah(value: number, locale: Locale = "id") {
@@ -343,17 +328,7 @@ export function formatRupiah(value: number, locale: Locale = "id") {
 }
 
 export function toInputDate(value: string | null) {
-  if (!value) {
-    return "";
-  }
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-
-  return date.toISOString().slice(0, 10);
+  return toInputDateValue(value);
 }
 
 export function toPurchaseOrderFormState(item: PurchaseOrderItem): PurchaseOrderFormState {

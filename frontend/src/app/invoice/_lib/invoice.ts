@@ -1,4 +1,5 @@
 import { requestApi } from "../../_lib/api-client";
+import { formatAppDate, parseAppDate, parseAppDateRangeEnd, parseAppDateRangeStart, toInputDateValue } from "../../_lib/date";
 import {
   buildListQueryString,
   normalizeServerPaginationMeta,
@@ -603,19 +604,7 @@ export async function deleteInvoice(id: string) {
 }
 
 export function formatTanggal(value: string, locale: Locale = "id") {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "-";
-  }
-
-  const dateLocale = locale === "en" ? "en-US" : "id-ID";
-
-  return date.toLocaleDateString(dateLocale, {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+  return formatAppDate(value, locale);
 }
 
 export function formatRupiah(value: number, locale: Locale = "id") {
@@ -650,13 +639,7 @@ export function invoiceNoSuratJalanListLabel(noSuratJalan: string[]) {
 }
 
 export function toInputDate(value: string) {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-
-  return date.toISOString().slice(0, 10);
+  return toInputDateValue(value);
 }
 
 export function createEmptyInvoiceBarangRow(): InvoiceBarangFormRow {
@@ -923,12 +906,8 @@ export function filterInvoiceRows(
   filter: InvoiceFilter,
   resolveCustomerLabel?: ResolveCustomerLabel
 ) {
-  const fromDate = filter.tanggalDari ? new Date(filter.tanggalDari) : null;
-  const toDate = filter.tanggalSampai ? new Date(filter.tanggalSampai) : null;
-
-  if (toDate) {
-    toDate.setHours(23, 59, 59, 999);
-  }
+  const fromDate = parseAppDateRangeStart(filter.tanggalDari);
+  const toDate = parseAppDateRangeEnd(filter.tanggalSampai);
 
   return rows.filter((row) => {
     const matchNoInvoice = normalize(row.noInvoice).includes(normalize(filter.noInvoice));
@@ -944,11 +923,9 @@ export function filterInvoiceRows(
       (filter.isPpn === "true" && row.isPpn) ||
       (filter.isPpn === "false" && !row.isPpn);
 
-    const rowDate = new Date(row.tanggal);
-    const validRowDate = !Number.isNaN(rowDate.getTime());
-
-    const matchFromDate = !fromDate || (validRowDate && rowDate >= fromDate);
-    const matchToDate = !toDate || (validRowDate && rowDate <= toDate);
+    const rowDate = parseAppDate(row.tanggal);
+    const matchFromDate = !fromDate || Boolean(rowDate && rowDate >= fromDate);
+    const matchToDate = !toDate || Boolean(rowDate && rowDate <= toDate);
 
     return (
       matchNoInvoice &&

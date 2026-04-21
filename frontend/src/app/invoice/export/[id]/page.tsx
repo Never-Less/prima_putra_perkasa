@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ApiLoadingState } from "../../../_components/api-loading-state";
+import { formatAppUppercaseDate } from "../../../_lib/date";
 import { ApiRequestError } from "../../../_lib/api-client";
 import { useI18n } from "../../../_i18n/provider";
 import { fetchCustomerById, type CustomerItem } from "../../../customer/_lib/customer";
@@ -96,19 +97,7 @@ function formatQuantity(value: number) {
 }
 
 function formatTemplateDate(value: string, locale: "id" | "en") {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "-";
-  }
-
-  const formatted = date.toLocaleDateString(locale === "en" ? "en-US" : "id-ID", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
-
-  return formatted.toUpperCase();
+  return formatAppUppercaseDate(value, locale);
 }
 
 function splitInvoiceBarangColumns(value: string) {

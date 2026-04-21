@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { useI18n } from "../../../_i18n/provider";
+import { formatAppUppercaseDate } from "../../../_lib/date";
 import { type SuratJalanItem } from "../../_lib/surat-jalan";
 
 type ExportCustomer = {
@@ -48,19 +49,7 @@ function normalizeCustomerName(value: string) {
 }
 
 function formatTemplateDate(value: string, locale: "id" | "en") {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "-";
-  }
-
-  const formatted = date.toLocaleDateString(locale === "en" ? "en-US" : "id-ID", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
-
-  return formatted.toUpperCase();
+  return formatAppUppercaseDate(value, locale);
 }
 
 function buildTemplateRows(suratJalan: SuratJalanItem, minimumRows = 8): TemplateRow[] {
