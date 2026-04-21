@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { ApiLoadingState } from "./api-loading-state";
 import {
+  canCurrentUserExport,
   clearAuthSession,
   getStoredAccessToken,
   isAccessTokenExpired,
@@ -18,11 +19,37 @@ function isPublicPath(pathname: string) {
   return pathname === "/login" || pathname.startsWith("/login/");
 }
 
+function isExportPath(pathname: string) {
+  return (
+    pathname.startsWith("/suratJalan/export/") ||
+    pathname === "/invoice/export" ||
+    pathname.startsWith("/invoice/export/") ||
+    pathname.startsWith("/purchaseOrder/export")
+  );
+}
+
+function getExportFallbackPath(pathname: string) {
+  if (pathname.startsWith("/suratJalan/export/")) {
+    return "/suratJalan";
+  }
+
+  if (pathname.startsWith("/invoice/export")) {
+    return "/invoice";
+  }
+
+  if (pathname.startsWith("/purchaseOrder/export")) {
+    return "/purchaseOrder";
+  }
+
+  return "/";
+}
+
 export function PrivateRouteGuard({ children }: PrivateRouteGuardProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [isChecking, setIsChecking] = useState(true);
   const isPublicRoute = useMemo(() => isPublicPath(pathname), [pathname]);
+  const isExportRoute = useMemo(() => isExportPath(pathname), [pathname]);
 
   useEffect(() => {
     let mounted = true;
@@ -44,6 +71,11 @@ export function PrivateRouteGuard({ children }: PrivateRouteGuardProps) {
       }
 
       if (!isAccessTokenExpired(accessToken)) {
+        if (isExportRoute && !canCurrentUserExport()) {
+          router.replace(getExportFallbackPath(pathname));
+          return;
+        }
+
         if (mounted) {
           setIsChecking(false);
         }
@@ -58,6 +90,11 @@ export function PrivateRouteGuard({ children }: PrivateRouteGuardProps) {
         return;
       }
 
+      if (isExportRoute && !canCurrentUserExport()) {
+        router.replace(getExportFallbackPath(pathname));
+        return;
+      }
+
       if (mounted) {
         setIsChecking(false);
       }
@@ -68,7 +105,7 @@ export function PrivateRouteGuard({ children }: PrivateRouteGuardProps) {
     return () => {
       mounted = false;
     };
-  }, [isPublicRoute, router]);
+  }, [isExportRoute, isPublicRoute, pathname, router]);
 
   if (isPublicRoute) {
     return <>{children}</>;

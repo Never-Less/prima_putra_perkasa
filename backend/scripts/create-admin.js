@@ -1,7 +1,7 @@
 require("dotenv").config();
 
 const { connectDatabase, mongoose } = require("../config/database");
-const { User } = require("../models/User");
+const { User, ROLE_ADMIN } = require("../models/User");
 
 // Ganti value ini sesuai kebutuhan sebelum menjalankan script.
 const ADMIN_USERNAME = "admin@gmail.com";
@@ -27,11 +27,11 @@ async function createOrUpdateAdmin() {
     adminUser = new User({
       username: username,
       password: password,
-      role: "admin",
+      role: ROLE_ADMIN,
     });
   } else {
     adminUser.password = password;
-    adminUser.role = "admin";
+    adminUser.role = ROLE_ADMIN;
   }
 
   await adminUser.save();

@@ -6,6 +6,7 @@ import { ApiLoadingState } from "../_components/api-loading-state";
 import { AppToast } from "../_components/app-toast";
 import { ConfirmationModal } from "../_components/confirmation-modal";
 import { useDebouncedValue } from "../_hooks/use-debounced-value";
+import { useExportAccess } from "../_hooks/use-export-access";
 import { ApiRequestError } from "../_lib/api-client";
 import { type ServerPaginationMeta } from "../_lib/pagination";
 import { useI18n } from "../_i18n/provider";
@@ -43,6 +44,7 @@ type PostSaveActionState = {
 export default function InvoicePage() {
   const { t } = useI18n();
   const router = useRouter();
+  const canExport = useExportAccess();
   const [rows, setRows] = useState<InvoiceItem[]>([]);
   const [filter, setFilter] = useState<InvoiceFilter>(defaultInvoiceFilter);
   const [paginationQuery, setPaginationQuery] = useState({
@@ -469,14 +471,18 @@ export default function InvoicePage() {
   const handleExportInvoice = useCallback((invoiceId: string) => {
     const id = String(invoiceId || "").trim();
 
-    if (!id || typeof window === "undefined") {
+    if (!canExport || !id || typeof window === "undefined") {
       return;
     }
 
     window.open(`/invoice/export/${id}`, "_blank", "noopener,noreferrer");
-  }, []);
+  }, [canExport]);
 
   const handleOpenExportPage = useCallback(() => {
+    if (!canExport) {
+      return;
+    }
+
     const searchParams = new URLSearchParams();
 
     Object.entries(filter).forEach(([key, value]) => {
@@ -494,7 +500,7 @@ export default function InvoicePage() {
       : "/invoice/export";
 
     window.open(targetPath, "_blank", "noopener,noreferrer");
-  }, [filter]);
+  }, [canExport, filter]);
 
   const showDataSection = !isLoading && (rows.length > 0 || !errorMessage);
 
@@ -530,6 +536,7 @@ export default function InvoicePage() {
                 filteredCount={filteredCount}
                 pagination={pagination}
                 selectedId={selectedId}
+                canExport={canExport}
                 resolveCustomerLabel={resolveCustomerLabel}
                 onFilterChange={handleFilterChange}
                 onResetFilter={handleResetFilter}
@@ -587,6 +594,7 @@ export default function InvoicePage() {
         isOpen={Boolean(postSaveModalConfig)}
         title={postSaveModalConfig?.title ?? ""}
         description={postSaveModalConfig?.description ?? ""}
+        showExportButton={canExport}
         showCreatePembelianButton={Boolean(postSaveModalConfig?.showCreatePembelianButton)}
         exportLabel={t("invoice.postSaveModal.exportButton")}
         createPembelianLabel={t("invoice.postSaveModal.createPembelianButton")}

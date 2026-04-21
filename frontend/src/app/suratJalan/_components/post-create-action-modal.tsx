@@ -4,6 +4,7 @@ type PostCreateActionModalProps = {
   isOpen: boolean;
   title: string;
   description: string;
+  showExportButton?: boolean;
   showCreateInvoiceButton: boolean;
   exportLabel: string;
   createInvoiceLabel: string;
@@ -17,6 +18,7 @@ export function PostCreateActionModal({
   isOpen,
   title,
   description,
+  showExportButton = true,
   showCreateInvoiceButton,
   exportLabel,
   createInvoiceLabel,
@@ -43,13 +45,15 @@ export function PostCreateActionModal({
           >
             {closeLabel}
           </button>
-          <button
-            type="button"
-            onClick={onExport}
-            className="w-full rounded-lg border border-sky-300 bg-sky-700 px-4 py-2 text-sm text-white hover:bg-sky-600 dark:border-sky-700 dark:bg-sky-500 dark:text-slate-950 dark:hover:bg-sky-400 sm:w-auto"
-          >
-            {exportLabel}
-          </button>
+          {showExportButton ? (
+            <button
+              type="button"
+              onClick={onExport}
+              className="w-full rounded-lg border border-sky-300 bg-sky-700 px-4 py-2 text-sm text-white hover:bg-sky-600 dark:border-sky-700 dark:bg-sky-500 dark:text-slate-950 dark:hover:bg-sky-400 sm:w-auto"
+            >
+              {exportLabel}
+            </button>
+          ) : null}
           {showCreateInvoiceButton ? (
             <button
               type="button"

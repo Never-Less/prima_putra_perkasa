@@ -2,12 +2,13 @@ const express = require("express");
 
 const { requireRole } = require("../../middlewares/auth");
 const { Customer } = require("../../models/Customer");
+const { ROLE_ADMIN, ROLE_STAFF } = require("../../models/User");
 const { sanitizeCustomer } = require("./sanitize-customer");
 const { isValidId } = require("./validate-id");
 
 const router = express.Router();
 
-router.put("/:id", requireRole("admin"), async (req, res) => {
+router.put("/:id", requireRole(ROLE_ADMIN, ROLE_STAFF), async (req, res) => {
   const id = String(req.params.id || "");
 
   if (!isValidId(id)) {

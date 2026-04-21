@@ -10,9 +10,14 @@ type RefreshResponsePayload = {
   user?: unknown;
 };
 
+type StoredAuthUser = {
+  role?: unknown;
+};
+
 const accessTokenStorageKeys = ["accessToken", "access_token"];
 const refreshTokenStorageKeys = ["refreshToken", "refresh_token"];
 const authUserStorageKey = "authUser";
+const exportAllowedRoles = ["admin"];
 
 let refreshRequestPromise: Promise<string | null> | null = null;
 
@@ -80,6 +85,18 @@ function parseResponseBody(text: string) {
   } catch {
     return null;
   }
+}
+
+function normalizeRole(value: unknown) {
+  if (typeof value === "string") {
+    return value.trim().toLowerCase();
+  }
+
+  if (value === null || value === undefined) {
+    return "";
+  }
+
+  return String(value).trim().toLowerCase();
 }
 
 function isLoginPath(pathname: string) {
@@ -188,6 +205,42 @@ export function clearAuthSession() {
   if (typeof window !== "undefined") {
     window.localStorage.removeItem(authUserStorageKey);
   }
+}
+
+export function getStoredAuthUser(): StoredAuthUser | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const rawValue = window.localStorage.getItem(authUserStorageKey);
+
+  if (!rawValue) {
+    return null;
+  }
+
+  try {
+    const payload = JSON.parse(rawValue) as StoredAuthUser | null;
+
+    if (!payload || typeof payload !== "object") {
+      return null;
+    }
+
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+export function getStoredUserRole() {
+  return normalizeRole(getStoredAuthUser()?.role);
+}
+
+export function canRoleExport(role: unknown) {
+  return exportAllowedRoles.includes(normalizeRole(role));
+}
+
+export function canCurrentUserExport() {
+  return canRoleExport(getStoredUserRole());
 }
 
 export function redirectToLogin() {

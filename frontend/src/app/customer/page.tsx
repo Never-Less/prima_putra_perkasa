@@ -13,7 +13,6 @@ import {
   createCustomer,
   defaultCustomerFilter,
   deleteCustomer,
-  fetchCurrentUserRole,
   fetchCustomerList,
   updateCustomer,
   type CustomerFilter,
@@ -44,7 +43,6 @@ export default function CustomerPage() {
   });
   const [filteredCount, setFilteredCount] = useState(0);
   const [selectedId, setSelectedId] = useState("");
-  const [userRole, setUserRole] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -65,7 +63,7 @@ export default function CustomerPage() {
   >(null);
   const debouncedFilter = useDebouncedValue(filter);
 
-  const canManageCustomer = userRole === "admin";
+  const canManageCustomer = true;
 
   const showToast = useCallback((message: string, variant: ToastState["variant"]) => {
     setToast({
@@ -124,22 +122,9 @@ export default function CustomerPage() {
     }
   }, [debouncedFilter, paginationQuery, t]);
 
-  const loadCurrentUserRole = useCallback(async () => {
-    try {
-      const role = await fetchCurrentUserRole();
-      setUserRole(role);
-    } catch {
-      setUserRole("");
-    }
-  }, []);
-
   useEffect(() => {
     void loadCustomers();
   }, [loadCustomers]);
-
-  useEffect(() => {
-    void loadCurrentUserRole();
-  }, [loadCurrentUserRole]);
 
   const handleFilterChange = useCallback(
     <K extends keyof CustomerFilter,>(key: K, value: CustomerFilter[K]) => {

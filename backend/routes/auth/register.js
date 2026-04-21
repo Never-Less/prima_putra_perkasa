@@ -1,7 +1,7 @@
 const express = require("express");
 
 const { issueTokenPair } = require("../../services/auth-token");
-const { User } = require("../../models/User");
+const { User, ROLE_STAFF } = require("../../models/User");
 const { sanitizeUser } = require("./sanitize-user");
 
 const router = express.Router();
@@ -33,7 +33,7 @@ router.post("/register", async (req, res) => {
     const user = await User.create({
       username: username,
       password: password,
-      role: "staff",
+      role: ROLE_STAFF,
     });
 
     const { accessToken, refreshToken } = await issueTokenPair(user);

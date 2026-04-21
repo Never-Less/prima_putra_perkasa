@@ -18,6 +18,7 @@ type InvoiceTableFilterProps = {
   filteredCount: number;
   pagination: ServerPaginationMeta;
   selectedId?: string;
+  canExport?: boolean;
   onSelectRow?: (row: InvoiceItem) => void;
   onExportRow?: (row: InvoiceItem) => void;
   onExportPage?: () => void;
@@ -37,6 +38,7 @@ export function InvoiceTableFilter({
   filteredCount,
   pagination,
   selectedId,
+  canExport = false,
   onSelectRow,
   onExportRow,
   onExportPage,
@@ -55,13 +57,15 @@ export function InvoiceTableFilter({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-lg font-semibold text-sky-900 dark:text-sky-100">{t("invoice.table.title")}</h2>
         <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={onExportPage}
-            className="rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
-          >
-            {t("invoice.exportPage.openButton")}
-          </button>
+          {canExport ? (
+            <button
+              type="button"
+              onClick={onExportPage}
+              className="rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
+            >
+              {t("invoice.exportPage.openButton")}
+            </button>
+          ) : null}
           <button
             type="button"
             onClick={onResetFilter}
@@ -236,13 +240,15 @@ export function InvoiceTableFilter({
                   >
                     {isSelected ? t("common.selected") : t("common.selectRow")}
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => onExportRow?.(row)}
-                    className="w-full rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm font-medium text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
-                  >
-                    {t("common.export")}
-                  </button>
+                  {canExport ? (
+                    <button
+                      type="button"
+                      onClick={() => onExportRow?.(row)}
+                      className="w-full rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm font-medium text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
+                    >
+                      {t("common.export")}
+                    </button>
+                  ) : null}
                 </div>
               </article>
             );
@@ -326,13 +332,15 @@ export function InvoiceTableFilter({
                             >
                               {isSelected ? t("common.selected") : t("common.selectRow")}
                             </button>
-                            <button
-                              type="button"
-                              onClick={() => onExportRow?.(row)}
-                            className="rounded-lg border border-sky-200 bg-white px-3 py-1.5 text-xs font-medium text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
-                          >
-                            {t("common.export")}
-                          </button>
+                            {canExport ? (
+                              <button
+                                type="button"
+                                onClick={() => onExportRow?.(row)}
+                                className="rounded-lg border border-sky-200 bg-white px-3 py-1.5 text-xs font-medium text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
+                              >
+                                {t("common.export")}
+                              </button>
+                            ) : null}
                           </div>
                         </td>
                       </tr>

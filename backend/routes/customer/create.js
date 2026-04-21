@@ -2,11 +2,12 @@ const express = require("express");
 
 const { requireRole } = require("../../middlewares/auth");
 const { Customer } = require("../../models/Customer");
+const { ROLE_ADMIN, ROLE_STAFF } = require("../../models/User");
 const { sanitizeCustomer } = require("./sanitize-customer");
 
 const router = express.Router();
 
-router.post("/", requireRole("admin"), async (req, res) => {
+router.post("/", requireRole(ROLE_ADMIN, ROLE_STAFF), async (req, res) => {
   try {
     const nama = String(req.body.nama || "").trim();
     const alamat = String(req.body.alamat || "").trim();

@@ -20,6 +20,7 @@ type SuratJalanTableFilterProps = {
   filteredCount: number;
   pagination: ServerPaginationMeta;
   selectedId?: string;
+  canExport?: boolean;
   onSelectRow?: (row: SuratJalanItem) => void;
   onExportRow?: (row: SuratJalanItem) => void;
   onExportNoPo?: (noPo: string) => void;
@@ -106,6 +107,7 @@ export function SuratJalanTableFilter({
   filteredCount,
   pagination,
   selectedId,
+  canExport = false,
   onSelectRow,
   onExportRow,
   onExportNoPo,
@@ -264,13 +266,15 @@ export function SuratJalanTableFilter({
                 <span className="text-xs text-slate-500 dark:text-slate-400">
                   {t("common.totalData", { count: group.items.length })}
                 </span>
-                <button
-                  type="button"
-                  onClick={() => onExportNoPo?.(group.noPo)}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-medium ${tone.actionInactive}`}
-                >
-                  {t("suratJalan.table.exportNoPoButton")}
-                </button>
+                {canExport ? (
+                  <button
+                    type="button"
+                    onClick={() => onExportNoPo?.(group.noPo)}
+                    className={`rounded-lg px-3 py-1.5 text-xs font-medium ${tone.actionInactive}`}
+                  >
+                    {t("suratJalan.table.exportNoPoButton")}
+                  </button>
+                ) : null}
               </div>
             </div>
 
@@ -332,13 +336,15 @@ export function SuratJalanTableFilter({
                       >
                         {isSelected ? t("common.selected") : t("common.selectRow")}
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => onExportRow?.(row)}
-                        className={`w-full rounded-lg px-3 py-2 text-sm font-medium ${tone.actionInactive}`}
-                      >
-                        {t("common.export")}
-                      </button>
+                      {canExport ? (
+                        <button
+                          type="button"
+                          onClick={() => onExportRow?.(row)}
+                          className={`w-full rounded-lg px-3 py-2 text-sm font-medium ${tone.actionInactive}`}
+                        >
+                          {t("common.export")}
+                        </button>
+                      ) : null}
                     </div>
                   </article>
                 );
@@ -412,13 +418,15 @@ export function SuratJalanTableFilter({
                               >
                                 {isSelected ? t("common.selected") : t("common.selectRow")}
                               </button>
-                              <button
-                                type="button"
-                                onClick={() => onExportRow?.(row)}
-                                className={`rounded-lg px-3 py-1.5 text-xs font-medium ${tone.actionInactive}`}
-                              >
-                                {t("common.export")}
-                              </button>
+                              {canExport ? (
+                                <button
+                                  type="button"
+                                  onClick={() => onExportRow?.(row)}
+                                  className={`rounded-lg px-3 py-1.5 text-xs font-medium ${tone.actionInactive}`}
+                                >
+                                  {t("common.export")}
+                                </button>
+                              ) : null}
                             </div>
                           </td>
                         </tr>

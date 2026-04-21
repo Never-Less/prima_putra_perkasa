@@ -7,6 +7,7 @@ import { AppToast } from "../../_components/app-toast";
 import { ConfirmationModal } from "../../_components/confirmation-modal";
 import { saveInvoicePrefill, type InvoicePrefillPayload } from "../../invoice/_lib/invoice";
 import { useDebouncedValue } from "../../_hooks/use-debounced-value";
+import { useExportAccess } from "../../_hooks/use-export-access";
 import { ApiRequestError } from "../../_lib/api-client";
 import { type ServerPaginationMeta } from "../../_lib/pagination";
 import { useI18n } from "../../_i18n/provider";
@@ -42,6 +43,7 @@ type PostCreateActionState = {
 export function FormPreviewStylePage() {
   const { t } = useI18n();
   const router = useRouter();
+  const canExport = useExportAccess();
   const [rows, setRows] = useState<SuratJalanItem[]>([]);
   const [filter, setFilter] = useState<SuratJalanFilter>(defaultSuratJalanFilter);
   const [paginationQuery, setPaginationQuery] = useState({
@@ -262,7 +264,7 @@ export function FormPreviewStylePage() {
   const handleExportSuratJalanByNoPo = useCallback((rawNoPo: string) => {
     const noPo = String(rawNoPo || "").trim();
 
-    if (!noPo || typeof window === "undefined") {
+    if (!canExport || !noPo || typeof window === "undefined") {
       return;
     }
 
@@ -272,7 +274,7 @@ export function FormPreviewStylePage() {
       "_blank",
       "noopener,noreferrer"
     );
-  }, []);
+  }, [canExport]);
 
   const noPoCustomerMap = useMemo(() => {
     const map: Record<string, string> = {};
@@ -561,12 +563,12 @@ export function FormPreviewStylePage() {
   const handleExportSuratJalan = useCallback((suratJalanId: string) => {
     const id = String(suratJalanId || "").trim();
 
-    if (!id || typeof window === "undefined") {
+    if (!canExport || !id || typeof window === "undefined") {
       return;
     }
 
     window.open(`/suratJalan/export/${id}`, "_blank", "noopener,noreferrer");
-  }, []);
+  }, [canExport]);
 
   const showDataSection = !isLoading && (rows.length > 0 || !errorMessage);
 
@@ -596,6 +598,7 @@ export function FormPreviewStylePage() {
               filteredCount={filteredCount}
               pagination={pagination}
               selectedId={selectedId}
+              canExport={canExport}
               onFilterChange={handleFilterChange}
               onResetFilter={handleResetFilter}
               onPageChange={handlePageChange}
@@ -656,6 +659,7 @@ export function FormPreviewStylePage() {
         isOpen={Boolean(postCreateModalConfig)}
         title={postCreateModalConfig?.title ?? ""}
         description={postCreateModalConfig?.description ?? ""}
+        showExportButton={canExport}
         showCreateInvoiceButton={Boolean(postCreateModalConfig?.showCreateInvoiceButton)}
         exportLabel={t("suratJalan.postCreateModal.exportButton")}
         createInvoiceLabel={t("suratJalan.postCreateModal.createInvoiceButton")}

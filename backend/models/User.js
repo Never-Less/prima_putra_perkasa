@@ -1,7 +1,26 @@
 const bcrypt = require("bcryptjs");
 const mongoose = require("mongoose");
 
-const ALLOWED_ROLES = ["admin", "staff"];
+const ROLE_ADMIN = "admin";
+const ROLE_STAFF = "staff";
+const ALLOWED_ROLES = [ROLE_ADMIN, ROLE_STAFF];
+const EXPORT_ALLOWED_ROLES = [ROLE_ADMIN];
+
+function normalizeRole(value) {
+  if (typeof value === "string") {
+    return value.trim().toLowerCase();
+  }
+
+  if (value === null || value === undefined) {
+    return "";
+  }
+
+  return String(value).trim().toLowerCase();
+}
+
+function canRoleExport(role) {
+  return EXPORT_ALLOWED_ROLES.includes(normalizeRole(role));
+}
 
 const userSchema = new mongoose.Schema(
   {
@@ -47,4 +66,8 @@ const User = mongoose.model("User", userSchema);
 module.exports = {
   User,
   ALLOWED_ROLES,
+  ROLE_ADMIN,
+  ROLE_STAFF,
+  EXPORT_ALLOWED_ROLES,
+  canRoleExport,
 };

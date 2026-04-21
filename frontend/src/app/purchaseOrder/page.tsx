@@ -5,6 +5,7 @@ import { ApiLoadingState } from "../_components/api-loading-state";
 import { AppToast } from "../_components/app-toast";
 import { ConfirmationModal } from "../_components/confirmation-modal";
 import { useDebouncedValue } from "../_hooks/use-debounced-value";
+import { useExportAccess } from "../_hooks/use-export-access";
 import { useI18n } from "../_i18n/provider";
 import { ApiRequestError } from "../_lib/api-client";
 import { type ServerPaginationMeta } from "../_lib/pagination";
@@ -32,6 +33,7 @@ type ToastState = {
 
 export default function PurchaseOrderPage() {
   const { t } = useI18n();
+  const canExport = useExportAccess();
   const [rows, setRows] = useState<PurchaseOrderItem[]>([]);
   const [filter, setFilter] = useState<PurchaseOrderFilter>(defaultPurchaseOrderFilter);
   const [paginationQuery, setPaginationQuery] = useState({
@@ -190,6 +192,10 @@ export default function PurchaseOrderPage() {
   }, []);
 
   const handleOpenExportPage = useCallback(() => {
+    if (!canExport) {
+      return;
+    }
+
     const searchParams = new URLSearchParams();
 
     Object.entries(filter).forEach(([key, value]) => {
@@ -207,7 +213,7 @@ export default function PurchaseOrderPage() {
       : "/purchaseOrder/export";
 
     window.open(targetPath, "_blank", "noopener,noreferrer");
-  }, [filter]);
+  }, [canExport, filter]);
 
   const selectedRow = useMemo(() => {
     return rows.find((row) => row.id === selectedId);
@@ -425,6 +431,7 @@ export default function PurchaseOrderPage() {
                 filteredCount={filteredCount}
                 pagination={pagination}
                 selectedId={selectedId}
+                canExport={canExport}
                 resolveCustomerLabel={resolveCustomerLabel}
                 resolveInvoiceLabel={resolveInvoiceLabel}
                 onExportPage={handleOpenExportPage}

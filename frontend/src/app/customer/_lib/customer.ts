@@ -51,10 +51,6 @@ type CustomerResponse = {
   customer?: unknown;
 };
 
-type AuthMeResponse = {
-  user?: unknown;
-};
-
 export const customerNameOptions: string[] = [];
 
 function toText(value: unknown) {
@@ -172,17 +168,6 @@ export async function deleteCustomer(id: string) {
   await requestApi(`/api/customers/${id}`, {
     method: "DELETE",
   });
-}
-
-export async function fetchCurrentUserRole() {
-  const response = await requestApi<AuthMeResponse>("/api/auth/me");
-
-  if (!response || typeof response !== "object") {
-    return "";
-  }
-
-  const user = response.user as Record<string, unknown> | undefined;
-  return toText(user?.role).trim().toLowerCase();
 }
 
 function normalize(value: unknown) {

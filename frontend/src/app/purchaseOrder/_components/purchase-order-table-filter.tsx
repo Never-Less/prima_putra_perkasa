@@ -16,6 +16,7 @@ type PurchaseOrderTableFilterProps = {
   filteredCount: number;
   pagination: ServerPaginationMeta;
   selectedId?: string;
+  canExport?: boolean;
   resolveCustomerLabel?: (customerId: string) => string;
   resolveInvoiceLabel?: (invoiceId: string) => string;
   onSelectRow?: (row: PurchaseOrderItem) => void;
@@ -35,6 +36,7 @@ export function PurchaseOrderTableFilter({
   filteredCount,
   pagination,
   selectedId,
+  canExport = false,
   resolveCustomerLabel,
   resolveInvoiceLabel,
   onSelectRow,
@@ -55,13 +57,15 @@ export function PurchaseOrderTableFilter({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-lg font-semibold text-sky-900 dark:text-sky-100">{t("purchaseOrder.table.title")}</h2>
         <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={onExportPage}
-            className="rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
-          >
-            {t("purchaseOrder.exportPage.openButton")}
-          </button>
+          {canExport ? (
+            <button
+              type="button"
+              onClick={onExportPage}
+              className="rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
+            >
+              {t("purchaseOrder.exportPage.openButton")}
+            </button>
+          ) : null}
           <button
             type="button"
             onClick={onResetFilter}
