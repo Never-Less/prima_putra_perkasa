@@ -7,7 +7,7 @@ function sanitizePurchaseOrder(purchaseOrder) {
     nominalPo: purchaseOrder.nominalPo,
     isPaid: purchaseOrder.isPaid,
     tanggalBayar: purchaseOrder.tanggalBayar,
-    tanggalKirim: purchaseOrder.tanggalKirim,
+    tanggalInvoice: purchaseOrder.tanggalInvoice,
     noInvoice: purchaseOrder.noInvoice,
     createdAt: purchaseOrder.createdAt,
     updatedAt: purchaseOrder.updatedAt,

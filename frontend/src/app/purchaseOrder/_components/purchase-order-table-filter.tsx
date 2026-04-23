@@ -163,21 +163,21 @@ export function PurchaseOrderTableFilter({
           </label>
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
-            {t("field.tanggalKirimDari")}
+            {t("field.tanggalInvoiceDari")}
             <input
               type="date"
-              value={filter.tanggalKirimDari}
-              onChange={(event) => onFilterChange("tanggalKirimDari", event.target.value)}
+              value={filter.tanggalInvoiceDari}
+              onChange={(event) => onFilterChange("tanggalInvoiceDari", event.target.value)}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
-            {t("field.tanggalKirimSampai")}
+            {t("field.tanggalInvoiceSampai")}
             <input
               type="date"
-              value={filter.tanggalKirimSampai}
-              onChange={(event) => onFilterChange("tanggalKirimSampai", event.target.value)}
+              value={filter.tanggalInvoiceSampai}
+              onChange={(event) => onFilterChange("tanggalInvoiceSampai", event.target.value)}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
@@ -260,8 +260,8 @@ export function PurchaseOrderTableFilter({
                     <dd className="mt-1 text-slate-700 dark:text-slate-200">{formatTanggal(row.tanggalBayar, locale)}</dd>
                   </div>
                   <div>
-                    <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.tanggalKirim")}</dt>
-                    <dd className="mt-1 text-slate-700 dark:text-slate-200">{formatTanggal(row.tanggalKirim, locale)}</dd>
+                    <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.tanggalInvoice")}</dt>
+                    <dd className="mt-1 text-slate-700 dark:text-slate-200">{formatTanggal(row.tanggalInvoice, locale)}</dd>
                   </div>
                 </div>
               </dl>
@@ -304,7 +304,7 @@ export function PurchaseOrderTableFilter({
                 <th className="px-3 py-2 font-medium">{t("field.nominalPo")}</th>
                 <th className="px-3 py-2 font-medium">{t("field.isPaid")}</th>
                 <th className="px-3 py-2 font-medium">{t("field.tanggalBayar")}</th>
-                <th className="px-3 py-2 font-medium">{t("field.tanggalKirim")}</th>
+                <th className="px-3 py-2 font-medium">{t("field.tanggalInvoice")}</th>
                 <th className="px-3 py-2 font-medium">{t("field.noInvoice")}</th>
                 <th className="px-3 py-2 font-medium">{t("common.action")}</th>
               </tr>
@@ -335,7 +335,7 @@ export function PurchaseOrderTableFilter({
                     <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{formatRupiah(row.nominalPo, locale)}</td>
                     <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{row.isPaid ? paidLabel : unpaidLabel}</td>
                     <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{formatTanggal(row.tanggalBayar, locale)}</td>
-                    <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{formatTanggal(row.tanggalKirim, locale)}</td>
+                    <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{formatTanggal(row.tanggalInvoice, locale)}</td>
                     <td className="px-3 py-2 text-slate-600 dark:text-slate-300" title={invoiceLabel}>
                       <div className={clampedCellClassName}>{invoiceLabel}</div>
                     </td>

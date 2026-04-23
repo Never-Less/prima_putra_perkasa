@@ -82,17 +82,17 @@ router.put("/:id", async (req, res) => {
       }
     }
 
-    if (req.body.tanggalKirim !== undefined) {
-      if (req.body.tanggalKirim === null) {
-        updates.tanggalKirim = null;
+    if (req.body.tanggalInvoice !== undefined) {
+      if (req.body.tanggalInvoice === null) {
+        updates.tanggalInvoice = null;
       } else {
-        const tanggalKirim = parseDate(req.body.tanggalKirim);
+        const tanggalInvoice = parseDate(req.body.tanggalInvoice);
 
-        if (!tanggalKirim) {
-          return res.status(400).json({ message: "tanggalKirim tidak valid" });
+        if (!tanggalInvoice) {
+          return res.status(400).json({ message: "tanggalInvoice tidak valid" });
         }
 
-        updates.tanggalKirim = tanggalKirim;
+        updates.tanggalInvoice = tanggalInvoice;
       }
     }
 
@@ -113,7 +113,7 @@ router.put("/:id", async (req, res) => {
     if (Object.keys(updates).length === 0) {
       return res.status(400).json({
         message:
-          "minimal kirim salah satu field: noPo, tanggalPo, namaCustomer, nominalPo, isPaid, tanggalBayar, tanggalKirim, noInvoice",
+          "minimal kirim salah satu field: noPo, tanggalPo, namaCustomer, nominalPo, isPaid, tanggalBayar, tanggalInvoice, noInvoice",
       });
     }
 

@@ -29,8 +29,8 @@ function toSearchFilter(searchParams: URLSearchParams): PurchaseOrderFilter {
     tanggalPoSampai: String(searchParams.get("tanggalPoSampai") || "").trim(),
     tanggalBayarDari: String(searchParams.get("tanggalBayarDari") || "").trim(),
     tanggalBayarSampai: String(searchParams.get("tanggalBayarSampai") || "").trim(),
-    tanggalKirimDari: String(searchParams.get("tanggalKirimDari") || "").trim(),
-    tanggalKirimSampai: String(searchParams.get("tanggalKirimSampai") || "").trim(),
+    tanggalInvoiceDari: String(searchParams.get("tanggalInvoiceDari") || "").trim(),
+    tanggalInvoiceSampai: String(searchParams.get("tanggalInvoiceSampai") || "").trim(),
     nominalPoMin: String(searchParams.get("nominalPoMin") || "").trim(),
     nominalPoMax: String(searchParams.get("nominalPoMax") || "").trim(),
   };
@@ -59,8 +59,8 @@ export default function PurchaseOrderExportPage() {
       ["field.tanggalPoSampai", filter.tanggalPoSampai],
       ["field.tanggalBayarDari", filter.tanggalBayarDari],
       ["field.tanggalBayarSampai", filter.tanggalBayarSampai],
-      ["field.tanggalKirimDari", filter.tanggalKirimDari],
-      ["field.tanggalKirimSampai", filter.tanggalKirimSampai],
+      ["field.tanggalInvoiceDari", filter.tanggalInvoiceDari],
+      ["field.tanggalInvoiceSampai", filter.tanggalInvoiceSampai],
       ["field.nominalPoMin", filter.nominalPoMin],
       ["field.nominalPoMax", filter.nominalPoMax],
     ].filter((entry) => Boolean(String(entry[1] || "").trim()));
@@ -257,7 +257,7 @@ export default function PurchaseOrderExportPage() {
                           <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">{t("field.nominalPo")}</th>
                           <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">{t("field.isPaid")}</th>
                           <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">{t("field.tanggalBayar")}</th>
-                          <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">{t("field.tanggalKirim")}</th>
+                          <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">{t("field.tanggalInvoice")}</th>
                           <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">{t("field.noInvoice")}</th>
                         </tr>
                       </thead>
@@ -294,7 +294,7 @@ export default function PurchaseOrderExportPage() {
                                 {formatTanggal(row.tanggalBayar, locale)}
                               </td>
                               <td className="border border-slate-300 px-3 py-2 align-top break-words print:px-2 print:py-1.5">
-                                {formatTanggal(row.tanggalKirim, locale)}
+                                {formatTanggal(row.tanggalInvoice, locale)}
                               </td>
                               <td className="border border-slate-300 px-3 py-2 align-top break-words print:px-2 print:py-1.5">
                                 {invoiceLabel}

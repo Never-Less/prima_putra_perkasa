@@ -39,7 +39,7 @@ async function syncPurchaseOrderByNoPo(noPoValue) {
       { noPo: noPo },
       {
         $set: {
-          tanggalKirim: null,
+          tanggalInvoice: null,
           noInvoice: null,
         },
       }
@@ -55,8 +55,8 @@ async function syncPurchaseOrderByNoPo(noPoValue) {
   const updateResult = await PurchaseOrder.updateMany(
     { noPo: noPo },
     {
-      $set: {
-        tanggalKirim: latestInvoice.tanggal || null,
+        $set: {
+        tanggalInvoice: latestInvoice.tanggal || null,
         noInvoice: latestInvoice._id,
         nominalPo:
           typeof latestInvoice.grandTotal === "number" && Number.isFinite(latestInvoice.grandTotal)

@@ -81,7 +81,7 @@ async function backfillPurchaseOrdersFromSuratJalan() {
       nominalPo: 0,
       isPaid: false,
       tanggalBayar: null,
-      tanggalKirim: null,
+      tanggalInvoice: null,
       noInvoice: null,
     }));
 

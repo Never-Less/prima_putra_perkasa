@@ -32,7 +32,7 @@ function createEmptyPurchaseOrderFormState(): PurchaseOrderFormState {
     nominalPo: "0",
     isPaid: false,
     tanggalBayar: "",
-    tanggalKirim: "",
+    tanggalInvoice: "",
     noInvoice: "",
   };
 }
@@ -161,13 +161,13 @@ export function PurchaseOrderEditForm({
             </label>
 
             <label className="text-sm text-slate-700 dark:text-slate-200">
-              {t("field.tanggalKirim")}
+              {t("field.tanggalInvoice")}
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                 {t("purchaseOrder.form.autoFilledFromInvoice")}
               </p>
               <input
                 type="date"
-                value={form.tanggalKirim}
+                value={form.tanggalInvoice}
                 disabled={true}
                 readOnly={true}
                 className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm disabled:cursor-not-allowed disabled:bg-sky-100/70 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
@@ -263,7 +263,7 @@ export function PurchaseOrderEditForm({
               <span className="text-slate-500 dark:text-slate-400">{t("field.tanggalBayar")}:</span> {formatTanggal(form.tanggalBayar || null, locale)}
             </p>
             <p>
-              <span className="text-slate-500 dark:text-slate-400">{t("field.tanggalKirim")}:</span> {formatTanggal(form.tanggalKirim || null, locale)}
+              <span className="text-slate-500 dark:text-slate-400">{t("field.tanggalInvoice")}:</span> {formatTanggal(form.tanggalInvoice || null, locale)}
             </p>
             <p>
               <span className="text-slate-500 dark:text-slate-400">{t("field.noInvoice")}:</span> {previewInvoice}

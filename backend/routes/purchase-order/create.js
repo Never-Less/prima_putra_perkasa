@@ -21,11 +21,11 @@ router.post("/", async (req, res) => {
       : req.body.tanggalBayar !== undefined
         ? parseDate(req.body.tanggalBayar)
         : null;
-  const tanggalKirim =
-    req.body.tanggalKirim === null
+  const tanggalInvoice =
+    req.body.tanggalInvoice === null
       ? null
-      : req.body.tanggalKirim !== undefined
-        ? parseDate(req.body.tanggalKirim)
+      : req.body.tanggalInvoice !== undefined
+        ? parseDate(req.body.tanggalInvoice)
         : null;
   const noInvoice =
     req.body.noInvoice === null || req.body.noInvoice === undefined
@@ -54,8 +54,8 @@ router.post("/", async (req, res) => {
     return res.status(400).json({ message: "tanggalBayar tidak valid" });
   }
 
-  if (req.body.tanggalKirim !== undefined && req.body.tanggalKirim !== null && !tanggalKirim) {
-    return res.status(400).json({ message: "tanggalKirim tidak valid" });
+  if (req.body.tanggalInvoice !== undefined && req.body.tanggalInvoice !== null && !tanggalInvoice) {
+    return res.status(400).json({ message: "tanggalInvoice tidak valid" });
   }
 
   if (noInvoice !== null && !isValidId(noInvoice)) {
@@ -90,7 +90,7 @@ router.post("/", async (req, res) => {
       nominalPo: nominalPo,
       isPaid: parsedIsPaid,
       tanggalBayar: tanggalBayar,
-      tanggalKirim: tanggalKirim,
+      tanggalInvoice: tanggalInvoice,
       noInvoice: noInvoice,
     });
 

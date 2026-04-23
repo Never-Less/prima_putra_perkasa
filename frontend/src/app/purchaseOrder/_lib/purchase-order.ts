@@ -17,7 +17,7 @@ export type PurchaseOrderItem = {
   nominalPo: number;
   isPaid: boolean;
   tanggalBayar: string | null;
-  tanggalKirim: string | null;
+  tanggalInvoice: string | null;
   noInvoice: string;
   createdAt: string;
   updatedAt: string;
@@ -42,8 +42,8 @@ export type PurchaseOrderFilter = {
   tanggalPoSampai: string;
   tanggalBayarDari: string;
   tanggalBayarSampai: string;
-  tanggalKirimDari: string;
-  tanggalKirimSampai: string;
+  tanggalInvoiceDari: string;
+  tanggalInvoiceSampai: string;
   nominalPoMin: string;
   nominalPoMax: string;
 };
@@ -55,7 +55,7 @@ export type PurchaseOrderFormState = {
   nominalPo: string;
   isPaid: boolean;
   tanggalBayar: string;
-  tanggalKirim: string;
+  tanggalInvoice: string;
   noInvoice: string;
 };
 
@@ -93,8 +93,8 @@ function buildPurchaseOrderListQueryString(
     tanggalPoSampai: query.tanggalPoSampai,
     tanggalBayarDari: query.tanggalBayarDari,
     tanggalBayarSampai: query.tanggalBayarSampai,
-    tanggalKirimDari: query.tanggalKirimDari,
-    tanggalKirimSampai: query.tanggalKirimSampai,
+    tanggalInvoiceDari: query.tanggalInvoiceDari,
+    tanggalInvoiceSampai: query.tanggalInvoiceSampai,
     nominalPoMin: query.nominalPoMin,
     nominalPoMax: query.nominalPoMax,
     page: includePagination ? query.page : undefined,
@@ -111,8 +111,8 @@ export const defaultPurchaseOrderFilter: PurchaseOrderFilter = {
   tanggalPoSampai: "",
   tanggalBayarDari: "",
   tanggalBayarSampai: "",
-  tanggalKirimDari: "",
-  tanggalKirimSampai: "",
+  tanggalInvoiceDari: "",
+  tanggalInvoiceSampai: "",
   nominalPoMin: "",
   nominalPoMax: "",
 };
@@ -176,7 +176,7 @@ function toPurchaseOrderItem(value: unknown): PurchaseOrderItem | null {
     nominalPo: parseNumberFromUnknown(row.nominalPo),
     isPaid: Boolean(row.isPaid),
     tanggalBayar: toText(row.tanggalBayar).trim() || null,
-    tanggalKirim: toText(row.tanggalKirim).trim() || null,
+    tanggalInvoice: toText(row.tanggalInvoice || row.tanggalKirim).trim() || null,
     noInvoice: parseReferenceId(row.noInvoice),
     createdAt: toText(row.createdAt).trim(),
     updatedAt: toText(row.updatedAt).trim(),
@@ -221,7 +221,7 @@ function toPurchaseOrderInvoiceOption(value: unknown): PurchaseOrderInvoiceOptio
 
 function toNormalizedPurchaseOrderPayload(form: PurchaseOrderFormState) {
   const tanggalBayar = toText(form.tanggalBayar).trim();
-  const tanggalKirim = toText(form.tanggalKirim).trim();
+  const tanggalInvoice = toText(form.tanggalInvoice).trim();
   const noInvoice = toText(form.noInvoice).trim();
 
   return {
@@ -231,7 +231,7 @@ function toNormalizedPurchaseOrderPayload(form: PurchaseOrderFormState) {
     nominalPo: parseNumberFromUnknown(form.nominalPo),
     isPaid: form.isPaid,
     tanggalBayar: form.isPaid ? tanggalBayar || null : null,
-    tanggalKirim: tanggalKirim || null,
+    tanggalInvoice: tanggalInvoice || null,
     noInvoice: noInvoice || null,
   };
 }
@@ -339,7 +339,7 @@ export function toPurchaseOrderFormState(item: PurchaseOrderItem): PurchaseOrder
     nominalPo: String(item.nominalPo),
     isPaid: item.isPaid,
     tanggalBayar: toInputDate(item.tanggalBayar),
-    tanggalKirim: toInputDate(item.tanggalKirim),
+    tanggalInvoice: toInputDate(item.tanggalInvoice),
     noInvoice: item.noInvoice,
   };
 }

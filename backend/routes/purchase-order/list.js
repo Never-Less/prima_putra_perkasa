@@ -79,26 +79,29 @@ router.get("/", async (req, res) => {
       }
     }
 
-    if (req.query.tanggalKirimDari || req.query.tanggalKirimSampai) {
-      query.tanggalKirim = {};
+    const tanggalInvoiceDari = req.query.tanggalInvoiceDari;
+    const tanggalInvoiceSampai = req.query.tanggalInvoiceSampai;
 
-      if (req.query.tanggalKirimDari) {
-        const fromDate = new Date(req.query.tanggalKirimDari);
+    if (tanggalInvoiceDari || tanggalInvoiceSampai) {
+      query.tanggalInvoice = {};
+
+      if (tanggalInvoiceDari) {
+        const fromDate = new Date(tanggalInvoiceDari);
         if (!Number.isNaN(fromDate.getTime())) {
-          query.tanggalKirim.$gte = fromDate;
+          query.tanggalInvoice.$gte = fromDate;
         }
       }
 
-      if (req.query.tanggalKirimSampai) {
-        const toDate = new Date(req.query.tanggalKirimSampai);
+      if (tanggalInvoiceSampai) {
+        const toDate = new Date(tanggalInvoiceSampai);
         if (!Number.isNaN(toDate.getTime())) {
           toDate.setHours(23, 59, 59, 999);
-          query.tanggalKirim.$lte = toDate;
+          query.tanggalInvoice.$lte = toDate;
         }
       }
 
-      if (Object.keys(query.tanggalKirim).length === 0) {
-        delete query.tanggalKirim;
+      if (Object.keys(query.tanggalInvoice).length === 0) {
+        delete query.tanggalInvoice;
       }
     }
 

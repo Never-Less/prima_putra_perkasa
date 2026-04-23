@@ -32,7 +32,7 @@ const purchaseOrderSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
-    tanggalKirim: {
+    tanggalInvoice: {
       type: Date,
       default: null,
     },
