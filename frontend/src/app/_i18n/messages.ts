@@ -12,6 +12,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "brand.name": "PRIMA PUTRA PERKASA",
     "nav.home": "Beranda",
     "nav.login": "Login",
+    "nav.user": "User",
     "nav.customer": "Customer",
     "nav.suratJalan": "Surat Jalan",
     "nav.invoice": "Invoice",
@@ -28,6 +29,10 @@ export const messages: Record<Locale, MessageDictionary> = {
     "home.title": "Frontend Surat Jalan",
     "home.description":
       "Pilih halaman yang ingin digunakan: Surat Jalan, Invoice, Pembelian, atau Customer.",
+    "home.route.user.title": "User",
+    "home.route.user.description":
+      "Kelola akun user aplikasi, role, serta password melalui tabel, filter, dan form dalam satu halaman.",
+    "home.route.user.cta": "Buka User",
     "home.route.customer.title": "Customer",
     "home.route.customer.description":
       "Kelola data customer melalui tabel, filter, serta form dan preview dalam satu halaman.",
@@ -110,6 +115,38 @@ export const messages: Record<Locale, MessageDictionary> = {
     "customer.toast.createSuccess": "Data customer berhasil ditambahkan.",
     "customer.toast.updateSuccess": "Data customer \"{{nama}}\" berhasil diperbarui.",
     "customer.toast.deleteSuccess": "Data customer \"{{nama}}\" berhasil dihapus.",
+
+    "user.page.description":
+      "Kelola akun user aplikasi melalui tabel, filter, serta form dan preview pada halaman yang sama. Akses halaman ini khusus admin.",
+    "user.table.title": "Tabel User",
+    "user.form.title": "Form dan Preview User",
+    "user.form.description":
+      "Tambahkan atau perbarui akun user, role, dan password tanpa mengubah kontrak data backend.",
+    "user.form.passwordOptionalHint":
+      "Kosongkan password jika tidak ingin mengubah password user ini.",
+    "user.form.confirmPasswordRequired":
+      "Password dan konfirmasi password harus diisi dan sama.",
+    "user.form.passwordMismatch":
+      "Konfirmasi password harus sama dengan password.",
+    "user.form.showPassword": "Lihat",
+    "user.form.hidePassword": "Sembunyikan",
+    "user.preview.title": "Preview User",
+    "user.preview.passwordHidden": "Tersembunyi",
+    "user.apiLoadError": "Gagal memuat data user dari backend.",
+    "user.mutationError": "Gagal memproses perubahan user.",
+    "user.confirmUpdateTitle": "Konfirmasi Ubah User",
+    "user.confirmUpdateDescription":
+      "Simpan perubahan untuk user \"{{username}}\"?",
+    "user.confirmDeleteTitle": "Konfirmasi Hapus User",
+    "user.confirmDeleteDescription":
+      "User \"{{username}}\" akan dihapus permanen. Lanjutkan?",
+    "user.toast.createSuccess": "User \"{{username}}\" berhasil ditambahkan.",
+    "user.toast.updateSuccess": "User \"{{username}}\" berhasil diperbarui.",
+    "user.toast.deleteSuccess": "User \"{{username}}\" berhasil dihapus.",
+    "user.currentUserDeleteDisabled":
+      "User yang sedang login tidak bisa dihapus dari halaman ini.",
+    "user.role.admin": "Admin",
+    "user.role.staff": "Staff",
 
     "invoice.page.description":
       "Kelola data invoice, pilih surat jalan, lalu hitung subtotal, PPN, dan grand total secara otomatis.",
@@ -367,8 +404,10 @@ export const messages: Record<Locale, MessageDictionary> = {
       "Purchase order \"{{noPo}}\" berhasil dihapus.",
 
     "field.nama": "Nama",
-    "field.username": "username",
-    "field.password": "password",
+    "field.username": "Username",
+    "field.password": "Password",
+    "field.confirmPassword": "Konfirmasi Password",
+    "field.role": "Role",
     "field.alamat": "Alamat",
     "field.npwp": "NPWP",
     "field.atasNama": "Atas Nama",
@@ -421,6 +460,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "brand.name": "PRIMA PUTRA PERKASA",
     "nav.home": "Home",
     "nav.login": "Login",
+    "nav.user": "User",
     "nav.customer": "Customer",
     "nav.suratJalan": "Delivery Note",
     "nav.invoice": "Invoice",
@@ -437,6 +477,10 @@ export const messages: Record<Locale, MessageDictionary> = {
     "home.title": "Delivery Frontend",
     "home.description":
       "Choose a page to use: Delivery Note, Invoice, Purchase, or Customer.",
+    "home.route.user.title": "User",
+    "home.route.user.description":
+      "Manage application user accounts, roles, and passwords through a single page with table, filter, and form.",
+    "home.route.user.cta": "Open User",
     "home.route.customer.title": "Customer",
     "home.route.customer.description":
       "Manage customer data using a table, filters, and form plus preview in one page.",
@@ -519,6 +563,38 @@ export const messages: Record<Locale, MessageDictionary> = {
     "customer.toast.createSuccess": "Customer has been added successfully.",
     "customer.toast.updateSuccess": "Customer \"{{nama}}\" has been updated successfully.",
     "customer.toast.deleteSuccess": "Customer \"{{nama}}\" has been deleted successfully.",
+
+    "user.page.description":
+      "Manage application user accounts through a single page with table, filter, form, and preview. This page is admin-only.",
+    "user.table.title": "User Table",
+    "user.form.title": "User Form and Preview",
+    "user.form.description":
+      "Create or update user accounts, roles, and passwords without changing the backend data contract.",
+    "user.form.passwordOptionalHint":
+      "Leave the password blank if you do not want to change this user's password.",
+    "user.form.confirmPasswordRequired":
+      "Password and password confirmation must both be filled and match.",
+    "user.form.passwordMismatch":
+      "Password confirmation must match the password.",
+    "user.form.showPassword": "Show",
+    "user.form.hidePassword": "Hide",
+    "user.preview.title": "User Preview",
+    "user.preview.passwordHidden": "Hidden",
+    "user.apiLoadError": "Failed to load user data from backend.",
+    "user.mutationError": "Failed to process user changes.",
+    "user.confirmUpdateTitle": "Confirm User Update",
+    "user.confirmUpdateDescription":
+      "Save changes for user \"{{username}}\"?",
+    "user.confirmDeleteTitle": "Confirm User Deletion",
+    "user.confirmDeleteDescription":
+      "User \"{{username}}\" will be deleted permanently. Continue?",
+    "user.toast.createSuccess": "User \"{{username}}\" has been added successfully.",
+    "user.toast.updateSuccess": "User \"{{username}}\" has been updated successfully.",
+    "user.toast.deleteSuccess": "User \"{{username}}\" has been deleted successfully.",
+    "user.currentUserDeleteDisabled":
+      "The currently logged-in user cannot be deleted from this page.",
+    "user.role.admin": "Admin",
+    "user.role.staff": "Staff",
 
     "invoice.page.description":
       "Manage invoices, select delivery notes, and calculate subtotal, VAT, and grand total automatically.",
@@ -777,8 +853,10 @@ export const messages: Record<Locale, MessageDictionary> = {
       "Purchase order \"{{noPo}}\" has been deleted successfully.",
 
     "field.nama": "Name",
-    "field.username": "username",
-    "field.password": "password",
+    "field.username": "Username",
+    "field.password": "Password",
+    "field.confirmPassword": "Confirm Password",
+    "field.role": "Role",
     "field.alamat": "Address",
     "field.npwp": "NPWP",
     "field.atasNama": "Attention Name",

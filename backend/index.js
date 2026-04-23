@@ -4,6 +4,7 @@ const cors = require("cors");
 const express = require("express");
 const helmet = require("helmet");
 const { connectDatabase, getDatabaseState, mongoose } = require("./config/database");
+const { cleanupLegacyUserIndexes } = require("./models/User");
 const {
   createCsrfProtection,
   isOriginAllowed,
@@ -15,6 +16,7 @@ const invoiceRoutes = require("./routes/invoice");
 const pembelianRoutes = require("./routes/pembelian");
 const purchaseOrderRoutes = require("./routes/purchase-order");
 const suratJalanRoutes = require("./routes/surat-jalan");
+const userRoutes = require("./routes/user");
 
 const app = express();
 const port = Number(process.env.PORT) || 5000;
@@ -49,6 +51,7 @@ app.use("/api/invoices", invoiceRoutes);
 app.use("/api/pembelian", pembelianRoutes);
 app.use("/api/purchase-orders", purchaseOrderRoutes);
 app.use("/api/surat-jalan", suratJalanRoutes);
+app.use("/api/users", userRoutes);
 
 app.use((error, _req, res, next) => {
   if (error?.message === "Origin blocked by CORS policy") {
@@ -76,6 +79,7 @@ function validateEnvironment() {
 async function startServer() {
   validateEnvironment();
   await connectDatabase();
+  await cleanupLegacyUserIndexes();
 
   app.listen(port, () => {
     console.log(`Backend server running on port ${port}`);

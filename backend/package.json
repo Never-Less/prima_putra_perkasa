@@ -6,6 +6,7 @@
     "dev": "nodemon index.js",
     "start": "node index.js",
     "create:admin": "node scripts/create-admin.js",
+    "backfill:user-role-admin": "node scripts/backfill-user-role-admin.js",
     "backfill:surat-jalan-barang": "node scripts/backfill-surat-jalan-barang.js",
     "backfill:purchase-order-from-surat-jalan": "node scripts/backfill-purchase-order-from-surat-jalan.js",
     "backfill:purchase-order-invoice-link": "node scripts/backfill-purchase-order-invoice-link.js",

@@ -8,6 +8,7 @@ import {
   clearAuthSession,
   getStoredAccessToken,
   isAccessTokenExpired,
+  isCurrentUserAdmin,
   refreshAuthSession,
 } from "../_lib/auth-session";
 
@@ -26,6 +27,10 @@ function isExportPath(pathname: string) {
     pathname.startsWith("/invoice/export/") ||
     pathname.startsWith("/purchaseOrder/export")
   );
+}
+
+function isAdminOnlyPath(pathname: string) {
+  return pathname === "/user" || pathname.startsWith("/user/");
 }
 
 function getExportFallbackPath(pathname: string) {
@@ -50,6 +55,7 @@ export function PrivateRouteGuard({ children }: PrivateRouteGuardProps) {
   const [isChecking, setIsChecking] = useState(true);
   const isPublicRoute = useMemo(() => isPublicPath(pathname), [pathname]);
   const isExportRoute = useMemo(() => isExportPath(pathname), [pathname]);
+  const isAdminOnlyRoute = useMemo(() => isAdminOnlyPath(pathname), [pathname]);
 
   useEffect(() => {
     let mounted = true;
@@ -71,6 +77,11 @@ export function PrivateRouteGuard({ children }: PrivateRouteGuardProps) {
       }
 
       if (!isAccessTokenExpired(accessToken)) {
+        if (isAdminOnlyRoute && !isCurrentUserAdmin()) {
+          router.replace("/");
+          return;
+        }
+
         if (isExportRoute && !canCurrentUserExport()) {
           router.replace(getExportFallbackPath(pathname));
           return;
@@ -90,6 +101,11 @@ export function PrivateRouteGuard({ children }: PrivateRouteGuardProps) {
         return;
       }
 
+      if (isAdminOnlyRoute && !isCurrentUserAdmin()) {
+        router.replace("/");
+        return;
+      }
+
       if (isExportRoute && !canCurrentUserExport()) {
         router.replace(getExportFallbackPath(pathname));
         return;
@@ -105,7 +121,7 @@ export function PrivateRouteGuard({ children }: PrivateRouteGuardProps) {
     return () => {
       mounted = false;
     };
-  }, [isExportRoute, isPublicRoute, pathname, router]);
+  }, [isAdminOnlyRoute, isExportRoute, isPublicRoute, pathname, router]);
 
   if (isPublicRoute) {
     return <>{children}</>;

@@ -11,6 +11,7 @@ type RefreshResponsePayload = {
 };
 
 type StoredAuthUser = {
+  id?: unknown;
   role?: unknown;
 };
 
@@ -18,6 +19,7 @@ const accessTokenStorageKeys = ["accessToken", "access_token"];
 const refreshTokenStorageKeys = ["refreshToken", "refresh_token"];
 const authUserStorageKey = "authUser";
 const exportAllowedRoles = ["admin"];
+const authSessionEventName = "ppp-auth-session-change";
 
 let refreshRequestPromise: Promise<string | null> | null = null;
 
@@ -85,6 +87,14 @@ function parseResponseBody(text: string) {
   } catch {
     return null;
   }
+}
+
+function notifyAuthSessionChange() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.dispatchEvent(new Event(authSessionEventName));
 }
 
 function normalizeRole(value: unknown) {
@@ -196,6 +206,8 @@ export function saveAuthSession(payload: AuthSessionPayload) {
   if (payload.user !== undefined) {
     window.localStorage.setItem(authUserStorageKey, JSON.stringify(payload.user));
   }
+
+  notifyAuthSessionChange();
 }
 
 export function clearAuthSession() {
@@ -205,6 +217,8 @@ export function clearAuthSession() {
   if (typeof window !== "undefined") {
     window.localStorage.removeItem(authUserStorageKey);
   }
+
+  notifyAuthSessionChange();
 }
 
 export function getStoredAuthUser(): StoredAuthUser | null {
@@ -235,12 +249,59 @@ export function getStoredUserRole() {
   return normalizeRole(getStoredAuthUser()?.role);
 }
 
+export function getStoredUserId() {
+  const user = getStoredAuthUser();
+
+  if (!user) {
+    return "";
+  }
+
+  if (typeof user.id === "string") {
+    return user.id.trim();
+  }
+
+  if (user.id === null || user.id === undefined) {
+    return "";
+  }
+
+  return String(user.id).trim();
+}
+
 export function canRoleExport(role: unknown) {
   return exportAllowedRoles.includes(normalizeRole(role));
 }
 
 export function canCurrentUserExport() {
   return canRoleExport(getStoredUserRole());
+}
+
+export function isCurrentUserAdmin() {
+  return getStoredUserRole() === "admin";
+}
+
+export function subscribeAuthSession(callback: () => void) {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  const handleStorage = (event: StorageEvent) => {
+    if (
+      event.key === null ||
+      accessTokenStorageKeys.includes(event.key) ||
+      refreshTokenStorageKeys.includes(event.key) ||
+      event.key === authUserStorageKey
+    ) {
+      callback();
+    }
+  };
+
+  window.addEventListener("storage", handleStorage);
+  window.addEventListener(authSessionEventName, callback);
+
+  return () => {
+    window.removeEventListener("storage", handleStorage);
+    window.removeEventListener(authSessionEventName, callback);
+  };
 }
 
 export function redirectToLogin() {

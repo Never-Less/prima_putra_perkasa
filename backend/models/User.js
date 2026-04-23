@@ -63,6 +63,23 @@ userSchema.methods.comparePassword = function comparePassword(candidatePassword)
 
 const User = mongoose.model("User", userSchema);
 
+async function cleanupLegacyUserIndexes() {
+  const collection = User.collection;
+
+  if (!collection) {
+    return;
+  }
+
+  const indexes = await collection.indexes();
+  const legacyIndexNames = indexes
+    .map((index) => index.name)
+    .filter((name) => typeof name === "string" && name === "Username_1");
+
+  for (const indexName of legacyIndexNames) {
+    await collection.dropIndex(indexName);
+  }
+}
+
 module.exports = {
   User,
   ALLOWED_ROLES,
@@ -70,4 +87,5 @@ module.exports = {
   ROLE_STAFF,
   EXPORT_ALLOWED_ROLES,
   canRoleExport,
+  cleanupLegacyUserIndexes,
 };

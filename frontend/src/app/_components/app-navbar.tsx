@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { useIsAdminAccess } from "../_hooks/use-current-user";
 import { useI18n } from "../_i18n/provider";
 import { type Locale } from "../_i18n/messages";
 import { requestApi } from "../_lib/api-client";
@@ -21,19 +22,22 @@ export function AppNavbar() {
   const pathname = usePathname();
   const router = useRouter();
   const { locale, setLocale, t } = useI18n();
+  const isAdminAccess = useIsAdminAccess();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navItems = useMemo(
-    () => [
-      { href: "/", label: t("nav.home") },
-      { href: "/customer", label: t("nav.customer") },
-      { href: "/purchaseOrder", label: t("nav.purchaseOrder") },
-      { href: "/suratJalan", label: t("nav.suratJalan") },
-      { href: "/invoice", label: t("nav.invoice") },
-      { href: "/pembelian", label: t("nav.pembelian") },
-    ],
-    [t]
+    () =>
+      [
+        { href: "/", label: t("nav.home") },
+        isAdminAccess ? { href: "/user", label: t("nav.user") } : null,
+        { href: "/customer", label: t("nav.customer") },
+        { href: "/purchaseOrder", label: t("nav.purchaseOrder") },
+        { href: "/suratJalan", label: t("nav.suratJalan") },
+        { href: "/invoice", label: t("nav.invoice") },
+        { href: "/pembelian", label: t("nav.pembelian") },
+      ].filter((item): item is { href: string; label: string } => Boolean(item)),
+    [isAdminAccess, t]
   );
   const activeNavItem = useMemo(() => {
     return navItems.find((item) => isActivePath(pathname, item.href));

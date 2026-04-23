@@ -1,13 +1,25 @@
 "use client";
 
 import Link from "next/link";
+import { useIsAdminAccess } from "./_hooks/use-current-user";
 import { ThemeToggle } from "./_components/theme-toggle";
 import { useI18n } from "./_i18n/provider";
 
 export default function HomePage() {
   const { t } = useI18n();
+  const isAdminAccess = useIsAdminAccess();
 
   const routes = [
+    ...(isAdminAccess
+      ? [
+          {
+            href: "/user",
+            title: t("home.route.user.title"),
+            description: t("home.route.user.description"),
+            cta: t("home.route.user.cta"),
+          },
+        ]
+      : []),
     {
       href: "/customer",
       title: t("home.route.customer.title"),
@@ -57,7 +69,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+      <section className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-6">
         {routes.map((route) => (
           <Link
             key={route.href}
