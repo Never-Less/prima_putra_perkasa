@@ -1,6 +1,8 @@
 "use client";
 
 import { PaginationControls } from "../../_components/pagination-controls";
+import { DebouncedFilterInput } from "../../_components/debounced-filter-input";
+import { AppDateInput } from "../../_components/app-date-input";
 import { type ServerPaginationMeta } from "../../_lib/pagination";
 import { useI18n } from "../../_i18n/provider";
 import {
@@ -81,9 +83,9 @@ export function PurchaseOrderTableFilter({
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.noPo")}
-            <input
+            <DebouncedFilterInput
               value={filter.noPo}
-              onChange={(event) => onFilterChange("noPo", event.target.value)}
+              onValueChange={(value) => onFilterChange("noPo", value)}
               placeholder={filterPlaceholder("field.noPo")}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
@@ -91,9 +93,9 @@ export function PurchaseOrderTableFilter({
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.namaCustomer")}
-            <input
+            <DebouncedFilterInput
               value={filter.namaCustomer}
-              onChange={(event) => onFilterChange("namaCustomer", event.target.value)}
+              onValueChange={(value) => onFilterChange("namaCustomer", value)}
               placeholder={filterPlaceholder("field.namaCustomer")}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
@@ -101,9 +103,9 @@ export function PurchaseOrderTableFilter({
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.noInvoice")}
-            <input
+            <DebouncedFilterInput
               value={filter.noInvoice}
-              onChange={(event) => onFilterChange("noInvoice", event.target.value)}
+              onValueChange={(value) => onFilterChange("noInvoice", value)}
               placeholder={filterPlaceholder("field.noInvoice")}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
@@ -124,71 +126,65 @@ export function PurchaseOrderTableFilter({
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.tanggalPoDari")}
-            <input
-              type="date"
+            <AppDateInput
               value={filter.tanggalPoDari}
-              onChange={(event) => onFilterChange("tanggalPoDari", event.target.value)}
+              onValueChange={(value) => onFilterChange("tanggalPoDari", value)}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.tanggalPoSampai")}
-            <input
-              type="date"
+            <AppDateInput
               value={filter.tanggalPoSampai}
-              onChange={(event) => onFilterChange("tanggalPoSampai", event.target.value)}
+              onValueChange={(value) => onFilterChange("tanggalPoSampai", value)}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.tanggalBayarDari")}
-            <input
-              type="date"
+            <AppDateInput
               value={filter.tanggalBayarDari}
-              onChange={(event) => onFilterChange("tanggalBayarDari", event.target.value)}
+              onValueChange={(value) => onFilterChange("tanggalBayarDari", value)}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.tanggalBayarSampai")}
-            <input
-              type="date"
+            <AppDateInput
               value={filter.tanggalBayarSampai}
-              onChange={(event) => onFilterChange("tanggalBayarSampai", event.target.value)}
+              onValueChange={(value) => onFilterChange("tanggalBayarSampai", value)}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.tanggalInvoiceDari")}
-            <input
-              type="date"
+            <AppDateInput
               value={filter.tanggalInvoiceDari}
-              onChange={(event) => onFilterChange("tanggalInvoiceDari", event.target.value)}
+              onValueChange={(value) => onFilterChange("tanggalInvoiceDari", value)}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.tanggalInvoiceSampai")}
-            <input
-              type="date"
+            <AppDateInput
               value={filter.tanggalInvoiceSampai}
-              onChange={(event) => onFilterChange("tanggalInvoiceSampai", event.target.value)}
+              onValueChange={(value) => onFilterChange("tanggalInvoiceSampai", value)}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.nominalPoMin")}
-            <input
+            <DebouncedFilterInput
               type="number"
               min={0}
               value={filter.nominalPoMin}
-              onChange={(event) => onFilterChange("nominalPoMin", event.target.value)}
+              onValueChange={(value) => onFilterChange("nominalPoMin", value)}
               placeholder={filterPlaceholder("field.nominalPoMin")}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
@@ -196,11 +192,11 @@ export function PurchaseOrderTableFilter({
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.nominalPoMax")}
-            <input
+            <DebouncedFilterInput
               type="number"
               min={0}
               value={filter.nominalPoMax}
-              onChange={(event) => onFilterChange("nominalPoMax", event.target.value)}
+              onValueChange={(value) => onFilterChange("nominalPoMax", value)}
               placeholder={filterPlaceholder("field.nominalPoMax")}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />

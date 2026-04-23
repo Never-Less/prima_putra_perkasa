@@ -1,6 +1,8 @@
 "use client";
 
 import { PaginationControls } from "../../_components/pagination-controls";
+import { DebouncedFilterInput } from "../../_components/debounced-filter-input";
+import { AppDateInput } from "../../_components/app-date-input";
 import { type ServerPaginationMeta } from "../../_lib/pagination";
 import {
   formatInvoiceBarangLabel,
@@ -81,9 +83,9 @@ export function InvoiceTableFilter({
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.noInvoice")}
-            <input
+            <DebouncedFilterInput
               value={filter.noInvoice}
-              onChange={(event) => onFilterChange("noInvoice", event.target.value)}
+              onValueChange={(value) => onFilterChange("noInvoice", value)}
               placeholder={filterPlaceholder("field.noInvoice")}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
@@ -91,9 +93,9 @@ export function InvoiceTableFilter({
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.noPo")}
-            <input
+            <DebouncedFilterInput
               value={filter.noPo}
-              onChange={(event) => onFilterChange("noPo", event.target.value)}
+              onValueChange={(value) => onFilterChange("noPo", value)}
               placeholder={filterPlaceholder("field.noPo")}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
@@ -101,9 +103,9 @@ export function InvoiceTableFilter({
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.noSuratJalan")}
-            <input
+            <DebouncedFilterInput
               value={filter.noSuratJalan}
-              onChange={(event) => onFilterChange("noSuratJalan", event.target.value)}
+              onValueChange={(value) => onFilterChange("noSuratJalan", value)}
               placeholder={filterPlaceholder("field.noSuratJalan")}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
@@ -111,9 +113,9 @@ export function InvoiceTableFilter({
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.namaCustomer")}
-            <input
+            <DebouncedFilterInput
               value={filter.idCustomer}
-              onChange={(event) => onFilterChange("idCustomer", event.target.value)}
+              onValueChange={(value) => onFilterChange("idCustomer", value)}
               placeholder={filterPlaceholder("field.namaCustomer")}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
@@ -136,20 +138,18 @@ export function InvoiceTableFilter({
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.tanggalDari")}
-            <input
-              type="date"
+            <AppDateInput
               value={filter.tanggalDari}
-              onChange={(event) => onFilterChange("tanggalDari", event.target.value)}
+              onValueChange={(value) => onFilterChange("tanggalDari", value)}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.tanggalSampai")}
-            <input
-              type="date"
+            <AppDateInput
               value={filter.tanggalSampai}
-              onChange={(event) => onFilterChange("tanggalSampai", event.target.value)}
+              onValueChange={(value) => onFilterChange("tanggalSampai", value)}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>

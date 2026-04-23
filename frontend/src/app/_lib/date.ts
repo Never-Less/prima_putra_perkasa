@@ -2,6 +2,7 @@ import { endOfDay, format as formatDateFns, isValid, parseISO } from "date-fns";
 import { enUS, id as localeId } from "date-fns/locale";
 
 type AppLocale = "id" | "en";
+const appDateDisplayPattern = "dd-MM-yyyy";
 
 function getDateLocale(locale: AppLocale) {
   return locale === "en" ? enUS : localeId;
@@ -36,7 +37,7 @@ export function parseAppDateRangeEnd(value: string | null | undefined) {
 export function formatAppDate(
   value: string | null | undefined,
   locale: AppLocale = "id",
-  pattern = "dd MMM yyyy"
+  pattern = appDateDisplayPattern
 ) {
   const date = parseAppDate(value);
 
@@ -65,4 +66,12 @@ export function toInputDateValue(value: string | null | undefined) {
   }
 
   return formatDateFns(date, "yyyy-MM-dd");
+}
+
+export function toApiDateValue(value: Date | null | undefined) {
+  if (!value || !isValid(value)) {
+    return "";
+  }
+
+  return formatDateFns(value, "yyyy-MM-dd");
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { PaginationControls } from "../../_components/pagination-controls";
+import { DebouncedFilterInput } from "../../_components/debounced-filter-input";
 import { type ServerPaginationMeta } from "../../_lib/pagination";
 import { type CustomerFilter, type CustomerItem } from "../_lib/customer";
 import { useI18n } from "../../_i18n/provider";
@@ -54,9 +55,9 @@ export function CustomerTableFilter({
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.nama")}
-            <input
+            <DebouncedFilterInput
               value={filter.nama}
-              onChange={(event) => onFilterChange("nama", event.target.value)}
+              onValueChange={(value) => onFilterChange("nama", value)}
               placeholder={filterPlaceholder("field.nama")}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
@@ -64,9 +65,9 @@ export function CustomerTableFilter({
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.alamat")}
-            <input
+            <DebouncedFilterInput
               value={filter.alamat}
-              onChange={(event) => onFilterChange("alamat", event.target.value)}
+              onValueChange={(value) => onFilterChange("alamat", value)}
               placeholder={filterPlaceholder("field.alamat")}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
@@ -74,9 +75,9 @@ export function CustomerTableFilter({
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.npwp")}
-            <input
+            <DebouncedFilterInput
               value={filter.npwp}
-              onChange={(event) => onFilterChange("npwp", event.target.value)}
+              onValueChange={(value) => onFilterChange("npwp", value)}
               placeholder={filterPlaceholder("field.npwp")}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
@@ -84,9 +85,9 @@ export function CustomerTableFilter({
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.atasNama")}
-            <input
+            <DebouncedFilterInput
               value={filter.atasNama}
-              onChange={(event) => onFilterChange("atasNama", event.target.value)}
+              onValueChange={(value) => onFilterChange("atasNama", value)}
               placeholder={filterPlaceholder("field.atasNama")}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />

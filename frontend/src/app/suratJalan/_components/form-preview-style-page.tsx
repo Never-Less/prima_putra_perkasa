@@ -6,7 +6,6 @@ import { ApiLoadingState } from "../../_components/api-loading-state";
 import { AppToast } from "../../_components/app-toast";
 import { ConfirmationModal } from "../../_components/confirmation-modal";
 import { saveInvoicePrefill, type InvoicePrefillPayload } from "../../invoice/_lib/invoice";
-import { useDebouncedValue } from "../../_hooks/use-debounced-value";
 import { useExportAccess } from "../../_hooks/use-export-access";
 import { ApiRequestError } from "../../_lib/api-client";
 import { type ServerPaginationMeta } from "../../_lib/pagination";
@@ -79,7 +78,6 @@ export function FormPreviewStylePage() {
       }
     | null
   >(null);
-  const debouncedFilter = useDebouncedValue(filter);
 
   const showToast = useCallback((message: string, variant: ToastState["variant"]) => {
     setToast({
@@ -101,7 +99,7 @@ export function FormPreviewStylePage() {
 
       try {
         const suratJalanResult = await fetchSuratJalanList({
-          ...debouncedFilter,
+          ...filter,
           ...paginationQuery,
         });
         const suratJalanRows = suratJalanResult.items;
@@ -140,7 +138,7 @@ export function FormPreviewStylePage() {
         }
       }
     },
-    [debouncedFilter, paginationQuery, t]
+    [filter, paginationQuery, t]
   );
 
   const loadCustomerOptions = useCallback(async () => {

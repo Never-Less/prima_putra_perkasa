@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Select from "react-select";
 import type { SingleValue, StylesConfig } from "react-select";
+import { AppDateInput } from "../../_components/app-date-input";
 import {
   barangRowsToList,
   createEmptyBarangRow,
@@ -375,12 +376,11 @@ export function SuratJalanEditForm({
 
             <label className={`text-sm ${tone.label}`}>
               {t("field.tanggal")}
-              <input
-                type="date"
-                value={form.tanggal}
-                onChange={(event) => setForm((prev) => ({ ...prev, tanggal: event.target.value }))}
-                className={inputClassName}
-              />
+                <AppDateInput
+                  value={form.tanggal}
+                  onValueChange={(value) => setForm((prev) => ({ ...prev, tanggal: value }))}
+                  className={inputClassName}
+                />
             </label>
 
             <label className={`text-sm ${tone.label}`}>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { AppDateInput } from "../../_components/app-date-input";
 import {
   formatRupiah,
   formatTanggal,
@@ -121,10 +122,9 @@ export function PembelianEditForm({
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="text-sm text-slate-700 dark:text-slate-200">
               {t("field.tanggalNota")}
-              <input
-                type="date"
+              <AppDateInput
                 value={form.tanggalNota}
-                onChange={(event) => setForm((prev) => ({ ...prev, tanggalNota: event.target.value }))}
+                onValueChange={(value) => setForm((prev) => ({ ...prev, tanggalNota: value }))}
                 className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               />
             </label>
@@ -238,23 +238,19 @@ export function PembelianEditForm({
               <p aria-hidden="true" className="mt-1 text-xs text-transparent select-none">
                 {t("pembelian.lamaHutang.note")}
               </p>
-              <input
-                type="date"
+              <AppDateInput
                 value={form.tanggalJatuhTempo}
                 disabled={!form.hutang}
-                onChange={(event) =>
-                  setForm((prev) => ({ ...prev, tanggalJatuhTempo: event.target.value }))
-                }
+                onValueChange={(value) => setForm((prev) => ({ ...prev, tanggalJatuhTempo: value }))}
                 className="mt-1 h-10 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm disabled:cursor-not-allowed disabled:bg-sky-100/70 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
               />
             </label>
 
             <label className="text-sm text-slate-700 dark:text-slate-200">
               {t("field.tanggalBayar")}
-              <input
-                type="date"
+              <AppDateInput
                 value={form.tanggalBayar}
-                onChange={(event) => setForm((prev) => ({ ...prev, tanggalBayar: event.target.value }))}
+                onValueChange={(value) => setForm((prev) => ({ ...prev, tanggalBayar: value }))}
                 className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               />
             </label>

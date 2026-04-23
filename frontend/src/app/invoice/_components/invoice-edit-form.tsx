@@ -2,6 +2,7 @@
 
 import Select, { type MultiValue, type SingleValue, type StylesConfig } from "react-select";
 import { useMemo, useState } from "react";
+import { AppDateInput } from "../../_components/app-date-input";
 import {
   buildInvoiceBarangRowsFromSuratJalanSelection,
   calculateInvoiceSummary,
@@ -393,12 +394,11 @@ export function InvoiceEditForm({
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="text-sm text-slate-700 dark:text-slate-200">
               {t("field.tanggal")}
-              <input
-                type="date"
-                value={form.tanggal}
-                onChange={(event) => setForm((prev) => ({ ...prev, tanggal: event.target.value }))}
-                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-              />
+                <AppDateInput
+                  value={form.tanggal}
+                  onValueChange={(value) => setForm((prev) => ({ ...prev, tanggal: value }))}
+                  className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                />
             </label>
 
             <label className="text-sm text-slate-700 dark:text-slate-200">

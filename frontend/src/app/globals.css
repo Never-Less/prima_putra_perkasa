@@ -94,3 +94,119 @@ body {
 .toast-enter {
   animation: toastEnter 180ms ease-out;
 }
+
+.app-date-picker-popper {
+  z-index: 60;
+}
+
+.app-date-picker-calendar {
+  overflow: hidden;
+  border: 1px solid var(--line) !important;
+  border-radius: 16px !important;
+  background: var(--surface) !important;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.18);
+  color: var(--foreground) !important;
+  font-family: var(--font-geist-sans), "Segoe UI", sans-serif !important;
+}
+
+.app-date-picker-calendar .react-datepicker__header {
+  border-bottom-color: var(--line) !important;
+  background: var(--surface-soft) !important;
+}
+
+.app-date-picker-calendar .react-datepicker__current-month,
+.app-date-picker-calendar .react-datepicker-time__header,
+.app-date-picker-calendar .react-datepicker-year-header,
+.app-date-picker-calendar .react-datepicker__day-name,
+.app-date-picker-calendar .react-datepicker__day,
+.app-date-picker-calendar .react-datepicker__time-name {
+  color: var(--foreground) !important;
+}
+
+.app-date-picker-calendar .react-datepicker__month-select,
+.app-date-picker-calendar .react-datepicker__year-select {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--foreground);
+}
+
+.app-date-picker-calendar .react-datepicker__month-select option,
+.app-date-picker-calendar .react-datepicker__year-select option {
+  background: var(--surface);
+  color: var(--foreground);
+}
+
+.app-date-picker-calendar .react-datepicker__month-dropdown,
+.app-date-picker-calendar .react-datepicker__year-dropdown {
+  overflow: hidden;
+  border: 1px solid var(--line) !important;
+  border-radius: 12px !important;
+  background: var(--surface) !important;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.22);
+}
+
+.app-date-picker-calendar .react-datepicker__month-option,
+.app-date-picker-calendar .react-datepicker__year-option {
+  background: var(--surface) !important;
+  color: var(--foreground) !important;
+}
+
+.app-date-picker-calendar .react-datepicker__month-option:hover,
+.app-date-picker-calendar .react-datepicker__year-option:hover {
+  background: #e0f2fe !important;
+  color: #075985 !important;
+}
+
+.app-date-picker-calendar .react-datepicker__month-option--selected_month,
+.app-date-picker-calendar .react-datepicker__year-option--selected_year {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+}
+
+.app-date-picker-calendar .react-datepicker__day:hover,
+.app-date-picker-calendar .react-datepicker__month-text:hover,
+.app-date-picker-calendar .react-datepicker__quarter-text:hover,
+.app-date-picker-calendar .react-datepicker__year-text:hover {
+  background: #e0f2fe !important;
+  color: #075985 !important;
+}
+
+.app-date-picker-calendar .react-datepicker__day--keyboard-selected,
+.app-date-picker-calendar .react-datepicker__day--selected {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+}
+
+.app-date-picker-calendar .react-datepicker__day--disabled {
+  color: var(--muted) !important;
+  opacity: 0.45;
+}
+
+.dark .app-date-picker-calendar .react-datepicker__day:hover,
+.dark .app-date-picker-calendar .react-datepicker__month-text:hover,
+.dark .app-date-picker-calendar .react-datepicker__quarter-text:hover,
+.dark .app-date-picker-calendar .react-datepicker__year-text:hover {
+  background: #164e63 !important;
+  color: #e0f2fe !important;
+}
+
+.dark .app-date-picker-calendar .react-datepicker__month-dropdown,
+.dark .app-date-picker-calendar .react-datepicker__year-dropdown,
+.dark .app-date-picker-calendar .react-datepicker__month-option,
+.dark .app-date-picker-calendar .react-datepicker__year-option {
+  background: #0f172a !important;
+  color: #e5eefb !important;
+}
+
+.dark .app-date-picker-calendar .react-datepicker__month-option:hover,
+.dark .app-date-picker-calendar .react-datepicker__year-option:hover {
+  background: #164e63 !important;
+  color: #e0f2fe !important;
+}
+
+.dark .app-date-picker-calendar .react-datepicker__month-option--selected_month,
+.dark .app-date-picker-calendar .react-datepicker__year-option--selected_year {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+}

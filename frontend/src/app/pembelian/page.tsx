@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiLoadingState } from "../_components/api-loading-state";
 import { AppToast } from "../_components/app-toast";
 import { ConfirmationModal } from "../_components/confirmation-modal";
-import { useDebouncedValue } from "../_hooks/use-debounced-value";
 import { ApiRequestError } from "../_lib/api-client";
 import { type ServerPaginationMeta } from "../_lib/pagination";
 import { PembelianEditForm } from "./_components/pembelian-edit-form";
@@ -71,7 +70,6 @@ export default function PembelianPage() {
       }
     | null
   >(null);
-  const debouncedFilter = useDebouncedValue(filter);
 
   const showToast = useCallback((message: string, variant: ToastState["variant"]) => {
     setToast({
@@ -93,7 +91,7 @@ export default function PembelianPage() {
 
       try {
         const pembelianResult = await fetchPembelianList({
-          ...debouncedFilter,
+          ...filter,
           ...paginationQuery,
         });
         const pembelianRows = pembelianResult.items;
@@ -129,7 +127,7 @@ export default function PembelianPage() {
         }
       }
     },
-    [debouncedFilter, paginationQuery, t]
+    [filter, paginationQuery, t]
   );
 
   const loadInvoiceOptions = useCallback(async () => {

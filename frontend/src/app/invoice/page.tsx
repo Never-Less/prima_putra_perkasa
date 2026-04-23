@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { ApiLoadingState } from "../_components/api-loading-state";
 import { AppToast } from "../_components/app-toast";
 import { ConfirmationModal } from "../_components/confirmation-modal";
-import { useDebouncedValue } from "../_hooks/use-debounced-value";
 import { useExportAccess } from "../_hooks/use-export-access";
 import { ApiRequestError } from "../_lib/api-client";
 import { type ServerPaginationMeta } from "../_lib/pagination";
@@ -85,7 +84,6 @@ export default function InvoicePage() {
       }
     | null
   >(null);
-  const debouncedFilter = useDebouncedValue(filter);
 
   const showToast = useCallback((message: string, variant: ToastState["variant"]) => {
     setToast({
@@ -107,7 +105,7 @@ export default function InvoicePage() {
 
       try {
         const invoiceResult = await fetchInvoiceList({
-          ...debouncedFilter,
+          ...filter,
           ...paginationQuery,
         });
         const invoiceRows = invoiceResult.items;
@@ -146,7 +144,7 @@ export default function InvoicePage() {
         }
       }
     },
-    [debouncedFilter, paginationQuery, t]
+    [filter, paginationQuery, t]
   );
 
   const loadCustomerOptions = useCallback(async () => {

@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiLoadingState } from "../_components/api-loading-state";
 import { AppToast } from "../_components/app-toast";
 import { ConfirmationModal } from "../_components/confirmation-modal";
-import { useDebouncedValue } from "../_hooks/use-debounced-value";
 import { ApiRequestError } from "../_lib/api-client";
 import { type ServerPaginationMeta } from "../_lib/pagination";
 import { CustomerEditForm } from "./_components/customer-edit-form";
@@ -61,7 +60,6 @@ export default function CustomerPage() {
       }
     | null
   >(null);
-  const debouncedFilter = useDebouncedValue(filter);
 
   const canManageCustomer = true;
 
@@ -83,8 +81,8 @@ export default function CustomerPage() {
     setErrorMessage("");
 
     try {
-        const customerResult = await fetchCustomerList({
-        ...debouncedFilter,
+      const customerResult = await fetchCustomerList({
+        ...filter,
         ...paginationQuery,
       });
       const customerRows = customerResult.items;
@@ -120,7 +118,7 @@ export default function CustomerPage() {
         setIsLoading(false);
       }
     }
-  }, [debouncedFilter, paginationQuery, t]);
+  }, [filter, paginationQuery, t]);
 
   useEffect(() => {
     void loadCustomers();

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { AppDateInput } from "../../_components/app-date-input";
 import { useI18n } from "../../_i18n/provider";
 import {
   formatRupiah,
@@ -90,12 +91,11 @@ export function PurchaseOrderEditForm({
 
             <label className="text-sm text-slate-700 dark:text-slate-200">
               {t("field.tanggalPo")}
-              <input
-                type="date"
-                value={form.tanggalPo}
-                onChange={(event) => setForm((prev) => ({ ...prev, tanggalPo: event.target.value }))}
-                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-              />
+                <AppDateInput
+                  value={form.tanggalPo}
+                  onValueChange={(value) => setForm((prev) => ({ ...prev, tanggalPo: value }))}
+                  className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                />
             </label>
 
             <label className="text-sm text-slate-700 dark:text-slate-200 sm:col-span-2">
@@ -151,13 +151,12 @@ export function PurchaseOrderEditForm({
 
             <label className="text-sm text-slate-700 dark:text-slate-200">
               {t("field.tanggalBayar")}
-              <input
-                type="date"
-                value={form.tanggalBayar}
-                disabled={!form.isPaid}
-                onChange={(event) => setForm((prev) => ({ ...prev, tanggalBayar: event.target.value }))}
-                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm disabled:cursor-not-allowed disabled:bg-sky-100/70 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
-              />
+                <AppDateInput
+                  value={form.tanggalBayar}
+                  disabled={!form.isPaid}
+                  onValueChange={(value) => setForm((prev) => ({ ...prev, tanggalBayar: value }))}
+                  className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm disabled:cursor-not-allowed disabled:bg-sky-100/70 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
+                />
             </label>
 
             <label className="text-sm text-slate-700 dark:text-slate-200">
@@ -165,13 +164,13 @@ export function PurchaseOrderEditForm({
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                 {t("purchaseOrder.form.autoFilledFromInvoice")}
               </p>
-              <input
-                type="date"
-                value={form.tanggalInvoice}
-                disabled={true}
-                readOnly={true}
-                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm disabled:cursor-not-allowed disabled:bg-sky-100/70 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
-              />
+                <AppDateInput
+                  value={form.tanggalInvoice}
+                  onValueChange={() => undefined}
+                  disabled={true}
+                  readOnly={true}
+                  className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm disabled:cursor-not-allowed disabled:bg-sky-100/70 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
+                />
             </label>
 
             <label className="text-sm text-slate-700 dark:text-slate-200 sm:col-span-2">

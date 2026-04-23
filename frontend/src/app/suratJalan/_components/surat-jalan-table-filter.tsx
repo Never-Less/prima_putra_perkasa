@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
+import { AppDateInput } from "../../_components/app-date-input";
+import { DebouncedFilterInput } from "../../_components/debounced-filter-input";
 import { PaginationControls } from "../../_components/pagination-controls";
 import { type ServerPaginationMeta } from "../../_lib/pagination";
 import {
@@ -164,9 +166,9 @@ export function SuratJalanTableFilter({
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.noSuratJalan")}
-            <input
+            <DebouncedFilterInput
               value={filter.noSuratJalan}
-              onChange={(event) => onFilterChange("noSuratJalan", event.target.value)}
+              onValueChange={(value) => onFilterChange("noSuratJalan", value)}
               placeholder={filterPlaceholder("field.noSuratJalan")}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
@@ -174,9 +176,9 @@ export function SuratJalanTableFilter({
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.noPo")}
-            <input
+            <DebouncedFilterInput
               value={filter.noPo}
-              onChange={(event) => onFilterChange("noPo", event.target.value)}
+              onValueChange={(value) => onFilterChange("noPo", value)}
               placeholder={filterPlaceholder("field.noPo")}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
@@ -184,9 +186,9 @@ export function SuratJalanTableFilter({
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.kodeDepartemen")}
-            <input
+            <DebouncedFilterInput
               value={filter.kodeDepartemen}
-              onChange={(event) => onFilterChange("kodeDepartemen", event.target.value)}
+              onValueChange={(value) => onFilterChange("kodeDepartemen", value)}
               placeholder={filterPlaceholder("field.kodeDepartemen")}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
@@ -194,9 +196,9 @@ export function SuratJalanTableFilter({
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.namaCustomer")}
-            <input
+            <DebouncedFilterInput
               value={filter.idCustomer}
-              onChange={(event) => onFilterChange("idCustomer", event.target.value)}
+              onValueChange={(value) => onFilterChange("idCustomer", value)}
               placeholder={filterPlaceholder("field.namaCustomer")}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
@@ -204,9 +206,9 @@ export function SuratJalanTableFilter({
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.kendaraan")}
-            <input
+            <DebouncedFilterInput
               value={filter.kendaraan}
-              onChange={(event) => onFilterChange("kendaraan", event.target.value)}
+              onValueChange={(value) => onFilterChange("kendaraan", value)}
               placeholder={filterPlaceholder("field.kendaraan")}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
@@ -229,20 +231,18 @@ export function SuratJalanTableFilter({
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.tanggalDari")}
-            <input
-              type="date"
+            <AppDateInput
               value={filter.tanggalDari}
-              onChange={(event) => onFilterChange("tanggalDari", event.target.value)}
+              onValueChange={(value) => onFilterChange("tanggalDari", value)}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.tanggalSampai")}
-            <input
-              type="date"
+            <AppDateInput
               value={filter.tanggalSampai}
-              onChange={(event) => onFilterChange("tanggalSampai", event.target.value)}
+              onValueChange={(value) => onFilterChange("tanggalSampai", value)}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>

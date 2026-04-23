@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiLoadingState } from "../_components/api-loading-state";
 import { AppToast } from "../_components/app-toast";
 import { ConfirmationModal } from "../_components/confirmation-modal";
-import { useDebouncedValue } from "../_hooks/use-debounced-value";
 import { useI18n } from "../_i18n/provider";
 import { ApiRequestError } from "../_lib/api-client";
 import { type ServerPaginationMeta } from "../_lib/pagination";
@@ -61,7 +60,6 @@ export default function UserPage() {
       }
     | null
   >(null);
-  const debouncedFilter = useDebouncedValue(filter);
 
   const showToast = useCallback((message: string, variant: ToastState["variant"]) => {
     setToast({
@@ -83,7 +81,7 @@ export default function UserPage() {
 
       try {
         const userResult = await fetchUserList({
-          ...debouncedFilter,
+          ...filter,
           ...paginationQuery,
         });
         const userRows = userResult.items;
@@ -120,7 +118,7 @@ export default function UserPage() {
         }
       }
     },
-    [debouncedFilter, paginationQuery, t]
+    [filter, paginationQuery, t]
   );
 
   useEffect(() => {

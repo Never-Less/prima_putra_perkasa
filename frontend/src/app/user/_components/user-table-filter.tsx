@@ -1,6 +1,7 @@
 "use client";
 
 import { PaginationControls } from "../../_components/pagination-controls";
+import { DebouncedFilterInput } from "../../_components/debounced-filter-input";
 import { type ServerPaginationMeta } from "../../_lib/pagination";
 import { useI18n } from "../../_i18n/provider";
 import { userRoleOptions, type UserFilter, type UserItem } from "../_lib/user";
@@ -57,9 +58,9 @@ export function UserTableFilter({
         <div className="grid gap-3 md:grid-cols-2">
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.username")}
-            <input
+            <DebouncedFilterInput
               value={filter.username}
-              onChange={(event) => onFilterChange("username", event.target.value)}
+              onValueChange={(value) => onFilterChange("username", value)}
               placeholder={filterPlaceholder("field.username")}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />

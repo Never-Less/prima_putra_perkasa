@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiLoadingState } from "../_components/api-loading-state";
 import { AppToast } from "../_components/app-toast";
 import { ConfirmationModal } from "../_components/confirmation-modal";
-import { useDebouncedValue } from "../_hooks/use-debounced-value";
 import { useExportAccess } from "../_hooks/use-export-access";
 import { useI18n } from "../_i18n/provider";
 import { ApiRequestError } from "../_lib/api-client";
@@ -68,7 +67,6 @@ export default function PurchaseOrderPage() {
       }
     | null
   >(null);
-  const debouncedFilter = useDebouncedValue(filter);
 
   const showToast = useCallback((message: string, variant: ToastState["variant"]) => {
     setToast({
@@ -90,7 +88,7 @@ export default function PurchaseOrderPage() {
 
       try {
         const purchaseOrderResult = await fetchPurchaseOrderList({
-          ...debouncedFilter,
+          ...filter,
           ...paginationQuery,
         });
         const purchaseOrderRows = purchaseOrderResult.items;
@@ -126,7 +124,7 @@ export default function PurchaseOrderPage() {
         }
       }
     },
-    [debouncedFilter, paginationQuery, t]
+    [filter, paginationQuery, t]
   );
 
   const loadOptions = useCallback(async () => {

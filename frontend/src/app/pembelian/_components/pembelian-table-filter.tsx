@@ -1,6 +1,8 @@
 "use client";
 
 import { PaginationControls } from "../../_components/pagination-controls";
+import { DebouncedFilterInput } from "../../_components/debounced-filter-input";
+import { AppDateInput } from "../../_components/app-date-input";
 import { type ServerPaginationMeta } from "../../_lib/pagination";
 import {
   formatRupiah,
@@ -82,9 +84,9 @@ export function PembelianTableFilter({
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.namaSupplier")}
-            <input
+            <DebouncedFilterInput
               value={filter.namaSupplier}
-              onChange={(event) => onFilterChange("namaSupplier", event.target.value)}
+              onValueChange={(value) => onFilterChange("namaSupplier", value)}
               placeholder={filterPlaceholder("field.namaSupplier")}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
@@ -92,9 +94,9 @@ export function PembelianTableFilter({
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.noNpwp")}
-            <input
+            <DebouncedFilterInput
               value={filter.noNpwp}
-              onChange={(event) => onFilterChange("noNpwp", event.target.value)}
+              onValueChange={(value) => onFilterChange("noNpwp", value)}
               placeholder={filterPlaceholder("field.noNpwp")}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
@@ -102,9 +104,9 @@ export function PembelianTableFilter({
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.noInvoice")}
-            <input
+            <DebouncedFilterInput
               value={filter.noInvoice}
-              onChange={(event) => onFilterChange("noInvoice", event.target.value)}
+              onValueChange={(value) => onFilterChange("noInvoice", value)}
               placeholder={filterPlaceholder("field.noInvoice")}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
@@ -142,51 +144,47 @@ export function PembelianTableFilter({
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.tanggalDari")}
-            <input
-              type="date"
+            <AppDateInput
               value={filter.tanggalNotaDari}
-              onChange={(event) => onFilterChange("tanggalNotaDari", event.target.value)}
+              onValueChange={(value) => onFilterChange("tanggalNotaDari", value)}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.tanggalSampai")}
-            <input
-              type="date"
+            <AppDateInput
               value={filter.tanggalNotaSampai}
-              onChange={(event) => onFilterChange("tanggalNotaSampai", event.target.value)}
+              onValueChange={(value) => onFilterChange("tanggalNotaSampai", value)}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.tanggalBayarDari")}
-            <input
-              type="date"
+            <AppDateInput
               value={filter.tanggalBayarDari}
-              onChange={(event) => onFilterChange("tanggalBayarDari", event.target.value)}
+              onValueChange={(value) => onFilterChange("tanggalBayarDari", value)}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.tanggalBayarSampai")}
-            <input
-              type="date"
+            <AppDateInput
               value={filter.tanggalBayarSampai}
-              onChange={(event) => onFilterChange("tanggalBayarSampai", event.target.value)}
+              onValueChange={(value) => onFilterChange("tanggalBayarSampai", value)}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.nilaiNotaMin")}
-            <input
+            <DebouncedFilterInput
               type="number"
               min={0}
               value={filter.nilaiNotaMin}
-              onChange={(event) => onFilterChange("nilaiNotaMin", event.target.value)}
+              onValueChange={(value) => onFilterChange("nilaiNotaMin", value)}
               placeholder={filterPlaceholder("field.nilaiNotaMin")}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
@@ -194,11 +192,11 @@ export function PembelianTableFilter({
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.nilaiNotaMax")}
-            <input
+            <DebouncedFilterInput
               type="number"
               min={0}
               value={filter.nilaiNotaMax}
-              onChange={(event) => onFilterChange("nilaiNotaMax", event.target.value)}
+              onValueChange={(value) => onFilterChange("nilaiNotaMax", value)}
               placeholder={filterPlaceholder("field.nilaiNotaMax")}
               className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
