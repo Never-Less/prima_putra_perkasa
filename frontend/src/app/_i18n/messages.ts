@@ -383,7 +383,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "purchaseOrder.exportPage.totalRows": "Total data: {{count}}",
     "purchaseOrder.exportPage.factoryBillingTitle": "Daftar Tagihan Pabrik",
     "purchaseOrder.exportPage.factoryBillingDescription":
-      "Ringkasan ini mengelompokkan nama customer pabrik dan menjumlahkan nominal tagihan dari hasil filter aktif.",
+      "Ringkasan ini hanya mengambil PO yang sudah memiliki invoice dan belum lunas, lalu menjumlahkan nominal tagihan berdasarkan customer.",
     "purchaseOrder.exportPage.factoryBillingTotalCustomers": "Total pabrik: {{count}}",
     "purchaseOrder.exportPage.factoryBillingCustomerColumn": "Nama Customer (Daftar Tagihan Pabrik)",
     "purchaseOrder.exportPage.factoryBillingAmountColumn": "Jumlah Tagihan",
@@ -832,7 +832,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "purchaseOrder.exportPage.totalRows": "Total rows: {{count}}",
     "purchaseOrder.exportPage.factoryBillingTitle": "Factory Billing List",
     "purchaseOrder.exportPage.factoryBillingDescription":
-      "This summary groups factory customer names and totals the billed nominal values from the active filter result.",
+      "This summary only includes POs that already have an invoice and are unpaid, then totals billed amounts by customer.",
     "purchaseOrder.exportPage.factoryBillingTotalCustomers": "Total factories: {{count}}",
     "purchaseOrder.exportPage.factoryBillingCustomerColumn": "Customer Name (Factory Billing List)",
     "purchaseOrder.exportPage.factoryBillingAmountColumn": "Billing Amount",

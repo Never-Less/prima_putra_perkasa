@@ -67,8 +67,11 @@ export default function PurchaseOrderExportPage() {
   }, [filter, paidLabel, unpaidLabel]);
   const factoryBillingRows = useMemo(() => {
     const groupedRows = new Map<string, { namaCustomer: string; totalNominal: number }>();
+    const billableRows = rows.filter((row) => {
+      return Boolean(String(row.noInvoice || "").trim()) && !row.isPaid;
+    });
 
-    for (const row of rows) {
+    for (const row of billableRows) {
       const customerLabel = customerLabelMap.get(row.namaCustomer) || row.namaCustomer || "-";
       const groupKey = row.namaCustomer || customerLabel;
       const currentGroup = groupedRows.get(groupKey);
