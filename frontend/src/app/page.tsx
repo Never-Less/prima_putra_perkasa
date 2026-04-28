@@ -18,6 +18,12 @@ export default function HomePage() {
             description: t("home.route.user.description"),
             cta: t("home.route.user.cta"),
           },
+          {
+            href: "/laporanKeuangan",
+            title: t("home.route.laporanKeuangan.title"),
+            description: t("home.route.laporanKeuangan.description"),
+            cta: t("home.route.laporanKeuangan.cta"),
+          },
         ]
       : []),
     {

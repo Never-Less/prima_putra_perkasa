@@ -18,6 +18,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "nav.invoice": "Invoice",
     "nav.purchaseOrder": "Purchase Order",
     "nav.pembelian": "Pembelian",
+    "nav.laporanKeuangan": "Laporan Keuangan",
     "nav.menu": "Menu",
     "nav.theme": "Tema",
     "nav.logout": "Logout",
@@ -33,6 +34,10 @@ export const messages: Record<Locale, MessageDictionary> = {
     "home.route.user.description":
       "Kelola akun user aplikasi, role, serta password melalui tabel, filter, dan form dalam satu halaman.",
     "home.route.user.cta": "Buka User",
+    "home.route.laporanKeuangan.title": "Laporan Keuangan",
+    "home.route.laporanKeuangan.description":
+      "Input biaya operasional bulanan dengan rincian biaya dinamis. Akses halaman ini khusus admin.",
+    "home.route.laporanKeuangan.cta": "Buka Laporan Keuangan",
     "home.route.customer.title": "Customer",
     "home.route.customer.description":
       "Kelola data customer melalui tabel, filter, serta form dan preview dalam satu halaman.",
@@ -73,6 +78,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "common.saveChanges": "Simpan Perubahan",
     "common.newData": "Data Baru",
     "common.export": "Export",
+    "common.exportExcel": "Export Excel",
     "common.print": "Print",
     "common.delete": "Hapus",
     "common.cancel": "Batal",
@@ -147,6 +153,47 @@ export const messages: Record<Locale, MessageDictionary> = {
       "User yang sedang login tidak bisa dihapus dari halaman ini.",
     "user.role.admin": "Admin",
     "user.role.staff": "Staff",
+
+    "laporanKeuangan.page.description":
+      "Kelola biaya operasional bulanan dengan rincian biaya yang bisa ditambah sesuai kebutuhan. Akses halaman ini khusus admin.",
+    "laporanKeuangan.form.title": "Form Biaya Operasional",
+    "laporanKeuangan.form.description":
+      "Pilih bulan laporan, isi nama biaya dan jumlah, lalu simpan untuk bulan tersebut.",
+    "laporanKeuangan.placeholder.namaBiaya": "Contoh: biaya operasional, telpon",
+    "laporanKeuangan.addRow": "Tambah Rincian Biaya",
+    "laporanKeuangan.apiLoadError": "Gagal memuat laporan keuangan dari backend.",
+    "laporanKeuangan.mutationError": "Gagal menyimpan laporan keuangan.",
+    "laporanKeuangan.exportPage.openButton": "Export Data",
+    "laporanKeuangan.exportPage.title": "Export Laporan Keuangan",
+    "laporanKeuangan.exportPage.description":
+      "Halaman ini menampilkan laporan keuangan bulanan dan siap dicetak.",
+    "laporanKeuangan.exportPage.heading": "Laporan Keuangan",
+    "laporanKeuangan.exportPage.empty":
+      "Belum ada laporan keuangan tersimpan untuk bulan ini.",
+    "laporanKeuangan.exportPage.loadError": "Gagal memuat export laporan keuangan.",
+    "laporanKeuangan.validation.bulanRequired": "Bulan laporan wajib dipilih.",
+    "laporanKeuangan.validation.namaBiayaRequired": "Nama biaya wajib diisi.",
+    "laporanKeuangan.validation.jumlahInvalid": "Jumlah harus angka >= 0.",
+    "laporanKeuangan.toast.saveSuccess": "Laporan keuangan {{bulan}} berhasil disimpan.",
+    "laporanKeuangan.summary.title": "Ringkasan Bulan",
+    "laporanKeuangan.summary.savedStatus": "Status Data",
+    "laporanKeuangan.summary.saved": "Sudah tersimpan",
+    "laporanKeuangan.summary.notSaved": "Belum tersimpan",
+    "laporanKeuangan.summary.rincian": "Rincian Biaya",
+    "laporanKeuangan.invoiceTable.title": "Invoice Bulan Ini",
+    "laporanKeuangan.invoiceTable.description":
+      "Invoice pada bulan {{bulan}} dihitung sebagai gross profit menggunakan grand total invoice.",
+    "laporanKeuangan.invoiceTable.empty": "Belum ada invoice untuk bulan ini.",
+    "laporanKeuangan.report.date": "DATE",
+    "laporanKeuangan.report.description": "DESCRIPTION",
+    "laporanKeuangan.report.debet": "DEBET",
+    "laporanKeuangan.report.kredit": "KREDIT",
+    "laporanKeuangan.report.nonPpn": "NON PPN",
+    "laporanKeuangan.report.bayar": "BAYAR",
+    "laporanKeuangan.report.note": "NOTE",
+    "laporanKeuangan.report.totalJumlah": "TOTAL JUMLAH",
+    "laporanKeuangan.report.grandTotal": "GRAND TOTAL",
+    "laporanKeuangan.report.biayaOperasional": "BIAYA OPERASIONAL",
 
     "invoice.page.description":
       "Kelola data invoice, pilih surat jalan, lalu hitung subtotal, PPN, dan grand total secara otomatis.",
@@ -455,6 +502,13 @@ export const messages: Record<Locale, MessageDictionary> = {
     "field.tanggalInvoiceSampai": "Tanggal Invoice Sampai",
     "field.nominalPoMin": "Nominal PO Minimum",
     "field.nominalPoMax": "Nominal PO Maksimum",
+    "field.no": "No.",
+    "field.bulan": "Bulan",
+    "field.namaBiaya": "Nama Biaya",
+    "field.jumlah": "Jumlah",
+    "field.totalBiayaOperasional": "Total Biaya Operasional",
+    "field.grossProfit": "Gross Profit",
+    "field.netProfit": "Net Profit",
   },
   en: {
     "brand.name": "PRIMA PUTRA PERKASA",
@@ -466,6 +520,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "nav.invoice": "Invoice",
     "nav.purchaseOrder": "Purchase Order",
     "nav.pembelian": "Purchase",
+    "nav.laporanKeuangan": "Financial Report",
     "nav.menu": "Menu",
     "nav.theme": "Theme",
     "nav.logout": "Logout",
@@ -481,6 +536,10 @@ export const messages: Record<Locale, MessageDictionary> = {
     "home.route.user.description":
       "Manage application user accounts, roles, and passwords through a single page with table, filter, and form.",
     "home.route.user.cta": "Open User",
+    "home.route.laporanKeuangan.title": "Financial Report",
+    "home.route.laporanKeuangan.description":
+      "Input monthly operational costs with dynamic cost rows. This page is admin-only.",
+    "home.route.laporanKeuangan.cta": "Open Financial Report",
     "home.route.customer.title": "Customer",
     "home.route.customer.description":
       "Manage customer data using a table, filters, and form plus preview in one page.",
@@ -521,6 +580,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "common.saveChanges": "Save Changes",
     "common.newData": "New Data",
     "common.export": "Export",
+    "common.exportExcel": "Export Excel",
     "common.print": "Print",
     "common.delete": "Delete",
     "common.cancel": "Cancel",
@@ -595,6 +655,47 @@ export const messages: Record<Locale, MessageDictionary> = {
       "The currently logged-in user cannot be deleted from this page.",
     "user.role.admin": "Admin",
     "user.role.staff": "Staff",
+
+    "laporanKeuangan.page.description":
+      "Manage monthly operational costs with cost rows that can be added as needed. This page is admin-only.",
+    "laporanKeuangan.form.title": "Operational Cost Form",
+    "laporanKeuangan.form.description":
+      "Select the report month, fill in cost names and amounts, then save them for that month.",
+    "laporanKeuangan.placeholder.namaBiaya": "Example: operational cost, phone",
+    "laporanKeuangan.addRow": "Add Cost Row",
+    "laporanKeuangan.apiLoadError": "Failed to load financial report from backend.",
+    "laporanKeuangan.mutationError": "Failed to save financial report.",
+    "laporanKeuangan.exportPage.openButton": "Export Data",
+    "laporanKeuangan.exportPage.title": "Export Financial Report",
+    "laporanKeuangan.exportPage.description":
+      "This page shows the monthly financial report and is ready to print.",
+    "laporanKeuangan.exportPage.heading": "Financial Report",
+    "laporanKeuangan.exportPage.empty":
+      "No saved financial report is available for this month.",
+    "laporanKeuangan.exportPage.loadError": "Failed to load financial report export.",
+    "laporanKeuangan.validation.bulanRequired": "Report month is required.",
+    "laporanKeuangan.validation.namaBiayaRequired": "Cost name is required.",
+    "laporanKeuangan.validation.jumlahInvalid": "Amount must be a number >= 0.",
+    "laporanKeuangan.toast.saveSuccess": "Financial report for {{bulan}} has been saved.",
+    "laporanKeuangan.summary.title": "Monthly Summary",
+    "laporanKeuangan.summary.savedStatus": "Data Status",
+    "laporanKeuangan.summary.saved": "Saved",
+    "laporanKeuangan.summary.notSaved": "Not saved yet",
+    "laporanKeuangan.summary.rincian": "Cost Details",
+    "laporanKeuangan.invoiceTable.title": "Invoices This Month",
+    "laporanKeuangan.invoiceTable.description":
+      "Invoices in {{bulan}} are calculated as gross profit using invoice grand totals.",
+    "laporanKeuangan.invoiceTable.empty": "No invoices are available for this month.",
+    "laporanKeuangan.report.date": "DATE",
+    "laporanKeuangan.report.description": "DESCRIPTION",
+    "laporanKeuangan.report.debet": "DEBIT",
+    "laporanKeuangan.report.kredit": "CREDIT",
+    "laporanKeuangan.report.nonPpn": "NON VAT",
+    "laporanKeuangan.report.bayar": "PAID",
+    "laporanKeuangan.report.note": "NOTE",
+    "laporanKeuangan.report.totalJumlah": "TOTAL AMOUNT",
+    "laporanKeuangan.report.grandTotal": "GRAND TOTAL",
+    "laporanKeuangan.report.biayaOperasional": "OPERATIONAL COST",
 
     "invoice.page.description":
       "Manage invoices, select delivery notes, and calculate subtotal, VAT, and grand total automatically.",
@@ -904,6 +1005,13 @@ export const messages: Record<Locale, MessageDictionary> = {
     "field.tanggalInvoiceSampai": "Invoice Date To",
     "field.nominalPoMin": "Minimum PO Amount",
     "field.nominalPoMax": "Maximum PO Amount",
+    "field.no": "No.",
+    "field.bulan": "Month",
+    "field.namaBiaya": "Cost Name",
+    "field.jumlah": "Amount",
+    "field.totalBiayaOperasional": "Total Operational Cost",
+    "field.grossProfit": "Gross Profit",
+    "field.netProfit": "Net Profit",
   },
 };
 

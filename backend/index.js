@@ -13,6 +13,7 @@ const {
 const authRoutes = require("./routes/auth");
 const customerRoutes = require("./routes/customer");
 const invoiceRoutes = require("./routes/invoice");
+const laporanKeuanganRoutes = require("./routes/laporan-keuangan");
 const pembelianRoutes = require("./routes/pembelian");
 const purchaseOrderRoutes = require("./routes/purchase-order");
 const suratJalanRoutes = require("./routes/surat-jalan");
@@ -48,6 +49,7 @@ app.get("/api/health", (_req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/customers", customerRoutes);
 app.use("/api/invoices", invoiceRoutes);
+app.use("/api/laporan-keuangan", laporanKeuanganRoutes);
 app.use("/api/pembelian", pembelianRoutes);
 app.use("/api/purchase-orders", purchaseOrderRoutes);
 app.use("/api/surat-jalan", suratJalanRoutes);

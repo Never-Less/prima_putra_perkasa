@@ -30,7 +30,12 @@ function isExportPath(pathname: string) {
 }
 
 function isAdminOnlyPath(pathname: string) {
-  return pathname === "/user" || pathname.startsWith("/user/");
+  return (
+    pathname === "/user" ||
+    pathname.startsWith("/user/") ||
+    pathname === "/laporanKeuangan" ||
+    pathname.startsWith("/laporanKeuangan/")
+  );
 }
 
 function getExportFallbackPath(pathname: string) {
