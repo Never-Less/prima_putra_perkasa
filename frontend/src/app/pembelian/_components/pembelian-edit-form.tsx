@@ -69,12 +69,14 @@ export function PembelianEditForm({
           return {
             ...mappedForm,
             idInvoice: ensureValidIdInvoice(mappedForm.idInvoice, invoiceOptions),
+            tanggalBayar: mappedForm.hutang ? "" : mappedForm.tanggalBayar,
           };
         })()
       : initialForm
         ? {
             ...initialForm,
             idInvoice: ensureValidIdInvoice(initialForm.idInvoice, invoiceOptions),
+            tanggalBayar: initialForm.hutang ? "" : initialForm.tanggalBayar,
           }
         : createEmptyPembelianFormState(invoiceOptions)
   );
@@ -104,6 +106,8 @@ export function PembelianEditForm({
   }, [form.idInvoice, invoiceOptions]);
 
   const effectiveIdInvoice = form.idInvoice || normalizedInvoiceOptions[0]?.id || "";
+  const nilaiNota = Number(form.nilaiNota || 0);
+  const normalizedNilaiNota = Number.isFinite(nilaiNota) ? nilaiNota : 0;
 
   const invoiceLabelMap = useMemo(() => {
     return new Map(normalizedInvoiceOptions.map((option) => [option.id, option.noInvoice]));
@@ -193,6 +197,7 @@ export function PembelianEditForm({
                     hutang: isHutang,
                     lamaHutang: isHutang ? prev.lamaHutang : "0",
                     tanggalJatuhTempo: isHutang ? prev.tanggalJatuhTempo : "",
+                    tanggalBayar: isHutang ? "" : prev.tanggalBayar,
                   }));
                 }}
                 className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
@@ -249,9 +254,10 @@ export function PembelianEditForm({
             <label className="text-sm text-slate-700 dark:text-slate-200">
               {t("field.tanggalBayar")}
               <AppDateInput
-                value={form.tanggalBayar}
+                value={form.hutang ? "" : form.tanggalBayar}
+                disabled={form.hutang}
                 onValueChange={(value) => setForm((prev) => ({ ...prev, tanggalBayar: value }))}
-                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm disabled:cursor-not-allowed disabled:bg-sky-100/70 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
               />
             </label>
           </div>
@@ -259,7 +265,15 @@ export function PembelianEditForm({
           <div className="mt-3 grid gap-2 sm:flex sm:flex-wrap">
             <button
               type="button"
-              onClick={() => void onSave?.({ ...form, idInvoice: effectiveIdInvoice }, item)}
+              onClick={() =>
+                void onSave?.(
+                  {
+                    ...form,
+                    idInvoice: effectiveIdInvoice,
+                  },
+                  item
+                )
+              }
               disabled={isSaving || isDeleting}
               className="w-full rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-sky-500 dark:text-slate-950 dark:hover:bg-sky-400 sm:w-auto"
             >
@@ -286,6 +300,7 @@ export function PembelianEditForm({
                   setForm({
                     ...resetForm,
                     idInvoice: ensureValidIdInvoice(resetForm.idInvoice, invoiceOptions),
+                    tanggalBayar: resetForm.hutang ? "" : resetForm.tanggalBayar,
                   });
                   return;
                 }
@@ -294,6 +309,7 @@ export function PembelianEditForm({
                   setForm({
                     ...initialForm,
                     idInvoice: ensureValidIdInvoice(initialForm.idInvoice, invoiceOptions),
+                    tanggalBayar: initialForm.hutang ? "" : initialForm.tanggalBayar,
                   });
                   return;
                 }
@@ -352,7 +368,7 @@ export function PembelianEditForm({
             </p>
             <p>
               <span className="text-slate-500 dark:text-slate-400">{t("field.nilaiNota")}:</span>{" "}
-              {formatRupiah(Number(form.nilaiNota || "0"), locale)}
+              {formatRupiah(normalizedNilaiNota, locale)}
             </p>
             <p>
               <span className="text-slate-500 dark:text-slate-400">{t("field.tanggalJatuhTempo")}:</span>{" "}
@@ -360,7 +376,7 @@ export function PembelianEditForm({
             </p>
             <p>
               <span className="text-slate-500 dark:text-slate-400">{t("field.tanggalBayar")}:</span>{" "}
-              {formatTanggal(form.tanggalBayar || null, locale)}
+              {formatTanggal(form.hutang ? null : form.tanggalBayar || null, locale)}
             </p>
           </div>
         </div>

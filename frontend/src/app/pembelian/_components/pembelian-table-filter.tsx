@@ -252,9 +252,15 @@ export function PembelianTableFilter({
                     <dl className="mt-4 space-y-3 text-sm">
                       <div className="grid gap-3 sm:grid-cols-2">
                         <div>
+                          <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.noInvoice")}</dt>
+                          <dd className="mt-1 text-slate-700 dark:text-slate-200">{group.noInvoice || "-"}</dd>
+                        </div>
+                        <div>
                           <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.noNpwp")}</dt>
                           <dd className="mt-1 text-slate-700 dark:text-slate-200">{row.noNpwp || "-"}</dd>
                         </div>
+                      </div>
+                      <div className="grid gap-3 sm:grid-cols-2">
                         <div>
                           <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.lamaHutang")}</dt>
                           <dd className="mt-1 text-slate-700 dark:text-slate-200">
@@ -302,9 +308,10 @@ export function PembelianTableFilter({
 
             <div className="hidden md:block">
               <div className="overflow-x-auto">
-                <table className="min-w-[1240px] table-fixed text-sm">
+                <table className="min-w-[1380px] table-fixed text-sm">
                   <colgroup>
                     <col style={{ width: "110px" }} />
+                    <col style={{ width: "140px" }} />
                     <col style={{ width: "250px" }} />
                     <col style={{ width: "160px" }} />
                     <col style={{ width: "80px" }} />
@@ -318,6 +325,7 @@ export function PembelianTableFilter({
                   <thead className="bg-sky-800 text-left text-white dark:bg-sky-950">
                     <tr>
                       <th className="px-3 py-2 font-medium">{t("field.tanggalNota")}</th>
+                      <th className="px-3 py-2 font-medium">{t("field.noInvoice")}</th>
                       <th className="px-3 py-2 font-medium">{t("field.namaSupplier")}</th>
                       <th className="px-3 py-2 font-medium">{t("field.noNpwp")}</th>
                       <th className="px-3 py-2 font-medium">{t("field.hutang")}</th>
@@ -343,6 +351,9 @@ export function PembelianTableFilter({
                         >
                           <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">
                             {formatTanggal(row.tanggalNota, locale)}
+                          </td>
+                          <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">
+                            {group.noInvoice || "-"}
                           </td>
                           <td className="px-3 py-2 font-medium text-slate-800 dark:text-slate-100" title={row.namaSupplier || "-"}>
                             <div className={clampedCellClassName}>{row.namaSupplier || "-"}</div>

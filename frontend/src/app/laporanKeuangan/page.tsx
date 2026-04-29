@@ -6,6 +6,7 @@ import { AppToast } from "../_components/app-toast";
 import { useI18n } from "../_i18n/provider";
 import { ApiRequestError } from "../_lib/api-client";
 import { fetchCustomerRows } from "../customer/_lib/customer";
+import { fetchPembelianRows, type PembelianItem } from "../pembelian/_lib/pembelian";
 import {
   defaultInvoiceFilter,
   fetchInvoiceExportRows,
@@ -84,6 +85,7 @@ export default function LaporanKeuanganPage() {
   const [bulan, setBulan] = useState(getCurrentMonthValue);
   const [rows, setRows] = useState<FormRow[]>(() => [createFormRow()]);
   const [invoiceRows, setInvoiceRows] = useState<InvoiceItem[]>([]);
+  const [pembelianRows, setPembelianRows] = useState<PembelianItem[]>([]);
   const [customerLabelMap, setCustomerLabelMap] = useState<Map<string, string>>(new Map());
   const [lastSavedItem, setLastSavedItem] = useState<LaporanKeuanganItem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -105,6 +107,7 @@ export default function LaporanKeuanganPage() {
       if (!selectedBulan) {
         setRows([createFormRow()]);
         setInvoiceRows([]);
+        setPembelianRows([]);
         setCustomerLabelMap(new Map());
         setLastSavedItem(null);
         setIsLoading(false);
@@ -117,7 +120,7 @@ export default function LaporanKeuanganPage() {
 
       try {
         const { tanggalDari, tanggalSampai } = getMonthDateRange(selectedBulan);
-        const [item, invoices, customers] = await Promise.all([
+        const [item, invoices, customers, pembelians] = await Promise.all([
           fetchLaporanKeuangan(selectedBulan),
           fetchInvoiceExportRows({
             ...defaultInvoiceFilter,
@@ -125,11 +128,13 @@ export default function LaporanKeuanganPage() {
             tanggalSampai,
           }),
           fetchCustomerRows(),
+          fetchPembelianRows(),
         ]);
 
         setLastSavedItem(item);
         setRows(toFormRows(item));
         setInvoiceRows(invoices);
+        setPembelianRows(pembelians);
         setCustomerLabelMap(
           new Map(customers.map((customer) => [customer.id, customer.nama || customer.id]))
         );
@@ -137,6 +142,7 @@ export default function LaporanKeuanganPage() {
         setLastSavedItem(null);
         setRows([createFormRow()]);
         setInvoiceRows([]);
+        setPembelianRows([]);
         setCustomerLabelMap(new Map());
 
         if (error instanceof ApiRequestError) {
@@ -159,9 +165,33 @@ export default function LaporanKeuanganPage() {
   const totalBiayaOperasional = useMemo(() => {
     return rows.reduce((total, row) => total + (normalizeAmount(row.jumlah) ?? 0), 0);
   }, [rows]);
-  const grossProfit = useMemo(() => {
+  const invoiceGrandTotal = useMemo(() => {
     return invoiceRows.reduce((total, row) => total + Number(row.grandTotal || 0), 0);
   }, [invoiceRows]);
+  const purchaseTotalByInvoiceId = useMemo(() => {
+    const map = new Map<string, number>();
+
+    pembelianRows.forEach((row) => {
+      const invoiceId = String(row.idInvoice || "").trim();
+
+      if (!invoiceId) {
+        return;
+      }
+
+      const rowTotal = Number(row.nilaiNota || 0);
+
+      map.set(invoiceId, (map.get(invoiceId) || 0) + rowTotal);
+    });
+
+    return map;
+  }, [pembelianRows]);
+  const purchaseTotal = useMemo(() => {
+    return invoiceRows.reduce(
+      (total, row) => total + (purchaseTotalByInvoiceId.get(row.id) || 0),
+      0
+    );
+  }, [invoiceRows, purchaseTotalByInvoiceId]);
+  const grossProfit = invoiceGrandTotal - purchaseTotal;
   const netProfit = grossProfit - totalBiayaOperasional;
 
   const selectedMonthLabel = useMemo(
@@ -305,30 +335,45 @@ export default function LaporanKeuanganPage() {
             </div>
           ) : (
             <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
-              <table className="w-full min-w-[680px] text-left text-sm">
+              <table className="w-full min-w-[860px] text-left text-sm">
                 <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:bg-slate-900 dark:text-slate-400">
                   <tr>
                     <th className="px-3 py-2">{t("field.tanggal")}</th>
                     <th className="px-3 py-2">{t("field.noInvoice")}</th>
                     <th className="px-3 py-2">{t("field.namaCustomer")}</th>
                     <th className="px-3 py-2 text-right">{t("field.grandTotal")}</th>
+                    <th className="px-3 py-2 text-right">{t("field.totalPembelian")}</th>
+                    <th className="px-3 py-2 text-right">{t("field.grossProfit")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {invoiceRows.map((row) => (
-                    <tr key={row.id} className="text-slate-700 dark:text-slate-200">
-                      <td className="whitespace-nowrap px-3 py-2">{row.tanggal ? row.tanggal.slice(0, 10) : "-"}</td>
-                      <td className="whitespace-nowrap px-3 py-2 font-medium">{row.noInvoice || "-"}</td>
-                      <td className="px-3 py-2">{customerLabelMap.get(row.idCustomer) || row.idCustomer || "-"}</td>
-                      <td className="whitespace-nowrap px-3 py-2 text-right font-medium">
-                        {formatLaporanKeuanganCurrency(row.grandTotal, locale)}
-                      </td>
-                    </tr>
-                  ))}
+                  {invoiceRows.map((row) => {
+                    const rowPembelian = purchaseTotalByInvoiceId.get(row.id) || 0;
+                    const rowProfit = Number(row.grandTotal || 0) - rowPembelian;
+
+                    return (
+                      <tr key={row.id} className="text-slate-700 dark:text-slate-200">
+                        <td className="whitespace-nowrap px-3 py-2">{row.tanggal ? row.tanggal.slice(0, 10) : "-"}</td>
+                        <td className="whitespace-nowrap px-3 py-2 font-medium">{row.noInvoice || "-"}</td>
+                        <td className="px-3 py-2">{customerLabelMap.get(row.idCustomer) || row.idCustomer || "-"}</td>
+                        <td className="whitespace-nowrap px-3 py-2 text-right font-medium">
+                          {formatLaporanKeuanganCurrency(row.grandTotal, locale)}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-2 text-right font-medium">
+                          {formatLaporanKeuanganCurrency(rowPembelian, locale)}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-2 text-right font-medium">
+                          {formatLaporanKeuanganCurrency(rowProfit, locale)}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
                 <tfoot className="bg-slate-50 font-semibold text-slate-900 dark:bg-slate-900 dark:text-slate-100">
                   <tr>
                     <td className="px-3 py-2 text-right" colSpan={3}>{t("field.grossProfit")}</td>
+                    <td className="whitespace-nowrap px-3 py-2 text-right">{formatLaporanKeuanganCurrency(invoiceGrandTotal, locale)}</td>
+                    <td className="whitespace-nowrap px-3 py-2 text-right">{formatLaporanKeuanganCurrency(purchaseTotal, locale)}</td>
                     <td className="whitespace-nowrap px-3 py-2 text-right">{formatLaporanKeuanganCurrency(grossProfit, locale)}</td>
                   </tr>
                 </tfoot>
@@ -443,15 +488,27 @@ export default function LaporanKeuanganPage() {
             <h2 className="mt-2 text-xl font-semibold text-slate-900 dark:text-slate-100">{selectedMonthLabel}</h2>
             <dl className="mt-5 space-y-4">
               <div>
-                <dt className="text-sm text-slate-500 dark:text-slate-400">{t("field.totalBiayaOperasional")}</dt>
+                <dt className="text-sm text-slate-500 dark:text-slate-400">{t("field.totalInvoice")}</dt>
                 <dd className="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                  {formatLaporanKeuanganCurrency(totalBiayaOperasional, locale)}
+                  {formatLaporanKeuanganCurrency(invoiceGrandTotal, locale)}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-sm text-slate-500 dark:text-slate-400">{t("field.totalPembelian")}</dt>
+                <dd className="mt-1 text-2xl font-semibold text-red-700 dark:text-red-300">
+                  {formatLaporanKeuanganCurrency(purchaseTotal, locale)}
                 </dd>
               </div>
               <div>
                 <dt className="text-sm text-slate-500 dark:text-slate-400">{t("field.grossProfit")}</dt>
                 <dd className="mt-1 text-2xl font-semibold text-emerald-700 dark:text-emerald-300">
                   {formatLaporanKeuanganCurrency(grossProfit, locale)}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-sm text-slate-500 dark:text-slate-400">{t("field.totalBiayaOperasional")}</dt>
+                <dd className="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">
+                  {formatLaporanKeuanganCurrency(totalBiayaOperasional, locale)}
                 </dd>
               </div>
               <div>

@@ -6,6 +6,7 @@ import { ApiLoadingState } from "../../_components/api-loading-state";
 import { useI18n } from "../../_i18n/provider";
 import { ApiRequestError } from "../../_lib/api-client";
 import { fetchCustomerRows } from "../../customer/_lib/customer";
+import { fetchPembelianRows, type PembelianItem } from "../../pembelian/_lib/pembelian";
 import {
   defaultInvoiceFilter,
   fetchInvoiceExportRows,
@@ -49,7 +50,15 @@ type FinancialReportRow = {
   kreditPpn?: number;
   kreditNonPpn?: number;
   bayar?: string;
+  isHutang?: boolean;
   note?: string;
+};
+
+type PurchaseReportRow = {
+  hutang: boolean;
+  ppn: boolean;
+  supplierName: string;
+  total: number;
 };
 
 function escapeExcelXml(value: ExcelCellValue) {
@@ -349,12 +358,8 @@ function toOptionalAmount(value: number) {
   return value === 0 ? undefined : value;
 }
 
-function formatInvoiceBarangDescription(barang: InvoiceItem["barang"][number]) {
-  const parts = [barang.namaBarang, barang.spesifikasi].map((value) => value.trim()).filter(Boolean);
-  const quantity = [barang.kuantitas, barang.unit].filter(Boolean).join(" ");
-  const description = parts.join(" - ");
-
-  return quantity ? `${description} (${quantity})` : description;
+function calculatePembelianTotal(row: PembelianItem) {
+  return Number(row.nilaiNota || 0);
 }
 
 export default function LaporanKeuanganExportPage() {
@@ -364,6 +369,7 @@ export default function LaporanKeuanganExportPage() {
   const bulan = String(searchParams.get("bulan") || "").trim() || getCurrentMonthValue();
   const [item, setItem] = useState<LaporanKeuanganItem | null>(null);
   const [invoiceRows, setInvoiceRows] = useState<InvoiceItem[]>([]);
+  const [pembelianRows, setPembelianRows] = useState<PembelianItem[]>([]);
   const [customerLabelMap, setCustomerLabelMap] = useState<Map<string, string>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
@@ -372,22 +378,81 @@ export default function LaporanKeuanganExportPage() {
     () => formatLaporanKeuanganMonth(bulan, locale),
     [bulan, locale]
   );
-  const grossProfit = useMemo(() => {
+  const invoiceGrandTotal = useMemo(() => {
     return invoiceRows.reduce((total, row) => total + Number(row.grandTotal || 0), 0);
   }, [invoiceRows]);
+  const purchaseRowsByInvoiceId = useMemo(() => {
+    const map = new Map<string, PurchaseReportRow[]>();
+
+    pembelianRows.forEach((row) => {
+      const invoiceId = String(row.idInvoice || "").trim();
+
+      if (!invoiceId) {
+        return;
+      }
+
+      const rowTotal = calculatePembelianTotal(row);
+
+      if (rowTotal <= 0) {
+        return;
+      }
+
+      const supplierName = String(row.namaSupplier || "").trim() || "-";
+      const currentRows = map.get(invoiceId) || [];
+
+      map.set(invoiceId, [
+        ...currentRows,
+        {
+          hutang: Boolean(row.hutang),
+          ppn: Boolean(row.ppn),
+          supplierName,
+          total: rowTotal,
+        },
+      ]);
+    });
+
+    return map;
+  }, [pembelianRows]);
+  const purchaseTotalByInvoiceId = useMemo(() => {
+    const map = new Map<string, number>();
+
+    purchaseRowsByInvoiceId.forEach((rows, invoiceId) => {
+      map.set(
+        invoiceId,
+        rows.reduce((total, row) => total + row.total, 0)
+      );
+    });
+
+    return map;
+  }, [purchaseRowsByInvoiceId]);
+  const purchaseTotal = useMemo(() => {
+    return invoiceRows.reduce(
+      (total, row) => total + (purchaseTotalByInvoiceId.get(row.id) || 0),
+      0
+    );
+  }, [invoiceRows, purchaseTotalByInvoiceId]);
+  const grossProfit = invoiceGrandTotal - purchaseTotal;
   const totalBiayaOperasional = item?.totalBiayaOperasional || 0;
   const netProfit = grossProfit - totalBiayaOperasional;
-  const invoicePpnTotal = useMemo(() => {
-    return invoiceRows.reduce((total, row) => total + Number(row.ppnAmount || 0), 0);
-  }, [invoiceRows]);
-  const invoiceNonPpnTotal = Math.max(0, grossProfit - invoicePpnTotal);
+  const purchasePpnTotal = useMemo(() => {
+    return invoiceRows.reduce((total, row) => {
+      const invoicePurchases = purchaseRowsByInvoiceId.get(row.id) || [];
+      return (
+        total +
+        invoicePurchases.reduce(
+          (invoiceTotal, purchase) => invoiceTotal + (purchase.ppn ? purchase.total : 0),
+          0
+        )
+      );
+    }, 0);
+  }, [invoiceRows, purchaseRowsByInvoiceId]);
+  const purchaseNonPpnTotal = purchaseTotal - purchasePpnTotal;
   const financialReportRows = useMemo(() => {
     const rows: FinancialReportRow[] = [];
 
     invoiceRows.forEach((row) => {
       const grandTotal = Number(row.grandTotal || 0);
-      const ppnAmount = Number(row.ppnAmount || 0);
-      const nonPpnAmount = Math.max(0, grandTotal - ppnAmount);
+      const invoicePurchases = purchaseRowsByInvoiceId.get(row.id) || [];
       const customerName = customerLabelMap.get(row.idCustomer) || row.idCustomer || "-";
 
       rows.push({
@@ -395,14 +460,16 @@ export default function LaporanKeuanganExportPage() {
         date: formatSpreadsheetDate(row.tanggal),
         description: `${customerName} (${row.noInvoice || "-"})`,
         debet: grandTotal,
-        kreditPpn: toOptionalAmount(ppnAmount),
-        kreditNonPpn: toOptionalAmount(nonPpnAmount),
       });
 
-      row.barang.forEach((barang) => {
+      invoicePurchases.forEach((purchase) => {
         rows.push({
           kind: "invoiceDetail",
-          description: formatInvoiceBarangDescription(barang),
+          description: `${t("nav.pembelian")} - ${purchase.supplierName}`,
+          kreditPpn: purchase.ppn ? purchase.total : undefined,
+          kreditNonPpn: purchase.ppn ? undefined : purchase.total,
+          bayar: purchase.hutang ? t("field.hutang").toUpperCase() : t("field.lunas").toUpperCase(),
+          isHutang: purchase.hutang,
         });
       });
 
@@ -412,15 +479,15 @@ export default function LaporanKeuanganExportPage() {
     rows.push({
       kind: "total",
       description: t("laporanKeuangan.report.totalJumlah"),
-      debet: grossProfit,
-      kreditPpn: toOptionalAmount(invoicePpnTotal),
-      kreditNonPpn: toOptionalAmount(invoiceNonPpnTotal),
+      debet: invoiceGrandTotal,
+      kreditPpn: toOptionalAmount(purchasePpnTotal),
+      kreditNonPpn: toOptionalAmount(purchaseNonPpnTotal),
     });
     rows.push({
       kind: "grandTotal",
       description: t("laporanKeuangan.report.grandTotal"),
-      debet: grossProfit,
-      kreditNonPpn: grossProfit,
+      debet: invoiceGrandTotal,
+      kreditNonPpn: purchaseTotal,
     });
     rows.push({ kind: "spacer" });
     rows.push({
@@ -459,11 +526,14 @@ export default function LaporanKeuanganExportPage() {
   }, [
     customerLabelMap,
     grossProfit,
-    invoiceNonPpnTotal,
-    invoicePpnTotal,
+    invoiceGrandTotal,
     invoiceRows,
     item,
     netProfit,
+    purchaseNonPpnTotal,
+    purchasePpnTotal,
+    purchaseTotal,
+    purchaseRowsByInvoiceId,
     t,
     totalBiayaOperasional,
   ]);
@@ -486,7 +556,7 @@ export default function LaporanKeuanganExportPage() {
 
       try {
         const { tanggalDari, tanggalSampai } = getMonthDateRange(bulan);
-        const [laporanKeuangan, invoices, customers] = await Promise.all([
+        const [laporanKeuangan, invoices, customers, pembelians] = await Promise.all([
           fetchLaporanKeuangan(bulan),
           fetchInvoiceExportRows({
             ...defaultInvoiceFilter,
@@ -494,6 +564,7 @@ export default function LaporanKeuanganExportPage() {
             tanggalSampai,
           }),
           fetchCustomerRows(),
+          fetchPembelianRows(),
         ]);
 
         if (isCancelled) {
@@ -502,6 +573,7 @@ export default function LaporanKeuanganExportPage() {
 
         setItem(laporanKeuangan);
         setInvoiceRows(invoices);
+        setPembelianRows(pembelians);
         setCustomerLabelMap(
           new Map(customers.map((customer) => [customer.id, customer.nama || customer.id]))
         );
@@ -644,7 +716,15 @@ export default function LaporanKeuanganExportPage() {
                 </div>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-3">
+              <div className="grid gap-3 sm:grid-cols-5">
+                <div className="rounded-lg border border-slate-300 px-3 py-2">
+                  <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">{t("field.totalInvoice")}</p>
+                  <p className="mt-1 font-semibold text-slate-900">{formatLaporanKeuanganCurrency(invoiceGrandTotal, locale)}</p>
+                </div>
+                <div className="rounded-lg border border-slate-300 px-3 py-2">
+                  <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">{t("field.totalPembelian")}</p>
+                  <p className="mt-1 font-semibold text-slate-900">{formatLaporanKeuanganCurrency(purchaseTotal, locale)}</p>
+                </div>
                 <div className="rounded-lg border border-slate-300 px-3 py-2">
                   <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">{t("field.grossProfit")}</p>
                   <p className="mt-1 font-semibold text-slate-900">{formatLaporanKeuanganCurrency(grossProfit, locale)}</p>
@@ -706,7 +786,17 @@ export default function LaporanKeuanganExportPage() {
                           <td className="border border-slate-300 px-2 py-1 text-right align-top">
                             {formatAccountingNumber(row.kreditNonPpn, locale)}
                           </td>
-                          <td className="border border-slate-300 px-2 py-1 align-top">{row.bayar || ""}</td>
+                          <td
+                            className={`border border-slate-300 px-2 py-1 align-top ${
+                              row.isHutang
+                                ? "font-semibold text-red-700"
+                                : row.bayar
+                                  ? "font-semibold text-emerald-700"
+                                  : ""
+                            }`}
+                          >
+                            {row.bayar || ""}
+                          </td>
                           <td className="border border-slate-300 px-2 py-1 align-top">{row.note || ""}</td>
                         </tr>
                       );
