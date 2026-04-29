@@ -21,7 +21,13 @@ import {
   type LaporanKeuanganItem,
 } from "../_lib/laporan-keuangan";
 
-type ExcelCellValue = string | number | null | undefined;
+type ExcelPrimitiveCellValue = string | number | null | undefined;
+type ExcelCellValue =
+  | ExcelPrimitiveCellValue
+  | {
+      value: ExcelPrimitiveCellValue;
+      styleId?: number;
+    };
 
 type ExcelWorksheetData = {
   name: string;
@@ -61,7 +67,46 @@ type PurchaseReportRow = {
   total: number;
 };
 
-function escapeExcelXml(value: ExcelCellValue) {
+const excelStyleIds = {
+  tableText: 1,
+  tableTextIndent: 2,
+  tableNumber: 3,
+  header: 4,
+  boldText: 5,
+  boldNumber: 6,
+  grossText: 7,
+  grossNumber: 8,
+  operationalTotalText: 9,
+  operationalTotalNumber: 10,
+  netProfitText: 11,
+  netProfitNumber: 12,
+  hutangStatus: 13,
+  lunasStatus: 14,
+  spacer: 15,
+} as const;
+
+function styledExcelCell(value: ExcelPrimitiveCellValue, styleId: number): ExcelCellValue {
+  return { value, styleId };
+}
+
+function isStyledExcelCell(value: ExcelCellValue): value is { value: ExcelPrimitiveCellValue; styleId?: number } {
+  return typeof value === "object" && value !== null && "value" in value;
+}
+
+function getExcelCellValue(value: ExcelCellValue) {
+  return isStyledExcelCell(value) ? value.value : value;
+}
+
+function getExcelCellStyleId(value: ExcelCellValue) {
+  return isStyledExcelCell(value) ? value.styleId : undefined;
+}
+
+function isEmptyExcelCell(value: ExcelCellValue) {
+  const cellValue = getExcelCellValue(value);
+  return (cellValue === null || cellValue === undefined) && getExcelCellStyleId(value) === undefined;
+}
+
+function escapeExcelXml(value: ExcelPrimitiveCellValue) {
   return String(value ?? "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -84,12 +129,19 @@ function toExcelColumnName(index: number) {
 
 function toExcelCell(value: ExcelCellValue, columnIndex: number, rowIndex: number) {
   const cellReference = `${toExcelColumnName(columnIndex)}${rowIndex + 1}`;
+  const cellValue = getExcelCellValue(value);
+  const styleId = getExcelCellStyleId(value);
+  const styleAttribute = styleId === undefined ? "" : ` s="${styleId}"`;
 
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return `<c r="${cellReference}"><v>${value}</v></c>`;
+  if (cellValue === null || cellValue === undefined) {
+    return `<c r="${cellReference}"${styleAttribute}/>`;
   }
 
-  return `<c r="${cellReference}" t="inlineStr"><is><t>${escapeExcelXml(value)}</t></is></c>`;
+  if (typeof cellValue === "number" && Number.isFinite(cellValue)) {
+    return `<c r="${cellReference}"${styleAttribute}><v>${cellValue}</v></c>`;
+  }
+
+  return `<c r="${cellReference}"${styleAttribute} t="inlineStr"><is><t>${escapeExcelXml(cellValue)}</t></is></c>`;
 }
 
 function toExcelRows(rows: ExcelCellValue[][]) {
@@ -97,7 +149,7 @@ function toExcelRows(rows: ExcelCellValue[][]) {
     .map(
       (row, rowIndex) =>
         `<row r="${rowIndex + 1}">${row
-          .map((value, columnIndex) => (value === null || value === undefined ? "" : toExcelCell(value, columnIndex, rowIndex)))
+          .map((value, columnIndex) => (isEmptyExcelCell(value) ? "" : toExcelCell(value, columnIndex, rowIndex)))
           .join("")}</row>`
     )
     .join("");
@@ -129,10 +181,72 @@ function toExcelMergesXml(merges?: string[]) {
 function toExcelWorksheetXml(worksheet: ExcelWorksheetData) {
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <sheetViews>
+    <sheetView showGridLines="0" workbookViewId="0"/>
+  </sheetViews>
   ${toExcelColumnsXml(worksheet.columnWidths)}
   <sheetData>${toExcelRows(worksheet.rows)}</sheetData>
   ${toExcelMergesXml(worksheet.merges)}
 </worksheet>`;
+}
+
+function createExcelStylesXml() {
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <numFmts count="1">
+    <numFmt numFmtId="164" formatCode="#,##0;[Red]-#,##0;-"/>
+  </numFmts>
+  <fonts count="4">
+    <font><sz val="11"/><color rgb="FF0F172A"/><name val="Calibri"/><family val="2"/></font>
+    <font><b/><sz val="11"/><color rgb="FF020617"/><name val="Calibri"/><family val="2"/></font>
+    <font><b/><sz val="11"/><color rgb="FFB91C1C"/><name val="Calibri"/><family val="2"/></font>
+    <font><b/><sz val="11"/><color rgb="FF047857"/><name val="Calibri"/><family val="2"/></font>
+  </fonts>
+  <fills count="6">
+    <fill><patternFill patternType="none"/></fill>
+    <fill><patternFill patternType="gray125"/></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFFFF7ED"/><bgColor indexed="64"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFBAE6FD"/><bgColor indexed="64"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFFFEDD5"/><bgColor indexed="64"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFFEF3C7"/><bgColor indexed="64"/></patternFill></fill>
+  </fills>
+  <borders count="2">
+    <border><left/><right/><top/><bottom/><diagonal/></border>
+    <border>
+      <left style="thin"><color rgb="FF334155"/></left>
+      <right style="thin"><color rgb="FF334155"/></right>
+      <top style="thin"><color rgb="FF334155"/></top>
+      <bottom style="thin"><color rgb="FF334155"/></bottom>
+      <diagonal/>
+    </border>
+  </borders>
+  <cellStyleXfs count="1">
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="0"/>
+  </cellStyleXfs>
+  <cellXfs count="16">
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1"><alignment vertical="top"/></xf>
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyAlignment="1" applyBorder="1"><alignment vertical="top" indent="2"/></xf>
+    <xf numFmtId="164" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyAlignment="1" applyBorder="1"><alignment horizontal="right" vertical="top"/></xf>
+    <xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyAlignment="1" applyBorder="1" applyFill="1" applyFont="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
+    <xf numFmtId="0" fontId="1" fillId="0" borderId="1" xfId="0" applyBorder="1" applyFont="1"><alignment vertical="top"/></xf>
+    <xf numFmtId="164" fontId="1" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyAlignment="1" applyBorder="1" applyFont="1"><alignment horizontal="right" vertical="top"/></xf>
+    <xf numFmtId="0" fontId="1" fillId="3" borderId="1" xfId="0" applyBorder="1" applyFill="1" applyFont="1"><alignment vertical="top"/></xf>
+    <xf numFmtId="164" fontId="1" fillId="3" borderId="1" xfId="0" applyNumberFormat="1" applyAlignment="1" applyBorder="1" applyFill="1" applyFont="1"><alignment horizontal="right" vertical="top"/></xf>
+    <xf numFmtId="0" fontId="1" fillId="4" borderId="1" xfId="0" applyBorder="1" applyFill="1" applyFont="1"><alignment vertical="top"/></xf>
+    <xf numFmtId="164" fontId="1" fillId="4" borderId="1" xfId="0" applyNumberFormat="1" applyAlignment="1" applyBorder="1" applyFill="1" applyFont="1"><alignment horizontal="right" vertical="top"/></xf>
+    <xf numFmtId="0" fontId="1" fillId="5" borderId="1" xfId="0" applyBorder="1" applyFill="1" applyFont="1"><alignment vertical="top"/></xf>
+    <xf numFmtId="164" fontId="1" fillId="5" borderId="1" xfId="0" applyNumberFormat="1" applyAlignment="1" applyBorder="1" applyFill="1" applyFont="1"><alignment horizontal="right" vertical="top"/></xf>
+    <xf numFmtId="0" fontId="2" fillId="0" borderId="1" xfId="0" applyAlignment="1" applyBorder="1" applyFont="1"><alignment horizontal="center" vertical="top"/></xf>
+    <xf numFmtId="0" fontId="3" fillId="0" borderId="1" xfId="0" applyAlignment="1" applyBorder="1" applyFont="1"><alignment horizontal="center" vertical="top"/></xf>
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1"><alignment vertical="top"/></xf>
+  </cellXfs>
+  <cellStyles count="1">
+    <cellStyle name="Normal" xfId="0" builtinId="0"/>
+  </cellStyles>
+  <dxfs count="0"/>
+  <tableStyles count="0" defaultTableStyle="TableStyleMedium2" defaultPivotStyle="PivotStyleLight16"/>
+</styleSheet>`;
 }
 
 function writeUint16(view: DataView, offset: number, value: number) {
@@ -262,6 +376,7 @@ function createExcelWorkbookBlob(worksheets: ExcelWorksheetData[]) {
   <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
   <Default Extension="xml" ContentType="application/xml"/>
   <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+  <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
   ${worksheets
     .map(
       (_worksheet, index) =>
@@ -301,7 +416,12 @@ function createExcelWorkbookBlob(worksheets: ExcelWorksheetData[]) {
         `<Relationship Id="rId${index + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${index + 1}.xml"/>`
     )
     .join("")}
+  <Relationship Id="rIdStyles" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
 </Relationships>`,
+    },
+    {
+      path: "xl/styles.xml",
+      content: createExcelStylesXml(),
     },
     ...worksheets.map((worksheet, index) => ({
       path: `xl/worksheets/sheet${index + 1}.xml`,
@@ -360,6 +480,69 @@ function toOptionalAmount(value: number) {
 
 function calculatePembelianTotal(row: PembelianItem) {
   return Number(row.nilaiNota || 0);
+}
+
+function getFinancialReportExcelStyles(row: FinancialReportRow) {
+  if (row.kind === "grossProfit") {
+    return {
+      text: excelStyleIds.grossText,
+      number: excelStyleIds.grossNumber,
+    };
+  }
+
+  if (row.kind === "operationalTotal") {
+    return {
+      text: excelStyleIds.operationalTotalText,
+      number: excelStyleIds.operationalTotalNumber,
+    };
+  }
+
+  if (row.kind === "netProfit") {
+    return {
+      text: excelStyleIds.netProfitText,
+      number: excelStyleIds.netProfitNumber,
+    };
+  }
+
+  if (row.kind === "total" || row.kind === "grandTotal") {
+    return {
+      text: excelStyleIds.boldText,
+      number: excelStyleIds.boldNumber,
+    };
+  }
+
+  if (row.kind === "spacer") {
+    return {
+      text: excelStyleIds.spacer,
+      number: excelStyleIds.spacer,
+    };
+  }
+
+  return {
+    text: excelStyleIds.tableText,
+    number: excelStyleIds.tableNumber,
+  };
+}
+
+function toFinancialReportExcelRow(row: FinancialReportRow): ExcelCellValue[] {
+  const styles = getFinancialReportExcelStyles(row);
+  const descriptionStyle =
+    row.kind === "invoiceDetail" ? excelStyleIds.tableTextIndent : styles.text;
+  const bayarStyle = row.bayar
+    ? row.isHutang
+      ? excelStyleIds.hutangStatus
+      : excelStyleIds.lunasStatus
+    : styles.text;
+
+  return [
+    styledExcelCell(row.date || null, styles.text),
+    styledExcelCell(row.description || null, descriptionStyle),
+    styledExcelCell(row.debet, styles.number),
+    styledExcelCell(row.kreditPpn, styles.number),
+    styledExcelCell(row.kreditNonPpn, styles.number),
+    styledExcelCell(row.bayar || null, bayarStyle),
+    styledExcelCell(row.note || null, styles.text),
+  ];
 }
 
 export default function LaporanKeuanganExportPage() {
@@ -614,24 +797,24 @@ export default function LaporanKeuanganExportPage() {
   function handleExportExcel() {
     const reportRows: ExcelCellValue[][] = [
       [
-        t("laporanKeuangan.report.date"),
-        t("laporanKeuangan.report.description"),
-        t("laporanKeuangan.report.debet"),
-        t("laporanKeuangan.report.kredit"),
-        null,
-        t("laporanKeuangan.report.bayar"),
-        t("laporanKeuangan.report.note"),
+        styledExcelCell(t("laporanKeuangan.report.date"), excelStyleIds.header),
+        styledExcelCell(t("laporanKeuangan.report.description"), excelStyleIds.header),
+        styledExcelCell(t("laporanKeuangan.report.debet"), excelStyleIds.header),
+        styledExcelCell(t("laporanKeuangan.report.kredit"), excelStyleIds.header),
+        styledExcelCell(null, excelStyleIds.header),
+        styledExcelCell(t("laporanKeuangan.report.bayar"), excelStyleIds.header),
+        styledExcelCell(t("laporanKeuangan.report.note"), excelStyleIds.header),
       ],
-      [null, null, null, t("field.ppn"), t("laporanKeuangan.report.nonPpn"), null, null],
-      ...financialReportRows.map((row) => [
-        row.date || null,
-        row.description || null,
-        row.debet,
-        row.kreditPpn,
-        row.kreditNonPpn,
-        row.bayar || null,
-        row.note || null,
-      ]),
+      [
+        styledExcelCell(null, excelStyleIds.header),
+        styledExcelCell(null, excelStyleIds.header),
+        styledExcelCell(null, excelStyleIds.header),
+        styledExcelCell(t("field.ppn"), excelStyleIds.header),
+        styledExcelCell(t("laporanKeuangan.report.nonPpn"), excelStyleIds.header),
+        styledExcelCell(null, excelStyleIds.header),
+        styledExcelCell(null, excelStyleIds.header),
+      ],
+      ...financialReportRows.map((row) => toFinancialReportExcelRow(row)),
     ];
 
     downloadExcelFile(`laporan-keuangan-${bulan}.xlsx`, [
@@ -651,9 +834,17 @@ export default function LaporanKeuanganExportPage() {
           size: A4 portrait;
           margin: 12mm;
         }
+
+        @media print {
+          .laporan-keuangan-export,
+          .laporan-keuangan-export * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+        }
       `}</style>
 
-      <main className="min-h-screen bg-slate-100 px-4 py-4 print:bg-white print:px-0 print:py-0">
+      <main className="laporan-keuangan-export min-h-screen bg-slate-100 px-4 py-4 print:bg-white print:px-0 print:py-0">
         <div className="mx-auto max-w-[900px] space-y-4 print:max-w-none">
           <header className="flex flex-wrap items-start justify-between gap-3 rounded-2xl bg-white p-4 shadow-sm print:hidden">
             <div>
