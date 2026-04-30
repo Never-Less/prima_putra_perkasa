@@ -8,6 +8,11 @@ import { ConfirmationModal } from "../_components/confirmation-modal";
 import { useExportAccess } from "../_hooks/use-export-access";
 import { ApiRequestError } from "../_lib/api-client";
 import { type ServerPaginationMeta } from "../_lib/pagination";
+import {
+  buildInvoicePrefillFromReadyInvoicePoGroup,
+  fetchReadyInvoicePoGroups,
+  type ReadyInvoicePoGroup,
+} from "../_lib/surat-jalan-invoice-status";
 import { useI18n } from "../_i18n/provider";
 import { fetchCustomerRows, type CustomerItem } from "../customer/_lib/customer";
 import { savePembelianPrefill } from "../pembelian/_lib/pembelian";
@@ -59,6 +64,8 @@ export default function InvoicePage() {
   const [filteredCount, setFilteredCount] = useState(0);
   const [customerRows, setCustomerRows] = useState<CustomerItem[]>([]);
   const [suratJalanOptions, setSuratJalanOptions] = useState<InvoiceSuratJalanOption[]>([]);
+  const [readyInvoicePoGroups, setReadyInvoicePoGroups] = useState<ReadyInvoicePoGroup[]>([]);
+  const [selectedReadyNoPo, setSelectedReadyNoPo] = useState("");
   const [selectedId, setSelectedId] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -164,10 +171,23 @@ export default function InvoicePage() {
 
   const loadSuratJalanOptions = useCallback(async () => {
     try {
-      const options = await fetchInvoiceSuratJalanOptions();
+      const [options, readyPoGroups] = await Promise.all([
+        fetchInvoiceSuratJalanOptions(),
+        fetchReadyInvoicePoGroups(),
+      ]);
       setSuratJalanOptions(options);
+      setReadyInvoicePoGroups(readyPoGroups);
+      setSelectedReadyNoPo((prevNoPo) => {
+        if (readyPoGroups.some((group) => group.noPo === prevNoPo)) {
+          return prevNoPo;
+        }
+
+        return readyPoGroups[0]?.noPo || "";
+      });
     } catch (error) {
       setSuratJalanOptions([]);
+      setReadyInvoicePoGroups([]);
+      setSelectedReadyNoPo("");
 
       if (error instanceof ApiRequestError) {
         showToast(error.message || t("invoice.suratJalanLoadError"), "error");
@@ -261,6 +281,19 @@ export default function InvoicePage() {
       nama: customer.nama || customer.id,
     }));
   }, [customerRows]);
+  const selectedReadyPoGroup = useMemo(() => {
+    return (
+      readyInvoicePoGroups.find((group) => group.noPo === selectedReadyNoPo) ||
+      readyInvoicePoGroups[0] ||
+      null
+    );
+  }, [readyInvoicePoGroups, selectedReadyNoPo]);
+  const readyInvoiceSuratJalanCount = useMemo(() => {
+    return readyInvoicePoGroups.reduce(
+      (total, group) => total + group.suratJalanRows.length,
+      0
+    );
+  }, [readyInvoicePoGroups]);
 
   const executeSaveInvoice = useCallback(
     async (form: InvoiceFormState, selectedItem?: InvoiceItem) => {
@@ -271,6 +304,7 @@ export default function InvoicePage() {
         if (selectedItem?.id) {
           const updatedInvoice = await updateInvoice(selectedItem.id, form);
           const refreshedRows = await loadInvoices({ showLoading: false });
+          await loadSuratJalanOptions();
           const currentUpdatedInvoice = updatedInvoice
             ? refreshedRows.find((row) => row.id === updatedInvoice.id) || updatedInvoice
             : undefined;
@@ -292,6 +326,7 @@ export default function InvoicePage() {
 
         const createdInvoice = await createInvoice(form);
         const refreshedRows = await loadInvoices({ showLoading: false });
+        await loadSuratJalanOptions();
         const currentCreatedInvoice = createdInvoice
           ? refreshedRows.find((row) => row.id === createdInvoice.id) || createdInvoice
           : undefined;
@@ -325,7 +360,7 @@ export default function InvoicePage() {
         setIsSaving(false);
       }
     },
-    [loadInvoices, showToast, t]
+    [loadInvoices, loadSuratJalanOptions, showToast, t]
   );
 
   const executeDeleteInvoice = useCallback(
@@ -337,6 +372,7 @@ export default function InvoicePage() {
         await deleteInvoice(selectedItem.id);
         setSelectedId("");
         await loadInvoices({ showLoading: false });
+        await loadSuratJalanOptions();
         setPostSaveAction(null);
         showToast(
           t("invoice.toast.deleteSuccess", {
@@ -359,8 +395,25 @@ export default function InvoicePage() {
         setIsDeleting(false);
       }
     },
-    [loadInvoices, showToast, t]
+    [loadInvoices, loadSuratJalanOptions, showToast, t]
   );
+
+  const handleUseReadySuratJalan = useCallback(() => {
+    const readyGroup = selectedReadyPoGroup;
+
+    if (!readyGroup) {
+      return;
+    }
+
+    setActionErrorMessage("");
+    setToast(null);
+    setPostSaveAction(null);
+    setSelectedId("");
+    setInitialForm(
+      toInvoiceFormStateFromPrefill(buildInvoicePrefillFromReadyInvoicePoGroup(readyGroup))
+    );
+    setInitialFormKey(Date.now());
+  }, [selectedReadyPoGroup]);
 
   const handleSaveInvoice = useCallback(
     async (form: InvoiceFormState, selectedItem?: InvoiceItem) => {
@@ -528,6 +581,50 @@ export default function InvoicePage() {
 
           {showDataSection ? (
             <>
+              {readyInvoicePoGroups.length > 0 ? (
+                <section className="rounded-2xl border border-amber-200 bg-amber-50/80 p-4 shadow-sm dark:border-amber-900/70 dark:bg-amber-950/30 sm:p-5">
+                  <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+                    <div className="max-w-3xl">
+                      <h2 className="text-lg font-semibold text-amber-900 dark:text-amber-100">
+                        {t("invoice.readySuratJalan.title")}
+                      </h2>
+                      <p className="mt-1 text-sm text-amber-800 dark:text-amber-200">
+                        {t("invoice.readySuratJalan.description", {
+                          count: readyInvoicePoGroups.length,
+                          suratJalanCount: readyInvoiceSuratJalanCount,
+                        })}
+                      </p>
+                    </div>
+                    <div className="grid gap-2 sm:grid-cols-[minmax(260px,1fr)_auto] lg:min-w-[520px]">
+                      <label className="text-sm text-amber-900 dark:text-amber-100">
+                        {t("field.noPo")}
+                        <select
+                          value={selectedReadyPoGroup?.noPo || ""}
+                          onChange={(event) => setSelectedReadyNoPo(event.target.value)}
+                          className="mt-1 w-full rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-amber-900 dark:bg-slate-950 dark:text-slate-100"
+                        >
+                          {readyInvoicePoGroups.map((group) => (
+                            <option key={group.noPo} value={group.noPo}>
+                              {group.noPo} - {resolveCustomerLabel(group.idCustomer)} -{" "}
+                              {t("invoice.readySuratJalan.optionSuratJalanCount", {
+                                count: group.suratJalanRows.length,
+                              })}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={handleUseReadySuratJalan}
+                        className="rounded-lg bg-amber-700 px-4 py-2 text-sm font-medium text-white hover:bg-amber-600 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400 sm:self-end"
+                      >
+                        {t("invoice.readySuratJalan.useButton")}
+                      </button>
+                    </div>
+                  </div>
+                </section>
+              ) : null}
+
               <InvoiceTableFilter
                 rows={rows}
                 filter={filter}

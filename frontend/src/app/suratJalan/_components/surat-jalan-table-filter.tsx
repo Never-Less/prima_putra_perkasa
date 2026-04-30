@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { AppDateInput } from "../../_components/app-date-input";
 import { DebouncedFilterInput } from "../../_components/debounced-filter-input";
 import { PaginationControls } from "../../_components/pagination-controls";
+import { isSuratJalanInvoiced } from "../../_lib/surat-jalan-invoice-status";
 import { type ServerPaginationMeta } from "../../_lib/pagination";
 import {
   barangLabel,
@@ -23,6 +24,7 @@ type SuratJalanTableFilterProps = {
   pagination: ServerPaginationMeta;
   selectedId?: string;
   canExport?: boolean;
+  invoicedSuratJalanNumbers?: Set<string>;
   onSelectRow?: (row: SuratJalanItem) => void;
   onExportRow?: (row: SuratJalanItem) => void;
   onExportNoPo?: (noPo: string) => void;
@@ -110,6 +112,7 @@ export function SuratJalanTableFilter({
   pagination,
   selectedId,
   canExport = false,
+  invoicedSuratJalanNumbers = new Set(),
   onSelectRow,
   onExportRow,
   onExportNoPo,
@@ -127,6 +130,26 @@ export function SuratJalanTableFilter({
   const tone = toneStyles[colorTone];
   const cellPadding = tableStyle === "compact" ? "px-2 py-1.5" : "px-3 py-2";
   const tableText = tableStyle === "compact" ? "text-xs" : "text-sm";
+  const getInvoiceStatus = (row: SuratJalanItem) => {
+    if (row.tipe !== "non partial") {
+      return {
+        label: t("suratJalan.invoiceStatus.notRequired"),
+        className: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
+      };
+    }
+
+    if (isSuratJalanInvoiced(row, invoicedSuratJalanNumbers)) {
+      return {
+        label: t("suratJalan.invoiceStatus.invoiced"),
+        className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-200",
+      };
+    }
+
+    return {
+      label: t("suratJalan.invoiceStatus.pending"),
+      className: "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-200",
+    };
+  };
   const groupedRows = useMemo(() => {
     const groupMap = new Map<string, SuratJalanItem[]>();
 
@@ -283,6 +306,7 @@ export function SuratJalanTableFilter({
                 const isSelected = selectedId === row.id;
                 const customerLabel = resolveCustomerLabel?.(row.idCustomer) || row.idCustomer || "-";
                 const barangText = barangLabel(row.barang);
+                const invoiceStatus = getInvoiceStatus(row);
 
                 return (
                   <article
@@ -296,13 +320,18 @@ export function SuratJalanTableFilter({
                         <p className="truncate text-base font-semibold text-slate-900 dark:text-slate-100">{row.noSuratJalan || "-"}</p>
                         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{formatTanggal(row.tanggal, locale)}</p>
                       </div>
-                      <span
-                        className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${
-                          isSelected ? tone.actionActive : "bg-sky-100 text-sky-700 dark:bg-slate-800 dark:text-slate-300"
-                        }`}
-                      >
-                        {row.tipe}
-                      </span>
+                      <div className="flex flex-col items-end gap-1">
+                        <span
+                          className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${
+                            isSelected ? tone.actionActive : "bg-sky-100 text-sky-700 dark:bg-slate-800 dark:text-slate-300"
+                          }`}
+                        >
+                          {row.tipe}
+                        </span>
+                        <span className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${invoiceStatus.className}`}>
+                          {invoiceStatus.label}
+                        </span>
+                      </div>
                     </div>
 
                     <dl className="mt-4 space-y-3 text-sm">
@@ -353,7 +382,7 @@ export function SuratJalanTableFilter({
 
             <div className="hidden md:block">
               <div className="overflow-x-auto">
-                <table className={`min-w-[1370px] table-fixed ${tableText}`}>
+                <table className={`min-w-[1500px] table-fixed ${tableText}`}>
                   <colgroup>
                     <col style={{ width: "140px" }} />
                     <col style={{ width: "110px" }} />
@@ -362,6 +391,7 @@ export function SuratJalanTableFilter({
                     <col style={{ width: "340px" }} />
                     <col style={{ width: "130px" }} />
                     <col style={{ width: "120px" }} />
+                    <col style={{ width: "130px" }} />
                     <col style={{ width: "180px" }} />
                   </colgroup>
                   <thead className={`${tone.header} text-left`}>
@@ -373,6 +403,7 @@ export function SuratJalanTableFilter({
                       <th className={`${cellPadding} font-medium`}>{t("field.barang")}</th>
                       <th className={`${cellPadding} font-medium`}>{t("field.kendaraan")}</th>
                       <th className={`${cellPadding} font-medium`}>{t("field.tipe")}</th>
+                      <th className={`${cellPadding} font-medium`}>{t("field.statusInvoice")}</th>
                       <th className={`${cellPadding} font-medium`}>{t("common.action")}</th>
                     </tr>
                   </thead>
@@ -382,6 +413,7 @@ export function SuratJalanTableFilter({
                       const useStripedRow = tableStyle === "striped" && index % 2 === 1;
                       const customerLabel = resolveCustomerLabel?.(row.idCustomer) || row.idCustomer || "-";
                       const barangText = barangLabel(row.barang);
+                      const invoiceStatus = getInvoiceStatus(row);
                       const rowClassName = isSelected
                         ? tone.selectedRow
                         : useStripedRow
@@ -407,6 +439,11 @@ export function SuratJalanTableFilter({
                           </td>
                           <td className={`whitespace-nowrap ${cellPadding} text-slate-600 dark:text-slate-300`}>{row.kendaraan}</td>
                           <td className={`whitespace-nowrap ${cellPadding} text-slate-600 dark:text-slate-300`}>{row.tipe}</td>
+                          <td className={`whitespace-nowrap ${cellPadding}`}>
+                            <span className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${invoiceStatus.className}`}>
+                              {invoiceStatus.label}
+                            </span>
+                          </td>
                           <td className={`whitespace-nowrap ${cellPadding}`}>
                             <div className="flex flex-wrap items-center gap-1.5">
                               <button

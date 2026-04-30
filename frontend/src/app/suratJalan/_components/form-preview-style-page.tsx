@@ -5,7 +5,12 @@ import { useRouter } from "next/navigation";
 import { ApiLoadingState } from "../../_components/api-loading-state";
 import { AppToast } from "../../_components/app-toast";
 import { ConfirmationModal } from "../../_components/confirmation-modal";
-import { saveInvoicePrefill, type InvoicePrefillPayload } from "../../invoice/_lib/invoice";
+import { buildInvoicedSuratJalanNumberSet } from "../../_lib/surat-jalan-invoice-status";
+import {
+  fetchInvoiceRows,
+  saveInvoicePrefill,
+  type InvoicePrefillPayload,
+} from "../../invoice/_lib/invoice";
 import { useExportAccess } from "../../_hooks/use-export-access";
 import { ApiRequestError } from "../../_lib/api-client";
 import { type ServerPaginationMeta } from "../../_lib/pagination";
@@ -58,6 +63,9 @@ export function FormPreviewStylePage() {
   const [filteredCount, setFilteredCount] = useState(0);
   const [customerRows, setCustomerRows] = useState<CustomerItem[]>([]);
   const [noPoOptionRows, setNoPoOptionRows] = useState<SuratJalanNoPoOption[]>([]);
+  const [invoicedSuratJalanNumbers, setInvoicedSuratJalanNumbers] = useState<Set<string>>(
+    () => new Set()
+  );
   const [selectedId, setSelectedId] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -171,13 +179,22 @@ export function FormPreviewStylePage() {
     }
   }, [showToast, t]);
 
+  const loadInvoiceStatus = useCallback(async () => {
+    try {
+      const invoices = await fetchInvoiceRows();
+      setInvoicedSuratJalanNumbers(buildInvoicedSuratJalanNumberSet(invoices));
+    } catch {
+      setInvoicedSuratJalanNumbers(new Set());
+    }
+  }, []);
+
   useEffect(() => {
     void loadSuratJalanData();
   }, [loadSuratJalanData]);
 
   useEffect(() => {
-    void Promise.all([loadCustomerOptions(), loadNoPoOptions()]);
-  }, [loadCustomerOptions, loadNoPoOptions]);
+    void Promise.all([loadCustomerOptions(), loadNoPoOptions(), loadInvoiceStatus()]);
+  }, [loadCustomerOptions, loadInvoiceStatus, loadNoPoOptions]);
 
   const handleFilterChange = useCallback(
     <K extends keyof SuratJalanFilter,>(key: K, value: SuratJalanFilter[K]) => {
@@ -597,6 +614,7 @@ export function FormPreviewStylePage() {
               pagination={pagination}
               selectedId={selectedId}
               canExport={canExport}
+              invoicedSuratJalanNumbers={invoicedSuratJalanNumbers}
               onFilterChange={handleFilterChange}
               onResetFilter={handleResetFilter}
               onPageChange={handlePageChange}

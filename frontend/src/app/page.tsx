@@ -1,13 +1,57 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 import { useIsAdminAccess } from "./_hooks/use-current-user";
 import { ThemeToggle } from "./_components/theme-toggle";
 import { useI18n } from "./_i18n/provider";
+import {
+  fetchReadyInvoicePoGroups,
+  type ReadyInvoicePoGroup,
+} from "./_lib/surat-jalan-invoice-status";
 
 export default function HomePage() {
   const { t } = useI18n();
   const isAdminAccess = useIsAdminAccess();
+  const [readyInvoicePoGroups, setReadyInvoicePoGroups] = useState<ReadyInvoicePoGroup[]>([]);
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    async function loadReadyInvoiceRows() {
+      try {
+        const groups = await fetchReadyInvoicePoGroups();
+
+        if (!isCancelled) {
+          setReadyInvoicePoGroups(groups);
+        }
+      } catch {
+        if (!isCancelled) {
+          setReadyInvoicePoGroups([]);
+        }
+      }
+    }
+
+    void loadReadyInvoiceRows();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
+
+  const readyInvoicePoPreview = useMemo(() => {
+    return readyInvoicePoGroups
+      .slice(0, 3)
+      .map((group) => group.noPo)
+      .filter(Boolean)
+      .join(", ");
+  }, [readyInvoicePoGroups]);
+  const readyInvoiceSuratJalanCount = useMemo(() => {
+    return readyInvoicePoGroups.reduce(
+      (total, group) => total + group.suratJalanRows.length,
+      0
+    );
+  }, [readyInvoicePoGroups]);
 
   const routes = [
     ...(isAdminAccess
@@ -88,6 +132,38 @@ export default function HomePage() {
           </Link>
         ))}
       </section>
+
+      {readyInvoicePoGroups.length > 0 ? (
+        <section className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-sm dark:border-amber-900/70 dark:bg-amber-950/30 sm:p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold text-amber-900 dark:text-amber-100">
+                {t("home.invoiceReminder.title", { count: readyInvoicePoGroups.length })}
+              </p>
+              <p className="mt-1 text-sm text-amber-800 dark:text-amber-200">
+                {t("home.invoiceReminder.description", {
+                  count: readyInvoiceSuratJalanCount,
+                  items: readyInvoicePoPreview || "-",
+                })}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href="/invoice"
+                className="rounded-lg bg-amber-700 px-3 py-2 text-sm font-medium text-white hover:bg-amber-600 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
+              >
+                {t("home.invoiceReminder.invoiceCta")}
+              </Link>
+              <Link
+                href="/suratJalan"
+                className="rounded-lg border border-amber-300 bg-white px-3 py-2 text-sm font-medium text-amber-800 hover:bg-amber-100 dark:border-amber-900 dark:bg-slate-950 dark:text-amber-200 dark:hover:bg-amber-950/50"
+              >
+                {t("home.invoiceReminder.suratJalanCta")}
+              </Link>
+            </div>
+          </div>
+        </section>
+      ) : null}
     </main>
   );
 }

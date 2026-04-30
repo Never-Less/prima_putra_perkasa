@@ -58,6 +58,11 @@ export const messages: Record<Locale, MessageDictionary> = {
     "home.route.pembelian.description":
       "Kelola data pembelian melalui tabel, filter, serta form dan preview dalam satu halaman.",
     "home.route.pembelian.cta": "Buka Pembelian",
+    "home.invoiceReminder.title": "{{count}} PO siap dibuat invoice",
+    "home.invoiceReminder.description":
+      "Berdasarkan {{count}} Surat Jalan non partial yang belum punya invoice: {{items}}",
+    "home.invoiceReminder.invoiceCta": "Buat Invoice",
+    "home.invoiceReminder.suratJalanCta": "Lihat Surat Jalan",
     "login.title": "Login",
     "login.description":
       "Masuk menggunakan username dan password untuk mengakses dashboard.",
@@ -231,6 +236,11 @@ export const messages: Record<Locale, MessageDictionary> = {
     "invoice.form.items.placeholder.qty": "Kuantitas",
     "invoice.form.items.placeholder.unit": "Unit",
     "invoice.form.items.placeholder.price": "Harga satuan",
+    "invoice.readySuratJalan.title": "PO Siap Invoice",
+    "invoice.readySuratJalan.description":
+      "{{count}} PO memiliki {{suratJalanCount}} Surat Jalan non partial yang belum punya invoice. Pilih PO untuk mengisi form invoice.",
+    "invoice.readySuratJalan.useButton": "Gunakan PO untuk Invoice",
+    "invoice.readySuratJalan.optionSuratJalanCount": "{{count}} SJ belum invoice",
     "invoice.preview.title": "Preview Invoice",
     "invoice.apiLoadError": "Gagal memuat data invoice dari backend.",
     "invoice.customerLoadError": "Gagal memuat pilihan customer untuk invoice.",
@@ -296,6 +306,9 @@ export const messages: Record<Locale, MessageDictionary> = {
       "Kelola data surat jalan melalui tabel, filter, serta form dan preview pada halaman yang sama.",
     "suratJalan.table.title": "Tabel Surat Jalan",
     "suratJalan.table.exportNoPoButton": "Export NoPO",
+    "suratJalan.invoiceStatus.pending": "Belum Invoice",
+    "suratJalan.invoiceStatus.invoiced": "Sudah Invoice",
+    "suratJalan.invoiceStatus.notRequired": "Tidak Berlaku",
     "suratJalan.form.title": "Form dan Preview Surat Jalan",
     "suratJalan.form.description":
       "Klik baris pada tabel untuk mengubah data, atau gunakan form ini untuk membuat surat jalan baru.",
@@ -469,6 +482,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "field.ppnAmount": "Nilai PPN",
     "field.grandTotal": "Grand Total",
     "field.isPpn": "PPN",
+    "field.statusInvoice": "Status Invoice",
     "field.tanggalDari": "Tanggal Dari",
     "field.tanggalSampai": "Tanggal Sampai",
     "field.kendaraan": "Kendaraan",
@@ -563,6 +577,11 @@ export const messages: Record<Locale, MessageDictionary> = {
     "home.route.pembelian.description":
       "Manage purchase data using a table, filters, and form plus preview in one page.",
     "home.route.pembelian.cta": "Open Purchase",
+    "home.invoiceReminder.title": "{{count}} POs are ready for invoice",
+    "home.invoiceReminder.description":
+      "Based on {{count}} non partial delivery notes without invoices: {{items}}",
+    "home.invoiceReminder.invoiceCta": "Create Invoice",
+    "home.invoiceReminder.suratJalanCta": "View Delivery Notes",
     "login.title": "Login",
     "login.description":
       "Sign in with username and password to access the dashboard.",
@@ -735,6 +754,11 @@ export const messages: Record<Locale, MessageDictionary> = {
     "invoice.form.items.placeholder.qty": "Quantity",
     "invoice.form.items.placeholder.unit": "Unit",
     "invoice.form.items.placeholder.price": "Unit Price",
+    "invoice.readySuratJalan.title": "POs Ready for Invoice",
+    "invoice.readySuratJalan.description":
+      "{{count}} POs have {{suratJalanCount}} non partial delivery notes without invoices. Select a PO to fill the invoice form.",
+    "invoice.readySuratJalan.useButton": "Use PO for Invoice",
+    "invoice.readySuratJalan.optionSuratJalanCount": "{{count}} DN not invoiced",
     "invoice.preview.title": "Invoice Preview",
     "invoice.apiLoadError": "Failed to load invoice data from backend.",
     "invoice.customerLoadError": "Failed to load customer options for invoice.",
@@ -800,6 +824,9 @@ export const messages: Record<Locale, MessageDictionary> = {
       "Manage delivery note data using a table, filters, and form plus preview on the same page.",
     "suratJalan.table.title": "Delivery Note Table",
     "suratJalan.table.exportNoPoButton": "Export noPo",
+    "suratJalan.invoiceStatus.pending": "Not Invoiced",
+    "suratJalan.invoiceStatus.invoiced": "Invoiced",
+    "suratJalan.invoiceStatus.notRequired": "Not Applicable",
     "suratJalan.form.title": "Delivery Note Form and Preview",
     "suratJalan.form.description":
       "Click a table row to update data, or use this form to create a new delivery note.",
@@ -975,6 +1002,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "field.ppnAmount": "VAT Amount",
     "field.grandTotal": "Grand Total",
     "field.isPpn": "VAT",
+    "field.statusInvoice": "Invoice Status",
     "field.tanggalDari": "Date From",
     "field.tanggalSampai": "Date To",
     "field.kendaraan": "Vehicle",
