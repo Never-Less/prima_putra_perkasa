@@ -1,0 +1,334 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { ApiLoadingState } from "../../_components/api-loading-state";
+import { ApiRequestError } from "../../_lib/api-client";
+import { useI18n } from "../../_i18n/provider";
+import { fetchCustomerRows, type CustomerItem } from "../../customer/_lib/customer";
+import {
+  defaultInvoiceFilter,
+  fetchInvoiceExportRows,
+  formatRupiah,
+  formatTanggal,
+  type InvoiceFilter,
+  type InvoiceItem,
+} from "../_lib/invoice";
+
+function toSearchFilter(searchParams: URLSearchParams): InvoiceFilter {
+  return {
+    ...defaultInvoiceFilter,
+    noInvoice: String(searchParams.get("noInvoice") || "").trim(),
+    noPo: String(searchParams.get("noPo") || "").trim(),
+    noSuratJalan: String(searchParams.get("noSuratJalan") || "").trim(),
+    idCustomer: String(searchParams.get("idCustomer") || "").trim(),
+    isPpn:
+      searchParams.get("isPpn") === "true" || searchParams.get("isPpn") === "false"
+        ? (searchParams.get("isPpn") as InvoiceFilter["isPpn"])
+        : "",
+    tanggalDari: String(searchParams.get("tanggalDari") || "").trim(),
+    tanggalSampai: String(searchParams.get("tanggalSampai") || "").trim(),
+  };
+}
+
+export default function InvoiceExportPage() {
+  const { locale, t } = useI18n();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const filter = useMemo(() => toSearchFilter(searchParams), [searchParams]);
+  const [rows, setRows] = useState<InvoiceItem[]>([]);
+  const [customerRows, setCustomerRows] = useState<CustomerItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const activeFilterEntries = useMemo(() => {
+    return [
+      ["field.noInvoice", filter.noInvoice],
+      ["field.noPo", filter.noPo],
+      ["field.noSuratJalan", filter.noSuratJalan],
+      ["field.namaCustomer", filter.idCustomer],
+      [
+        "field.isPpn",
+        filter.isPpn === "true" ? t("common.true") : filter.isPpn === "false" ? t("common.false") : "",
+      ],
+      ["field.tanggalDari", filter.tanggalDari],
+      ["field.tanggalSampai", filter.tanggalSampai],
+    ].filter((entry) => Boolean(String(entry[1] || "").trim()));
+  }, [filter, t]);
+  const hasTanggalFilter = Boolean(filter.tanggalDari || filter.tanggalSampai);
+
+  useEffect(() => {
+    const previousTitle = document.title;
+    document.title = activeFilterEntries.length > 0 ? "invoice-export-filtered" : "invoice-export";
+
+    return () => {
+      document.title = previousTitle;
+    };
+  }, [activeFilterEntries.length]);
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    async function loadExportData() {
+      setIsLoading(true);
+      setErrorMessage("");
+
+      try {
+        const [invoiceRows, customers] = await Promise.all([
+          fetchInvoiceExportRows(filter),
+          fetchCustomerRows(),
+        ]);
+
+        if (isCancelled) {
+          return;
+        }
+
+        setRows(invoiceRows);
+        setCustomerRows(customers);
+      } catch (error) {
+        if (isCancelled) {
+          return;
+        }
+
+        if (error instanceof ApiRequestError) {
+          setErrorMessage(error.message || t("invoice.exportPage.loadError"));
+        } else {
+          setErrorMessage(t("invoice.exportPage.loadError"));
+        }
+      } finally {
+        if (!isCancelled) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    void loadExportData();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [filter, t]);
+
+  const customerLabelMap = useMemo(() => {
+    const map = new Map<string, string>();
+
+    customerRows.forEach((customer) => {
+      const id = String(customer.id || "").trim();
+      const nama = String(customer.nama || "").trim();
+
+      if (!id) {
+        return;
+      }
+
+      map.set(id, nama || id);
+    });
+
+    return map;
+  }, [customerRows]);
+
+  const totals = useMemo(() => {
+    return rows.reduce(
+      (accumulator, row) => {
+        accumulator.subtotal += Number(row.subtotal || 0);
+        accumulator.ppnAmount += Number(row.ppnAmount || 0);
+        accumulator.grandTotal += Number(row.grandTotal || 0);
+        return accumulator;
+      },
+      {
+        subtotal: 0,
+        ppnAmount: 0,
+        grandTotal: 0,
+      }
+    );
+  }, [rows]);
+
+  function handleClosePage() {
+    window.close();
+
+    window.setTimeout(() => {
+      if (!document.hidden) {
+        router.push("/invoice");
+      }
+    }, 150);
+  }
+
+  return (
+    <>
+      <style jsx global>{`
+        @page {
+          size: A4 portrait;
+          margin: 12mm;
+        }
+      `}</style>
+
+      <main className="min-h-screen bg-slate-100 px-4 py-4 print:bg-white print:px-0 print:py-0">
+        <div className="mx-auto max-w-[980px] space-y-4 print:max-w-none">
+          <header className="flex flex-wrap items-start justify-between gap-3 rounded-2xl bg-white p-4 shadow-sm print:hidden">
+            <div>
+              <h1 className="text-xl font-semibold text-slate-900">{t("invoice.exportPage.title")}</h1>
+              <p className="mt-1 text-sm text-slate-600">{t("invoice.exportPage.description")}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600"
+              >
+                {t("common.print")}
+              </button>
+              <button
+                type="button"
+                onClick={handleClosePage}
+                className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              >
+                {t("common.close")}
+              </button>
+            </div>
+          </header>
+
+          {isLoading ? <ApiLoadingState /> : null}
+
+          {!isLoading && errorMessage ? (
+            <section className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+              {errorMessage}
+            </section>
+          ) : null}
+
+          {!isLoading && !errorMessage ? (
+            <section className="space-y-4 rounded-2xl bg-white p-4 shadow-sm print:rounded-none print:p-0 print:shadow-none">
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h2 className="text-base font-semibold text-slate-900">
+                    {t("invoice.exportPage.activeFilters")}
+                  </h2>
+                  <span className="text-sm text-slate-500">
+                    {t("invoice.exportPage.totalRows", { count: rows.length })}
+                  </span>
+                </div>
+
+                {activeFilterEntries.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {activeFilterEntries.map(([fieldKey, value]) => (
+                      <span
+                        key={`${fieldKey}-${value}`}
+                        className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs text-sky-800"
+                      >
+                        {t(fieldKey)}: {value}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-600">{t("invoice.exportPage.allData")}</p>
+                )}
+
+                {hasTanggalFilter ? (
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
+                      <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">
+                        {t("field.tanggalDari")}
+                      </p>
+                      <p className="mt-1 text-slate-800">
+                        {filter.tanggalDari ? formatTanggal(filter.tanggalDari, locale) : "-"}
+                      </p>
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
+                      <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">
+                        {t("field.tanggalSampai")}
+                      </p>
+                      <p className="mt-1 text-slate-800">
+                        {filter.tanggalSampai ? formatTanggal(filter.tanggalSampai, locale) : "-"}
+                      </p>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+
+              {rows.length === 0 ? (
+                <div className="rounded-xl border border-slate-200 px-4 py-6 text-center text-sm text-slate-500">
+                  {t("invoice.exportPage.empty")}
+                </div>
+              ) : (
+                <>
+                  <div className="overflow-x-auto border border-slate-300 print:overflow-visible">
+                    <table className="w-full border-collapse text-sm text-slate-800 print:text-[11px]">
+                      <thead className="bg-slate-100">
+                        <tr>
+                          <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">
+                            {t("field.tanggal")}
+                          </th>
+                          <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">
+                            {t("field.noInvoice")}
+                          </th>
+                          <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">
+                            {t("invoice.exportPage.customerFactoryLabel")}
+                          </th>
+                          <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">
+                            {t("invoice.exportPage.subtotalDppLabel")}
+                          </th>
+                          <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">
+                            {t("invoice.exportPage.ppnLabel")}
+                          </th>
+                          <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">
+                            {t("invoice.exportPage.totalInvoiceLabel")}
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rows.map((row, index) => {
+                          const customerLabel =
+                            customerLabelMap.get(row.idCustomer) || row.idCustomer || "-";
+
+                          return (
+                            <tr key={row.id} className={index % 2 ? "bg-slate-50" : "bg-white"}>
+                              <td className="border border-slate-300 px-3 py-2 print:px-2 print:py-1.5">
+                                {formatTanggal(row.tanggal, locale)}
+                              </td>
+                              <td className="border border-slate-300 px-3 py-2 font-medium print:px-2 print:py-1.5">
+                                {row.noInvoice || "-"}
+                              </td>
+                              <td className="border border-slate-300 px-3 py-2 print:px-2 print:py-1.5">
+                                {customerLabel}
+                              </td>
+                              <td className="border border-slate-300 px-3 py-2 print:px-2 print:py-1.5">
+                                {formatRupiah(row.subtotal, locale)}
+                              </td>
+                              <td className="border border-slate-300 px-3 py-2 print:px-2 print:py-1.5">
+                                {formatRupiah(row.ppnAmount, locale)}
+                              </td>
+                              <td className="border border-slate-300 px-3 py-2 font-medium print:px-2 print:py-1.5">
+                                {formatRupiah(row.grandTotal, locale)}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                      <tfoot className="bg-slate-100">
+                        <tr>
+                          <td
+                            colSpan={3}
+                            className="border border-slate-300 px-3 py-2 text-right font-semibold print:px-2 print:py-1.5"
+                          >
+                            {t("invoice.exportPage.grandTotalRowLabel")}
+                          </td>
+                          <td className="border border-slate-300 px-3 py-2 font-semibold print:px-2 print:py-1.5">
+                            {formatRupiah(totals.subtotal, locale)}
+                          </td>
+                          <td className="border border-slate-300 px-3 py-2 font-semibold print:px-2 print:py-1.5">
+                            {formatRupiah(totals.ppnAmount, locale)}
+                          </td>
+                          <td className="border border-slate-300 px-3 py-2 font-semibold print:px-2 print:py-1.5">
+                            {formatRupiah(totals.grandTotal, locale)}
+                          </td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                </>
+              )}
+            </section>
+          ) : null}
+        </div>
+      </main>
+    </>
+  );
+}

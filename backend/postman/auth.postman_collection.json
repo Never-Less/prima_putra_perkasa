@@ -1,0 +1,201 @@
+{
+  "info": {
+    "_postman_id": "8f8555b4-6d96-4300-95a1-d6f6dd6758f2",
+    "name": "PPP Backend Auth",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "  const data = pm.response.json();",
+                  "  if (data.accessToken) pm.collectionVariables.set('access_token', data.accessToken);",
+                  "  if (data.refreshToken) pm.collectionVariables.set('refresh_token', data.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/auth/register"
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "  const data = pm.response.json();",
+                  "  if (data.accessToken) pm.collectionVariables.set('access_token', data.accessToken);",
+                  "  if (data.refreshToken) pm.collectionVariables.set('refresh_token', data.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/auth/login"
+          }
+        },
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{base_url}}/api/auth/me"
+          }
+        },
+        {
+          "name": "Refresh",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "  const data = pm.response.json();",
+                  "  if (data.accessToken) pm.collectionVariables.set('access_token', data.accessToken);",
+                  "  if (data.refreshToken) pm.collectionVariables.set('refresh_token', data.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/auth/refresh"
+          }
+        },
+        {
+          "name": "Logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "  pm.collectionVariables.unset('access_token');",
+                  "  pm.collectionVariables.unset('refresh_token');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/auth/logout"
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000"
+    },
+    {
+      "key": "username",
+      "value": "admin"
+    },
+    {
+      "key": "password",
+      "value": "passwordku123"
+    },
+    {
+      "key": "access_token",
+      "value": ""
+    },
+    {
+      "key": "refresh_token",
+      "value": ""
+    }
+  ]
+}

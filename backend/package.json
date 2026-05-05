@@ -5,6 +5,11 @@
   "scripts": {
     "dev": "nodemon index.js",
     "start": "node index.js",
+    "create:admin": "node scripts/create-admin.js",
+    "backfill:user-role-admin": "node scripts/backfill-user-role-admin.js",
+    "backfill:surat-jalan-barang": "node scripts/backfill-surat-jalan-barang.js",
+    "backfill:purchase-order-from-surat-jalan": "node scripts/backfill-purchase-order-from-surat-jalan.js",
+    "backfill:purchase-order-invoice-link": "node scripts/backfill-purchase-order-invoice-link.js",
     "test": "echo \"No tests configured\""
   },
   "keywords": [],
@@ -12,9 +17,13 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.2.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"

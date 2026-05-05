@@ -1,0 +1,361 @@
+{
+  "info": {
+    "_postman_id": "7a92cddc-c63a-4e44-9d9f-4df749fd696f",
+    "name": "PPP Backend Surat Jalan",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth Helper",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "  const data = pm.response.json();",
+                  "  if (data.accessToken) pm.collectionVariables.set('access_token', data.accessToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/auth/login"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Customer Helper",
+      "item": [
+        {
+          "name": "Create Customer (Set customer_id)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "  const data = pm.response.json();",
+                  "  if (data.customer && data.customer.id) pm.collectionVariables.set('customer_id', data.customer.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama\": \"{{customer_nama}}\",\n  \"alamat\": \"{{customer_alamat}}\",\n  \"atasNama\": \"{{customer_atas_nama}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/customers"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Surat Jalan",
+      "item": [
+        {
+          "name": "Create Surat Jalan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "  const data = pm.response.json();",
+                  "  if (data.suratJalan && data.suratJalan.id) pm.collectionVariables.set('surat_jalan_id', data.suratJalan.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"noSuratJalan\": \"{{no_surat_jalan}}\",\n  \"noPo\": \"{{no_po}}\",\n  \"tanggal\": \"{{tanggal}}\",\n  \"idCustomer\": \"{{customer_id}}\",\n  \"barang\": [\n    {\n      \"nama\": \"{{barang_1_nama}}\",\n      \"jumlah\": {{barang_1_jumlah}}\n    },\n    {\n      \"nama\": \"{{barang_2_nama}}\",\n      \"jumlah\": {{barang_2_jumlah}}\n    }\n  ],\n  \"kendaraan\": \"{{kendaraan}}\",\n  \"tipe\": \"{{tipe}}\",\n  \"sudahSelesai\": {{sudah_selesai}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/surat-jalan"
+          }
+        },
+        {
+          "name": "Get All Surat Jalan",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{base_url}}/api/surat-jalan"
+          }
+        },
+        {
+          "name": "Get Surat Jalan By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{base_url}}/api/surat-jalan/{{surat_jalan_id}}"
+          }
+        },
+        {
+          "name": "Update Surat Jalan",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"noSuratJalan\": \"{{no_surat_jalan_update}}\",\n  \"noPo\": \"{{no_po_update}}\",\n  \"tanggal\": \"{{tanggal_update}}\",\n  \"idCustomer\": \"{{customer_id}}\",\n  \"barang\": [\n    {\n      \"nama\": \"{{barang_update_nama}}\",\n      \"jumlah\": {{barang_update_jumlah}}\n    }\n  ],\n  \"kendaraan\": \"{{kendaraan_update}}\",\n  \"tipe\": \"{{tipe_update}}\",\n  \"sudahSelesai\": {{sudah_selesai_update}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/surat-jalan/{{surat_jalan_id}}"
+          }
+        },
+        {
+          "name": "Delete Surat Jalan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "  pm.collectionVariables.unset('surat_jalan_id');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{base_url}}/api/surat-jalan/{{surat_jalan_id}}"
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000"
+    },
+    {
+      "key": "username",
+      "value": "admin"
+    },
+    {
+      "key": "password",
+      "value": "passwordku123"
+    },
+    {
+      "key": "access_token",
+      "value": ""
+    },
+    {
+      "key": "customer_id",
+      "value": ""
+    },
+    {
+      "key": "surat_jalan_id",
+      "value": ""
+    },
+    {
+      "key": "customer_nama",
+      "value": "PT Contoh Surat Jalan"
+    },
+    {
+      "key": "customer_alamat",
+      "value": "Jl. Raya Logistik No. 10, Jakarta"
+    },
+    {
+      "key": "customer_atas_nama",
+      "value": "Rudi Hartono"
+    },
+    {
+      "key": "no_surat_jalan",
+      "value": "SJ-0001"
+    },
+    {
+      "key": "no_po",
+      "value": "PO-0001"
+    },
+    {
+      "key": "tanggal",
+      "value": "2026-02-24"
+    },
+    {
+      "key": "barang_1_nama",
+      "value": "Semen"
+    },
+    {
+      "key": "barang_1_jumlah",
+      "value": "100"
+    },
+    {
+      "key": "barang_2_nama",
+      "value": "Pasir"
+    },
+    {
+      "key": "barang_2_jumlah",
+      "value": "50"
+    },
+    {
+      "key": "kendaraan",
+      "value": "B 1234 XYZ"
+    },
+    {
+      "key": "tipe",
+      "value": "partial"
+    },
+    {
+      "key": "sudah_selesai",
+      "value": "false"
+    },
+    {
+      "key": "no_surat_jalan_update",
+      "value": "SJ-0001-REV"
+    },
+    {
+      "key": "no_po_update",
+      "value": "PO-0001-REV"
+    },
+    {
+      "key": "tanggal_update",
+      "value": "2026-02-25"
+    },
+    {
+      "key": "barang_update_nama",
+      "value": "Batu Split"
+    },
+    {
+      "key": "barang_update_jumlah",
+      "value": "75"
+    },
+    {
+      "key": "kendaraan_update",
+      "value": "B 5678 ABC"
+    },
+    {
+      "key": "tipe_update",
+      "value": "non partial"
+    },
+    {
+      "key": "sudah_selesai_update",
+      "value": "true"
+    }
+  ]
+}

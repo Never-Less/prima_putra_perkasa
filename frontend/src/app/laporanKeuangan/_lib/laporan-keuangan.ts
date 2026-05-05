@@ -1,0 +1,237 @@
+import { requestApi } from "../../_lib/api-client";
+import type { InvoiceItem } from "../../invoice/_lib/invoice";
+import type { PembelianItem } from "../../pembelian/_lib/pembelian";
+
+export type RincianBiayaItem = {
+  namaBiaya: string;
+  jumlah: number;
+};
+
+export type LaporanKeuanganItem = {
+  id: string;
+  bulan: string;
+  rincianBiaya: RincianBiayaItem[];
+  totalBiayaOperasional: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type LaporanKeuanganFormState = {
+  bulan: string;
+  rincianBiaya: RincianBiayaItem[];
+};
+
+export type LaporanKeuanganMonthSummary = {
+  bulan: string;
+  totalInvoice: number;
+  totalPembelian: number;
+  grossProfit: number;
+  totalBiayaOperasional: number;
+  netProfit: number;
+};
+
+type LaporanKeuanganResponse = {
+  laporanKeuangan?: unknown;
+};
+
+type AppLocale = "id" | "en";
+
+function toText(value: unknown) {
+  if (typeof value === "string") {
+    return value;
+  }
+
+  if (value === null || value === undefined) {
+    return "";
+  }
+
+  return String(value);
+}
+
+function toNumber(value: unknown) {
+  const number = Number(value);
+
+  return Number.isFinite(number) ? number : 0;
+}
+
+function toRincianBiayaItem(value: unknown): RincianBiayaItem | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const row = value as Record<string, unknown>;
+  const namaBiaya = toText(row.namaBiaya).trim();
+
+  if (!namaBiaya) {
+    return null;
+  }
+
+  return {
+    namaBiaya,
+    jumlah: Math.max(0, toNumber(row.jumlah)),
+  };
+}
+
+function toLaporanKeuanganItem(value: unknown): LaporanKeuanganItem | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const row = value as Record<string, unknown>;
+  const id = toText(row.id || row._id).trim();
+  const bulan = toText(row.bulan).trim();
+
+  if (!id || !bulan) {
+    return null;
+  }
+
+  const rincianBiaya = Array.isArray(row.rincianBiaya)
+    ? row.rincianBiaya
+        .map(toRincianBiayaItem)
+        .filter((item): item is RincianBiayaItem => Boolean(item))
+    : [];
+
+  return {
+    id,
+    bulan,
+    rincianBiaya,
+    totalBiayaOperasional: Math.max(0, toNumber(row.totalBiayaOperasional)),
+    createdAt: toText(row.createdAt).trim(),
+    updatedAt: toText(row.updatedAt).trim(),
+  };
+}
+
+export function getCurrentMonthValue() {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+
+  return `${year}-${month}`;
+}
+
+export function getCurrentYearValue() {
+  return getCurrentMonthValue().slice(0, 4);
+}
+
+export function getYearMonthValues(value: string) {
+  const year = Number(value);
+
+  if (!Number.isInteger(year) || year < 1000 || year > 9999) {
+    return [];
+  }
+
+  return Array.from({ length: 12 }, (_item, index) => {
+    const month = String(index + 1).padStart(2, "0");
+    return `${year}-${month}`;
+  });
+}
+
+export function getMonthDateRange(value: string) {
+  const [year, month] = value.split("-").map(Number);
+
+  if (!year || !month) {
+    return {
+      tanggalDari: "",
+      tanggalSampai: "",
+    };
+  }
+
+  const tanggalDari = `${year}-${String(month).padStart(2, "0")}-01`;
+  const lastDate = new Date(year, month, 0).getDate();
+  const tanggalSampai = `${year}-${String(month).padStart(2, "0")}-${String(lastDate).padStart(2, "0")}`;
+
+  return {
+    tanggalDari,
+    tanggalSampai,
+  };
+}
+
+export function formatLaporanKeuanganMonth(value: string, locale: AppLocale) {
+  const [year, month] = value.split("-").map(Number);
+
+  if (!year || !month) {
+    return value || "-";
+  }
+
+  return new Intl.DateTimeFormat(locale === "en" ? "en-US" : "id-ID", {
+    month: "long",
+    year: "numeric",
+  }).format(new Date(year, month - 1, 1));
+}
+
+export function formatLaporanKeuanganCurrency(value: number, locale: AppLocale) {
+  return new Intl.NumberFormat(locale === "en" ? "en-US" : "id-ID", {
+    currency: "IDR",
+    maximumFractionDigits: 0,
+    style: "currency",
+  }).format(value);
+}
+
+export function buildPurchaseTotalByInvoiceId(pembelianRows: PembelianItem[]) {
+  const map = new Map<string, number>();
+
+  pembelianRows.forEach((row) => {
+    const invoiceId = String(row.idInvoice || "").trim();
+
+    if (!invoiceId) {
+      return;
+    }
+
+    const rowTotal = Number(row.nilaiNota || 0);
+
+    map.set(invoiceId, (map.get(invoiceId) || 0) + rowTotal);
+  });
+
+  return map;
+}
+
+export function calculateLaporanKeuanganMonthSummary({
+  bulan,
+  invoiceRows,
+  laporanKeuangan,
+  pembelianRows,
+}: {
+  bulan: string;
+  invoiceRows: InvoiceItem[];
+  laporanKeuangan: LaporanKeuanganItem | null;
+  pembelianRows: PembelianItem[];
+}): LaporanKeuanganMonthSummary {
+  const purchaseTotalByInvoiceId = buildPurchaseTotalByInvoiceId(pembelianRows);
+  const totalInvoice = invoiceRows.reduce(
+    (total, row) => total + Number(row.grandTotal || 0),
+    0
+  );
+  const totalPembelian = invoiceRows.reduce(
+    (total, row) => total + (purchaseTotalByInvoiceId.get(row.id) || 0),
+    0
+  );
+  const grossProfit = totalInvoice - totalPembelian;
+  const totalBiayaOperasional = laporanKeuangan?.totalBiayaOperasional || 0;
+  const netProfit = grossProfit - totalBiayaOperasional;
+
+  return {
+    bulan,
+    totalInvoice,
+    totalPembelian,
+    grossProfit,
+    totalBiayaOperasional,
+    netProfit,
+  };
+}
+
+export async function fetchLaporanKeuangan(bulan: string) {
+  const response = await requestApi<LaporanKeuanganResponse>(
+    `/api/laporan-keuangan?bulan=${encodeURIComponent(bulan)}`
+  );
+
+  return toLaporanKeuanganItem(response?.laporanKeuangan);
+}
+
+export async function saveLaporanKeuangan(form: LaporanKeuanganFormState) {
+  const response = await requestApi<LaporanKeuanganResponse>("/api/laporan-keuangan", {
+    method: "POST",
+    body: form,
+  });
+
+  return toLaporanKeuanganItem(response?.laporanKeuangan);
+}
