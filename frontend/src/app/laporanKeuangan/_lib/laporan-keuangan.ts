@@ -1,4 +1,6 @@
 import { requestApi } from "../../_lib/api-client";
+import type { InvoiceItem } from "../../invoice/_lib/invoice";
+import type { PembelianItem } from "../../pembelian/_lib/pembelian";
 
 export type RincianBiayaItem = {
   namaBiaya: string;
@@ -17,6 +19,15 @@ export type LaporanKeuanganItem = {
 export type LaporanKeuanganFormState = {
   bulan: string;
   rincianBiaya: RincianBiayaItem[];
+};
+
+export type LaporanKeuanganMonthSummary = {
+  bulan: string;
+  totalInvoice: number;
+  totalPembelian: number;
+  grossProfit: number;
+  totalBiayaOperasional: number;
+  netProfit: number;
 };
 
 type LaporanKeuanganResponse = {
@@ -98,6 +109,23 @@ export function getCurrentMonthValue() {
   return `${year}-${month}`;
 }
 
+export function getCurrentYearValue() {
+  return getCurrentMonthValue().slice(0, 4);
+}
+
+export function getYearMonthValues(value: string) {
+  const year = Number(value);
+
+  if (!Number.isInteger(year) || year < 1000 || year > 9999) {
+    return [];
+  }
+
+  return Array.from({ length: 12 }, (_item, index) => {
+    const month = String(index + 1).padStart(2, "0");
+    return `${year}-${month}`;
+  });
+}
+
 export function getMonthDateRange(value: string) {
   const [year, month] = value.split("-").map(Number);
 
@@ -137,6 +165,58 @@ export function formatLaporanKeuanganCurrency(value: number, locale: AppLocale) 
     maximumFractionDigits: 0,
     style: "currency",
   }).format(value);
+}
+
+export function buildPurchaseTotalByInvoiceId(pembelianRows: PembelianItem[]) {
+  const map = new Map<string, number>();
+
+  pembelianRows.forEach((row) => {
+    const invoiceId = String(row.idInvoice || "").trim();
+
+    if (!invoiceId) {
+      return;
+    }
+
+    const rowTotal = Number(row.nilaiNota || 0);
+
+    map.set(invoiceId, (map.get(invoiceId) || 0) + rowTotal);
+  });
+
+  return map;
+}
+
+export function calculateLaporanKeuanganMonthSummary({
+  bulan,
+  invoiceRows,
+  laporanKeuangan,
+  pembelianRows,
+}: {
+  bulan: string;
+  invoiceRows: InvoiceItem[];
+  laporanKeuangan: LaporanKeuanganItem | null;
+  pembelianRows: PembelianItem[];
+}): LaporanKeuanganMonthSummary {
+  const purchaseTotalByInvoiceId = buildPurchaseTotalByInvoiceId(pembelianRows);
+  const totalInvoice = invoiceRows.reduce(
+    (total, row) => total + Number(row.grandTotal || 0),
+    0
+  );
+  const totalPembelian = invoiceRows.reduce(
+    (total, row) => total + (purchaseTotalByInvoiceId.get(row.id) || 0),
+    0
+  );
+  const grossProfit = totalInvoice - totalPembelian;
+  const totalBiayaOperasional = laporanKeuangan?.totalBiayaOperasional || 0;
+  const netProfit = grossProfit - totalBiayaOperasional;
+
+  return {
+    bulan,
+    totalInvoice,
+    totalPembelian,
+    grossProfit,
+    totalBiayaOperasional,
+    netProfit,
+  };
 }
 
 export async function fetchLaporanKeuangan(bulan: string) {

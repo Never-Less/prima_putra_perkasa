@@ -166,12 +166,17 @@ export const messages: Record<Locale, MessageDictionary> = {
       "Pilih bulan laporan, isi nama biaya dan jumlah, lalu simpan untuk bulan tersebut.",
     "laporanKeuangan.placeholder.namaBiaya": "Contoh: biaya operasional, telpon",
     "laporanKeuangan.addRow": "Tambah Rincian Biaya",
+    "laporanKeuangan.reportMode.label": "Tipe Laporan",
+    "laporanKeuangan.reportMode.monthly": "Bulanan",
+    "laporanKeuangan.reportMode.yearly": "Tahunan",
     "laporanKeuangan.apiLoadError": "Gagal memuat laporan keuangan dari backend.",
     "laporanKeuangan.mutationError": "Gagal menyimpan laporan keuangan.",
     "laporanKeuangan.exportPage.openButton": "Export Data",
     "laporanKeuangan.exportPage.title": "Export Laporan Keuangan",
     "laporanKeuangan.exportPage.description":
       "Halaman ini menampilkan laporan keuangan bulanan dan siap dicetak.",
+    "laporanKeuangan.exportPage.yearlyDescription":
+      "Halaman ini menampilkan laporan keuangan tahunan per bulan dan siap dicetak.",
     "laporanKeuangan.exportPage.heading": "Laporan Keuangan",
     "laporanKeuangan.exportPage.empty":
       "Belum ada laporan keuangan tersimpan untuk bulan ini.",
@@ -181,6 +186,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "laporanKeuangan.validation.jumlahInvalid": "Jumlah harus angka >= 0.",
     "laporanKeuangan.toast.saveSuccess": "Laporan keuangan {{bulan}} berhasil disimpan.",
     "laporanKeuangan.summary.title": "Ringkasan Bulan",
+    "laporanKeuangan.summary.yearlyTitle": "Ringkasan Tahun",
     "laporanKeuangan.summary.savedStatus": "Status Data",
     "laporanKeuangan.summary.saved": "Sudah tersimpan",
     "laporanKeuangan.summary.notSaved": "Belum tersimpan",
@@ -189,6 +195,13 @@ export const messages: Record<Locale, MessageDictionary> = {
     "laporanKeuangan.invoiceTable.description":
       "Invoice pada bulan {{bulan}} dihitung sebagai gross profit menggunakan grand total invoice.",
     "laporanKeuangan.invoiceTable.empty": "Belum ada invoice untuk bulan ini.",
+    "laporanKeuangan.yearlyTable.title": "Laporan Tahunan",
+    "laporanKeuangan.yearlyTable.description":
+      "Ringkasan tahun {{tahun}} dihitung per bulan dari invoice, pembelian, dan biaya operasional tersimpan.",
+    "laporanKeuangan.yearlyTable.total": "TOTAL TAHUN",
+    "laporanKeuangan.yearlyInfo.title": "Input Biaya Operasional Tetap Bulanan",
+    "laporanKeuangan.yearlyInfo.description":
+      "Mode tahunan hanya menghitung ringkasan per bulan. Untuk menambah atau mengubah biaya operasional, gunakan mode Bulanan lalu pilih bulan yang ingin diedit.",
     "laporanKeuangan.report.date": "DATE",
     "laporanKeuangan.report.description": "DESCRIPTION",
     "laporanKeuangan.report.debet": "DEBET",
@@ -519,6 +532,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "field.nominalPoMax": "Nominal PO Maksimum",
     "field.no": "No.",
     "field.bulan": "Bulan",
+    "field.tahun": "Tahun",
     "field.namaBiaya": "Nama Biaya",
     "field.jumlah": "Jumlah",
     "field.totalBiayaOperasional": "Total Biaya Operasional",
@@ -685,12 +699,17 @@ export const messages: Record<Locale, MessageDictionary> = {
       "Select the report month, fill in cost names and amounts, then save them for that month.",
     "laporanKeuangan.placeholder.namaBiaya": "Example: operational cost, phone",
     "laporanKeuangan.addRow": "Add Cost Row",
+    "laporanKeuangan.reportMode.label": "Report Type",
+    "laporanKeuangan.reportMode.monthly": "Monthly",
+    "laporanKeuangan.reportMode.yearly": "Yearly",
     "laporanKeuangan.apiLoadError": "Failed to load financial report from backend.",
     "laporanKeuangan.mutationError": "Failed to save financial report.",
     "laporanKeuangan.exportPage.openButton": "Export Data",
     "laporanKeuangan.exportPage.title": "Export Financial Report",
     "laporanKeuangan.exportPage.description":
       "This page shows the monthly financial report and is ready to print.",
+    "laporanKeuangan.exportPage.yearlyDescription":
+      "This page shows the yearly financial report by month and is ready to print.",
     "laporanKeuangan.exportPage.heading": "Financial Report",
     "laporanKeuangan.exportPage.empty":
       "No saved financial report is available for this month.",
@@ -700,6 +719,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "laporanKeuangan.validation.jumlahInvalid": "Amount must be a number >= 0.",
     "laporanKeuangan.toast.saveSuccess": "Financial report for {{bulan}} has been saved.",
     "laporanKeuangan.summary.title": "Monthly Summary",
+    "laporanKeuangan.summary.yearlyTitle": "Yearly Summary",
     "laporanKeuangan.summary.savedStatus": "Data Status",
     "laporanKeuangan.summary.saved": "Saved",
     "laporanKeuangan.summary.notSaved": "Not saved yet",
@@ -708,6 +728,13 @@ export const messages: Record<Locale, MessageDictionary> = {
     "laporanKeuangan.invoiceTable.description":
       "Invoices in {{bulan}} are calculated as gross profit using invoice grand totals.",
     "laporanKeuangan.invoiceTable.empty": "No invoices are available for this month.",
+    "laporanKeuangan.yearlyTable.title": "Yearly Report",
+    "laporanKeuangan.yearlyTable.description":
+      "The {{tahun}} summary is calculated per month from invoices, purchases, and saved operational costs.",
+    "laporanKeuangan.yearlyTable.total": "YEAR TOTAL",
+    "laporanKeuangan.yearlyInfo.title": "Operational Cost Input Stays Monthly",
+    "laporanKeuangan.yearlyInfo.description":
+      "Yearly mode only calculates the monthly summary. To add or edit operational costs, use Monthly mode and select the month you want to edit.",
     "laporanKeuangan.report.date": "DATE",
     "laporanKeuangan.report.description": "DESCRIPTION",
     "laporanKeuangan.report.debet": "DEBIT",
@@ -1039,6 +1066,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "field.nominalPoMax": "Maximum PO Amount",
     "field.no": "No.",
     "field.bulan": "Month",
+    "field.tahun": "Year",
     "field.namaBiaya": "Cost Name",
     "field.jumlah": "Amount",
     "field.totalBiayaOperasional": "Total Operational Cost",

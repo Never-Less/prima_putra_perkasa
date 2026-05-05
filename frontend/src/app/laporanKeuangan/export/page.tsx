@@ -13,12 +13,16 @@ import {
   type InvoiceItem,
 } from "../../invoice/_lib/invoice";
 import {
+  calculateLaporanKeuanganMonthSummary,
   fetchLaporanKeuangan,
   formatLaporanKeuanganCurrency,
   formatLaporanKeuanganMonth,
   getCurrentMonthValue,
+  getCurrentYearValue,
   getMonthDateRange,
+  getYearMonthValues,
   type LaporanKeuanganItem,
+  type LaporanKeuanganMonthSummary,
 } from "../_lib/laporan-keuangan";
 
 type ExcelPrimitiveCellValue = string | number | null | undefined;
@@ -66,6 +70,8 @@ type PurchaseReportRow = {
   supplierName: string;
   total: number;
 };
+
+type ReportMode = "monthly" | "yearly";
 
 const excelStyleIds = {
   tableText: 1,
@@ -549,10 +555,14 @@ export default function LaporanKeuanganExportPage() {
   const { locale, t } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const reportMode: ReportMode =
+    searchParams.get("mode") === "yearly" ? "yearly" : "monthly";
   const bulan = String(searchParams.get("bulan") || "").trim() || getCurrentMonthValue();
+  const tahun = String(searchParams.get("tahun") || "").trim() || getCurrentYearValue();
   const [item, setItem] = useState<LaporanKeuanganItem | null>(null);
   const [invoiceRows, setInvoiceRows] = useState<InvoiceItem[]>([]);
   const [pembelianRows, setPembelianRows] = useState<PembelianItem[]>([]);
+  const [yearlyRows, setYearlyRows] = useState<LaporanKeuanganMonthSummary[]>([]);
   const [customerLabelMap, setCustomerLabelMap] = useState<Map<string, string>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
@@ -617,6 +627,39 @@ export default function LaporanKeuanganExportPage() {
   const grossProfit = invoiceGrandTotal - purchaseTotal;
   const totalBiayaOperasional = item?.totalBiayaOperasional || 0;
   const netProfit = grossProfit - totalBiayaOperasional;
+  const yearlyTotals = useMemo<LaporanKeuanganMonthSummary>(() => {
+    return yearlyRows.reduce(
+      (total, row) => ({
+        bulan: tahun,
+        totalInvoice: total.totalInvoice + row.totalInvoice,
+        totalPembelian: total.totalPembelian + row.totalPembelian,
+        grossProfit: total.grossProfit + row.grossProfit,
+        totalBiayaOperasional:
+          total.totalBiayaOperasional + row.totalBiayaOperasional,
+        netProfit: total.netProfit + row.netProfit,
+      }),
+      {
+        bulan: tahun,
+        totalInvoice: 0,
+        totalPembelian: 0,
+        grossProfit: 0,
+        totalBiayaOperasional: 0,
+        netProfit: 0,
+      }
+    );
+  }, [tahun, yearlyRows]);
+  const exportSummary =
+    reportMode === "yearly"
+      ? yearlyTotals
+      : {
+          bulan,
+          totalInvoice: invoiceGrandTotal,
+          totalPembelian: purchaseTotal,
+          grossProfit,
+          totalBiayaOperasional,
+          netProfit,
+        };
+  const reportPeriodLabel = reportMode === "yearly" ? tahun : monthLabel;
   const purchasePpnTotal = useMemo(() => {
     return invoiceRows.reduce((total, row) => {
       const invoicePurchases = purchaseRowsByInvoiceId.get(row.id) || [];
@@ -723,12 +766,13 @@ export default function LaporanKeuanganExportPage() {
 
   useEffect(() => {
     const previousTitle = document.title;
-    document.title = `laporan-keuangan-${bulan}`;
+    document.title =
+      reportMode === "yearly" ? `laporan-keuangan-${tahun}` : `laporan-keuangan-${bulan}`;
 
     return () => {
       document.title = previousTitle;
     };
-  }, [bulan]);
+  }, [bulan, reportMode, tahun]);
 
   useEffect(() => {
     let isCancelled = false;
@@ -738,6 +782,58 @@ export default function LaporanKeuanganExportPage() {
       setErrorMessage("");
 
       try {
+        if (reportMode === "yearly") {
+          const monthValues = getYearMonthValues(tahun);
+
+          if (monthValues.length === 0) {
+            if (!isCancelled) {
+              setItem(null);
+              setInvoiceRows([]);
+              setPembelianRows([]);
+              setYearlyRows([]);
+              setCustomerLabelMap(new Map());
+            }
+
+            return;
+          }
+
+          const [laporanKeuanganItems, invoiceRowsByMonth, pembelians] = await Promise.all([
+            Promise.all(monthValues.map((monthValue) => fetchLaporanKeuangan(monthValue))),
+            Promise.all(
+              monthValues.map((monthValue) => {
+                const { tanggalDari, tanggalSampai } = getMonthDateRange(monthValue);
+
+                return fetchInvoiceExportRows({
+                  ...defaultInvoiceFilter,
+                  tanggalDari,
+                  tanggalSampai,
+                });
+              })
+            ),
+            fetchPembelianRows(),
+          ]);
+
+          if (isCancelled) {
+            return;
+          }
+
+          setItem(null);
+          setInvoiceRows([]);
+          setPembelianRows(pembelians);
+          setYearlyRows(
+            monthValues.map((monthValue, index) =>
+              calculateLaporanKeuanganMonthSummary({
+                bulan: monthValue,
+                invoiceRows: invoiceRowsByMonth[index] || [],
+                laporanKeuangan: laporanKeuanganItems[index] || null,
+                pembelianRows: pembelians,
+              })
+            )
+          );
+          setCustomerLabelMap(new Map());
+          return;
+        }
+
         const { tanggalDari, tanggalSampai } = getMonthDateRange(bulan);
         const [laporanKeuangan, invoices, customers, pembelians] = await Promise.all([
           fetchLaporanKeuangan(bulan),
@@ -757,6 +853,7 @@ export default function LaporanKeuanganExportPage() {
         setItem(laporanKeuangan);
         setInvoiceRows(invoices);
         setPembelianRows(pembelians);
+        setYearlyRows([]);
         setCustomerLabelMap(
           new Map(customers.map((customer) => [customer.id, customer.nama || customer.id]))
         );
@@ -782,7 +879,7 @@ export default function LaporanKeuanganExportPage() {
     return () => {
       isCancelled = true;
     };
-  }, [bulan, t]);
+  }, [bulan, reportMode, t, tahun]);
 
   function handleClosePage() {
     window.close();
@@ -795,6 +892,44 @@ export default function LaporanKeuanganExportPage() {
   }
 
   function handleExportExcel() {
+    if (reportMode === "yearly") {
+      const reportRows: ExcelCellValue[][] = [
+        [
+          styledExcelCell(t("field.bulan"), excelStyleIds.header),
+          styledExcelCell(t("field.totalInvoice"), excelStyleIds.header),
+          styledExcelCell(t("field.totalPembelian"), excelStyleIds.header),
+          styledExcelCell(t("field.grossProfit"), excelStyleIds.header),
+          styledExcelCell(t("field.totalBiayaOperasional"), excelStyleIds.header),
+          styledExcelCell(t("field.netProfit"), excelStyleIds.header),
+        ],
+        ...yearlyRows.map((row) => [
+          styledExcelCell(formatLaporanKeuanganMonth(row.bulan, locale), excelStyleIds.tableText),
+          styledExcelCell(row.totalInvoice, excelStyleIds.tableNumber),
+          styledExcelCell(row.totalPembelian, excelStyleIds.tableNumber),
+          styledExcelCell(row.grossProfit, excelStyleIds.tableNumber),
+          styledExcelCell(row.totalBiayaOperasional, excelStyleIds.tableNumber),
+          styledExcelCell(row.netProfit, excelStyleIds.tableNumber),
+        ]),
+        [
+          styledExcelCell(t("laporanKeuangan.yearlyTable.total"), excelStyleIds.boldText),
+          styledExcelCell(yearlyTotals.totalInvoice, excelStyleIds.boldNumber),
+          styledExcelCell(yearlyTotals.totalPembelian, excelStyleIds.boldNumber),
+          styledExcelCell(yearlyTotals.grossProfit, excelStyleIds.boldNumber),
+          styledExcelCell(yearlyTotals.totalBiayaOperasional, excelStyleIds.boldNumber),
+          styledExcelCell(yearlyTotals.netProfit, excelStyleIds.boldNumber),
+        ],
+      ];
+
+      downloadExcelFile(`laporan-keuangan-${tahun}.xlsx`, [
+        {
+          name: `Laporan ${tahun}`,
+          rows: reportRows,
+          columnWidths: [22, 18, 18, 18, 24, 18],
+        },
+      ]);
+      return;
+    }
+
     const reportRows: ExcelCellValue[][] = [
       [
         styledExcelCell(t("laporanKeuangan.report.date"), excelStyleIds.header),
@@ -849,7 +984,13 @@ export default function LaporanKeuanganExportPage() {
           <header className="flex flex-wrap items-start justify-between gap-3 rounded-2xl bg-white p-4 shadow-sm print:hidden">
             <div>
               <h1 className="text-xl font-semibold text-slate-900">{t("laporanKeuangan.exportPage.title")}</h1>
-              <p className="mt-1 text-sm text-slate-600">{t("laporanKeuangan.exportPage.description")}</p>
+              <p className="mt-1 text-sm text-slate-600">
+                {t(
+                  reportMode === "yearly"
+                    ? "laporanKeuangan.exportPage.yearlyDescription"
+                    : "laporanKeuangan.exportPage.description"
+                )}
+              </p>
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -895,14 +1036,14 @@ export default function LaporanKeuanganExportPage() {
                   <h2 className="mt-2 text-2xl font-semibold text-slate-900">
                     {t("laporanKeuangan.exportPage.heading")}
                   </h2>
-                  <p className="mt-1 text-sm text-slate-600">{monthLabel}</p>
+                  <p className="mt-1 text-sm text-slate-600">{reportPeriodLabel}</p>
                 </div>
                 <div className="rounded-lg border border-slate-300 px-3 py-2 text-right">
                   <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">
                     {t("field.netProfit")}
                   </p>
-                  <p className={`mt-1 text-lg font-semibold ${netProfit >= 0 ? "text-slate-900" : "text-red-700"}`}>
-                    {formatLaporanKeuanganCurrency(netProfit, locale)}
+                  <p className={`mt-1 text-lg font-semibold ${exportSummary.netProfit >= 0 ? "text-slate-900" : "text-red-700"}`}>
+                    {formatLaporanKeuanganCurrency(exportSummary.netProfit, locale)}
                   </p>
                 </div>
               </div>
@@ -910,91 +1051,156 @@ export default function LaporanKeuanganExportPage() {
               <div className="grid gap-3 sm:grid-cols-5">
                 <div className="rounded-lg border border-slate-300 px-3 py-2">
                   <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">{t("field.totalInvoice")}</p>
-                  <p className="mt-1 font-semibold text-slate-900">{formatLaporanKeuanganCurrency(invoiceGrandTotal, locale)}</p>
+                  <p className="mt-1 font-semibold text-slate-900">{formatLaporanKeuanganCurrency(exportSummary.totalInvoice, locale)}</p>
                 </div>
                 <div className="rounded-lg border border-slate-300 px-3 py-2">
                   <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">{t("field.totalPembelian")}</p>
-                  <p className="mt-1 font-semibold text-slate-900">{formatLaporanKeuanganCurrency(purchaseTotal, locale)}</p>
+                  <p className="mt-1 font-semibold text-slate-900">{formatLaporanKeuanganCurrency(exportSummary.totalPembelian, locale)}</p>
                 </div>
                 <div className="rounded-lg border border-slate-300 px-3 py-2">
                   <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">{t("field.grossProfit")}</p>
-                  <p className="mt-1 font-semibold text-slate-900">{formatLaporanKeuanganCurrency(grossProfit, locale)}</p>
+                  <p className="mt-1 font-semibold text-slate-900">{formatLaporanKeuanganCurrency(exportSummary.grossProfit, locale)}</p>
                 </div>
                 <div className="rounded-lg border border-slate-300 px-3 py-2">
                   <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">{t("field.totalBiayaOperasional")}</p>
-                  <p className="mt-1 font-semibold text-slate-900">{formatLaporanKeuanganCurrency(totalBiayaOperasional, locale)}</p>
+                  <p className="mt-1 font-semibold text-slate-900">{formatLaporanKeuanganCurrency(exportSummary.totalBiayaOperasional, locale)}</p>
                 </div>
                 <div className="rounded-lg border border-slate-300 px-3 py-2">
                   <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">{t("field.netProfit")}</p>
-                  <p className={`mt-1 font-semibold ${netProfit >= 0 ? "text-slate-900" : "text-red-700"}`}>
-                    {formatLaporanKeuanganCurrency(netProfit, locale)}
+                  <p className={`mt-1 font-semibold ${exportSummary.netProfit >= 0 ? "text-slate-900" : "text-red-700"}`}>
+                    {formatLaporanKeuanganCurrency(exportSummary.netProfit, locale)}
                   </p>
                 </div>
               </div>
 
-              <div className="overflow-x-auto border border-slate-300 print:overflow-visible">
-                <table className="w-full min-w-[980px] border-collapse text-sm text-slate-900 print:text-[11px]">
-                  <thead className="bg-amber-50 text-center font-semibold uppercase">
-                    <tr>
-                      <th rowSpan={2} className="w-24 border border-slate-400 px-2 py-2">{t("laporanKeuangan.report.date")}</th>
-                      <th rowSpan={2} className="min-w-80 border border-slate-400 px-2 py-2">{t("laporanKeuangan.report.description")}</th>
-                      <th rowSpan={2} className="w-32 border border-slate-400 px-2 py-2">{t("laporanKeuangan.report.debet")}</th>
-                      <th colSpan={2} className="border border-slate-400 px-2 py-1">{t("laporanKeuangan.report.kredit")}</th>
-                      <th rowSpan={2} className="w-20 border border-slate-400 px-2 py-2">{t("laporanKeuangan.report.bayar")}</th>
-                      <th rowSpan={2} className="w-48 border border-slate-400 px-2 py-2">{t("laporanKeuangan.report.note")}</th>
-                    </tr>
-                    <tr>
-                      <th className="w-32 border border-slate-400 px-2 py-1">{t("field.ppn")}</th>
-                      <th className="w-32 border border-slate-400 px-2 py-1">{t("laporanKeuangan.report.nonPpn")}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {financialReportRows.map((row, index) => {
-                      const isSpacer = row.kind === "spacer";
-                      const rowClassName =
-                        row.kind === "grossProfit"
-                          ? "bg-sky-200 font-semibold"
-                          : row.kind === "operationalTotal"
-                            ? "bg-orange-100 font-semibold"
-                            : row.kind === "netProfit"
-                              ? "bg-amber-100 font-semibold"
-                              : row.kind === "total" || row.kind === "grandTotal"
-                                ? "font-semibold"
-                                : "";
-
-                      return (
-                        <tr key={`${row.kind}-${index}`} className={`${rowClassName} ${isSpacer ? "h-6" : ""}`}>
-                          <td className="border border-slate-300 px-2 py-1 align-top">{row.date || ""}</td>
-                          <td className={`border border-slate-300 px-2 py-1 align-top ${row.kind === "invoiceDetail" ? "pl-8" : ""}`}>
-                            {row.description || ""}
+              {reportMode === "yearly" ? (
+                <div className="overflow-x-auto border border-slate-300 print:overflow-visible">
+                  <table className="w-full min-w-[900px] border-collapse text-sm text-slate-900 print:text-[11px]">
+                    <thead className="bg-amber-50 text-center font-semibold uppercase">
+                      <tr>
+                        <th className="w-40 border border-slate-400 px-2 py-2">{t("field.bulan")}</th>
+                        <th className="w-36 border border-slate-400 px-2 py-2">{t("field.totalInvoice")}</th>
+                        <th className="w-36 border border-slate-400 px-2 py-2">{t("field.totalPembelian")}</th>
+                        <th className="w-36 border border-slate-400 px-2 py-2">{t("field.grossProfit")}</th>
+                        <th className="w-44 border border-slate-400 px-2 py-2">{t("field.totalBiayaOperasional")}</th>
+                        <th className="w-36 border border-slate-400 px-2 py-2">{t("field.netProfit")}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {yearlyRows.map((row) => (
+                        <tr key={row.bulan}>
+                          <td className="border border-slate-300 px-2 py-1 align-top font-medium">
+                            {formatLaporanKeuanganMonth(row.bulan, locale)}
                           </td>
                           <td className="border border-slate-300 px-2 py-1 text-right align-top">
-                            {formatAccountingNumber(row.debet, locale)}
+                            {formatAccountingNumber(row.totalInvoice, locale)}
                           </td>
                           <td className="border border-slate-300 px-2 py-1 text-right align-top">
-                            {formatAccountingNumber(row.kreditPpn, locale)}
+                            {formatAccountingNumber(row.totalPembelian, locale)}
                           </td>
                           <td className="border border-slate-300 px-2 py-1 text-right align-top">
-                            {formatAccountingNumber(row.kreditNonPpn, locale)}
+                            {formatAccountingNumber(row.grossProfit, locale)}
                           </td>
-                          <td
-                            className={`border border-slate-300 px-2 py-1 align-top ${
-                              row.isHutang
-                                ? "font-semibold text-red-700"
-                                : row.bayar
-                                  ? "font-semibold text-emerald-700"
-                                  : ""
-                            }`}
-                          >
-                            {row.bayar || ""}
+                          <td className="border border-slate-300 px-2 py-1 text-right align-top">
+                            {formatAccountingNumber(row.totalBiayaOperasional, locale)}
                           </td>
-                          <td className="border border-slate-300 px-2 py-1 align-top">{row.note || ""}</td>
+                          <td className={`border border-slate-300 px-2 py-1 text-right align-top font-semibold ${
+                            row.netProfit >= 0 ? "text-slate-900" : "text-red-700"
+                          }`}>
+                            {formatAccountingNumber(row.netProfit, locale)}
+                          </td>
                         </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                      ))}
+                      <tr className="bg-amber-100 font-semibold">
+                        <td className="border border-slate-300 px-2 py-1 align-top">
+                          {t("laporanKeuangan.yearlyTable.total")}
+                        </td>
+                        <td className="border border-slate-300 px-2 py-1 text-right align-top">
+                          {formatAccountingNumber(yearlyTotals.totalInvoice, locale)}
+                        </td>
+                        <td className="border border-slate-300 px-2 py-1 text-right align-top">
+                          {formatAccountingNumber(yearlyTotals.totalPembelian, locale)}
+                        </td>
+                        <td className="border border-slate-300 px-2 py-1 text-right align-top">
+                          {formatAccountingNumber(yearlyTotals.grossProfit, locale)}
+                        </td>
+                        <td className="border border-slate-300 px-2 py-1 text-right align-top">
+                          {formatAccountingNumber(yearlyTotals.totalBiayaOperasional, locale)}
+                        </td>
+                        <td className={`border border-slate-300 px-2 py-1 text-right align-top ${
+                          yearlyTotals.netProfit >= 0 ? "text-slate-900" : "text-red-700"
+                        }`}>
+                          {formatAccountingNumber(yearlyTotals.netProfit, locale)}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="overflow-x-auto border border-slate-300 print:overflow-visible">
+                  <table className="w-full min-w-[980px] border-collapse text-sm text-slate-900 print:text-[11px]">
+                    <thead className="bg-amber-50 text-center font-semibold uppercase">
+                      <tr>
+                        <th rowSpan={2} className="w-24 border border-slate-400 px-2 py-2">{t("laporanKeuangan.report.date")}</th>
+                        <th rowSpan={2} className="min-w-80 border border-slate-400 px-2 py-2">{t("laporanKeuangan.report.description")}</th>
+                        <th rowSpan={2} className="w-32 border border-slate-400 px-2 py-2">{t("laporanKeuangan.report.debet")}</th>
+                        <th colSpan={2} className="border border-slate-400 px-2 py-1">{t("laporanKeuangan.report.kredit")}</th>
+                        <th rowSpan={2} className="w-20 border border-slate-400 px-2 py-2">{t("laporanKeuangan.report.bayar")}</th>
+                        <th rowSpan={2} className="w-48 border border-slate-400 px-2 py-2">{t("laporanKeuangan.report.note")}</th>
+                      </tr>
+                      <tr>
+                        <th className="w-32 border border-slate-400 px-2 py-1">{t("field.ppn")}</th>
+                        <th className="w-32 border border-slate-400 px-2 py-1">{t("laporanKeuangan.report.nonPpn")}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {financialReportRows.map((row, index) => {
+                        const isSpacer = row.kind === "spacer";
+                        const rowClassName =
+                          row.kind === "grossProfit"
+                            ? "bg-sky-200 font-semibold"
+                            : row.kind === "operationalTotal"
+                              ? "bg-orange-100 font-semibold"
+                              : row.kind === "netProfit"
+                                ? "bg-amber-100 font-semibold"
+                                : row.kind === "total" || row.kind === "grandTotal"
+                                  ? "font-semibold"
+                                  : "";
+
+                        return (
+                          <tr key={`${row.kind}-${index}`} className={`${rowClassName} ${isSpacer ? "h-6" : ""}`}>
+                            <td className="border border-slate-300 px-2 py-1 align-top">{row.date || ""}</td>
+                            <td className={`border border-slate-300 px-2 py-1 align-top ${row.kind === "invoiceDetail" ? "pl-8" : ""}`}>
+                              {row.description || ""}
+                            </td>
+                            <td className="border border-slate-300 px-2 py-1 text-right align-top">
+                              {formatAccountingNumber(row.debet, locale)}
+                            </td>
+                            <td className="border border-slate-300 px-2 py-1 text-right align-top">
+                              {formatAccountingNumber(row.kreditPpn, locale)}
+                            </td>
+                            <td className="border border-slate-300 px-2 py-1 text-right align-top">
+                              {formatAccountingNumber(row.kreditNonPpn, locale)}
+                            </td>
+                            <td
+                              className={`border border-slate-300 px-2 py-1 align-top ${
+                                row.isHutang
+                                  ? "font-semibold text-red-700"
+                                  : row.bayar
+                                    ? "font-semibold text-emerald-700"
+                                    : ""
+                              }`}
+                            >
+                              {row.bayar || ""}
+                            </td>
+                            <td className="border border-slate-300 px-2 py-1 align-top">{row.note || ""}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </section>
           ) : null}
         </div>
