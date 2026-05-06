@@ -15,8 +15,6 @@ export type PurchaseOrderItem = {
   tanggalPo: string;
   namaCustomer: string;
   nominalPo: number;
-  isPaid: boolean;
-  tanggalBayar: string | null;
   tanggalInvoice: string | null;
   noInvoice: string;
   createdAt: string;
@@ -37,11 +35,8 @@ export type PurchaseOrderFilter = {
   noPo: string;
   namaCustomer: string;
   noInvoice: string;
-  isPaid: "" | "true" | "false";
   tanggalPoDari: string;
   tanggalPoSampai: string;
-  tanggalBayarDari: string;
-  tanggalBayarSampai: string;
   tanggalInvoiceDari: string;
   tanggalInvoiceSampai: string;
   nominalPoMin: string;
@@ -53,8 +48,6 @@ export type PurchaseOrderFormState = {
   tanggalPo: string;
   namaCustomer: string;
   nominalPo: string;
-  isPaid: boolean;
-  tanggalBayar: string;
   tanggalInvoice: string;
   noInvoice: string;
 };
@@ -88,11 +81,8 @@ function buildPurchaseOrderListQueryString(
     noPo: query.noPo,
     namaCustomer: query.namaCustomer,
     noInvoice: query.noInvoice,
-    isPaid: query.isPaid,
     tanggalPoDari: query.tanggalPoDari,
     tanggalPoSampai: query.tanggalPoSampai,
-    tanggalBayarDari: query.tanggalBayarDari,
-    tanggalBayarSampai: query.tanggalBayarSampai,
     tanggalInvoiceDari: query.tanggalInvoiceDari,
     tanggalInvoiceSampai: query.tanggalInvoiceSampai,
     nominalPoMin: query.nominalPoMin,
@@ -106,11 +96,8 @@ export const defaultPurchaseOrderFilter: PurchaseOrderFilter = {
   noPo: "",
   namaCustomer: "",
   noInvoice: "",
-  isPaid: "",
   tanggalPoDari: "",
   tanggalPoSampai: "",
-  tanggalBayarDari: "",
-  tanggalBayarSampai: "",
   tanggalInvoiceDari: "",
   tanggalInvoiceSampai: "",
   nominalPoMin: "",
@@ -174,8 +161,6 @@ function toPurchaseOrderItem(value: unknown): PurchaseOrderItem | null {
     tanggalPo: toText(row.tanggalPo).trim(),
     namaCustomer: parseReferenceId(row.namaCustomer),
     nominalPo: parseNumberFromUnknown(row.nominalPo),
-    isPaid: Boolean(row.isPaid),
-    tanggalBayar: toText(row.tanggalBayar).trim() || null,
     tanggalInvoice: toText(row.tanggalInvoice || row.tanggalKirim).trim() || null,
     noInvoice: parseReferenceId(row.noInvoice),
     createdAt: toText(row.createdAt).trim(),
@@ -220,7 +205,6 @@ function toPurchaseOrderInvoiceOption(value: unknown): PurchaseOrderInvoiceOptio
 }
 
 function toNormalizedPurchaseOrderPayload(form: PurchaseOrderFormState) {
-  const tanggalBayar = toText(form.tanggalBayar).trim();
   const tanggalInvoice = toText(form.tanggalInvoice).trim();
   const noInvoice = toText(form.noInvoice).trim();
 
@@ -229,8 +213,6 @@ function toNormalizedPurchaseOrderPayload(form: PurchaseOrderFormState) {
     tanggalPo: toText(form.tanggalPo).trim(),
     namaCustomer: toText(form.namaCustomer).trim(),
     nominalPo: parseNumberFromUnknown(form.nominalPo),
-    isPaid: form.isPaid,
-    tanggalBayar: form.isPaid ? tanggalBayar || null : null,
     tanggalInvoice: tanggalInvoice || null,
     noInvoice: noInvoice || null,
   };
@@ -337,8 +319,6 @@ export function toPurchaseOrderFormState(item: PurchaseOrderItem): PurchaseOrder
     tanggalPo: toInputDate(item.tanggalPo),
     namaCustomer: item.namaCustomer,
     nominalPo: String(item.nominalPo),
-    isPaid: item.isPaid,
-    tanggalBayar: toInputDate(item.tanggalBayar),
     tanggalInvoice: toInputDate(item.tanggalInvoice),
     noInvoice: item.noInvoice,
   };

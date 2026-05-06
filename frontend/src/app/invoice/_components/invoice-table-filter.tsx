@@ -53,6 +53,8 @@ export function InvoiceTableFilter({
   const { locale, t } = useI18n();
   const filterPlaceholder = (fieldKey: string) =>
     t("common.placeholder.filter", { field: t(fieldKey) });
+  const paidLabel = t("invoice.status.paid");
+  const unpaidLabel = t("invoice.status.unpaid");
 
   return (
     <section className="space-y-4 rounded-2xl border border-sky-200 bg-sky-50/40 p-5 shadow-sm dark:border-sky-900/70 dark:bg-slate-950/85">
@@ -137,6 +139,39 @@ export function InvoiceTableFilter({
           </label>
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
+            {t("field.isPaid")}
+            <select
+              value={filter.isPaid}
+              onChange={(event) =>
+                onFilterChange("isPaid", event.target.value as InvoiceFilter["isPaid"])
+              }
+              className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+            >
+              <option value="">{t("common.all")}</option>
+              <option value="true">{paidLabel}</option>
+              <option value="false">{unpaidLabel}</option>
+            </select>
+          </label>
+
+          <label className="text-sm text-slate-700 dark:text-slate-200">
+            {t("field.tanggalBayarDari")}
+            <AppDateInput
+              value={filter.tanggalBayarDari}
+              onValueChange={(value) => onFilterChange("tanggalBayarDari", value)}
+              className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+            />
+          </label>
+
+          <label className="text-sm text-slate-700 dark:text-slate-200">
+            {t("field.tanggalBayarSampai")}
+            <AppDateInput
+              value={filter.tanggalBayarSampai}
+              onValueChange={(value) => onFilterChange("tanggalBayarSampai", value)}
+              className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+            />
+          </label>
+
+          <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.tanggalDari")}
             <AppDateInput
               value={filter.tanggalDari}
@@ -214,6 +249,14 @@ export function InvoiceTableFilter({
                   </div>
                   <div className="grid gap-3 sm:grid-cols-3">
                     <div>
+                      <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.isPaid")}</dt>
+                      <dd className="mt-1 text-slate-700 dark:text-slate-200">{row.isPaid ? paidLabel : unpaidLabel}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.tanggalBayar")}</dt>
+                      <dd className="mt-1 text-slate-700 dark:text-slate-200">{formatTanggal(row.tanggalBayar, locale)}</dd>
+                    </div>
+                    <div>
                       <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.subtotal")}</dt>
                       <dd className="mt-1 text-slate-700 dark:text-slate-200">{formatRupiah(row.subtotal, locale)}</dd>
                     </div>
@@ -259,7 +302,7 @@ export function InvoiceTableFilter({
       <div className="hidden md:block">
         <div className="overflow-hidden rounded-xl border border-sky-300 bg-white shadow-sm dark:border-sky-900/70 dark:bg-slate-900">
           <div className="overflow-x-auto">
-            <table className="min-w-[1490px] table-fixed text-sm">
+            <table className="min-w-[1700px] table-fixed text-sm">
               <colgroup>
                 <col style={{ width: "130px" }} />
                 <col style={{ width: "110px" }} />
@@ -269,6 +312,8 @@ export function InvoiceTableFilter({
                 <col style={{ width: "240px" }} />
                 <col style={{ width: "110px" }} />
                 <col style={{ width: "110px" }} />
+                <col style={{ width: "120px" }} />
+                <col style={{ width: "90px" }} />
                 <col style={{ width: "120px" }} />
                 <col style={{ width: "160px" }} />
               </colgroup>
@@ -283,13 +328,15 @@ export function InvoiceTableFilter({
                   <th className="px-3 py-2 font-medium">{t("field.subtotal")}</th>
                   <th className="px-3 py-2 font-medium">{t("field.ppnAmount")}</th>
                   <th className="px-3 py-2 font-medium">{t("field.grandTotal")}</th>
+                  <th className="px-3 py-2 font-medium">{t("field.isPaid")}</th>
+                  <th className="px-3 py-2 font-medium">{t("field.tanggalBayar")}</th>
                   <th className="px-3 py-2 font-medium">{t("common.action")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 bg-white dark:divide-slate-800 dark:bg-slate-900">
                 {rows.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="px-3 py-4 text-center text-slate-500 dark:text-slate-400">
+                    <td colSpan={12} className="px-3 py-4 text-center text-slate-500 dark:text-slate-400">
                       {t("common.noData")}
                     </td>
                   </tr>
@@ -319,6 +366,8 @@ export function InvoiceTableFilter({
                         <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{formatRupiah(row.subtotal, locale)}</td>
                         <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{formatRupiah(row.ppnAmount, locale)}</td>
                         <td className="whitespace-nowrap px-3 py-2 font-medium text-slate-800 dark:text-slate-100">{formatRupiah(row.grandTotal, locale)}</td>
+                        <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{row.isPaid ? paidLabel : unpaidLabel}</td>
+                        <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{formatTanggal(row.tanggalBayar, locale)}</td>
                         <td className="whitespace-nowrap px-3 py-2">
                           <div className="flex flex-wrap items-center gap-1.5">
                             <button

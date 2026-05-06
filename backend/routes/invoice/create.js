@@ -29,6 +29,12 @@ router.post("/", async (req, res) => {
   const barang = normalizeBarangList(req.body.barang);
   const parsedIsPpn =
     req.body.isPpn !== undefined ? parseBoolean(req.body.isPpn) : true;
+  const parsedIsPaid =
+    req.body.isPaid !== undefined ? parseBoolean(req.body.isPaid) : false;
+  const tanggalBayar =
+    req.body.tanggalBayar === null || req.body.tanggalBayar === undefined
+      ? null
+      : parseDate(req.body.tanggalBayar);
   const parsedPpnRate =
     req.body.ppnRate !== undefined ? parseNumber(req.body.ppnRate) : 11;
 
@@ -47,6 +53,20 @@ router.post("/", async (req, res) => {
 
   if (parsedIsPpn === null) {
     return res.status(400).json({ message: "isPpn harus boolean" });
+  }
+
+  if (parsedIsPaid === null) {
+    return res.status(400).json({ message: "isPaid harus boolean" });
+  }
+
+  if (req.body.tanggalBayar !== undefined && req.body.tanggalBayar !== null && !tanggalBayar) {
+    return res.status(400).json({ message: "tanggalBayar tidak valid" });
+  }
+
+  if (tanggalBayar && tanggalBayar < tanggal) {
+    return res.status(400).json({
+      message: "tanggalBayar tidak boleh lebih kecil dari tanggal invoice",
+    });
   }
 
   if (parsedPpnRate === null || parsedPpnRate < 0 || parsedPpnRate > 100) {
@@ -75,6 +95,8 @@ router.post("/", async (req, res) => {
       idCustomer: idCustomer,
       barang: barang,
       isPpn: parsedIsPpn,
+      isPaid: parsedIsPaid,
+      tanggalBayar: tanggalBayar,
       ppnRate: parsedPpnRate,
       ppnAmount: ppnAmount,
       subtotal: subtotal,

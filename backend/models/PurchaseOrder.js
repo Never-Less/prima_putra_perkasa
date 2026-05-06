@@ -23,15 +23,6 @@ const purchaseOrderSchema = new mongoose.Schema(
       required: true,
       min: 0,
     },
-    isPaid: {
-      type: Boolean,
-      required: true,
-      default: false,
-    },
-    tanggalBayar: {
-      type: Date,
-      default: null,
-    },
     tanggalInvoice: {
       type: Date,
       default: null,

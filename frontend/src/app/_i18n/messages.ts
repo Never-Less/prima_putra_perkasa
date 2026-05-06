@@ -231,6 +231,15 @@ export const messages: Record<Locale, MessageDictionary> = {
     "invoice.exportPage.ppnLabel": "PPN",
     "invoice.exportPage.totalInvoiceLabel": "Total (Nilai Invoice)",
     "invoice.exportPage.grandTotalRowLabel": "Grand Total",
+    "invoice.exportPage.factoryBillingTitle": "Daftar Tagihan Pabrik",
+    "invoice.exportPage.factoryBillingDescription":
+      "Daftar ini hanya menghitung invoice yang belum lunas.",
+    "invoice.exportPage.factoryBillingTotalCustomers": "Total pabrik: {{count}}",
+    "invoice.exportPage.factoryBillingCustomerColumn": "Nama Customer (Daftar Tagihan Pabrik)",
+    "invoice.exportPage.factoryBillingAmountColumn": "Jumlah Tagihan",
+    "invoice.exportPage.factoryBillingGrandTotal": "Grand Total Tagihan",
+    "invoice.status.paid": "Lunas",
+    "invoice.status.unpaid": "Belum Lunas",
     "invoice.form.title": "Form dan Preview Invoice",
     "invoice.form.description":
       "Lengkapi data invoice, pilih No. PO dan surat jalan terkait, lalu biarkan sistem menghitung total secara otomatis.",
@@ -442,8 +451,6 @@ export const messages: Record<Locale, MessageDictionary> = {
       "Diisi otomatis saat invoice dibuat.",
     "purchaseOrder.form.nominalReplacedFromInvoice":
       "Saat invoice dibuat atau diperbarui, nominal PO akan diganti otomatis dengan grand total invoice (termasuk PPN).",
-    "purchaseOrder.status.paid": "Lunas",
-    "purchaseOrder.status.unpaid": "Belum Lunas",
     "purchaseOrder.preview.title": "Preview Purchase Order",
     "purchaseOrder.exportPage.openButton": "Export Data",
     "purchaseOrder.exportPage.title": "Export Purchase Order",
@@ -454,13 +461,6 @@ export const messages: Record<Locale, MessageDictionary> = {
     "purchaseOrder.exportPage.empty":
       "Tidak ada data purchase order yang cocok dengan filter ini.",
     "purchaseOrder.exportPage.totalRows": "Total data: {{count}}",
-    "purchaseOrder.exportPage.factoryBillingTitle": "Daftar Tagihan Pabrik",
-    "purchaseOrder.exportPage.factoryBillingDescription":
-      "Ringkasan ini hanya mengambil PO yang sudah memiliki invoice dan belum lunas, lalu menjumlahkan nominal tagihan berdasarkan customer.",
-    "purchaseOrder.exportPage.factoryBillingTotalCustomers": "Total pabrik: {{count}}",
-    "purchaseOrder.exportPage.factoryBillingCustomerColumn": "Nama Customer (Daftar Tagihan Pabrik)",
-    "purchaseOrder.exportPage.factoryBillingAmountColumn": "Jumlah Tagihan",
-    "purchaseOrder.exportPage.factoryBillingGrandTotal": "Grand Total Tagihan",
     "purchaseOrder.apiLoadError": "Gagal memuat data purchase order dari backend.",
     "purchaseOrder.optionsLoadError": "Gagal memuat pilihan customer dan invoice untuk purchase order.",
     "purchaseOrder.mutationError": "Gagal memproses perubahan purchase order.",
@@ -764,6 +764,15 @@ export const messages: Record<Locale, MessageDictionary> = {
     "invoice.exportPage.ppnLabel": "VAT",
     "invoice.exportPage.totalInvoiceLabel": "Total (Invoice Value)",
     "invoice.exportPage.grandTotalRowLabel": "Grand Total",
+    "invoice.exportPage.factoryBillingTitle": "Factory Billing List",
+    "invoice.exportPage.factoryBillingDescription":
+      "This list only includes unpaid invoices.",
+    "invoice.exportPage.factoryBillingTotalCustomers": "Total factories: {{count}}",
+    "invoice.exportPage.factoryBillingCustomerColumn": "Customer Name (Factory Billing List)",
+    "invoice.exportPage.factoryBillingAmountColumn": "Billing Amount",
+    "invoice.exportPage.factoryBillingGrandTotal": "Grand Billing Total",
+    "invoice.status.paid": "Paid",
+    "invoice.status.unpaid": "Unpaid",
     "invoice.form.title": "Invoice Form and Preview",
     "invoice.form.description":
       "Complete the invoice details, choose the related PO and delivery notes, and let the system calculate totals automatically.",
@@ -976,8 +985,6 @@ export const messages: Record<Locale, MessageDictionary> = {
       "Filled automatically when the invoice is created.",
     "purchaseOrder.form.nominalReplacedFromInvoice":
       "When an invoice is created or updated, the PO amount will be replaced automatically with the invoice grand total (including VAT).",
-    "purchaseOrder.status.paid": "Paid",
-    "purchaseOrder.status.unpaid": "Unpaid",
     "purchaseOrder.preview.title": "Purchase Order Preview",
     "purchaseOrder.exportPage.openButton": "Export Data",
     "purchaseOrder.exportPage.title": "Purchase Order Export",
@@ -988,13 +995,6 @@ export const messages: Record<Locale, MessageDictionary> = {
     "purchaseOrder.exportPage.empty":
       "No purchase order data matches the current filters.",
     "purchaseOrder.exportPage.totalRows": "Total rows: {{count}}",
-    "purchaseOrder.exportPage.factoryBillingTitle": "Factory Billing List",
-    "purchaseOrder.exportPage.factoryBillingDescription":
-      "This summary only includes POs that already have an invoice and are unpaid, then totals billed amounts by customer.",
-    "purchaseOrder.exportPage.factoryBillingTotalCustomers": "Total factories: {{count}}",
-    "purchaseOrder.exportPage.factoryBillingCustomerColumn": "Customer Name (Factory Billing List)",
-    "purchaseOrder.exportPage.factoryBillingAmountColumn": "Billing Amount",
-    "purchaseOrder.exportPage.factoryBillingGrandTotal": "Grand Billing Total",
     "purchaseOrder.apiLoadError": "Failed to load purchase order data from backend.",
     "purchaseOrder.optionsLoadError": "Failed to load customer and invoice options for purchase order.",
     "purchaseOrder.mutationError": "Failed to process purchase order changes.",

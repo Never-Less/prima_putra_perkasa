@@ -77,6 +77,30 @@ router.put("/:id", async (req, res) => {
     updates.isPpn = isPpn;
   }
 
+  if (req.body.isPaid !== undefined) {
+    const isPaid = parseBoolean(req.body.isPaid);
+
+    if (isPaid === null) {
+      return res.status(400).json({ message: "isPaid harus boolean" });
+    }
+
+    updates.isPaid = isPaid;
+  }
+
+  if (req.body.tanggalBayar !== undefined) {
+    if (req.body.tanggalBayar === null) {
+      updates.tanggalBayar = null;
+    } else {
+      const tanggalBayar = parseDate(req.body.tanggalBayar);
+
+      if (!tanggalBayar) {
+        return res.status(400).json({ message: "tanggalBayar tidak valid" });
+      }
+
+      updates.tanggalBayar = tanggalBayar;
+    }
+  }
+
   if (req.body.ppnRate !== undefined) {
     const ppnRate = parseNumber(req.body.ppnRate);
 
@@ -102,7 +126,7 @@ router.put("/:id", async (req, res) => {
   if (Object.keys(updates).length === 0) {
     return res.status(400).json({
       message:
-        "minimal kirim salah satu field: tanggal, noInvoice, noPo, noSuratJalan, idCustomer, barang, isPpn, ppnRate",
+        "minimal kirim salah satu field: tanggal, noInvoice, noPo, noSuratJalan, idCustomer, barang, isPpn, isPaid, tanggalBayar, ppnRate",
     });
   }
 
@@ -131,8 +155,17 @@ router.put("/:id", async (req, res) => {
 
     const effectiveSubtotal =
       updates.subtotal !== undefined ? updates.subtotal : existingInvoice.subtotal;
+    const effectiveTanggal = updates.tanggal ?? existingInvoice.tanggal;
+    const effectiveTanggalBayar =
+      updates.tanggalBayar !== undefined ? updates.tanggalBayar : existingInvoice.tanggalBayar;
     const effectiveIsPpn = updates.isPpn ?? existingInvoice.isPpn ?? true;
     const effectivePpnRate = updates.ppnRate ?? existingInvoice.ppnRate ?? 11;
+
+    if (effectiveTanggalBayar && effectiveTanggalBayar < effectiveTanggal) {
+      return res.status(400).json({
+        message: "tanggalBayar tidak boleh lebih kecil dari tanggal invoice",
+      });
+    }
 
     updates.subtotal = effectiveSubtotal;
     updates.isPpn = effectiveIsPpn;
