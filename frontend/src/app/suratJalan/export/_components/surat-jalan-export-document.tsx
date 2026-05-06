@@ -194,7 +194,7 @@ export function SuratJalanExportDocument({
               <span>:</span>
               <span>{suratJalan.noPo || "-"}</span>
             </div>
-            <div className="grid grid-cols-[90px_12px_1fr] gap-x-1">
+            <div className="grid grid-cols-[72px_10px_1fr] gap-x-1 text-[14px]">
               <span>{t("suratJalan.export.tanggalLabel")}</span>
               <span>:</span>
               <span>{templateDate}</span>
@@ -269,6 +269,7 @@ export function SuratJalanExportDocument({
           </div>
 
           <p className="mt-0.5 text-[13px] font-bold">{t("suratJalan.export.returnPolicy")}</p>
+          <br />
 
           <div className="mt-0.5 grid grid-cols-3 gap-8 text-center">
             <div>
@@ -317,7 +318,7 @@ export function SuratJalanExportDocument({
           </div>
 
           <div className="pt-7">
-            <div className="grid grid-cols-[120px_12px_1fr] text-[18px] font-bold leading-tight">
+            <div className="grid grid-cols-[88px_10px_1fr] text-[14px] font-bold leading-tight">
               <span>{t("suratJalan.export.tanggalLabel")}</span>
               <span>:</span>
               <span>{templateDate}</span>
