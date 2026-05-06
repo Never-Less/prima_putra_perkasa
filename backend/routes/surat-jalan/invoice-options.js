@@ -4,15 +4,18 @@ const { SuratJalan } = require("../../models/SuratJalan");
 
 const router = express.Router();
 
-function normalizeBarangOptions(value) {
+function normalizeBarangOptions(value, defaultKodeDepartemen = "") {
   if (!Array.isArray(value)) {
     return [];
   }
+
+  const fallbackKodeDepartemen = String(defaultKodeDepartemen || "").trim();
 
   return value
     .map((item) => {
       const nama = String(item?.nama || "").trim();
       const spesifikasi = String(item?.spesifikasi || "").trim();
+      const kodeDepartemen = String(item?.kodeDepartemen || fallbackKodeDepartemen).trim();
       const jumlah = Number(item?.jumlah);
       const unit = String(item?.unit || "").trim();
 
@@ -23,6 +26,7 @@ function normalizeBarangOptions(value) {
       return {
         nama,
         spesifikasi,
+        kodeDepartemen,
         jumlah,
         unit,
       };
@@ -34,7 +38,7 @@ router.get("/invoice-options", async (_req, res) => {
   try {
     const suratJalanList = await SuratJalan.find(
       {},
-      "noPo noSuratJalan idCustomer barang"
+      "noPo noSuratJalan idCustomer barang kodeDepartemen"
     )
       .sort({ noPo: 1, noSuratJalan: 1 })
       .lean();
@@ -45,7 +49,7 @@ router.get("/invoice-options", async (_req, res) => {
       const noPo = String(item?.noPo || "").trim();
       const noSuratJalan = String(item?.noSuratJalan || "").trim();
       const idCustomer = String(item?.idCustomer || "").trim();
-      const barang = normalizeBarangOptions(item?.barang);
+      const barang = normalizeBarangOptions(item?.barang, item?.kodeDepartemen);
 
       if (!noPo || !noSuratJalan) {
         return;

@@ -53,10 +53,10 @@ function formatTemplateDate(value: string, locale: "id" | "en") {
 }
 
 function buildTemplateRows(suratJalan: SuratJalanItem, minimumRows = 8): TemplateRow[] {
-  const kodeDepartemen = String(suratJalan.kodeDepartemen || "").trim();
   const filledRows = (suratJalan.barang || []).map((barang, index) => {
     const namaBarang = String(barang.nama || "").trim();
     const spesifikasi = String(barang.spesifikasi || "").trim();
+    const kodeDepartemen = String(barang.kodeDepartemen || suratJalan.kodeDepartemen || "").trim();
     const namaBarangDisplay =
       namaBarang && spesifikasi ? `${namaBarang} (${spesifikasi})` : namaBarang;
 
@@ -84,14 +84,13 @@ function buildTemplateRows(suratJalan: SuratJalanItem, minimumRows = 8): Templat
 }
 
 function buildMeiloonTemplateRows(suratJalan: SuratJalanItem, minimumRows = 8): MeiloonTemplateRow[] {
-  const kodeDepartemen = String(suratJalan.kodeDepartemen || "").trim();
   const filledRows = (suratJalan.barang || []).map((barang, index) => ({
     no: String(index + 1),
     namaBarang: String(barang.nama || "").trim(),
     spesifikasi: String(barang.spesifikasi || "").trim(),
     qty: String(barang.jumlah || "").trim(),
     unit: String(barang.unit || "").trim().toUpperCase(),
-    kodeDepartemen,
+    kodeDepartemen: String(barang.kodeDepartemen || suratJalan.kodeDepartemen || "").trim(),
     ttdPenerima: "",
     note: "",
   }));

@@ -33,7 +33,10 @@ router.get("/", async (req, res) => {
     }
 
     if (kodeDepartemenRegex) {
-      query.kodeDepartemen = kodeDepartemenRegex;
+      query.$or = [
+        { "barang.kodeDepartemen": kodeDepartemenRegex },
+        { kodeDepartemen: kodeDepartemenRegex },
+      ];
     }
 
     if (kendaraanRegex) {

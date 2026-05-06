@@ -59,11 +59,11 @@ router.post("/", async (req, res) => {
     return res.status(400).json({ message: "isPaid harus boolean" });
   }
 
-  if (req.body.tanggalBayar !== undefined && req.body.tanggalBayar !== null && !tanggalBayar) {
+  if (parsedIsPaid && req.body.tanggalBayar !== undefined && req.body.tanggalBayar !== null && !tanggalBayar) {
     return res.status(400).json({ message: "tanggalBayar tidak valid" });
   }
 
-  if (tanggalBayar && tanggalBayar < tanggal) {
+  if (parsedIsPaid && tanggalBayar && tanggalBayar < tanggal) {
     return res.status(400).json({
       message: "tanggalBayar tidak boleh lebih kecil dari tanggal invoice",
     });
@@ -96,7 +96,7 @@ router.post("/", async (req, res) => {
       barang: barang,
       isPpn: parsedIsPpn,
       isPaid: parsedIsPaid,
-      tanggalBayar: tanggalBayar,
+      tanggalBayar: parsedIsPaid ? tanggalBayar : null,
       ppnRate: parsedPpnRate,
       ppnAmount: ppnAmount,
       subtotal: subtotal,

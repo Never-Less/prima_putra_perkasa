@@ -1,4 +1,9 @@
-import { fetchInvoiceRows, type InvoiceItem, type InvoicePrefillPayload } from "../invoice/_lib/invoice";
+import {
+  buildSuratJalanInvoiceSpesifikasi,
+  fetchInvoiceRows,
+  type InvoiceItem,
+  type InvoicePrefillPayload,
+} from "../invoice/_lib/invoice";
 import {
   fetchSuratJalanRows,
   type SuratJalanItem,
@@ -101,7 +106,7 @@ export function buildInvoicePrefillFromSuratJalan(row: SuratJalanItem): InvoiceP
     barang: row.barang
       .map((barang) => ({
         namaBarang: barang.nama,
-        spesifikasi: barang.spesifikasi || "",
+        spesifikasi: buildSuratJalanInvoiceSpesifikasi(barang.spesifikasi, barang.kodeDepartemen),
         kuantitas: Number(barang.jumlah || 0),
         unit: barang.unit,
       }))
@@ -135,7 +140,7 @@ export function buildInvoicePrefillFromReadyInvoicePoGroup(
   group.suratJalanRows.forEach((row) => {
     row.barang.forEach((barang) => {
       const namaBarang = String(barang.nama || "").trim();
-      const spesifikasi = String(barang.spesifikasi || "").trim();
+      const spesifikasi = buildSuratJalanInvoiceSpesifikasi(barang.spesifikasi, barang.kodeDepartemen);
       const unit = String(barang.unit || "").trim();
       const kuantitas = Number(barang.jumlah || 0);
 

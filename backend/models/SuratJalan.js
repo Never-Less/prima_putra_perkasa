@@ -18,6 +18,12 @@ const barangSchema = new mongoose.Schema(
         return text || null;
       },
     },
+    kodeDepartemen: {
+      type: String,
+      trim: true,
+      maxlength: 100,
+      default: "",
+    },
     jumlah: {
       type: Number,
       required: true,
@@ -48,12 +54,6 @@ const suratJalanSchema = new mongoose.Schema(
       required: true,
       trim: true,
       maxlength: 100,
-    },
-    kodeDepartemen: {
-      type: String,
-      trim: true,
-      maxlength: 100,
-      default: "",
     },
     tanggal: {
       type: Date,

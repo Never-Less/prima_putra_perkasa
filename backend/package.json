@@ -10,6 +10,7 @@
     "backfill:surat-jalan-barang": "node scripts/backfill-surat-jalan-barang.js",
     "backfill:purchase-order-from-surat-jalan": "node scripts/backfill-purchase-order-from-surat-jalan.js",
     "backfill:purchase-order-invoice-link": "node scripts/backfill-purchase-order-invoice-link.js",
+    "migrate:surat-jalan-kode-departemen": "node scripts/migrate-surat-jalan-kode-departemen-to-barang.js",
     "migrate:is-paid-to-invoice": "node scripts/migrate-invoice-payment-fields.js",
     "migrate:invoice-payment-fields": "node scripts/migrate-invoice-payment-fields.js",
     "test": "echo \"No tests configured\""

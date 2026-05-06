@@ -237,7 +237,7 @@ export function PurchaseOrderTableFilter({
 
       <div className="hidden md:block">
         <div className="overflow-x-auto rounded-xl border border-sky-300 bg-white shadow-sm dark:border-sky-900/70 dark:bg-slate-900">
-          <table className="min-w-[980px] table-fixed text-sm">
+          <table className="w-full min-w-[980px] table-fixed text-sm">
             <colgroup>
               <col style={{ width: "120px" }} />
               <col style={{ width: "120px" }} />

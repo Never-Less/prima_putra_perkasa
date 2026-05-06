@@ -33,7 +33,9 @@ function parseBoolean(value) {
   return null;
 }
 
-function normalizeBarangList(barangInput) {
+function normalizeBarangList(barangInput, options = {}) {
+  const defaultKodeDepartemen = String(options.defaultKodeDepartemen || "").trim();
+
   if (!Array.isArray(barangInput) || barangInput.length === 0) {
     return null;
   }
@@ -43,6 +45,7 @@ function normalizeBarangList(barangInput) {
   for (const item of barangInput) {
     const nama = String(item?.nama || "").trim();
     const spesifikasiText = String(item?.spesifikasi || "").trim();
+    const kodeDepartemen = String(item?.kodeDepartemen || defaultKodeDepartemen).trim();
     const jumlah = Number(item?.jumlah);
     const unit = String(item?.unit || "").trim();
 
@@ -53,6 +56,7 @@ function normalizeBarangList(barangInput) {
     normalized.push({
       nama: nama,
       spesifikasi: spesifikasiText || null,
+      kodeDepartemen,
       jumlah: jumlah,
       unit: unit,
     });

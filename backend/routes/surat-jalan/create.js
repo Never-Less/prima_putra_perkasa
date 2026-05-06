@@ -10,10 +10,11 @@ const router = express.Router();
 router.post("/", async (req, res) => {
   const noSuratJalan = String(req.body.noSuratJalan || "").trim();
   const noPo = String(req.body.noPo || "").trim();
-  const kodeDepartemen = String(req.body.kodeDepartemen || "").trim();
   const tanggal = parseDate(req.body.tanggal);
   const idCustomer = String(req.body.idCustomer || "").trim();
-  const barang = normalizeBarangList(req.body.barang);
+  const barang = normalizeBarangList(req.body.barang, {
+    defaultKodeDepartemen: req.body.kodeDepartemen,
+  });
   const kendaraan = String(req.body.kendaraan || "").trim();
   const tipe = String(req.body.tipe || "")
     .trim()
@@ -22,7 +23,7 @@ router.post("/", async (req, res) => {
   if (!noSuratJalan || !noPo || !tanggal || !idCustomer || !barang || !kendaraan || !tipe) {
     return res.status(400).json({
       message:
-        "noSuratJalan, noPo, tanggal, idCustomer, barang (nama, spesifikasi?, jumlah, unit), kendaraan, dan tipe wajib diisi",
+        "noSuratJalan, noPo, tanggal, idCustomer, barang (nama, spesifikasi?, kodeDepartemen?, jumlah, unit), kendaraan, dan tipe wajib diisi",
     });
   }
 
@@ -63,7 +64,6 @@ router.post("/", async (req, res) => {
     const suratJalan = await SuratJalan.create({
       noSuratJalan,
       noPo,
-      kodeDepartemen,
       tanggal: tanggal,
       idCustomer,
       barang: barang,

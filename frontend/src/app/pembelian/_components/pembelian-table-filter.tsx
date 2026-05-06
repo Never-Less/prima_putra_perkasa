@@ -308,7 +308,7 @@ export function PembelianTableFilter({
 
             <div className="hidden md:block">
               <div className="overflow-x-auto">
-                <table className="min-w-[1380px] table-fixed text-sm">
+                <table className="w-full min-w-[1380px] table-fixed text-sm">
                   <colgroup>
                     <col style={{ width: "110px" }} />
                     <col style={{ width: "140px" }} />

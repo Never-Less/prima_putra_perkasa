@@ -91,6 +91,7 @@ export type InvoiceListQuery = InvoiceFilter & PaginationQueryState;
 export type InvoiceSuratJalanBarangOption = {
   nama: string;
   spesifikasi: string;
+  kodeDepartemen: string;
   jumlah: number;
   unit: string;
 };
@@ -253,6 +254,13 @@ function normalizeNoSuratJalanList(value: unknown) {
   return singleValue ? [singleValue] : [];
 }
 
+export function buildSuratJalanInvoiceSpesifikasi(spesifikasiValue: unknown, kodeDepartemenValue: unknown) {
+  const spesifikasi = toText(spesifikasiValue).trim();
+  const kodeDepartemen = toText(kodeDepartemenValue).trim();
+
+  return [spesifikasi, kodeDepartemen].filter(Boolean).join(" - ");
+}
+
 function toInvoiceSuratJalanBarangOption(value: unknown): InvoiceSuratJalanBarangOption | null {
   if (!value || typeof value !== "object") {
     return null;
@@ -261,6 +269,7 @@ function toInvoiceSuratJalanBarangOption(value: unknown): InvoiceSuratJalanBaran
   const item = value as Record<string, unknown>;
   const nama = toText(item.nama).trim();
   const spesifikasi = toText(item.spesifikasi).trim();
+  const kodeDepartemen = toText(item.kodeDepartemen).trim();
   const jumlah = parseNumberFromUnknown(item.jumlah);
   const unit = toText(item.unit).trim();
 
@@ -271,6 +280,7 @@ function toInvoiceSuratJalanBarangOption(value: unknown): InvoiceSuratJalanBaran
   return {
     nama,
     spesifikasi,
+    kodeDepartemen,
     jumlah,
     unit,
   };
@@ -423,6 +433,8 @@ function toInvoiceItem(value: unknown): InvoiceItem | null {
     ? row.barang.map(toInvoiceBarang).filter((item): item is InvoiceBarang => Boolean(item))
     : [];
 
+  const isPaid = Boolean(row.isPaid);
+
   return {
     id: id,
     tanggal: toText(row.tanggal).trim(),
@@ -432,8 +444,8 @@ function toInvoiceItem(value: unknown): InvoiceItem | null {
     idCustomer: parseCustomerId(row.idCustomer),
     barang: barang,
     isPpn: Boolean(row.isPpn),
-    isPaid: Boolean(row.isPaid),
-    tanggalBayar: toText(row.tanggalBayar).trim() || null,
+    isPaid,
+    tanggalBayar: isPaid ? toText(row.tanggalBayar).trim() || null : null,
     ppnRate: parseNumberFromUnknown(row.ppnRate, 11),
     ppnAmount: parseNumberFromUnknown(row.ppnAmount),
     subtotal: parseNumberFromUnknown(row.subtotal),
@@ -511,7 +523,7 @@ function toNormalizedInvoicePayload(form: InvoiceFormState) {
     barang: barang,
     isPpn: form.isPpn,
     isPaid: form.isPaid,
-    tanggalBayar: toText(form.tanggalBayar).trim() || null,
+    tanggalBayar: form.isPaid ? toText(form.tanggalBayar).trim() || null : null,
     ppnRate: Number.isFinite(ppnRateValue) ? ppnRateValue : 0,
   };
 }
@@ -789,7 +801,7 @@ export function buildInvoiceBarangRowsFromSuratJalanSelection(
 
     suratJalan.barang.forEach((barang) => {
       const namaBarang = toText(barang.nama).trim();
-      const spesifikasi = toText(barang.spesifikasi).trim();
+      const spesifikasi = buildSuratJalanInvoiceSpesifikasi(barang.spesifikasi, barang.kodeDepartemen);
       const unit = toText(barang.unit).trim();
       const identityKey = createInvoiceBarangIdentityKey(namaBarang, spesifikasi, unit);
       const existingItem = barangMap.get(identityKey);
@@ -862,7 +874,7 @@ export function toInvoiceFormState(item: InvoiceItem): InvoiceFormState {
     idCustomer: item.idCustomer,
     isPpn: item.isPpn,
     isPaid: item.isPaid,
-    tanggalBayar: toInputDate(item.tanggalBayar),
+    tanggalBayar: item.isPaid ? toInputDate(item.tanggalBayar) : "",
     ppnRate: String(item.ppnRate),
     barangRows: ensureTrailingEmptyInvoiceBarangRow(
       item.barang.map((barang) => ({

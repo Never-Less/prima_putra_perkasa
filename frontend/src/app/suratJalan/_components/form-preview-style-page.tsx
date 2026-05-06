@@ -7,6 +7,7 @@ import { AppToast } from "../../_components/app-toast";
 import { ConfirmationModal } from "../../_components/confirmation-modal";
 import { buildInvoicedSuratJalanNumberSet } from "../../_lib/surat-jalan-invoice-status";
 import {
+  buildSuratJalanInvoiceSpesifikasi,
   fetchInvoiceRows,
   saveInvoicePrefill,
   type InvoicePrefillPayload,
@@ -332,7 +333,7 @@ export function FormPreviewStylePage() {
 
         row.barang.forEach((barang) => {
           const nama = String(barang.nama || "").trim();
-          const spesifikasi = String(barang.spesifikasi || "").trim();
+          const spesifikasi = buildSuratJalanInvoiceSpesifikasi(barang.spesifikasi, barang.kodeDepartemen);
           const unit = String(barang.unit || "").trim();
 
           if (!nama) {

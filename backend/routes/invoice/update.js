@@ -156,10 +156,18 @@ router.put("/:id", async (req, res) => {
     const effectiveSubtotal =
       updates.subtotal !== undefined ? updates.subtotal : existingInvoice.subtotal;
     const effectiveTanggal = updates.tanggal ?? existingInvoice.tanggal;
-    const effectiveTanggalBayar =
-      updates.tanggalBayar !== undefined ? updates.tanggalBayar : existingInvoice.tanggalBayar;
+    const effectiveIsPaid = updates.isPaid ?? existingInvoice.isPaid ?? false;
+    const effectiveTanggalBayar = effectiveIsPaid
+      ? updates.tanggalBayar !== undefined
+        ? updates.tanggalBayar
+        : existingInvoice.tanggalBayar
+      : null;
     const effectiveIsPpn = updates.isPpn ?? existingInvoice.isPpn ?? true;
     const effectivePpnRate = updates.ppnRate ?? existingInvoice.ppnRate ?? 11;
+
+    if (!effectiveIsPaid) {
+      updates.tanggalBayar = null;
+    }
 
     if (effectiveTanggalBayar && effectiveTanggalBayar < effectiveTanggal) {
       return res.status(400).json({

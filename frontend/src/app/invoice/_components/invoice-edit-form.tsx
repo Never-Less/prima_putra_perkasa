@@ -494,15 +494,31 @@ export function InvoiceEditForm({
             </label>
 
             <label className="text-sm text-slate-700 dark:text-slate-200">
+              {t("field.ppnRate")}
+              <input
+                type="number"
+                min={0}
+                max={100}
+                value={form.ppnRate}
+                onChange={(event) => setForm((prev) => ({ ...prev, ppnRate: event.target.value }))}
+                placeholder={inputPlaceholder("field.ppnRate")}
+                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+              />
+            </label>
+
+            <label className="text-sm text-slate-700 dark:text-slate-200">
               {t("field.isPaid")}
               <select
                 value={String(form.isPaid)}
-                onChange={(event) =>
+                onChange={(event) => {
+                  const isPaid = event.target.value === "true";
+
                   setForm((prev) => ({
                     ...prev,
-                    isPaid: event.target.value === "true",
-                  }))
-                }
+                    isPaid,
+                    tanggalBayar: isPaid ? prev.tanggalBayar : "",
+                  }));
+                }}
                 className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               >
                 <option value="true">{paidLabel}</option>
@@ -513,22 +529,10 @@ export function InvoiceEditForm({
             <label className="text-sm text-slate-700 dark:text-slate-200">
               {t("field.tanggalBayar")}
               <AppDateInput
-                value={form.tanggalBayar}
+                value={form.isPaid ? form.tanggalBayar : ""}
                 onValueChange={(value) => setForm((prev) => ({ ...prev, tanggalBayar: value }))}
-                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-              />
-            </label>
-
-            <label className="text-sm text-slate-700 dark:text-slate-200">
-              {t("field.ppnRate")}
-              <input
-                type="number"
-                min={0}
-                max={100}
-                value={form.ppnRate}
-                onChange={(event) => setForm((prev) => ({ ...prev, ppnRate: event.target.value }))}
-                placeholder={inputPlaceholder("field.ppnRate")}
-                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                disabled={!form.isPaid}
+                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
               />
             </label>
 
@@ -682,7 +686,7 @@ export function InvoiceEditForm({
             </p>
             <p>
               <span className="text-slate-500 dark:text-slate-400">{t("field.tanggalBayar")}:</span>{" "}
-              {formatTanggal(form.tanggalBayar || null, locale)}
+              {formatTanggal(form.isPaid ? form.tanggalBayar || null : null, locale)}
             </p>
             <p>
               <span className="text-slate-500 dark:text-slate-400">{t("field.ppnRate")}:</span> {form.ppnRate || "0"}%
