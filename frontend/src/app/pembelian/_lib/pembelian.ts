@@ -19,7 +19,7 @@ export type PembelianItem = {
   id: string;
   tanggalNota: string;
   namaSupplier: string;
-  noNpwp: string;
+  noNota: string;
   idInvoice: string;
   hutang: boolean;
   ppn: boolean;
@@ -38,7 +38,7 @@ export type PembelianInvoiceOption = {
 
 export type PembelianFilter = {
   namaSupplier: string;
-  noNpwp: string;
+  noNota: string;
   noInvoice: string;
   hutang: "" | "true" | "false";
   ppn: "" | "true" | "false";
@@ -53,7 +53,7 @@ export type PembelianFilter = {
 export type PembelianFormState = {
   tanggalNota: string;
   namaSupplier: string;
-  noNpwp: string;
+  noNota: string;
   idInvoice: string;
   hutang: boolean;
   ppn: boolean;
@@ -90,7 +90,7 @@ type ResolveInvoiceLabel = (invoiceId: string) => string;
 
 export const defaultPembelianFilter: PembelianFilter = {
   namaSupplier: "",
-  noNpwp: "",
+  noNota: "",
   noInvoice: "",
   hutang: "",
   ppn: "",
@@ -163,7 +163,7 @@ function toPembelianItem(value: unknown): PembelianItem | null {
     id: id,
     tanggalNota: toText(row.tanggalNota).trim(),
     namaSupplier: toText(row.namaSupplier).trim(),
-    noNpwp: toText(row.noNpwp).trim(),
+    noNota: toText(row.noNota).trim(),
     idInvoice: parseInvoiceId(row.idInvoice),
     hutang: Boolean(row.hutang),
     ppn: Boolean(row.ppn),
@@ -229,7 +229,7 @@ function toNormalizedPembelianPayload(form: PembelianFormState) {
   return {
     tanggalNota: toText(form.tanggalNota).trim(),
     namaSupplier: toText(form.namaSupplier).trim(),
-    noNpwp: toText(form.noNpwp).trim(),
+    noNota: toText(form.noNota).trim(),
     idInvoice: idInvoice || null,
     hutang: form.hutang,
     ppn: form.ppn,
@@ -279,7 +279,7 @@ export async function fetchPembelianList(
 ): Promise<ServerListResult<PembelianItem>> {
   const requestPath = `/api/pembelian${buildListQueryString({
     namaSupplier: query.namaSupplier,
-    noNpwp: query.noNpwp,
+    noNota: query.noNota,
     noInvoice: query.noInvoice,
     hutang: query.hutang,
     ppn: query.ppn,
@@ -359,7 +359,7 @@ export function toPembelianFormState(item: PembelianItem): PembelianFormState {
   return {
     tanggalNota: toInputDate(item.tanggalNota),
     namaSupplier: item.namaSupplier,
-    noNpwp: item.noNpwp,
+    noNota: item.noNota,
     idInvoice: item.idInvoice,
     hutang: item.hutang,
     ppn: item.ppn,
@@ -382,7 +382,7 @@ export function toPembelianFormStateFromPrefill(
   return {
     tanggalNota: toInputDate(prefill.tanggalNota || null),
     namaSupplier: "",
-    noNpwp: "",
+    noNota: "",
     idInvoice: fallbackInvoiceId,
     hutang: false,
     ppn: Boolean(prefill.ppn),
@@ -436,7 +436,7 @@ export function filterPembelianRows(
 
   return rows.filter((row) => {
     const matchNamaSupplier = normalize(row.namaSupplier).includes(normalize(filter.namaSupplier));
-    const matchNoNpwp = normalize(row.noNpwp || "").includes(normalize(filter.noNpwp));
+    const matchNoNota = normalize(row.noNota || "").includes(normalize(filter.noNota));
     const invoiceLabel = resolveInvoiceLabel ? resolveInvoiceLabel(row.idInvoice) : row.idInvoice;
     const matchNoInvoice = normalize(invoiceLabel || "").includes(normalize(filter.noInvoice));
 
@@ -458,7 +458,7 @@ export function filterPembelianRows(
 
     return (
       matchNamaSupplier &&
-      matchNoNpwp &&
+      matchNoNota &&
       matchNoInvoice &&
       matchHutang &&
       matchPpn &&

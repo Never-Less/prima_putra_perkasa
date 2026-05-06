@@ -13,6 +13,7 @@
     "migrate:surat-jalan-kode-departemen": "node scripts/migrate-surat-jalan-kode-departemen-to-barang.js",
     "migrate:is-paid-to-invoice": "node scripts/migrate-invoice-payment-fields.js",
     "migrate:invoice-payment-fields": "node scripts/migrate-invoice-payment-fields.js",
+    "migrate:pembelian-no-nota": "node scripts/migrate-pembelian-no-npwp-to-no-nota.js",
     "test": "echo \"No tests configured\""
   },
   "keywords": [],

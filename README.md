@@ -120,7 +120,7 @@ Body create/update:
 {
   "tanggalNota": "2026-02-24",
   "namaSupplier": "PT Supplier Utama",
-  "noNpwp": "01.234.567.8-901.000",
+  "noNota": "NOTA-001",
   "idInvoice": "65f1234567890abcde123456",
   "hutang": true,
   "ppn": true,

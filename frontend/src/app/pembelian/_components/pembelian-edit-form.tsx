@@ -36,7 +36,7 @@ function createEmptyPembelianFormState(invoiceOptions: PembelianInvoiceOption[])
   return {
     tanggalNota: "",
     namaSupplier: "",
-    noNpwp: "",
+    noNota: "",
     idInvoice: ensureValidIdInvoice("", invoiceOptions),
     hutang: false,
     ppn: false,
@@ -156,11 +156,11 @@ export function PembelianEditForm({
             </label>
 
             <label className="text-sm text-slate-700 dark:text-slate-200">
-              {t("field.noNpwp")}
+              {t("field.noNota")}
               <input
-                value={form.noNpwp}
-                onChange={(event) => setForm((prev) => ({ ...prev, noNpwp: event.target.value }))}
-                placeholder={inputPlaceholder("field.noNpwp")}
+                value={form.noNota}
+                onChange={(event) => setForm((prev) => ({ ...prev, noNota: event.target.value }))}
+                placeholder={inputPlaceholder("field.noNota")}
                 className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               />
             </label>
@@ -349,7 +349,7 @@ export function PembelianEditForm({
               <span className="text-slate-500 dark:text-slate-400">{t("field.namaSupplier")}:</span> {form.namaSupplier || "-"}
             </p>
             <p>
-              <span className="text-slate-500 dark:text-slate-400">{t("field.noNpwp")}:</span> {form.noNpwp || "-"}
+              <span className="text-slate-500 dark:text-slate-400">{t("field.noNota")}:</span> {form.noNota || "-"}
             </p>
             <p>
               <span className="text-slate-500 dark:text-slate-400">{t("field.noInvoice")}:</span> {previewInvoiceLabel}

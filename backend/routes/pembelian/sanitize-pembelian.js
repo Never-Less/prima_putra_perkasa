@@ -3,7 +3,7 @@ function sanitizePembelian(pembelian) {
     id: pembelian._id,
     tanggalNota: pembelian.tanggalNota,
     namaSupplier: pembelian.namaSupplier,
-    noNpwp: pembelian.noNpwp,
+    noNota: pembelian.noNota,
     idInvoice: pembelian.idInvoice,
     hutang: pembelian.hutang,
     ppn: pembelian.ppn,
