@@ -50,6 +50,8 @@ function createEmptyInvoiceFormState(): InvoiceFormState {
     noSuratJalanText: "",
     idCustomer: "",
     isPpn: true,
+    isPaid: false,
+    tanggalBayar: "",
     ppnRate: "11",
     barangRows: ensureTrailingEmptyInvoiceBarangRow([createEmptyInvoiceBarangRow()]),
   };
@@ -73,6 +75,8 @@ export function InvoiceEditForm({
     t("common.placeholder.input", { field: t(fieldKey) });
   const selectPlaceholder = (fieldKey: string) =>
     t("common.placeholder.select", { field: t(fieldKey) });
+  const paidLabel = t("invoice.status.paid");
+  const unpaidLabel = t("invoice.status.unpaid");
   const [form, setForm] = useState<InvoiceFormState>(() =>
     item
       ? toInvoiceFormState(item)
@@ -502,6 +506,36 @@ export function InvoiceEditForm({
               />
             </label>
 
+            <label className="text-sm text-slate-700 dark:text-slate-200">
+              {t("field.isPaid")}
+              <select
+                value={String(form.isPaid)}
+                onChange={(event) => {
+                  const isPaid = event.target.value === "true";
+
+                  setForm((prev) => ({
+                    ...prev,
+                    isPaid,
+                    tanggalBayar: isPaid ? prev.tanggalBayar : "",
+                  }));
+                }}
+                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+              >
+                <option value="true">{paidLabel}</option>
+                <option value="false">{unpaidLabel}</option>
+              </select>
+            </label>
+
+            <label className="text-sm text-slate-700 dark:text-slate-200">
+              {t("field.tanggalBayar")}
+              <AppDateInput
+                value={form.isPaid ? form.tanggalBayar : ""}
+                onValueChange={(value) => setForm((prev) => ({ ...prev, tanggalBayar: value }))}
+                disabled={!form.isPaid}
+                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
+              />
+            </label>
+
             <div className="text-sm text-slate-700 dark:text-slate-200 sm:col-span-2">
               <p>{t("invoice.form.items.title")}</p>
               <p className="text-xs text-slate-500 dark:text-slate-400">{t("invoice.form.items.hint")}</p>
@@ -645,6 +679,14 @@ export function InvoiceEditForm({
             </p>
             <p>
               <span className="text-slate-500 dark:text-slate-400">{t("field.isPpn")}:</span> {String(form.isPpn)}
+            </p>
+            <p>
+              <span className="text-slate-500 dark:text-slate-400">{t("field.isPaid")}:</span>{" "}
+              {form.isPaid ? paidLabel : unpaidLabel}
+            </p>
+            <p>
+              <span className="text-slate-500 dark:text-slate-400">{t("field.tanggalBayar")}:</span>{" "}
+              {formatTanggal(form.isPaid ? form.tanggalBayar || null : null, locale)}
             </p>
             <p>
               <span className="text-slate-500 dark:text-slate-400">{t("field.ppnRate")}:</span> {form.ppnRate || "0"}%

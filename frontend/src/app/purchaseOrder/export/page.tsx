@@ -21,14 +21,8 @@ function toSearchFilter(searchParams: URLSearchParams): PurchaseOrderFilter {
     noPo: String(searchParams.get("noPo") || "").trim(),
     namaCustomer: String(searchParams.get("namaCustomer") || "").trim(),
     noInvoice: String(searchParams.get("noInvoice") || "").trim(),
-    isPaid:
-      searchParams.get("isPaid") === "true" || searchParams.get("isPaid") === "false"
-        ? (searchParams.get("isPaid") as PurchaseOrderFilter["isPaid"])
-        : "",
     tanggalPoDari: String(searchParams.get("tanggalPoDari") || "").trim(),
     tanggalPoSampai: String(searchParams.get("tanggalPoSampai") || "").trim(),
-    tanggalBayarDari: String(searchParams.get("tanggalBayarDari") || "").trim(),
-    tanggalBayarSampai: String(searchParams.get("tanggalBayarSampai") || "").trim(),
     tanggalInvoiceDari: String(searchParams.get("tanggalInvoiceDari") || "").trim(),
     tanggalInvoiceSampai: String(searchParams.get("tanggalInvoiceSampai") || "").trim(),
     nominalPoMin: String(searchParams.get("nominalPoMin") || "").trim(),
@@ -40,8 +34,6 @@ export default function PurchaseOrderExportPage() {
   const { locale, t } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const paidLabel = t("purchaseOrder.status.paid");
-  const unpaidLabel = t("purchaseOrder.status.unpaid");
   const [rows, setRows] = useState<PurchaseOrderItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
@@ -54,48 +46,14 @@ export default function PurchaseOrderExportPage() {
       ["field.noPo", filter.noPo],
       ["field.namaCustomer", filter.namaCustomer],
       ["field.noInvoice", filter.noInvoice],
-      ["field.isPaid", filter.isPaid === "true" ? paidLabel : filter.isPaid === "false" ? unpaidLabel : ""],
       ["field.tanggalPoDari", filter.tanggalPoDari],
       ["field.tanggalPoSampai", filter.tanggalPoSampai],
-      ["field.tanggalBayarDari", filter.tanggalBayarDari],
-      ["field.tanggalBayarSampai", filter.tanggalBayarSampai],
       ["field.tanggalInvoiceDari", filter.tanggalInvoiceDari],
       ["field.tanggalInvoiceSampai", filter.tanggalInvoiceSampai],
       ["field.nominalPoMin", filter.nominalPoMin],
       ["field.nominalPoMax", filter.nominalPoMax],
     ].filter((entry) => Boolean(String(entry[1] || "").trim()));
-  }, [filter, paidLabel, unpaidLabel]);
-  const factoryBillingRows = useMemo(() => {
-    const groupedRows = new Map<string, { namaCustomer: string; totalNominal: number }>();
-    const billableRows = rows.filter((row) => {
-      return Boolean(String(row.noInvoice || "").trim()) && !row.isPaid;
-    });
-
-    for (const row of billableRows) {
-      const customerLabel = customerLabelMap.get(row.namaCustomer) || row.namaCustomer || "-";
-      const groupKey = row.namaCustomer || customerLabel;
-      const currentGroup = groupedRows.get(groupKey);
-
-      if (currentGroup) {
-        currentGroup.totalNominal += row.nominalPo;
-        continue;
-      }
-
-      groupedRows.set(groupKey, {
-        namaCustomer: customerLabel,
-        totalNominal: row.nominalPo,
-      });
-    }
-
-    return Array.from(groupedRows.values()).sort((left, right) =>
-      left.namaCustomer.localeCompare(right.namaCustomer, locale === "en" ? "en" : "id", {
-        sensitivity: "base",
-      })
-    );
-  }, [customerLabelMap, locale, rows]);
-  const factoryBillingGrandTotal = useMemo(() => {
-    return factoryBillingRows.reduce((total, row) => total + row.totalNominal, 0);
-  }, [factoryBillingRows]);
+  }, [filter]);
 
   useEffect(() => {
     const previousTitle = document.title;
@@ -247,8 +205,6 @@ export default function PurchaseOrderExportPage() {
                         <col style={{ width: "11%" }} />
                         <col style={{ width: "19%" }} />
                         <col style={{ width: "11%" }} />
-                        <col style={{ width: "9%" }} />
-                        <col style={{ width: "12%" }} />
                         <col style={{ width: "12%" }} />
                         <col style={{ width: "13%" }} />
                       </colgroup>
@@ -258,8 +214,6 @@ export default function PurchaseOrderExportPage() {
                           <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">{t("field.tanggalPo")}</th>
                           <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">{t("field.namaCustomer")}</th>
                           <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">{t("field.nominalPo")}</th>
-                          <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">{t("field.isPaid")}</th>
-                          <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">{t("field.tanggalBayar")}</th>
                           <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">{t("field.tanggalInvoice")}</th>
                           <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">{t("field.noInvoice")}</th>
                         </tr>
@@ -270,10 +224,6 @@ export default function PurchaseOrderExportPage() {
                             customerLabelMap.get(row.namaCustomer) || row.namaCustomer || "-";
                           const invoiceLabel =
                             invoiceLabelMap.get(row.noInvoice) || row.noInvoice || "-";
-                          const paidCellClassName = row.isPaid
-                            ? "bg-emerald-100 text-emerald-900"
-                            : "bg-rose-100 text-rose-900";
-
                           return (
                             <tr key={row.id} className={index % 2 ? "bg-slate-50" : "bg-white"}>
                               <td className="border border-slate-300 px-3 py-2 align-top break-words print:px-2 print:py-1.5">
@@ -287,14 +237,6 @@ export default function PurchaseOrderExportPage() {
                               </td>
                               <td className="border border-slate-300 px-3 py-2 align-top break-words print:px-2 print:py-1.5">
                                 {formatRupiah(row.nominalPo, locale)}
-                              </td>
-                              <td
-                                className={`border border-slate-300 px-3 py-2 align-top break-words font-medium print:px-2 print:py-1.5 ${paidCellClassName}`}
-                              >
-                                {row.isPaid ? paidLabel : unpaidLabel}
-                              </td>
-                              <td className="border border-slate-300 px-3 py-2 align-top break-words print:px-2 print:py-1.5">
-                                {formatTanggal(row.tanggalBayar, locale)}
                               </td>
                               <td className="border border-slate-300 px-3 py-2 align-top break-words print:px-2 print:py-1.5">
                                 {formatTanggal(row.tanggalInvoice, locale)}
@@ -311,73 +253,6 @@ export default function PurchaseOrderExportPage() {
                 )}
               </section>
 
-              {rows.length > 0 ? (
-                <section className="space-y-4 rounded-2xl bg-white p-4 shadow-sm print:break-before-page print:rounded-none print:p-0 print:shadow-none">
-                  <div className="space-y-1">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <h2 className="text-lg font-semibold uppercase tracking-wide text-slate-900 print:text-[18px]">
-                        {t("purchaseOrder.exportPage.factoryBillingTitle")}
-                      </h2>
-                      <span className="text-sm text-slate-500">
-                        {t("purchaseOrder.exportPage.factoryBillingTotalCustomers", {
-                          count: factoryBillingRows.length,
-                        })}
-                      </span>
-                    </div>
-                    <p className="text-sm text-slate-600">
-                      {t("purchaseOrder.exportPage.factoryBillingDescription")}
-                    </p>
-                  </div>
-
-                  <div className="overflow-x-auto border border-slate-300 print:overflow-visible">
-                    <table className="w-full border-collapse text-sm text-slate-800 print:text-[11px]">
-                      <colgroup>
-                        <col style={{ width: "10%" }} />
-                        <col style={{ width: "60%" }} />
-                        <col style={{ width: "30%" }} />
-                      </colgroup>
-                      <thead className="bg-slate-100">
-                        <tr>
-                          <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">
-                            {t("invoice.export.table.no")}
-                          </th>
-                          <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">
-                            {t("purchaseOrder.exportPage.factoryBillingCustomerColumn")}
-                          </th>
-                          <th className="border border-slate-300 px-3 py-2 text-right font-semibold print:px-2 print:py-1.5">
-                            {t("purchaseOrder.exportPage.factoryBillingAmountColumn")}
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {factoryBillingRows.map((row, index) => (
-                          <tr key={`${row.namaCustomer}-${index}`} className={index % 2 ? "bg-slate-50" : "bg-white"}>
-                            <td className="border border-slate-300 px-3 py-2 align-top print:px-2 print:py-1.5">
-                              {index + 1}
-                            </td>
-                            <td className="border border-slate-300 px-3 py-2 align-top break-words print:px-2 print:py-1.5">
-                              {row.namaCustomer}
-                            </td>
-                            <td className="border border-slate-300 px-3 py-2 text-right align-top print:px-2 print:py-1.5">
-                              {formatRupiah(row.totalNominal, locale)}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                      <tfoot>
-                        <tr className="bg-slate-100 font-semibold">
-                          <td className="border border-slate-300 px-3 py-2 print:px-2 print:py-1.5" colSpan={2}>
-                            {t("purchaseOrder.exportPage.factoryBillingGrandTotal")}
-                          </td>
-                          <td className="border border-slate-300 px-3 py-2 text-right print:px-2 print:py-1.5">
-                            {formatRupiah(factoryBillingGrandTotal, locale)}
-                          </td>
-                        </tr>
-                      </tfoot>
-                    </table>
-                  </div>
-                </section>
-              ) : null}
             </>
           ) : null}
         </div>

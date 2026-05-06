@@ -13,6 +13,7 @@ type Locale = "id" | "en";
 export type SuratJalanBarang = {
   nama: string;
   spesifikasi: string | null;
+  kodeDepartemen: string;
   jumlah: number;
   unit: string;
 };
@@ -20,6 +21,7 @@ export type SuratJalanBarang = {
 export type SuratJalanBarangFormRow = {
   nama: string;
   spesifikasi: string;
+  kodeDepartemen: string;
   jumlah: string;
   unit: string;
 };
@@ -28,6 +30,7 @@ export type SuratJalanItem = {
   id: string;
   noSuratJalan: string;
   noPo: string;
+  // Ringkasan unik dari barang[].kodeDepartemen untuk filter/table/export lama.
   kodeDepartemen: string;
   tanggal: string;
   idCustomer: string;
@@ -52,7 +55,6 @@ export type SuratJalanFilter = {
 export type SuratJalanFormState = {
   noSuratJalan: string;
   noPo: string;
-  kodeDepartemen: string;
   tanggal: string;
   idCustomer: string;
   kendaraan: string;
@@ -164,6 +166,7 @@ function toSuratJalanBarang(value: unknown): SuratJalanBarang | null {
   const barang = value as Record<string, unknown>;
   const nama = toText(barang.nama).trim();
   const spesifikasi = toText(barang.spesifikasi).trim() || null;
+  const kodeDepartemen = toText(barang.kodeDepartemen).trim();
   const jumlah = toNumber(barang.jumlah, 0);
   const unit = toText(barang.unit).trim();
 
@@ -174,9 +177,18 @@ function toSuratJalanBarang(value: unknown): SuratJalanBarang | null {
   return {
     nama,
     spesifikasi,
+    kodeDepartemen,
     jumlah,
     unit,
   };
+}
+
+function summarizeKodeDepartemen(items: SuratJalanBarang[]) {
+  const codes = items
+    .map((barang) => barang.kodeDepartemen.trim())
+    .filter(Boolean);
+
+  return Array.from(new Set(codes)).join(", ");
 }
 
 function toSuratJalanItem(value: unknown): SuratJalanItem | null {
@@ -199,7 +211,7 @@ function toSuratJalanItem(value: unknown): SuratJalanItem | null {
     id,
     noSuratJalan: toText(row.noSuratJalan).trim(),
     noPo: toText(row.noPo).trim(),
-    kodeDepartemen: toText(row.kodeDepartemen).trim(),
+    kodeDepartemen: summarizeKodeDepartemen(barangList) || toText(row.kodeDepartemen).trim(),
     tanggal: toText(row.tanggal).trim(),
     idCustomer: parseCustomerId(row.idCustomer),
     barang: barangList,
@@ -214,7 +226,6 @@ function toNormalizedSuratJalanPayload(form: SuratJalanFormState) {
   return {
     noSuratJalan: toText(form.noSuratJalan).trim(),
     noPo: toText(form.noPo).trim(),
-    kodeDepartemen: toText(form.kodeDepartemen).trim(),
     tanggal: toText(form.tanggal).trim(),
     idCustomer: toText(form.idCustomer).trim(),
     barang: barangRowsToList(form.barangRows),
@@ -400,7 +411,6 @@ export function toFormState(item: SuratJalanItem): SuratJalanFormState {
   return {
     noSuratJalan: item.noSuratJalan,
     noPo: item.noPo,
-    kodeDepartemen: item.kodeDepartemen,
     tanggal: toInputDate(item.tanggal),
     idCustomer: item.idCustomer,
     kendaraan: item.kendaraan,
@@ -409,6 +419,7 @@ export function toFormState(item: SuratJalanItem): SuratJalanFormState {
       item.barang.map((barang) => ({
         nama: barang.nama,
         spesifikasi: barang.spesifikasi || "",
+        kodeDepartemen: barang.kodeDepartemen || "",
         jumlah: String(barang.jumlah),
         unit: barang.unit || "",
       }))
@@ -420,6 +431,7 @@ export function createEmptyBarangRow(): SuratJalanBarangFormRow {
   return {
     nama: "",
     spesifikasi: "",
+    kodeDepartemen: "",
     jumlah: "",
     unit: "",
   };
@@ -427,7 +439,11 @@ export function createEmptyBarangRow(): SuratJalanBarangFormRow {
 
 export function isBarangRowFilled(row: SuratJalanBarangFormRow) {
   return Boolean(
-    row.nama.trim() || row.spesifikasi.trim() || row.jumlah.trim() || row.unit.trim()
+    row.nama.trim() ||
+      row.spesifikasi.trim() ||
+      row.kodeDepartemen.trim() ||
+      row.jumlah.trim() ||
+      row.unit.trim()
   );
 }
 
@@ -435,6 +451,7 @@ export function ensureTrailingEmptyBarangRow(rows: SuratJalanBarangFormRow[]) {
   const normalizedRows = rows.map((row) => ({
     nama: String(row.nama || ""),
     spesifikasi: String(row.spesifikasi || ""),
+    kodeDepartemen: String(row.kodeDepartemen || ""),
     jumlah: String(row.jumlah || ""),
     unit: String(row.unit || ""),
   }));
@@ -465,12 +482,14 @@ export function barangRowsToList(rows: SuratJalanBarangFormRow[]) {
     .map((row) => {
       const nama = row.nama.trim();
       const spesifikasi = row.spesifikasi.trim() || null;
+      const kodeDepartemen = row.kodeDepartemen.trim();
       const jumlahParsed = Number(row.jumlah.trim());
       const unit = row.unit.trim();
 
       return {
         nama,
         spesifikasi,
+        kodeDepartemen,
         jumlah: Number.isFinite(jumlahParsed) ? jumlahParsed : 0,
         unit,
       };

@@ -53,10 +53,10 @@ function formatTemplateDate(value: string, locale: "id" | "en") {
 }
 
 function buildTemplateRows(suratJalan: SuratJalanItem, minimumRows = 8): TemplateRow[] {
-  const kodeDepartemen = String(suratJalan.kodeDepartemen || "").trim();
   const filledRows = (suratJalan.barang || []).map((barang, index) => {
     const namaBarang = String(barang.nama || "").trim();
     const spesifikasi = String(barang.spesifikasi || "").trim();
+    const kodeDepartemen = String(barang.kodeDepartemen || suratJalan.kodeDepartemen || "").trim();
     const namaBarangDisplay =
       namaBarang && spesifikasi ? `${namaBarang} (${spesifikasi})` : namaBarang;
 
@@ -84,14 +84,13 @@ function buildTemplateRows(suratJalan: SuratJalanItem, minimumRows = 8): Templat
 }
 
 function buildMeiloonTemplateRows(suratJalan: SuratJalanItem, minimumRows = 8): MeiloonTemplateRow[] {
-  const kodeDepartemen = String(suratJalan.kodeDepartemen || "").trim();
   const filledRows = (suratJalan.barang || []).map((barang, index) => ({
     no: String(index + 1),
     namaBarang: String(barang.nama || "").trim(),
     spesifikasi: String(barang.spesifikasi || "").trim(),
     qty: String(barang.jumlah || "").trim(),
     unit: String(barang.unit || "").trim().toUpperCase(),
-    kodeDepartemen,
+    kodeDepartemen: String(barang.kodeDepartemen || suratJalan.kodeDepartemen || "").trim(),
     ttdPenerima: "",
     note: "",
   }));
@@ -195,7 +194,7 @@ export function SuratJalanExportDocument({
               <span>:</span>
               <span>{suratJalan.noPo || "-"}</span>
             </div>
-            <div className="grid grid-cols-[90px_12px_1fr] gap-x-1">
+            <div className="grid grid-cols-[72px_10px_1fr] gap-x-1 text-[14px]">
               <span>{t("suratJalan.export.tanggalLabel")}</span>
               <span>:</span>
               <span>{templateDate}</span>
@@ -270,6 +269,7 @@ export function SuratJalanExportDocument({
           </div>
 
           <p className="mt-0.5 text-[13px] font-bold">{t("suratJalan.export.returnPolicy")}</p>
+          <br />
 
           <div className="mt-0.5 grid grid-cols-3 gap-8 text-center">
             <div>
@@ -318,7 +318,7 @@ export function SuratJalanExportDocument({
           </div>
 
           <div className="pt-7">
-            <div className="grid grid-cols-[120px_12px_1fr] text-[18px] font-bold leading-tight">
+            <div className="grid grid-cols-[88px_10px_1fr] text-[14px] font-bold leading-tight">
               <span>{t("suratJalan.export.tanggalLabel")}</span>
               <span>:</span>
               <span>{templateDate}</span>

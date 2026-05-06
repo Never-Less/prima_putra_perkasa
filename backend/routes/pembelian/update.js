@@ -35,8 +35,8 @@ router.put("/:id", async (req, res) => {
       updates.namaSupplier = String(req.body.namaSupplier || "").trim();
     }
 
-    if (req.body.noNpwp !== undefined) {
-      updates.noNpwp = String(req.body.noNpwp || "").trim();
+    if (req.body.noNota !== undefined) {
+      updates.noNota = String(req.body.noNota || "").trim();
     }
 
     if (req.body.idInvoice !== undefined) {
@@ -112,7 +112,7 @@ router.put("/:id", async (req, res) => {
     if (Object.keys(updates).length === 0) {
       return res.status(400).json({
         message:
-          "minimal kirim salah satu field: tanggalNota, namaSupplier, noNpwp, idInvoice, hutang, ppn, lamaHutang, nilaiNota, tanggalJatuhTempo, tanggalBayar",
+          "minimal kirim salah satu field: tanggalNota, namaSupplier, noNota, idInvoice, hutang, ppn, lamaHutang, nilaiNota, tanggalJatuhTempo, tanggalBayar",
       });
     }
 

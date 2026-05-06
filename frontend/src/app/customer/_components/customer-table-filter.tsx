@@ -162,7 +162,7 @@ export function CustomerTableFilter({
       <div className="hidden md:block">
         <div className="overflow-hidden rounded-xl border border-sky-300 bg-white shadow-sm dark:border-sky-900/70 dark:bg-slate-900">
           <div className="overflow-x-auto">
-            <table className="min-w-[1020px] table-fixed text-sm">
+            <table className="w-full min-w-[1020px] table-fixed text-sm">
               <colgroup>
                 <col style={{ width: "190px" }} />
                 <col style={{ width: "380px" }} />

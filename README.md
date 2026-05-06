@@ -50,6 +50,8 @@ JWT_EXPIRES_IN=1d
 JWT_REFRESH_SECRET=replace_with_strong_refresh_secret
 JWT_REFRESH_EXPIRES_IN=7d
 APP_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+ADMIN_USERNAME=admin@example.com
+ADMIN_PASSWORD=replace_with_strong_admin_password
 ```
 
 Health check endpoint:
@@ -68,8 +70,8 @@ Body register/login:
 
 ```json
 {
-  "username": "admin",
-  "password": "passwordku123"
+  "username": "user@example.com",
+  "password": "isi_password"
 }
 ```
 
@@ -120,7 +122,7 @@ Body create/update:
 {
   "tanggalNota": "2026-02-24",
   "namaSupplier": "PT Supplier Utama",
-  "noNpwp": "01.234.567.8-901.000",
+  "noNota": "NOTA-001",
   "idInvoice": "65f1234567890abcde123456",
   "hutang": true,
   "ppn": true,

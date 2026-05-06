@@ -24,10 +24,6 @@ router.put("/:id", async (req, res) => {
     updates.noPo = String(req.body.noPo || "").trim();
   }
 
-  if (req.body.kodeDepartemen !== undefined) {
-    updates.kodeDepartemen = String(req.body.kodeDepartemen || "").trim();
-  }
-
   if (req.body.tanggal !== undefined) {
     const tanggal = parseDate(req.body.tanggal);
     if (!tanggal) {
@@ -47,10 +43,12 @@ router.put("/:id", async (req, res) => {
   }
 
   if (req.body.barang !== undefined) {
-    const barang = normalizeBarangList(req.body.barang);
+    const barang = normalizeBarangList(req.body.barang, {
+      defaultKodeDepartemen: req.body.kodeDepartemen,
+    });
     if (!barang) {
       return res.status(400).json({
-        message: "barang harus array minimal 1 item (nama, spesifikasi?, jumlah, unit)",
+        message: "barang harus array minimal 1 item (nama, spesifikasi?, kodeDepartemen?, jumlah, unit)",
       });
     }
     updates.barang = barang;
@@ -75,7 +73,7 @@ router.put("/:id", async (req, res) => {
   if (Object.keys(updates).length === 0) {
     return res.status(400).json({
       message:
-        "minimal kirim salah satu field: noSuratJalan, noPo, kodeDepartemen, tanggal, idCustomer, barang, kendaraan, tipe",
+        "minimal kirim salah satu field: noSuratJalan, noPo, tanggal, idCustomer, barang, kendaraan, tipe",
     });
   }
 

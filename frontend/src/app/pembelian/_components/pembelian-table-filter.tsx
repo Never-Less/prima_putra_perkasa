@@ -93,11 +93,11 @@ export function PembelianTableFilter({
           </label>
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
-            {t("field.noNpwp")}
+            {t("field.noNota")}
             <DebouncedFilterInput
-              value={filter.noNpwp}
-              onValueChange={(value) => onFilterChange("noNpwp", value)}
-              placeholder={filterPlaceholder("field.noNpwp")}
+              value={filter.noNota}
+              onValueChange={(value) => onFilterChange("noNota", value)}
+              placeholder={filterPlaceholder("field.noNota")}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
@@ -256,8 +256,8 @@ export function PembelianTableFilter({
                           <dd className="mt-1 text-slate-700 dark:text-slate-200">{group.noInvoice || "-"}</dd>
                         </div>
                         <div>
-                          <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.noNpwp")}</dt>
-                          <dd className="mt-1 text-slate-700 dark:text-slate-200">{row.noNpwp || "-"}</dd>
+                          <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.noNota")}</dt>
+                          <dd className="mt-1 text-slate-700 dark:text-slate-200">{row.noNota || "-"}</dd>
                         </div>
                       </div>
                       <div className="grid gap-3 sm:grid-cols-2">
@@ -308,7 +308,7 @@ export function PembelianTableFilter({
 
             <div className="hidden md:block">
               <div className="overflow-x-auto">
-                <table className="min-w-[1380px] table-fixed text-sm">
+                <table className="w-full min-w-[1380px] table-fixed text-sm">
                   <colgroup>
                     <col style={{ width: "110px" }} />
                     <col style={{ width: "140px" }} />
@@ -327,7 +327,7 @@ export function PembelianTableFilter({
                       <th className="px-3 py-2 font-medium">{t("field.tanggalNota")}</th>
                       <th className="px-3 py-2 font-medium">{t("field.noInvoice")}</th>
                       <th className="px-3 py-2 font-medium">{t("field.namaSupplier")}</th>
-                      <th className="px-3 py-2 font-medium">{t("field.noNpwp")}</th>
+                      <th className="px-3 py-2 font-medium">{t("field.noNota")}</th>
                       <th className="px-3 py-2 font-medium">{t("field.hutang")}</th>
                       <th className="px-3 py-2 font-medium">{t("field.ppn")}</th>
                       <th className="px-3 py-2 font-medium">
@@ -358,7 +358,7 @@ export function PembelianTableFilter({
                           <td className="px-3 py-2 font-medium text-slate-800 dark:text-slate-100" title={row.namaSupplier || "-"}>
                             <div className={clampedCellClassName}>{row.namaSupplier || "-"}</div>
                           </td>
-                          <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{row.noNpwp || "-"}</td>
+                          <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{row.noNota || "-"}</td>
                           <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">
                             {row.hutang ? t("common.true") : t("common.false")}
                           </td>

@@ -26,6 +26,12 @@ function toSearchFilter(searchParams: URLSearchParams): InvoiceFilter {
       searchParams.get("isPpn") === "true" || searchParams.get("isPpn") === "false"
         ? (searchParams.get("isPpn") as InvoiceFilter["isPpn"])
         : "",
+    isPaid:
+      searchParams.get("isPaid") === "true" || searchParams.get("isPaid") === "false"
+        ? (searchParams.get("isPaid") as InvoiceFilter["isPaid"])
+        : "",
+    tanggalBayarDari: String(searchParams.get("tanggalBayarDari") || "").trim(),
+    tanggalBayarSampai: String(searchParams.get("tanggalBayarSampai") || "").trim(),
     tanggalDari: String(searchParams.get("tanggalDari") || "").trim(),
     tanggalSampai: String(searchParams.get("tanggalSampai") || "").trim(),
   };
@@ -35,6 +41,8 @@ export default function InvoiceExportPage() {
   const { locale, t } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const paidLabel = t("invoice.status.paid");
+  const unpaidLabel = t("invoice.status.unpaid");
   const filter = useMemo(() => toSearchFilter(searchParams), [searchParams]);
   const [rows, setRows] = useState<InvoiceItem[]>([]);
   const [customerRows, setCustomerRows] = useState<CustomerItem[]>([]);
@@ -51,10 +59,13 @@ export default function InvoiceExportPage() {
         "field.isPpn",
         filter.isPpn === "true" ? t("common.true") : filter.isPpn === "false" ? t("common.false") : "",
       ],
+      ["field.isPaid", filter.isPaid === "true" ? paidLabel : filter.isPaid === "false" ? unpaidLabel : ""],
+      ["field.tanggalBayarDari", filter.tanggalBayarDari],
+      ["field.tanggalBayarSampai", filter.tanggalBayarSampai],
       ["field.tanggalDari", filter.tanggalDari],
       ["field.tanggalSampai", filter.tanggalSampai],
     ].filter((entry) => Boolean(String(entry[1] || "").trim()));
-  }, [filter, t]);
+  }, [filter, paidLabel, t, unpaidLabel]);
   const hasTanggalFilter = Boolean(filter.tanggalDari || filter.tanggalSampai);
 
   useEffect(() => {
@@ -141,6 +152,35 @@ export default function InvoiceExportPage() {
       }
     );
   }, [rows]);
+  const factoryBillingRows = useMemo(() => {
+    const groupedRows = new Map<string, { namaCustomer: string; totalInvoice: number }>();
+    const billableRows = rows.filter((row) => !row.isPaid);
+
+    for (const row of billableRows) {
+      const customerLabel = customerLabelMap.get(row.idCustomer) || row.idCustomer || "-";
+      const groupKey = row.idCustomer || customerLabel;
+      const currentGroup = groupedRows.get(groupKey);
+
+      if (currentGroup) {
+        currentGroup.totalInvoice += Number(row.grandTotal || 0);
+        continue;
+      }
+
+      groupedRows.set(groupKey, {
+        namaCustomer: customerLabel,
+        totalInvoice: Number(row.grandTotal || 0),
+      });
+    }
+
+    return Array.from(groupedRows.values()).sort((left, right) =>
+      left.namaCustomer.localeCompare(right.namaCustomer, locale === "en" ? "en" : "id", {
+        sensitivity: "base",
+      })
+    );
+  }, [customerLabelMap, locale, rows]);
+  const factoryBillingGrandTotal = useMemo(() => {
+    return factoryBillingRows.reduce((total, row) => total + row.totalInvoice, 0);
+  }, [factoryBillingRows]);
 
   function handleClosePage() {
     window.close();
@@ -271,6 +311,12 @@ export default function InvoiceExportPage() {
                           <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">
                             {t("invoice.exportPage.totalInvoiceLabel")}
                           </th>
+                          <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">
+                            {t("field.isPaid")}
+                          </th>
+                          <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">
+                            {t("field.tanggalBayar")}
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
@@ -298,6 +344,18 @@ export default function InvoiceExportPage() {
                               <td className="border border-slate-300 px-3 py-2 font-medium print:px-2 print:py-1.5">
                                 {formatRupiah(row.grandTotal, locale)}
                               </td>
+                              <td
+                                className={`border border-slate-300 px-3 py-2 font-medium print:px-2 print:py-1.5 ${
+                                  row.isPaid
+                                    ? "bg-emerald-100 text-emerald-900"
+                                    : "bg-rose-100 text-rose-900"
+                                }`}
+                              >
+                                {row.isPaid ? paidLabel : unpaidLabel}
+                              </td>
+                              <td className="border border-slate-300 px-3 py-2 print:px-2 print:py-1.5">
+                                {formatTanggal(row.tanggalBayar, locale)}
+                              </td>
                             </tr>
                           );
                         })}
@@ -319,12 +377,82 @@ export default function InvoiceExportPage() {
                           <td className="border border-slate-300 px-3 py-2 font-semibold print:px-2 print:py-1.5">
                             {formatRupiah(totals.grandTotal, locale)}
                           </td>
+                          <td className="border border-slate-300 px-3 py-2 font-semibold print:px-2 print:py-1.5" />
+                          <td className="border border-slate-300 px-3 py-2 font-semibold print:px-2 print:py-1.5" />
                         </tr>
                       </tfoot>
                     </table>
                   </div>
                 </>
               )}
+            </section>
+          ) : null}
+
+          {!isLoading && !errorMessage && rows.length > 0 ? (
+            <section className="space-y-4 rounded-2xl bg-white p-4 shadow-sm print:break-before-page print:rounded-none print:p-0 print:shadow-none">
+              <div className="space-y-1">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h2 className="text-lg font-semibold uppercase tracking-wide text-slate-900 print:text-[18px]">
+                    {t("invoice.exportPage.factoryBillingTitle")}
+                  </h2>
+                  <span className="text-sm text-slate-500">
+                    {t("invoice.exportPage.factoryBillingTotalCustomers", {
+                      count: factoryBillingRows.length,
+                    })}
+                  </span>
+                </div>
+                <p className="text-sm text-slate-600">
+                  {t("invoice.exportPage.factoryBillingDescription")}
+                </p>
+              </div>
+
+              <div className="overflow-x-auto border border-slate-300 print:overflow-visible">
+                <table className="w-full border-collapse text-sm text-slate-800 print:text-[11px]">
+                  <colgroup>
+                    <col style={{ width: "10%" }} />
+                    <col style={{ width: "60%" }} />
+                    <col style={{ width: "30%" }} />
+                  </colgroup>
+                  <thead className="bg-slate-100">
+                    <tr>
+                      <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">
+                        {t("invoice.export.table.no")}
+                      </th>
+                      <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">
+                        {t("invoice.exportPage.factoryBillingCustomerColumn")}
+                      </th>
+                      <th className="border border-slate-300 px-3 py-2 text-right font-semibold print:px-2 print:py-1.5">
+                        {t("invoice.exportPage.factoryBillingAmountColumn")}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {factoryBillingRows.map((row, index) => (
+                      <tr key={`${row.namaCustomer}-${index}`} className={index % 2 ? "bg-slate-50" : "bg-white"}>
+                        <td className="border border-slate-300 px-3 py-2 align-top print:px-2 print:py-1.5">
+                          {index + 1}
+                        </td>
+                        <td className="border border-slate-300 px-3 py-2 align-top break-words print:px-2 print:py-1.5">
+                          {row.namaCustomer}
+                        </td>
+                        <td className="border border-slate-300 px-3 py-2 text-right align-top print:px-2 print:py-1.5">
+                          {formatRupiah(row.totalInvoice, locale)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className="bg-slate-100 font-semibold">
+                      <td className="border border-slate-300 px-3 py-2 print:px-2 print:py-1.5" colSpan={2}>
+                        {t("invoice.exportPage.factoryBillingGrandTotal")}
+                      </td>
+                      <td className="border border-slate-300 px-3 py-2 text-right print:px-2 print:py-1.5">
+                        {formatRupiah(factoryBillingGrandTotal, locale)}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
             </section>
           ) : null}
         </div>

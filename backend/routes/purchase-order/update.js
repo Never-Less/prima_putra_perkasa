@@ -4,7 +4,7 @@ const { Customer } = require("../../models/Customer");
 const { Invoice } = require("../../models/Invoice");
 const { PurchaseOrder } = require("../../models/PurchaseOrder");
 const { sanitizePurchaseOrder } = require("./sanitize-purchase-order");
-const { isValidId, parseBoolean, parseDate, parseNumber } = require("./validators");
+const { isValidId, parseDate, parseNumber } = require("./validators");
 
 const router = express.Router();
 
@@ -58,30 +58,6 @@ router.put("/:id", async (req, res) => {
       updates.nominalPo = nominalPo;
     }
 
-    if (req.body.isPaid !== undefined) {
-      const isPaid = parseBoolean(req.body.isPaid);
-
-      if (isPaid === null) {
-        return res.status(400).json({ message: "isPaid harus boolean" });
-      }
-
-      updates.isPaid = isPaid;
-    }
-
-    if (req.body.tanggalBayar !== undefined) {
-      if (req.body.tanggalBayar === null) {
-        updates.tanggalBayar = null;
-      } else {
-        const tanggalBayar = parseDate(req.body.tanggalBayar);
-
-        if (!tanggalBayar) {
-          return res.status(400).json({ message: "tanggalBayar tidak valid" });
-        }
-
-        updates.tanggalBayar = tanggalBayar;
-      }
-    }
-
     if (req.body.tanggalInvoice !== undefined) {
       if (req.body.tanggalInvoice === null) {
         updates.tanggalInvoice = null;
@@ -113,7 +89,7 @@ router.put("/:id", async (req, res) => {
     if (Object.keys(updates).length === 0) {
       return res.status(400).json({
         message:
-          "minimal kirim salah satu field: noPo, tanggalPo, namaCustomer, nominalPo, isPaid, tanggalBayar, tanggalInvoice, noInvoice",
+          "minimal kirim salah satu field: noPo, tanggalPo, namaCustomer, nominalPo, tanggalInvoice, noInvoice",
       });
     }
 
@@ -135,16 +111,6 @@ router.put("/:id", async (req, res) => {
       if (!invoice) {
         return res.status(404).json({ message: "invoice tidak ditemukan" });
       }
-    }
-
-    const effectiveTanggalPo = updates.tanggalPo ?? existingPurchaseOrder.tanggalPo;
-    const effectiveTanggalBayar =
-      updates.tanggalBayar !== undefined ? updates.tanggalBayar : existingPurchaseOrder.tanggalBayar;
-
-    if (effectiveTanggalBayar && effectiveTanggalBayar < effectiveTanggalPo) {
-      return res.status(400).json({
-        message: "tanggalBayar tidak boleh lebih kecil dari tanggalPo",
-      });
     }
 
     const purchaseOrder = await PurchaseOrder.findByIdAndUpdate(id, updates, {

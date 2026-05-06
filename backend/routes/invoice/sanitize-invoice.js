@@ -8,6 +8,8 @@ function sanitizeInvoice(invoice) {
     idCustomer: invoice.idCustomer,
     barang: invoice.barang,
     isPpn: invoice.isPpn,
+    isPaid: invoice.isPaid,
+    tanggalBayar: invoice.tanggalBayar,
     ppnRate: invoice.ppnRate,
     ppnAmount: invoice.ppnAmount,
     subtotal: invoice.subtotal,

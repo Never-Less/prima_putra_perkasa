@@ -12,7 +12,7 @@ const pembelianSchema = new mongoose.Schema(
       trim: true,
       maxlength: 150,
     },
-    noNpwp: {
+    noNota: {
       type: String,
       trim: true,
       maxlength: 50,

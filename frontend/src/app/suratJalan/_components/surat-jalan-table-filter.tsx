@@ -382,7 +382,7 @@ export function SuratJalanTableFilter({
 
             <div className="hidden md:block">
               <div className="overflow-x-auto">
-                <table className={`min-w-[1500px] table-fixed ${tableText}`}>
+                <table className={`w-full min-w-[1500px] table-fixed ${tableText}`}>
                   <colgroup>
                     <col style={{ width: "140px" }} />
                     <col style={{ width: "110px" }} />

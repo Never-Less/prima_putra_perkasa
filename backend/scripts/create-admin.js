@@ -3,18 +3,16 @@ require("dotenv").config();
 const { connectDatabase, mongoose } = require("../config/database");
 const { User, ROLE_ADMIN } = require("../models/User");
 
-// Ganti value ini sesuai kebutuhan sebelum menjalankan script.
-const ADMIN_USERNAME = "admin@gmail.com";
-const ADMIN_PASSWORD = "password123";
-
 async function createOrUpdateAdmin() {
-  const username = String(ADMIN_USERNAME || "")
+  const username = String(process.env.ADMIN_USERNAME || "")
     .trim()
     .toLowerCase();
-  const password = String(ADMIN_PASSWORD || "");
+  const password = String(process.env.ADMIN_PASSWORD || "");
 
   if (!username || !password) {
-    throw new Error("ADMIN_USERNAME dan ADMIN_PASSWORD wajib diisi.");
+    throw new Error(
+      "ADMIN_USERNAME dan ADMIN_PASSWORD wajib diisi melalui environment variable."
+    );
   }
 
   if (password.length < 8) {
@@ -36,14 +34,14 @@ async function createOrUpdateAdmin() {
 
   await adminUser.save();
 
-  console.log(`Admin user siap: ${adminUser.username}`);
+  process.stdout.write("Admin user siap.\n");
 }
 
 async function run() {
   try {
     await connectDatabase();
     await createOrUpdateAdmin();
-    console.log("Selesai.");
+    process.stdout.write("Selesai.\n");
   } catch (error) {
     console.error("Gagal create admin:", error.message);
     process.exitCode = 1;

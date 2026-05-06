@@ -112,7 +112,6 @@ function createEmptySuratJalanFormState(): SuratJalanFormState {
   return {
     noSuratJalan: "",
     noPo: "",
-    kodeDepartemen: "",
     tanggal: "",
     idCustomer: "",
     kendaraan: "",
@@ -384,21 +383,6 @@ export function SuratJalanEditForm({
             </label>
 
             <label className={`text-sm ${tone.label}`}>
-              {t("field.kodeDepartemen")}
-              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                {t("common.optional")}
-              </p>
-              <input
-                value={form.kodeDepartemen}
-                onChange={(event) =>
-                  setForm((prev) => ({ ...prev, kodeDepartemen: event.target.value }))
-                }
-                placeholder={inputPlaceholder("field.kodeDepartemen")}
-                className={inputClassName}
-              />
-            </label>
-
-            <label className={`text-sm ${tone.label}`}>
               {t("field.kendaraan")}
               <input
                 value={form.kendaraan}
@@ -452,7 +436,7 @@ export function SuratJalanEditForm({
               <p className="text-xs text-slate-500 dark:text-slate-400">{t("suratJalan.form.items.hint")}</p>
               <div className="mt-2 space-y-2">
                 {form.barangRows.map((row, index) => (
-                  <div key={`barang-row-${index}`} className="grid gap-2 sm:grid-cols-4">
+                  <div key={`barang-row-${index}`} className="grid gap-2 sm:grid-cols-[1.2fr_1.2fr_0.8fr_0.7fr_1fr]">
                     <input
                       type="text"
                       value={row.nama}
@@ -465,6 +449,13 @@ export function SuratJalanEditForm({
                       value={row.spesifikasi}
                       placeholder={t("suratJalan.form.items.placeholder.spec")}
                       onChange={(event) => updateBarangRow(index, "spesifikasi", event.target.value)}
+                      className={barangInputClassName}
+                    />
+                    <input
+                      type="text"
+                      value={row.kodeDepartemen}
+                      placeholder={t("suratJalan.form.items.placeholder.kodeDepartemen")}
+                      onChange={(event) => updateBarangRow(index, "kodeDepartemen", event.target.value)}
                       className={barangInputClassName}
                     />
                     <input
@@ -548,10 +539,6 @@ export function SuratJalanEditForm({
                 <span className="text-slate-500 dark:text-slate-400">{t("field.tanggal")}:</span> {formatTanggal(form.tanggal, locale)}
               </p>
               <p>
-                <span className="text-slate-500 dark:text-slate-400">{t("field.kodeDepartemen")}:</span>{" "}
-                {form.kodeDepartemen || "-"}
-              </p>
-              <p>
                 <span className="text-slate-500 dark:text-slate-400">{t("field.namaCustomer")}:</span> {previewCustomerLabel}
               </p>
               <p>
@@ -569,9 +556,10 @@ export function SuratJalanEditForm({
               {previewBarang.length > 0 ? (
                 <ul className="space-y-1 text-sm text-slate-700 dark:text-slate-200">
                   {previewBarang.map((barang) => (
-                    <li key={`${barang.nama}-${barang.spesifikasi || "-"}-${barang.jumlah}-${barang.unit || "-"}`}>
+                    <li key={`${barang.nama}-${barang.spesifikasi || "-"}-${barang.kodeDepartemen || "-"}-${barang.jumlah}-${barang.unit || "-"}`}>
                       {barang.spesifikasi ? `${barang.nama} (${barang.spesifikasi})` : barang.nama}: {barang.jumlah}{" "}
                       {barang.unit || "-"}
+                      {barang.kodeDepartemen ? ` - ${t("field.kodeDepartemen")}: ${barang.kodeDepartemen}` : ""}
                     </li>
                   ))}
                 </ul>

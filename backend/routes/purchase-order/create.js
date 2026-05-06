@@ -4,7 +4,7 @@ const { Customer } = require("../../models/Customer");
 const { Invoice } = require("../../models/Invoice");
 const { PurchaseOrder } = require("../../models/PurchaseOrder");
 const { sanitizePurchaseOrder } = require("./sanitize-purchase-order");
-const { isValidId, parseBoolean, parseDate, parseNumber } = require("./validators");
+const { isValidId, parseDate, parseNumber } = require("./validators");
 
 const router = express.Router();
 
@@ -13,14 +13,6 @@ router.post("/", async (req, res) => {
   const tanggalPo = parseDate(req.body.tanggalPo);
   const namaCustomer = String(req.body.namaCustomer || "").trim();
   const nominalPo = parseNumber(req.body.nominalPo);
-  const parsedIsPaid =
-    req.body.isPaid !== undefined ? parseBoolean(req.body.isPaid) : false;
-  const tanggalBayar =
-    req.body.tanggalBayar === null
-      ? null
-      : req.body.tanggalBayar !== undefined
-        ? parseDate(req.body.tanggalBayar)
-        : null;
   const tanggalInvoice =
     req.body.tanggalInvoice === null
       ? null
@@ -38,10 +30,6 @@ router.post("/", async (req, res) => {
     });
   }
 
-  if (parsedIsPaid === null) {
-    return res.status(400).json({ message: "isPaid harus boolean" });
-  }
-
   if (nominalPo < 0) {
     return res.status(400).json({ message: "nominalPo harus angka >= 0" });
   }
@@ -50,22 +38,12 @@ router.post("/", async (req, res) => {
     return res.status(400).json({ message: "namaCustomer tidak valid" });
   }
 
-  if (req.body.tanggalBayar !== undefined && req.body.tanggalBayar !== null && !tanggalBayar) {
-    return res.status(400).json({ message: "tanggalBayar tidak valid" });
-  }
-
   if (req.body.tanggalInvoice !== undefined && req.body.tanggalInvoice !== null && !tanggalInvoice) {
     return res.status(400).json({ message: "tanggalInvoice tidak valid" });
   }
 
   if (noInvoice !== null && !isValidId(noInvoice)) {
     return res.status(400).json({ message: "noInvoice tidak valid" });
-  }
-
-  if (tanggalBayar && tanggalBayar < tanggalPo) {
-    return res.status(400).json({
-      message: "tanggalBayar tidak boleh lebih kecil dari tanggalPo",
-    });
   }
 
   try {
@@ -88,8 +66,6 @@ router.post("/", async (req, res) => {
       tanggalPo: tanggalPo,
       namaCustomer: namaCustomer,
       nominalPo: nominalPo,
-      isPaid: parsedIsPaid,
-      tanggalBayar: tanggalBayar,
       tanggalInvoice: tanggalInvoice,
       noInvoice: noInvoice,
     });

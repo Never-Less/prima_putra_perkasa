@@ -27,6 +27,8 @@ export type InvoiceItem = {
   idCustomer: string;
   barang: InvoiceBarang[];
   isPpn: boolean;
+  isPaid: boolean;
+  tanggalBayar: string | null;
   ppnRate: number;
   ppnAmount: number;
   subtotal: number;
@@ -48,6 +50,8 @@ export type InvoiceFormState = {
   noSuratJalanText: string;
   idCustomer: string;
   isPpn: boolean;
+  isPaid: boolean;
+  tanggalBayar: string;
   ppnRate: string;
   barangRows: InvoiceBarangFormRow[];
 };
@@ -75,6 +79,9 @@ export type InvoiceFilter = {
   noSuratJalan: string;
   idCustomer: string;
   isPpn: "" | "true" | "false";
+  isPaid: "" | "true" | "false";
+  tanggalBayarDari: string;
+  tanggalBayarSampai: string;
   tanggalDari: string;
   tanggalSampai: string;
 };
@@ -84,6 +91,7 @@ export type InvoiceListQuery = InvoiceFilter & PaginationQueryState;
 export type InvoiceSuratJalanBarangOption = {
   nama: string;
   spesifikasi: string;
+  kodeDepartemen: string;
   jumlah: number;
   unit: string;
 };
@@ -123,6 +131,9 @@ export const defaultInvoiceFilter: InvoiceFilter = {
   noSuratJalan: "",
   idCustomer: "",
   isPpn: "",
+  isPaid: "",
+  tanggalBayarDari: "",
+  tanggalBayarSampai: "",
   tanggalDari: "",
   tanggalSampai: "",
 };
@@ -156,6 +167,8 @@ export const sampleInvoiceRows: InvoiceItem[] = [
       },
     ],
     isPpn: true,
+    isPaid: false,
+    tanggalBayar: null,
     ppnRate: 11,
     ppnAmount: 2310000,
     subtotal: 21000000,
@@ -179,6 +192,8 @@ export const sampleInvoiceRows: InvoiceItem[] = [
       },
     ],
     isPpn: false,
+    isPaid: false,
+    tanggalBayar: null,
     ppnRate: 11,
     ppnAmount: 0,
     subtotal: 7600000,
@@ -202,6 +217,8 @@ export const sampleInvoiceRows: InvoiceItem[] = [
       },
     ],
     isPpn: true,
+    isPaid: false,
+    tanggalBayar: null,
     ppnRate: 11,
     ppnAmount: 396000,
     subtotal: 3600000,
@@ -237,6 +254,13 @@ function normalizeNoSuratJalanList(value: unknown) {
   return singleValue ? [singleValue] : [];
 }
 
+export function buildSuratJalanInvoiceSpesifikasi(spesifikasiValue: unknown, kodeDepartemenValue: unknown) {
+  const spesifikasi = toText(spesifikasiValue).trim();
+  const kodeDepartemen = toText(kodeDepartemenValue).trim();
+
+  return [spesifikasi, kodeDepartemen].filter(Boolean).join(" - ");
+}
+
 function toInvoiceSuratJalanBarangOption(value: unknown): InvoiceSuratJalanBarangOption | null {
   if (!value || typeof value !== "object") {
     return null;
@@ -245,6 +269,7 @@ function toInvoiceSuratJalanBarangOption(value: unknown): InvoiceSuratJalanBaran
   const item = value as Record<string, unknown>;
   const nama = toText(item.nama).trim();
   const spesifikasi = toText(item.spesifikasi).trim();
+  const kodeDepartemen = toText(item.kodeDepartemen).trim();
   const jumlah = parseNumberFromUnknown(item.jumlah);
   const unit = toText(item.unit).trim();
 
@@ -255,6 +280,7 @@ function toInvoiceSuratJalanBarangOption(value: unknown): InvoiceSuratJalanBaran
   return {
     nama,
     spesifikasi,
+    kodeDepartemen,
     jumlah,
     unit,
   };
@@ -407,6 +433,8 @@ function toInvoiceItem(value: unknown): InvoiceItem | null {
     ? row.barang.map(toInvoiceBarang).filter((item): item is InvoiceBarang => Boolean(item))
     : [];
 
+  const isPaid = Boolean(row.isPaid);
+
   return {
     id: id,
     tanggal: toText(row.tanggal).trim(),
@@ -416,6 +444,8 @@ function toInvoiceItem(value: unknown): InvoiceItem | null {
     idCustomer: parseCustomerId(row.idCustomer),
     barang: barang,
     isPpn: Boolean(row.isPpn),
+    isPaid,
+    tanggalBayar: isPaid ? toText(row.tanggalBayar).trim() || null : null,
     ppnRate: parseNumberFromUnknown(row.ppnRate, 11),
     ppnAmount: parseNumberFromUnknown(row.ppnAmount),
     subtotal: parseNumberFromUnknown(row.subtotal),
@@ -492,6 +522,8 @@ function toNormalizedInvoicePayload(form: InvoiceFormState) {
     idCustomer: toText(form.idCustomer).trim(),
     barang: barang,
     isPpn: form.isPpn,
+    isPaid: form.isPaid,
+    tanggalBayar: form.isPaid ? toText(form.tanggalBayar).trim() || null : null,
     ppnRate: Number.isFinite(ppnRateValue) ? ppnRateValue : 0,
   };
 }
@@ -513,6 +545,9 @@ export async function fetchInvoiceList(query: InvoiceListQuery): Promise<ServerL
     noSuratJalan: query.noSuratJalan,
     idCustomer: query.idCustomer,
     isPpn: query.isPpn,
+    isPaid: query.isPaid,
+    tanggalBayarDari: query.tanggalBayarDari,
+    tanggalBayarSampai: query.tanggalBayarSampai,
     tanggalDari: query.tanggalDari,
     tanggalSampai: query.tanggalSampai,
     page: query.page,
@@ -542,6 +577,9 @@ export async function fetchInvoiceExportRows(query: InvoiceFilter) {
     noSuratJalan: query.noSuratJalan,
     idCustomer: query.idCustomer,
     isPpn: query.isPpn,
+    isPaid: query.isPaid,
+    tanggalBayarDari: query.tanggalBayarDari,
+    tanggalBayarSampai: query.tanggalBayarSampai,
     tanggalDari: query.tanggalDari,
     tanggalSampai: query.tanggalSampai,
   })}`;
@@ -603,7 +641,7 @@ export async function deleteInvoice(id: string) {
   });
 }
 
-export function formatTanggal(value: string, locale: Locale = "id") {
+export function formatTanggal(value: string | null, locale: Locale = "id") {
   return formatAppDate(value, locale);
 }
 
@@ -638,7 +676,7 @@ export function invoiceNoSuratJalanListLabel(noSuratJalan: string[]) {
   return normalized.join(", ");
 }
 
-export function toInputDate(value: string) {
+export function toInputDate(value: string | null) {
   return toInputDateValue(value);
 }
 
@@ -763,7 +801,7 @@ export function buildInvoiceBarangRowsFromSuratJalanSelection(
 
     suratJalan.barang.forEach((barang) => {
       const namaBarang = toText(barang.nama).trim();
-      const spesifikasi = toText(barang.spesifikasi).trim();
+      const spesifikasi = buildSuratJalanInvoiceSpesifikasi(barang.spesifikasi, barang.kodeDepartemen);
       const unit = toText(barang.unit).trim();
       const identityKey = createInvoiceBarangIdentityKey(namaBarang, spesifikasi, unit);
       const existingItem = barangMap.get(identityKey);
@@ -835,6 +873,8 @@ export function toInvoiceFormState(item: InvoiceItem): InvoiceFormState {
     noSuratJalanText: invoiceNoSuratJalanListToText(item.noSuratJalan),
     idCustomer: item.idCustomer,
     isPpn: item.isPpn,
+    isPaid: item.isPaid,
+    tanggalBayar: item.isPaid ? toInputDate(item.tanggalBayar) : "",
     ppnRate: String(item.ppnRate),
     barangRows: ensureTrailingEmptyInvoiceBarangRow(
       item.barang.map((barang) => ({
@@ -867,6 +907,8 @@ export function toInvoiceFormStateFromPrefill(prefill: InvoicePrefillPayload): I
     noSuratJalanText: invoiceNoSuratJalanListToText(prefill.noSuratJalan),
     idCustomer: prefill.idCustomer,
     isPpn: typeof prefill.isPpn === "boolean" ? prefill.isPpn : true,
+    isPaid: false,
+    tanggalBayar: "",
     ppnRate: String(normalizedPpnRate),
     barangRows,
   };
@@ -908,6 +950,8 @@ export function filterInvoiceRows(
 ) {
   const fromDate = parseAppDateRangeStart(filter.tanggalDari);
   const toDate = parseAppDateRangeEnd(filter.tanggalSampai);
+  const paymentFromDate = parseAppDateRangeStart(filter.tanggalBayarDari);
+  const paymentToDate = parseAppDateRangeEnd(filter.tanggalBayarSampai);
 
   return rows.filter((row) => {
     const matchNoInvoice = normalize(row.noInvoice).includes(normalize(filter.noInvoice));
@@ -922,10 +966,17 @@ export function filterInvoiceRows(
       !filter.isPpn ||
       (filter.isPpn === "true" && row.isPpn) ||
       (filter.isPpn === "false" && !row.isPpn);
+    const matchPaid =
+      !filter.isPaid ||
+      (filter.isPaid === "true" && row.isPaid) ||
+      (filter.isPaid === "false" && !row.isPaid);
 
     const rowDate = parseAppDate(row.tanggal);
     const matchFromDate = !fromDate || Boolean(rowDate && rowDate >= fromDate);
     const matchToDate = !toDate || Boolean(rowDate && rowDate <= toDate);
+    const rowPaymentDate = parseAppDate(row.tanggalBayar);
+    const matchPaymentFromDate = !paymentFromDate || Boolean(rowPaymentDate && rowPaymentDate >= paymentFromDate);
+    const matchPaymentToDate = !paymentToDate || Boolean(rowPaymentDate && rowPaymentDate <= paymentToDate);
 
     return (
       matchNoInvoice &&
@@ -933,8 +984,11 @@ export function filterInvoiceRows(
       matchNoSuratJalan &&
       matchIdCustomer &&
       matchPpn &&
+      matchPaid &&
       matchFromDate &&
-      matchToDate
+      matchToDate &&
+      matchPaymentFromDate &&
+      matchPaymentToDate
     );
   });
 }

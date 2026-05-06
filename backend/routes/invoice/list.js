@@ -41,6 +41,35 @@ router.get("/", async (req, res) => {
       query.isPpn = false;
     }
 
+    if (req.query.isPaid === "true") {
+      query.isPaid = true;
+    } else if (req.query.isPaid === "false") {
+      query.isPaid = false;
+    }
+
+    if (req.query.tanggalBayarDari || req.query.tanggalBayarSampai) {
+      query.tanggalBayar = {};
+
+      if (req.query.tanggalBayarDari) {
+        const fromDate = new Date(req.query.tanggalBayarDari);
+        if (!Number.isNaN(fromDate.getTime())) {
+          query.tanggalBayar.$gte = fromDate;
+        }
+      }
+
+      if (req.query.tanggalBayarSampai) {
+        const toDate = new Date(req.query.tanggalBayarSampai);
+        if (!Number.isNaN(toDate.getTime())) {
+          toDate.setHours(23, 59, 59, 999);
+          query.tanggalBayar.$lte = toDate;
+        }
+      }
+
+      if (Object.keys(query.tanggalBayar).length === 0) {
+        delete query.tanggalBayar;
+      }
+    }
+
     if (req.query.tanggalDari || req.query.tanggalSampai) {
       query.tanggal = {};
 

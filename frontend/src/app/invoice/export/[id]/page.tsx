@@ -265,11 +265,12 @@ type CommonTemplateProps = {
 
 type DefaultInvoiceTableProps = CommonTemplateProps & {
   rows: DefaultInvoiceTemplateRow[];
+  className?: string;
 };
 
-function DefaultInvoiceTable({ rows, t }: DefaultInvoiceTableProps) {
+function DefaultInvoiceTable({ rows, t, className = "" }: DefaultInvoiceTableProps) {
   return (
-    <div className="border border-black">
+    <div className={`flex flex-col border border-black ${className}`.trim()}>
       <table className="w-full border-collapse table-fixed">
         <colgroup>
           <col style={{ width: "36px" }} />
@@ -303,12 +304,12 @@ function DefaultInvoiceTable({ rows, t }: DefaultInvoiceTableProps) {
         </thead>
         <tbody>
           {rows.map((row, index) => (
-            <tr key={`default-invoice-row-${index}`} className="h-[23px] border-b border-black last:border-b-0">
-              <td className="border-r border-black px-1 text-center align-middle text-[11px]">{row.no}</td>
-              <td className="border-r border-black px-1.5 align-middle text-[11px] leading-[1.15]">{row.namaBarang}</td>
-              <td className="border-r border-black px-1 text-center align-middle text-[11px]">{row.qty}</td>
-              <td className="border-r border-black px-1 text-center align-middle text-[11px]">{row.unit}</td>
-              <td className="border-r border-black px-1 py-0.5 align-middle text-[11px]">
+            <tr key={`default-invoice-row-${index}`} className="h-[24px]">
+              <td className="px-1 text-center align-middle text-[11px]">{row.no}</td>
+              <td className="px-1.5 align-middle text-[11px] leading-[1.15]">{row.namaBarang}</td>
+              <td className="px-1 text-center align-middle text-[11px]">{row.qty}</td>
+              <td className="px-1 text-center align-middle text-[11px]">{row.unit}</td>
+              <td className="px-1 py-0.5 align-middle text-[11px]">
                 {row.hargaSatuan ? (
                   <div className="flex flex-col items-center justify-center leading-[1.05]">
                     <span>Rp.</span>
@@ -334,11 +335,12 @@ function DefaultInvoiceTable({ rows, t }: DefaultInvoiceTableProps) {
 
 type MeiloonInvoiceTableProps = CommonTemplateProps & {
   rows: MeiloonInvoiceTemplateRow[];
+  className?: string;
 };
 
-function MeiloonInvoiceTable({ rows, t }: MeiloonInvoiceTableProps) {
+function MeiloonInvoiceTable({ rows, t, className = "" }: MeiloonInvoiceTableProps) {
   return (
-    <div className="border-2 border-black">
+    <div className={`flex flex-col border-2 border-black ${className}`.trim()}>
       <table className="w-full border-collapse table-fixed">
         <colgroup>
           <col style={{ width: "30px" }} />
@@ -380,13 +382,13 @@ function MeiloonInvoiceTable({ rows, t }: MeiloonInvoiceTableProps) {
         </thead>
         <tbody>
           {rows.map((row, index) => (
-            <tr key={`meiloon-invoice-row-${index}`} className="h-[24px] border-b border-black last:border-b-0">
-              <td className="border-r border-black px-1 text-center align-middle text-[11px]">{row.no}</td>
-              <td className="border-r border-black px-1.5 align-middle text-[11px] leading-[1.15]">{row.namaBarang}</td>
-              <td className="border-r border-black px-1.5 align-middle text-[11px] leading-[1.15] whitespace-pre-line">{row.spesifikasi}</td>
-              <td className="border-r border-black px-1 text-center align-middle text-[11px]">{row.unit}</td>
-              <td className="border-r border-black px-1 text-center align-middle text-[11px]">{row.qty}</td>
-              <td className="border-r border-black px-1 py-0.5 align-middle text-[11px]">
+            <tr key={`meiloon-invoice-row-${index}`} className="h-[19px]">
+              <td className="px-1 text-center align-middle text-[11px]">{row.no}</td>
+              <td className="px-1.5 align-middle text-[11px] leading-[1.15]">{row.namaBarang}</td>
+              <td className="px-1.5 align-middle text-[11px] leading-[1.15] whitespace-pre-line">{row.spesifikasi}</td>
+              <td className="px-1 text-center align-middle text-[11px]">{row.unit}</td>
+              <td className="px-1 text-center align-middle text-[11px]">{row.qty}</td>
+              <td className="px-1 py-0.5 align-middle text-[11px]">
                 {row.hargaSatuan ? (
                   <div className="flex flex-col items-center justify-center leading-[1.05]">
                     <span>Rp.</span>
@@ -394,7 +396,7 @@ function MeiloonInvoiceTable({ rows, t }: MeiloonInvoiceTableProps) {
                   </div>
                 ) : null}
               </td>
-              <td className="border-r border-black px-1 py-0.5 align-middle text-[11px]">
+              <td className="px-1 py-0.5 align-middle text-[11px]">
                 {row.jumlah ? (
                   <div className="flex flex-col items-center justify-center leading-[1.05]">
                     <span>Rp.</span>
@@ -673,12 +675,12 @@ export default function InvoiceExportPage() {
           </section>
         ) : invoice && isMeiloonCustomer ? (
           <section
-            className="mx-auto w-full max-w-[210mm] bg-white text-black shadow-xl print:max-w-none print:shadow-none"
+            className="mx-auto flex h-[297mm] min-h-[297mm] w-full max-w-[210mm] flex-col bg-white text-black shadow-xl print:h-[297mm] print:min-h-[297mm] print:max-w-none print:shadow-none"
             style={{ fontFamily: "Arial, Helvetica, sans-serif" }}
           >
             <div
               className={`px-[5mm] py-[7mm] text-[13px] leading-[1.18] ${
-                meiloonPaginatedRows.isSinglePage ? "" : "min-h-[297mm] break-after-page print:break-after-page"
+                meiloonPaginatedRows.isSinglePage ? "flex min-h-0 flex-1 flex-col" : "min-h-[297mm] break-after-page print:break-after-page"
               }`}
             >
               <div className="flex items-start justify-between gap-8 pt-4">
@@ -719,13 +721,17 @@ export default function InvoiceExportPage() {
                 </div>
               </div>
 
-              <div className="mt-1">
-                <MeiloonInvoiceTable rows={meiloonPaginatedRows.firstPageRows} t={t} />
+              <div className={`mt-1 ${meiloonPaginatedRows.isSinglePage ? "min-h-0 flex-1" : ""}`.trim()}>
+                <MeiloonInvoiceTable
+                  rows={meiloonPaginatedRows.firstPageRows}
+                  t={t}
+                  className={meiloonPaginatedRows.isSinglePage ? "h-full" : ""}
+                />
               </div>
             </div>
 
             {meiloonPaginatedRows.isSinglePage ? (
-              <div className="min-h-[0mm] px-[5mm] pb-[7mm] text-[13px] leading-[1.18]">
+              <div className="shrink-0 px-[5mm] pb-[7mm] text-[13px] leading-[1.18]">
                 <div className="mt-2 grid grid-cols-[1.05fr_0.65fr] gap-3">
                   <div className="space-y-2">
                     <div className="border-2 border-black px-2 py-1">
@@ -779,7 +785,7 @@ export default function InvoiceExportPage() {
 
                     <div className="ml-auto w-[200px] pt-4 text-center">
                       <p className="text-[14px] font-bold">{t("invoice.export.signature.regards")}</p>
-                      <div className="mt-[72px] w-full border-t-[1.5px] border-black" />
+                      <div className="h-[72px]" />
                     </div>
                   </div>
                 </div>
@@ -851,7 +857,7 @@ export default function InvoiceExportPage() {
 
                       <div className="ml-auto w-[200px] pt-4 text-center">
                         <p className="text-[14px] font-bold">{t("invoice.export.signature.regards")}</p>
-                        <div className="mt-[72px] w-full border-t-[1.5px] border-black" />
+                        <div className="h-[72px]" />
                       </div>
                     </div>
                   </div>
@@ -861,12 +867,12 @@ export default function InvoiceExportPage() {
           </section>
         ) : invoice ? (
           <section
-            className="mx-auto w-full max-w-[210mm] bg-white text-black shadow-xl print:max-w-none print:shadow-none"
+            className="mx-auto flex h-[297mm] min-h-[297mm] w-full max-w-[210mm] flex-col bg-white text-black shadow-xl print:h-[297mm] print:min-h-[297mm] print:max-w-none print:shadow-none"
             style={{ fontFamily: "Arial, Helvetica, sans-serif" }}
           >
             <div
               className={`px-[4mm] py-[6mm] text-[13px] leading-[1.18] ${
-                defaultPaginatedRows.isSinglePage ? "" : "min-h-[297mm] break-after-page print:break-after-page"
+                defaultPaginatedRows.isSinglePage ? "flex min-h-0 flex-1 flex-col" : "min-h-[297mm] break-after-page print:break-after-page"
               }`}
             >
               <div className="flex items-start justify-between gap-8 pt-3">
@@ -919,13 +925,17 @@ export default function InvoiceExportPage() {
                 </div>
               </div>
 
-              <div className="mt-1">
-                <DefaultInvoiceTable rows={defaultPaginatedRows.firstPageRows} t={t} />
+              <div className={`mt-1 ${defaultPaginatedRows.isSinglePage ? "min-h-0 flex-1" : ""}`.trim()}>
+                <DefaultInvoiceTable
+                  rows={defaultPaginatedRows.firstPageRows}
+                  t={t}
+                  className={defaultPaginatedRows.isSinglePage ? "h-full" : ""}
+                />
               </div>
             </div>
 
             {defaultPaginatedRows.isSinglePage ? (
-              <div className="min-h-[0mm] px-[4mm] pb-[6mm] text-[13px] leading-[1.18]">
+              <div className="shrink-0 px-[4mm] pb-[6mm] text-[13px] leading-[1.18]">
                 <div className="mt-2 grid grid-cols-[1fr_0.48fr] gap-3">
                   <div className="space-y-2">
                     <div className="border border-black px-2 py-1">
@@ -973,7 +983,7 @@ export default function InvoiceExportPage() {
 
                     <div className="ml-auto w-[200px] pt-1 text-center">
                       <p className="text-[14px] font-bold">{t("invoice.export.signature.regards")}</p>
-                      <div className="mt-[62px] w-full border-t-[1.5px] border-black" />
+                      <div className="h-[62px]" />
                     </div>
                   </div>
                 </div>
@@ -1039,7 +1049,7 @@ export default function InvoiceExportPage() {
 
                       <div className="ml-auto w-[200px] pt-1 text-center">
                         <p className="text-[14px] font-bold">{t("invoice.export.signature.regards")}</p>
-                        <div className="mt-[62px] w-full border-t-[1.5px] border-black" />
+                        <div className="h-[62px]" />
                       </div>
                     </div>
                   </div>

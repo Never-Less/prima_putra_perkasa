@@ -100,6 +100,15 @@ const invoiceSchema = new mongoose.Schema(
       required: true,
       default: true,
     },
+    isPaid: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
+    tanggalBayar: {
+      type: Date,
+      default: null,
+    },
     ppnRate: {
       type: Number,
       required: true,

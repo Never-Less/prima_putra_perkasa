@@ -27,12 +27,6 @@ router.get("/", async (req, res) => {
       query.noPo = noPoRegex;
     }
 
-    if (req.query.isPaid === "true") {
-      query.isPaid = true;
-    } else if (req.query.isPaid === "false") {
-      query.isPaid = false;
-    }
-
     if (req.query.tanggalPoDari || req.query.tanggalPoSampai) {
       query.tanggalPo = {};
 
@@ -53,29 +47,6 @@ router.get("/", async (req, res) => {
 
       if (Object.keys(query.tanggalPo).length === 0) {
         delete query.tanggalPo;
-      }
-    }
-
-    if (req.query.tanggalBayarDari || req.query.tanggalBayarSampai) {
-      query.tanggalBayar = {};
-
-      if (req.query.tanggalBayarDari) {
-        const fromDate = new Date(req.query.tanggalBayarDari);
-        if (!Number.isNaN(fromDate.getTime())) {
-          query.tanggalBayar.$gte = fromDate;
-        }
-      }
-
-      if (req.query.tanggalBayarSampai) {
-        const toDate = new Date(req.query.tanggalBayarSampai);
-        if (!Number.isNaN(toDate.getTime())) {
-          toDate.setHours(23, 59, 59, 999);
-          query.tanggalBayar.$lte = toDate;
-        }
-      }
-
-      if (Object.keys(query.tanggalBayar).length === 0) {
-        delete query.tanggalBayar;
       }
     }
 

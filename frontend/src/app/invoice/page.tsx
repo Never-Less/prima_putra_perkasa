@@ -508,11 +508,8 @@ export default function InvoicePage() {
     }
 
     savePembelianPrefill({
-      tanggalNota: postSaveAction.invoice.tanggal,
       idInvoice: postSaveAction.invoice.id,
       noInvoice: postSaveAction.invoice.noInvoice,
-      ppn: postSaveAction.invoice.isPpn,
-      nilaiNota: postSaveAction.invoice.grandTotal,
     });
 
     setPostSaveAction(null);

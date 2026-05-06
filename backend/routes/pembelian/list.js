@@ -15,7 +15,7 @@ router.get("/", async (req, res) => {
   try {
     const query = {};
     const namaSupplierRegex = buildSearchRegex(req.query.namaSupplier);
-    const noNpwpRegex = buildSearchRegex(req.query.noNpwp);
+    const noNotaRegex = buildSearchRegex(req.query.noNota);
     const noInvoiceRegex = buildSearchRegex(req.query.noInvoice);
     const hasPagination =
       req.query.page !== undefined || req.query.limit !== undefined;
@@ -26,8 +26,8 @@ router.get("/", async (req, res) => {
       query.namaSupplier = namaSupplierRegex;
     }
 
-    if (noNpwpRegex) {
-      query.noNpwp = noNpwpRegex;
+    if (noNotaRegex) {
+      query.noNota = noNotaRegex;
     }
 
     if (req.query.hutang === "true") {

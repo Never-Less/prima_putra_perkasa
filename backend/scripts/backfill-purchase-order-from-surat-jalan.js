@@ -79,8 +79,6 @@ async function backfillPurchaseOrdersFromSuratJalan() {
       tanggalPo: row.tanggalPo,
       namaCustomer: row.namaCustomer,
       nominalPo: 0,
-      isPaid: false,
-      tanggalBayar: null,
       tanggalInvoice: null,
       noInvoice: null,
     }));
