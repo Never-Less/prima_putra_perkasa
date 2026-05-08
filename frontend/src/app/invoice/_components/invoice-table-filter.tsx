@@ -304,6 +304,7 @@ export function InvoiceTableFilter({
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1700px] table-fixed text-sm">
               <colgroup>
+                <col style={{ width: "160px" }} />
                 <col style={{ width: "130px" }} />
                 <col style={{ width: "110px" }} />
                 <col style={{ width: "140px" }} />
@@ -315,10 +316,10 @@ export function InvoiceTableFilter({
                 <col style={{ width: "120px" }} />
                 <col style={{ width: "90px" }} />
                 <col style={{ width: "120px" }} />
-                <col style={{ width: "160px" }} />
               </colgroup>
               <thead className="bg-sky-800 text-left text-white dark:bg-sky-950">
                 <tr>
+                  <th className="px-3 py-2 font-medium">{t("common.action")}</th>
                   <th className="px-3 py-2 font-medium">{t("field.noInvoice")}</th>
                   <th className="px-3 py-2 font-medium">{t("field.tanggal")}</th>
                   <th className="px-3 py-2 font-medium">{t("field.noPo")}</th>
@@ -330,7 +331,6 @@ export function InvoiceTableFilter({
                   <th className="px-3 py-2 font-medium">{t("field.grandTotal")}</th>
                   <th className="px-3 py-2 font-medium">{t("field.isPaid")}</th>
                   <th className="px-3 py-2 font-medium">{t("field.tanggalBayar")}</th>
-                  <th className="px-3 py-2 font-medium">{t("common.action")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 bg-white dark:divide-slate-800 dark:bg-slate-900">
@@ -351,33 +351,16 @@ export function InvoiceTableFilter({
 
                     return (
                       <tr key={row.id} className={isSelected ? "bg-sky-100 dark:bg-sky-950/40" : index % 2 ? "bg-sky-50/70 dark:bg-slate-950/40" : undefined}>
-                        <td className="whitespace-nowrap px-3 py-2 font-medium text-slate-800 dark:text-slate-100">{row.noInvoice}</td>
-                        <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{formatTanggal(row.tanggal, locale)}</td>
-                        <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{row.noPo}</td>
-                        <td className="px-3 py-2 text-slate-600 dark:text-slate-300" title={invoiceNoSuratJalanListLabel(row.noSuratJalan)}>
-                          <div className={clampedCellClassName}>{invoiceNoSuratJalanListLabel(row.noSuratJalan)}</div>
-                        </td>
-                        <td className="px-3 py-2 text-slate-600 dark:text-slate-300" title={barangText}>
-                          <div className={clampedCellClassName}>{barangText}</div>
-                        </td>
-                        <td className="px-3 py-2 text-slate-600 dark:text-slate-300" title={customerLabel}>
-                          <div className={clampedCellClassName}>{customerLabel}</div>
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{formatRupiah(row.subtotal, locale)}</td>
-                        <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{formatRupiah(row.ppnAmount, locale)}</td>
-                        <td className="whitespace-nowrap px-3 py-2 font-medium text-slate-800 dark:text-slate-100">{formatRupiah(row.grandTotal, locale)}</td>
-                        <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{row.isPaid ? paidLabel : unpaidLabel}</td>
-                        <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{formatTanggal(row.tanggalBayar, locale)}</td>
                         <td className="whitespace-nowrap px-3 py-2">
                           <div className="flex flex-wrap items-center gap-1.5">
                             <button
                               type="button"
                               onClick={() => onSelectRow?.(row)}
-                            className={`rounded-lg px-3 py-1.5 text-xs font-medium ${
-                              isSelected
-                                ? "bg-sky-700 text-white dark:bg-sky-500 dark:text-slate-950"
-                                : "border border-sky-200 bg-white text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
-                            }`}
+                              className={`rounded-lg px-3 py-1.5 text-xs font-medium ${
+                                isSelected
+                                  ? "bg-sky-700 text-white dark:bg-sky-500 dark:text-slate-950"
+                                  : "border border-sky-200 bg-white text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
+                              }`}
                             >
                               {isSelected ? t("common.selected") : t("common.selectRow")}
                             </button>
@@ -392,6 +375,25 @@ export function InvoiceTableFilter({
                             ) : null}
                           </div>
                         </td>
+                        <td className="whitespace-nowrap px-3 py-2 font-medium text-slate-800 dark:text-slate-100">{row.noInvoice}</td>
+                        <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{formatTanggal(row.tanggal, locale)}</td>
+                        <td className="px-3 py-2 text-slate-600 dark:text-slate-300" title={row.noPo || "-"}>
+                          <div className={clampedCellClassName}>{row.noPo || "-"}</div>
+                        </td>
+                        <td className="px-3 py-2 text-slate-600 dark:text-slate-300" title={invoiceNoSuratJalanListLabel(row.noSuratJalan)}>
+                          <div className={clampedCellClassName}>{invoiceNoSuratJalanListLabel(row.noSuratJalan)}</div>
+                        </td>
+                        <td className="px-3 py-2 text-slate-600 dark:text-slate-300" title={barangText}>
+                          <div className={clampedCellClassName}>{barangText}</div>
+                        </td>
+                        <td className="px-3 py-2 text-slate-600 dark:text-slate-300" title={customerLabel}>
+                          <div className={clampedCellClassName}>{customerLabel}</div>
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{formatRupiah(row.subtotal, locale)}</td>
+                        <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{formatRupiah(row.ppnAmount, locale)}</td>
+                        <td className="whitespace-nowrap px-3 py-2 font-medium text-slate-800 dark:text-slate-100">{formatRupiah(row.grandTotal, locale)}</td>
+                        <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{row.isPaid ? paidLabel : unpaidLabel}</td>
+                        <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{formatTanggal(row.tanggalBayar, locale)}</td>
                       </tr>
                     );
                   })

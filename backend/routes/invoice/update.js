@@ -3,7 +3,7 @@ const express = require("express");
 const { Customer } = require("../../models/Customer");
 const { Invoice } = require("../../models/Invoice");
 const { syncPurchaseOrderByNoPo } = require("../../utils/sync-purchase-order-from-invoice");
-const { sanitizeInvoice } = require("./sanitize-invoice");
+const { getInvoiceNoPoList, sanitizeInvoice } = require("./sanitize-invoice");
 const {
   calculateGrandTotal,
   calculatePpnAmount,
@@ -39,8 +39,23 @@ router.put("/:id", async (req, res) => {
     updates.noInvoice = String(req.body.noInvoice || "").trim();
   }
 
-  if (req.body.noPo !== undefined) {
-    updates.noPo = String(req.body.noPo || "").trim();
+  if (req.body.noPo !== undefined || req.body.noPoList !== undefined) {
+    const noPoList = normalizeStringList(
+      req.body.noPoList !== undefined ? req.body.noPoList : req.body.noPo,
+      {
+        maxLength: 100,
+        splitOnComma: true,
+      }
+    );
+
+    if (!noPoList) {
+      return res.status(400).json({
+        message: "noPo harus array minimal 1 item string",
+      });
+    }
+
+    updates.noPo = noPoList.join(", ");
+    updates.noPoList = noPoList;
   }
 
   if (req.body.noSuratJalan !== undefined) {
@@ -196,8 +211,8 @@ router.put("/:id", async (req, res) => {
     }
 
     const noPoSet = new Set([
-      String(existingInvoice.noPo || "").trim(),
-      String(invoice.noPo || "").trim(),
+      ...getInvoiceNoPoList(existingInvoice),
+      ...getInvoiceNoPoList(invoice),
     ]);
 
     for (const noPoValue of noPoSet) {

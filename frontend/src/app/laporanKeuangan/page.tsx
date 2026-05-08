@@ -679,14 +679,22 @@ export default function LaporanKeuanganPage() {
 
             {!isLoading ? (
               <div className="mt-4 space-y-3">
-                <div className="grid gap-3 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400 sm:grid-cols-[minmax(0,1fr)_11rem_5rem]">
+                <div className="grid gap-3 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400 sm:grid-cols-[5rem_minmax(0,1fr)_11rem]">
+                  <span>{t("common.action")}</span>
                   <span>{t("field.namaBiaya")}</span>
                   <span>{t("field.jumlah")}</span>
-                  <span>{t("common.action")}</span>
                 </div>
 
                 {rows.map((row) => (
-                  <div key={row.id} className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_11rem_5rem]">
+                  <div key={row.id} className="grid gap-3 sm:grid-cols-[5rem_minmax(0,1fr)_11rem]">
+                    <button
+                      type="button"
+                      onClick={() => removeRow(row.id)}
+                      disabled={!canRemoveRow}
+                      className="rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-900 dark:bg-slate-900 dark:text-red-300 dark:hover:bg-red-950/40"
+                    >
+                      {t("common.delete")}
+                    </button>
                     <input
                       type="text"
                       value={row.namaBiaya}
@@ -703,14 +711,6 @@ export default function LaporanKeuanganPage() {
                       placeholder="0"
                       className="min-w-0 rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-sky-900/60"
                     />
-                    <button
-                      type="button"
-                      onClick={() => removeRow(row.id)}
-                      disabled={!canRemoveRow}
-                      className="rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-900 dark:bg-slate-900 dark:text-red-300 dark:hover:bg-red-950/40"
-                    >
-                      {t("common.delete")}
-                    </button>
                   </div>
                 ))}
 

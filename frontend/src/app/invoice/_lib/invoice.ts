@@ -23,6 +23,7 @@ export type InvoiceItem = {
   tanggal: string;
   noInvoice: string;
   noPo: string;
+  noPoList: string[];
   noSuratJalan: string[];
   idCustomer: string;
   barang: InvoiceBarang[];
@@ -47,6 +48,7 @@ export type InvoiceFormState = {
   tanggal: string;
   noInvoice: string;
   noPo: string;
+  noPoList: string[];
   noSuratJalanText: string;
   idCustomer: string;
   isPpn: boolean;
@@ -66,6 +68,7 @@ export type InvoicePrefillBarang = {
 export type InvoicePrefillPayload = {
   tanggal: string;
   noPo: string;
+  noPoList?: string[];
   noSuratJalan: string[];
   idCustomer: string;
   barang: InvoicePrefillBarang[];
@@ -146,6 +149,7 @@ export const sampleInvoiceRows: InvoiceItem[] = [
     tanggal: "2026-03-01",
     noInvoice: "INV-260301",
     noPo: "PO-90011",
+    noPoList: ["PO-90011"],
     noSuratJalan: ["SJ-260311", "SJ-260312"],
     idCustomer: "PT Nusantara Bangun",
     barang: [
@@ -179,6 +183,7 @@ export const sampleInvoiceRows: InvoiceItem[] = [
     tanggal: "2026-03-02",
     noInvoice: "INV-260302",
     noPo: "PO-90012",
+    noPoList: ["PO-90012"],
     noSuratJalan: ["SJ-260320"],
     idCustomer: "CV Pilar Teknik",
     barang: [
@@ -204,6 +209,7 @@ export const sampleInvoiceRows: InvoiceItem[] = [
     tanggal: "2026-03-03",
     noInvoice: "INV-260303",
     noPo: "PO-90013",
+    noPoList: ["PO-90013"],
     noSuratJalan: ["SJ-260313", "SJ-260314", "SJ-260315"],
     idCustomer: "PT Sinar Baja Utama",
     barang: [
@@ -252,6 +258,26 @@ function normalizeNoSuratJalanList(value: unknown) {
   const singleValue = String(value || "").trim();
 
   return singleValue ? [singleValue] : [];
+}
+
+function normalizeNoPoList(value: unknown) {
+  const source = Array.isArray(value) ? value : toText(value).split(",");
+  const seen = new Set<string>();
+  const normalized: string[] = [];
+
+  source.forEach((item) => {
+    const noPo = toText(item).trim();
+    const key = normalize(noPo);
+
+    if (!noPo || seen.has(key)) {
+      return;
+    }
+
+    seen.add(key);
+    normalized.push(noPo);
+  });
+
+  return normalized;
 }
 
 export function buildSuratJalanInvoiceSpesifikasi(spesifikasiValue: unknown, kodeDepartemenValue: unknown) {
@@ -435,11 +461,15 @@ function toInvoiceItem(value: unknown): InvoiceItem | null {
 
   const isPaid = Boolean(row.isPaid);
 
+  const noPoList = normalizeNoPoList(row.noPoList);
+  const fallbackNoPoList = noPoList.length > 0 ? noPoList : normalizeNoPoList(row.noPo);
+
   return {
     id: id,
     tanggal: toText(row.tanggal).trim(),
     noInvoice: toText(row.noInvoice).trim(),
-    noPo: toText(row.noPo).trim(),
+    noPo: invoiceNoPoListLabel(fallbackNoPoList),
+    noPoList: fallbackNoPoList,
     noSuratJalan: normalizeNoSuratJalanList(row.noSuratJalan),
     idCustomer: parseCustomerId(row.idCustomer),
     barang: barang,
@@ -482,7 +512,9 @@ function toInvoicePrefillPayload(value: unknown): InvoicePrefillPayload | null {
   }
 
   const payload = value as Record<string, unknown>;
-  const noPo = toText(payload.noPo).trim();
+  const noPoList = normalizeNoPoList(payload.noPoList);
+  const fallbackNoPoList = noPoList.length > 0 ? noPoList : normalizeNoPoList(payload.noPo);
+  const noPo = invoiceNoPoListLabel(fallbackNoPoList);
   const idCustomer = toText(payload.idCustomer).trim();
   const tanggal = toText(payload.tanggal).trim();
   const noSuratJalan = normalizeNoSuratJalanList(payload.noSuratJalan);
@@ -494,13 +526,14 @@ function toInvoicePrefillPayload(value: unknown): InvoicePrefillPayload | null {
   const isPpn = typeof payload.isPpn === "boolean" ? payload.isPpn : true;
   const ppnRate = parseNumberFromUnknown(payload.ppnRate, 11);
 
-  if (!noPo || noSuratJalan.length === 0 || barang.length === 0) {
+  if (fallbackNoPoList.length === 0 || noSuratJalan.length === 0 || barang.length === 0) {
     return null;
   }
 
   return {
     tanggal,
     noPo,
+    noPoList: fallbackNoPoList,
     noSuratJalan,
     idCustomer,
     barang,
@@ -512,12 +545,14 @@ function toInvoicePrefillPayload(value: unknown): InvoicePrefillPayload | null {
 function toNormalizedInvoicePayload(form: InvoiceFormState) {
   const barang = invoiceBarangRowsToList(form.barangRows);
   const noSuratJalan = invoiceNoSuratJalanTextToList(form.noSuratJalanText);
+  const noPoList = normalizeNoPoList(form.noPoList.length > 0 ? form.noPoList : form.noPo);
   const ppnRateValue = parseNumber(form.ppnRate || "0");
 
   return {
     tanggal: toText(form.tanggal).trim(),
     noInvoice: toText(form.noInvoice).trim(),
-    noPo: toText(form.noPo).trim(),
+    noPo: noPoList,
+    noPoList: noPoList,
     noSuratJalan: noSuratJalan,
     idCustomer: toText(form.idCustomer).trim(),
     barang: barang,
@@ -676,6 +711,16 @@ export function invoiceNoSuratJalanListLabel(noSuratJalan: string[]) {
   return normalized.join(", ");
 }
 
+export function invoiceNoPoListLabel(noPoList: string[]) {
+  const normalized = normalizeNoPoList(noPoList);
+
+  if (normalized.length === 0) {
+    return "";
+  }
+
+  return normalized.join(", ");
+}
+
 export function toInputDate(value: string | null) {
   return toInputDateValue(value);
 }
@@ -757,20 +802,22 @@ function createInvoiceBarangIdentityKey(namaBarang: string, spesifikasi: string,
 
 export function buildInvoiceBarangRowsFromSuratJalanSelection(
   suratJalanOptions: InvoiceSuratJalanOption[],
-  noPo: string,
+  noPo: string | string[],
   selectedNoSuratJalan: string[],
   currentRows: InvoiceBarangFormRow[] = []
 ) {
-  const normalizedNoPo = toText(noPo).trim();
+  const selectedNoPoSet = new Set(normalizeNoPoList(noPo));
   const selectedSet = new Set(normalizeNoSuratJalanList(selectedNoSuratJalan));
 
-  if (!normalizedNoPo || selectedSet.size === 0) {
+  if (selectedNoPoSet.size === 0 || selectedSet.size === 0) {
     return ensureTrailingEmptyInvoiceBarangRow([createEmptyInvoiceBarangRow()]);
   }
 
-  const selectedNoPoOption = suratJalanOptions.find((option) => option.noPo === normalizedNoPo);
+  const selectedNoPoOptions = suratJalanOptions.filter((option) =>
+    selectedNoPoSet.has(option.noPo)
+  );
 
-  if (!selectedNoPoOption) {
+  if (selectedNoPoOptions.length === 0) {
     return ensureTrailingEmptyInvoiceBarangRow([createEmptyInvoiceBarangRow()]);
   }
 
@@ -794,30 +841,32 @@ export function buildInvoiceBarangRowsFromSuratJalanSelection(
 
   const barangMap = new Map<string, InvoiceBarangFormRow>();
 
-  selectedNoPoOption.noSuratJalan.forEach((suratJalan) => {
-    if (!selectedSet.has(suratJalan.noSuratJalan)) {
-      return;
-    }
-
-    suratJalan.barang.forEach((barang) => {
-      const namaBarang = toText(barang.nama).trim();
-      const spesifikasi = buildSuratJalanInvoiceSpesifikasi(barang.spesifikasi, barang.kodeDepartemen);
-      const unit = toText(barang.unit).trim();
-      const identityKey = createInvoiceBarangIdentityKey(namaBarang, spesifikasi, unit);
-      const existingItem = barangMap.get(identityKey);
-
-      if (existingItem) {
-        const currentQty = parseNumber(existingItem.kuantitas);
-        existingItem.kuantitas = String(currentQty + barang.jumlah);
+  selectedNoPoOptions.forEach((selectedNoPoOption) => {
+    selectedNoPoOption.noSuratJalan.forEach((suratJalan) => {
+      if (!selectedSet.has(suratJalan.noSuratJalan)) {
         return;
       }
 
-      barangMap.set(identityKey, {
-        namaBarang,
-        spesifikasi,
-        kuantitas: String(barang.jumlah),
-        unit,
-        hargaSatuan: hargaSatuanMap.get(identityKey) || "",
+      suratJalan.barang.forEach((barang) => {
+        const namaBarang = toText(barang.nama).trim();
+        const spesifikasi = buildSuratJalanInvoiceSpesifikasi(barang.spesifikasi, barang.kodeDepartemen);
+        const unit = toText(barang.unit).trim();
+        const identityKey = createInvoiceBarangIdentityKey(namaBarang, spesifikasi, unit);
+        const existingItem = barangMap.get(identityKey);
+
+        if (existingItem) {
+          const currentQty = parseNumber(existingItem.kuantitas);
+          existingItem.kuantitas = String(currentQty + barang.jumlah);
+          return;
+        }
+
+        barangMap.set(identityKey, {
+          namaBarang,
+          spesifikasi,
+          kuantitas: String(barang.jumlah),
+          unit,
+          hargaSatuan: hargaSatuanMap.get(identityKey) || "",
+        });
       });
     });
   });
@@ -869,7 +918,8 @@ export function toInvoiceFormState(item: InvoiceItem): InvoiceFormState {
   return {
     tanggal: toInputDate(item.tanggal),
     noInvoice: item.noInvoice,
-    noPo: item.noPo,
+    noPo: invoiceNoPoListLabel(item.noPoList),
+    noPoList: item.noPoList,
     noSuratJalanText: invoiceNoSuratJalanListToText(item.noSuratJalan),
     idCustomer: item.idCustomer,
     isPpn: item.isPpn,
@@ -890,6 +940,9 @@ export function toInvoiceFormState(item: InvoiceItem): InvoiceFormState {
 
 export function toInvoiceFormStateFromPrefill(prefill: InvoicePrefillPayload): InvoiceFormState {
   const normalizedPpnRate = Number.isFinite(prefill.ppnRate) ? prefill.ppnRate : 11;
+  const noPoList = normalizeNoPoList(
+    prefill.noPoList && prefill.noPoList.length > 0 ? prefill.noPoList : prefill.noPo
+  );
   const barangRows = ensureTrailingEmptyInvoiceBarangRow(
     prefill.barang.map((item) => ({
       namaBarang: item.namaBarang,
@@ -903,7 +956,8 @@ export function toInvoiceFormStateFromPrefill(prefill: InvoicePrefillPayload): I
   return {
     tanggal: toInputDate(prefill.tanggal),
     noInvoice: "",
-    noPo: prefill.noPo,
+    noPo: invoiceNoPoListLabel(noPoList),
+    noPoList,
     noSuratJalanText: invoiceNoSuratJalanListToText(prefill.noSuratJalan),
     idCustomer: prefill.idCustomer,
     isPpn: typeof prefill.isPpn === "boolean" ? prefill.isPpn : true,
@@ -955,7 +1009,7 @@ export function filterInvoiceRows(
 
   return rows.filter((row) => {
     const matchNoInvoice = normalize(row.noInvoice).includes(normalize(filter.noInvoice));
-    const matchNoPO = normalize(row.noPo).includes(normalize(filter.noPo));
+    const matchNoPO = normalize(invoiceNoPoListLabel(row.noPoList)).includes(normalize(filter.noPo));
     const matchNoSuratJalan = normalize(invoiceNoSuratJalanListLabel(row.noSuratJalan)).includes(
       normalize(filter.noSuratJalan)
     );

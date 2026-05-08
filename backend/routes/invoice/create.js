@@ -21,7 +21,14 @@ const router = express.Router();
 router.post("/", async (req, res) => {
   const tanggal = parseDate(req.body.tanggal);
   const noInvoice = String(req.body.noInvoice || "").trim();
-  const noPo = String(req.body.noPo || "").trim();
+  const noPoList = normalizeStringList(
+    req.body.noPoList !== undefined ? req.body.noPoList : req.body.noPo,
+    {
+      maxLength: 100,
+      splitOnComma: true,
+    }
+  );
+  const noPo = noPoList ? noPoList.join(", ") : "";
   const noSuratJalan = normalizeStringList(req.body.noSuratJalan, {
     maxLength: 100,
   });
@@ -38,7 +45,7 @@ router.post("/", async (req, res) => {
   const parsedPpnRate =
     req.body.ppnRate !== undefined ? parseNumber(req.body.ppnRate) : 11;
 
-  if (!tanggal || !noInvoice || !noPo || !noSuratJalan || !idCustomer) {
+  if (!tanggal || !noInvoice || !noPoList || !noSuratJalan || !idCustomer) {
     return res.status(400).json({
       message: "tanggal, noInvoice, noPo, noSuratJalan, dan idCustomer wajib diisi",
     });
@@ -91,6 +98,7 @@ router.post("/", async (req, res) => {
       tanggal: tanggal,
       noInvoice: noInvoice,
       noPo: noPo,
+      noPoList: noPoList,
       noSuratJalan: noSuratJalan,
       idCustomer: idCustomer,
       barang: barang,
@@ -103,7 +111,9 @@ router.post("/", async (req, res) => {
       grandTotal: grandTotal,
     });
 
-    await syncPurchaseOrderByNoPo(invoice.noPo);
+    for (const noPoValue of noPoList) {
+      await syncPurchaseOrderByNoPo(noPoValue);
+    }
 
     return res.status(201).json({
       message: "invoice created",

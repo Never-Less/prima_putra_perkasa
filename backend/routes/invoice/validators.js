@@ -84,9 +84,13 @@ function normalizeBarangList(barangInput) {
 }
 
 function normalizeStringList(value, options = {}) {
-  const { maxLength = 100 } = options;
+  const { maxLength = 100, splitOnComma = false } = options;
 
-  const source = Array.isArray(value) ? value : [value];
+  const source = Array.isArray(value)
+    ? value
+    : splitOnComma
+      ? String(value || "").split(",")
+      : [value];
   const normalized = source
     .map((item) => String(item || "").trim())
     .filter(Boolean);

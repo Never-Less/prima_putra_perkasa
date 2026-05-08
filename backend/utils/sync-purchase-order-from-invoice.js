@@ -25,7 +25,10 @@ async function syncPurchaseOrderByNoPo(noPoValue) {
   }
 
   const latestInvoice = await Invoice.findOne({
-    noPo: noPo,
+    $or: [
+      { noPo: noPo },
+      { noPoList: noPo },
+    ],
   })
     .sort({
       tanggal: -1,

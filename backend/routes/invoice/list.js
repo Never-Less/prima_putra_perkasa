@@ -28,7 +28,10 @@ router.get("/", async (req, res) => {
     }
 
     if (noPoRegex) {
-      query.noPo = noPoRegex;
+      query.$or = [
+        { noPo: noPoRegex },
+        { noPoList: noPoRegex },
+      ];
     }
 
     if (noSuratJalanRegex) {

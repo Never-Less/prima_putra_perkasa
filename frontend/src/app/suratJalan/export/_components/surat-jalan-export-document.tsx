@@ -44,6 +44,32 @@ function toUpperText(value: string) {
   return String(value || "").trim().toUpperCase();
 }
 
+function getSingleLineCustomerNameFontSize(value: string) {
+  const length = String(value || "").trim().length;
+
+  if (length > 58) {
+    return "11px";
+  }
+
+  if (length > 48) {
+    return "12px";
+  }
+
+  if (length > 40) {
+    return "13px";
+  }
+
+  if (length > 34) {
+    return "15px";
+  }
+
+  if (length > 28) {
+    return "17px";
+  }
+
+  return "19px";
+}
+
 function normalizeCustomerName(value: string) {
   return String(value || "").trim().toUpperCase();
 }
@@ -142,6 +168,14 @@ export function SuratJalanExportDocument({
     [customer?.atasNama]
   );
   const customerName = useMemo(() => toUpperText(customer?.nama || ""), [customer?.nama]);
+  const rawCustomerNameFontSize = useMemo(
+    () => getSingleLineCustomerNameFontSize(rawCustomerName || meiloonCustomerName),
+    [rawCustomerName]
+  );
+  const customerNameFontSize = useMemo(
+    () => getSingleLineCustomerNameFontSize(customerName || "-"),
+    [customerName]
+  );
   const customerAddress = useMemo(() => toUpperText(customer?.alamat || ""), [customer?.alamat]);
   const customerAttn = useMemo(() => toUpperText(customer?.atasNama || ""), [customer?.atasNama]);
   const kendaraan = useMemo(
@@ -163,7 +197,7 @@ export function SuratJalanExportDocument({
       >
         <div className="min-h-[297mm] px-[6mm] py-[8mm] text-[14px] leading-[1.22]">
           <div className="grid grid-cols-2 gap-6 pt-7">
-            <div className="border-2 border-black px-2 py-1">
+            <div className="px-2 py-1">
               <p className="text-[19px] font-bold">{companyProfile.name}</p>
               {companyProfile.addressLines.map((line) => (
                 <p key={line} className="text-[13px] leading-[1.22]">
@@ -173,7 +207,13 @@ export function SuratJalanExportDocument({
             </div>
 
             <div className="border-2 border-black px-2 py-1">
-              <p className="text-[19px] font-bold">{rawCustomerName || meiloonCustomerName}</p>
+              <p className="text-[14px] italic">{t("suratJalan.export.kepadaLabel")}</p>
+              <p
+                className="whitespace-nowrap font-bold leading-tight"
+                style={{ fontSize: rawCustomerNameFontSize }}
+              >
+                {rawCustomerName || meiloonCustomerName}
+              </p>
               <p className="whitespace-pre-line text-[13px] leading-[1.24]">
                 {rawCustomerAddress || customerAddress || "-"}
               </p>
@@ -183,7 +223,7 @@ export function SuratJalanExportDocument({
             </div>
           </div>
 
-          <div className="mt-1 flex items-end justify-between gap-4 text-[18px] font-bold leading-tight">
+          <div className="mt-1 flex items-end justify-between gap-4 text-[14px] font-bold leading-tight">
             <div className="grid grid-cols-[78px_12px_1fr] gap-x-1">
               <span>{t("suratJalan.export.meiloon.noSjLabel")}</span>
               <span>:</span>
@@ -194,7 +234,7 @@ export function SuratJalanExportDocument({
               <span>:</span>
               <span>{suratJalan.noPo || "-"}</span>
             </div>
-            <div className="grid grid-cols-[72px_10px_1fr] gap-x-1 text-[14px]">
+            <div className="grid grid-cols-[72px_10px_1fr] gap-x-1">
               <span>{t("suratJalan.export.tanggalLabel")}</span>
               <span>:</span>
               <span>{templateDate}</span>
@@ -326,7 +366,12 @@ export function SuratJalanExportDocument({
 
             <div className="mt-1 border-2 border-black px-2 py-1.5">
               <p className="text-[14px] italic">{t("suratJalan.export.kepadaLabel")}</p>
-              <p className="text-[18px] font-bold leading-tight">{customerName || "-"}</p>
+              <p
+                className="whitespace-nowrap font-bold leading-tight"
+                style={{ fontSize: customerNameFontSize }}
+              >
+                {customerName || "-"}
+              </p>
               <p className="whitespace-pre-line text-[13px] leading-[1.24]">{customerAddress || "-"}</p>
               <p className="mt-1 text-[14px] font-bold">
                 {t("suratJalan.export.attnLabel")}: {customerAttn || "-"}
