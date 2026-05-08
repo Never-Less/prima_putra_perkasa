@@ -55,7 +55,31 @@ const invoiceSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      maxlength: 100,
+      maxlength: 500,
+    },
+    noPoList: {
+      type: [
+        {
+          type: String,
+          trim: true,
+          maxlength: 100,
+        },
+      ],
+      default: undefined,
+      index: true,
+      validate: {
+        validator(value) {
+          return (
+            value === undefined ||
+            (Array.isArray(value) &&
+              value.length > 0 &&
+              value.every(
+                (item) => typeof item === "string" && item.trim().length > 0
+              ))
+          );
+        },
+        message: "noPoList minimal 1 item",
+      },
     },
     noSuratJalan: {
       type: [

@@ -151,15 +151,15 @@ export function UserTableFilter({
           <div className="overflow-x-auto">
             <table className="w-full min-w-[720px] table-fixed text-sm">
               <colgroup>
+                <col style={{ width: "140px" }} />
                 <col style={{ width: "240px" }} />
                 <col style={{ width: "180px" }} />
-                <col style={{ width: "140px" }} />
               </colgroup>
               <thead className="bg-sky-800 text-left text-white dark:bg-sky-950">
                 <tr>
+                  <th className="px-3 py-2 font-medium">{t("common.action")}</th>
                   <th className="px-3 py-2 font-medium">{t("field.username")}</th>
                   <th className="px-3 py-2 font-medium">{t("field.role")}</th>
-                  <th className="px-3 py-2 font-medium">{t("common.action")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 bg-white dark:divide-slate-800 dark:bg-slate-900">
@@ -175,8 +175,6 @@ export function UserTableFilter({
 
                     return (
                       <tr key={row.id} className={isSelected ? "bg-sky-100 dark:bg-sky-950/40" : index % 2 ? "bg-sky-50/70 dark:bg-slate-950/40" : undefined}>
-                        <td className="whitespace-nowrap px-3 py-2 font-medium text-slate-800 dark:text-slate-100">{row.username || "-"}</td>
-                        <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{roleLabelMap.get(row.role) || row.role}</td>
                         <td className="whitespace-nowrap px-3 py-2">
                           <button
                             type="button"
@@ -190,6 +188,8 @@ export function UserTableFilter({
                             {isSelected ? t("common.selected") : t("common.selectRow")}
                           </button>
                         </td>
+                        <td className="whitespace-nowrap px-3 py-2 font-medium text-slate-800 dark:text-slate-100">{row.username || "-"}</td>
+                        <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{roleLabelMap.get(row.role) || row.role}</td>
                       </tr>
                     );
                   })

@@ -101,6 +101,7 @@ export function buildInvoicePrefillFromSuratJalan(row: SuratJalanItem): InvoiceP
   return {
     tanggal: row.tanggal,
     noPo: row.noPo,
+    noPoList: [row.noPo].filter(Boolean),
     noSuratJalan: [row.noSuratJalan].filter(Boolean),
     idCustomer: row.idCustomer,
     barang: row.barang
@@ -168,6 +169,7 @@ export function buildInvoicePrefillFromReadyInvoicePoGroup(
   return {
     tanggal,
     noPo: group.noPo,
+    noPoList: [group.noPo].filter(Boolean),
     noSuratJalan,
     idCustomer: group.idCustomer,
     barang: Array.from(barangMap.values()),

@@ -384,6 +384,7 @@ export function SuratJalanTableFilter({
               <div className="overflow-x-auto">
                 <table className={`w-full min-w-[1500px] table-fixed ${tableText}`}>
                   <colgroup>
+                    <col style={{ width: "180px" }} />
                     <col style={{ width: "140px" }} />
                     <col style={{ width: "110px" }} />
                     <col style={{ width: "150px" }} />
@@ -392,10 +393,10 @@ export function SuratJalanTableFilter({
                     <col style={{ width: "130px" }} />
                     <col style={{ width: "120px" }} />
                     <col style={{ width: "130px" }} />
-                    <col style={{ width: "180px" }} />
                   </colgroup>
                   <thead className={`${tone.header} text-left`}>
                     <tr>
+                      <th className={`${cellPadding} font-medium`}>{t("common.action")}</th>
                       <th className={`${cellPadding} font-medium`}>{t("field.noSuratJalan")}</th>
                       <th className={`${cellPadding} font-medium`}>{t("field.tanggal")}</th>
                       <th className={`${cellPadding} font-medium`}>{t("field.kodeDepartemen")}</th>
@@ -404,7 +405,6 @@ export function SuratJalanTableFilter({
                       <th className={`${cellPadding} font-medium`}>{t("field.kendaraan")}</th>
                       <th className={`${cellPadding} font-medium`}>{t("field.tipe")}</th>
                       <th className={`${cellPadding} font-medium`}>{t("field.statusInvoice")}</th>
-                      <th className={`${cellPadding} font-medium`}>{t("common.action")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 bg-white dark:divide-slate-800 dark:bg-slate-900">
@@ -422,28 +422,6 @@ export function SuratJalanTableFilter({
 
                       return (
                         <tr key={row.id} className={rowClassName}>
-                          <td className={`whitespace-nowrap ${cellPadding} font-medium text-slate-800 dark:text-slate-100`}>
-                            {row.noSuratJalan}
-                          </td>
-                          <td className={`whitespace-nowrap ${cellPadding} text-slate-600 dark:text-slate-300`}>
-                            {formatTanggal(row.tanggal, locale)}
-                          </td>
-                          <td className={`whitespace-nowrap ${cellPadding} text-slate-600 dark:text-slate-300`}>
-                            {row.kodeDepartemen || "-"}
-                          </td>
-                          <td className={`${cellPadding} text-slate-600 dark:text-slate-300`} title={customerLabel}>
-                            <div className={clampedCellClassName}>{customerLabel}</div>
-                          </td>
-                          <td className={`${cellPadding} text-slate-600 dark:text-slate-300`} title={barangText}>
-                            <div className={clampedCellClassName}>{barangText}</div>
-                          </td>
-                          <td className={`whitespace-nowrap ${cellPadding} text-slate-600 dark:text-slate-300`}>{row.kendaraan}</td>
-                          <td className={`whitespace-nowrap ${cellPadding} text-slate-600 dark:text-slate-300`}>{row.tipe}</td>
-                          <td className={`whitespace-nowrap ${cellPadding}`}>
-                            <span className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${invoiceStatus.className}`}>
-                              {invoiceStatus.label}
-                            </span>
-                          </td>
                           <td className={`whitespace-nowrap ${cellPadding}`}>
                             <div className="flex flex-wrap items-center gap-1.5">
                               <button
@@ -465,6 +443,28 @@ export function SuratJalanTableFilter({
                                 </button>
                               ) : null}
                             </div>
+                          </td>
+                          <td className={`whitespace-nowrap ${cellPadding} font-medium text-slate-800 dark:text-slate-100`}>
+                            {row.noSuratJalan}
+                          </td>
+                          <td className={`whitespace-nowrap ${cellPadding} text-slate-600 dark:text-slate-300`}>
+                            {formatTanggal(row.tanggal, locale)}
+                          </td>
+                          <td className={`whitespace-nowrap ${cellPadding} text-slate-600 dark:text-slate-300`}>
+                            {row.kodeDepartemen || "-"}
+                          </td>
+                          <td className={`${cellPadding} text-slate-600 dark:text-slate-300`} title={customerLabel}>
+                            <div className={clampedCellClassName}>{customerLabel}</div>
+                          </td>
+                          <td className={`${cellPadding} text-slate-600 dark:text-slate-300`} title={barangText}>
+                            <div className={clampedCellClassName}>{barangText}</div>
+                          </td>
+                          <td className={`whitespace-nowrap ${cellPadding} text-slate-600 dark:text-slate-300`}>{row.kendaraan}</td>
+                          <td className={`whitespace-nowrap ${cellPadding} text-slate-600 dark:text-slate-300`}>{row.tipe}</td>
+                          <td className={`whitespace-nowrap ${cellPadding}`}>
+                            <span className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${invoiceStatus.className}`}>
+                              {invoiceStatus.label}
+                            </span>
                           </td>
                         </tr>
                       );

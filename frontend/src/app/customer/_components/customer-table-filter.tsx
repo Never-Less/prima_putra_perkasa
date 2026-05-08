@@ -164,19 +164,19 @@ export function CustomerTableFilter({
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1020px] table-fixed text-sm">
               <colgroup>
+                <col style={{ width: "120px" }} />
                 <col style={{ width: "190px" }} />
                 <col style={{ width: "380px" }} />
                 <col style={{ width: "170px" }} />
                 <col style={{ width: "220px" }} />
-                <col style={{ width: "120px" }} />
               </colgroup>
               <thead className="bg-sky-800 text-left text-white dark:bg-sky-950">
                 <tr>
+                  <th className="px-3 py-2 font-medium">{t("common.action")}</th>
                   <th className="px-3 py-2 font-medium">{t("field.nama")}</th>
                   <th className="px-3 py-2 font-medium">{t("field.alamat")}</th>
                   <th className="px-3 py-2 font-medium">{t("field.npwp")}</th>
                   <th className="px-3 py-2 font-medium">{t("field.atasNama")}</th>
-                  <th className="px-3 py-2 font-medium">{t("common.action")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 bg-white dark:divide-slate-800 dark:bg-slate-900">
@@ -192,14 +192,6 @@ export function CustomerTableFilter({
 
                     return (
                       <tr key={row.id} className={isSelected ? "bg-sky-100 dark:bg-sky-950/40" : index % 2 ? "bg-sky-50/70 dark:bg-slate-950/40" : undefined}>
-                        <td className="whitespace-nowrap px-3 py-2 font-medium text-slate-800 dark:text-slate-100">{row.nama}</td>
-                        <td className="px-3 py-2 text-slate-600 dark:text-slate-300" title={row.alamat || "-"}>
-                          <div className={clampedCellClassName}>{row.alamat || "-"}</div>
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{row.npwp || "-"}</td>
-                        <td className="px-3 py-2 text-slate-600 dark:text-slate-300" title={row.atasNama || "-"}>
-                          <div className={clampedCellClassName}>{row.atasNama || "-"}</div>
-                        </td>
                         <td className="whitespace-nowrap px-3 py-2">
                           <button
                             type="button"
@@ -212,6 +204,16 @@ export function CustomerTableFilter({
                           >
                             {isSelected ? t("common.selected") : t("common.selectRow")}
                           </button>
+                        </td>
+                        <td className="px-3 py-2 font-medium text-slate-800 dark:text-slate-100" title={row.nama || "-"}>
+                          <div className={clampedCellClassName}>{row.nama || "-"}</div>
+                        </td>
+                        <td className="px-3 py-2 text-slate-600 dark:text-slate-300" title={row.alamat || "-"}>
+                          <div className={clampedCellClassName}>{row.alamat || "-"}</div>
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{row.npwp || "-"}</td>
+                        <td className="px-3 py-2 text-slate-600 dark:text-slate-300" title={row.atasNama || "-"}>
+                          <div className={clampedCellClassName}>{row.atasNama || "-"}</div>
                         </td>
                       </tr>
                     );

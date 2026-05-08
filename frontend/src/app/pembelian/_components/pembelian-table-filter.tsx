@@ -310,6 +310,7 @@ export function PembelianTableFilter({
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[1380px] table-fixed text-sm">
                   <colgroup>
+                    <col style={{ width: "120px" }} />
                     <col style={{ width: "110px" }} />
                     <col style={{ width: "140px" }} />
                     <col style={{ width: "250px" }} />
@@ -320,10 +321,10 @@ export function PembelianTableFilter({
                     <col style={{ width: "120px" }} />
                     <col style={{ width: "130px" }} />
                     <col style={{ width: "130px" }} />
-                    <col style={{ width: "120px" }} />
                   </colgroup>
                   <thead className="bg-sky-800 text-left text-white dark:bg-sky-950">
                     <tr>
+                      <th className="px-3 py-2 font-medium">{t("common.action")}</th>
                       <th className="px-3 py-2 font-medium">{t("field.tanggalNota")}</th>
                       <th className="px-3 py-2 font-medium">{t("field.noInvoice")}</th>
                       <th className="px-3 py-2 font-medium">{t("field.namaSupplier")}</th>
@@ -337,7 +338,6 @@ export function PembelianTableFilter({
                       <th className="px-3 py-2 font-medium">{t("field.nilaiNota")}</th>
                       <th className="px-3 py-2 font-medium">{t("field.tanggalJatuhTempo")}</th>
                       <th className="px-3 py-2 font-medium">{t("field.tanggalBayar")}</th>
-                      <th className="px-3 py-2 font-medium">{t("common.action")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 bg-white dark:divide-slate-800 dark:bg-slate-900">
@@ -349,6 +349,19 @@ export function PembelianTableFilter({
                           key={row.id}
                           className={isSelected ? "bg-sky-100 dark:bg-sky-950/40" : index % 2 ? "bg-sky-50/70 dark:bg-slate-950/40" : undefined}
                         >
+                          <td className="whitespace-nowrap px-3 py-2">
+                            <button
+                              type="button"
+                              onClick={() => onSelectRow?.(row)}
+                              className={`rounded-lg px-3 py-1.5 text-xs font-medium ${
+                                isSelected
+                                ? "bg-sky-700 text-white dark:bg-sky-500 dark:text-slate-950"
+                                : "border border-sky-200 bg-white text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
+                              }`}
+                            >
+                              {isSelected ? t("common.selected") : t("common.selectRow")}
+                            </button>
+                          </td>
                           <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">
                             {formatTanggal(row.tanggalNota, locale)}
                           </td>
@@ -374,19 +387,6 @@ export function PembelianTableFilter({
                           </td>
                           <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">
                             {formatTanggal(row.tanggalBayar, locale)}
-                          </td>
-                          <td className="whitespace-nowrap px-3 py-2">
-                            <button
-                              type="button"
-                              onClick={() => onSelectRow?.(row)}
-                              className={`rounded-lg px-3 py-1.5 text-xs font-medium ${
-                                isSelected
-                                ? "bg-sky-700 text-white dark:bg-sky-500 dark:text-slate-950"
-                                : "border border-sky-200 bg-white text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
-                              }`}
-                            >
-                              {isSelected ? t("common.selected") : t("common.selectRow")}
-                            </button>
                           </td>
                         </tr>
                       );

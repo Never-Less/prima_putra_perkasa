@@ -2,6 +2,7 @@ const express = require("express");
 
 const { Invoice } = require("../../models/Invoice");
 const { syncPurchaseOrderByNoPo } = require("../../utils/sync-purchase-order-from-invoice");
+const { getInvoiceNoPoList } = require("./sanitize-invoice");
 const { isValidId } = require("./validators");
 
 const router = express.Router();
@@ -20,7 +21,9 @@ router.delete("/:id", async (req, res) => {
       return res.status(404).json({ message: "invoice not found" });
     }
 
-    await syncPurchaseOrderByNoPo(invoice.noPo);
+    for (const noPoValue of getInvoiceNoPoList(invoice)) {
+      await syncPurchaseOrderByNoPo(noPoValue);
+    }
 
     return res.json({
       message: "invoice deleted",
