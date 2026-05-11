@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import { AppDateInput } from "../../_components/app-date-input";
 import { DebouncedFilterInput } from "../../_components/debounced-filter-input";
 import { PaginationControls } from "../../_components/pagination-controls";
@@ -150,27 +149,6 @@ export function SuratJalanTableFilter({
       className: "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-200",
     };
   };
-  const groupedRows = useMemo(() => {
-    const groupMap = new Map<string, SuratJalanItem[]>();
-
-    rows.forEach((row) => {
-      const key = row.noPo || "-";
-      const existingRows = groupMap.get(key);
-
-      if (existingRows) {
-        existingRows.push(row);
-        return;
-      }
-
-      groupMap.set(key, [row]);
-    });
-
-    return Array.from(groupMap.entries()).map(([noPo, items]) => ({
-      noPo,
-      items,
-    }));
-  }, [rows]);
-
   return (
     <section className={`space-y-4 rounded-2xl border p-5 shadow-sm ${tone.section}`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -188,21 +166,21 @@ export function SuratJalanTableFilter({
         <p className={`mb-2 text-sm font-medium ${tone.subtitle}`}>{t("common.filterByField")}</p>
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           <label className="text-sm text-slate-700 dark:text-slate-200">
-            {t("field.noSuratJalan")}
-            <DebouncedFilterInput
-              value={filter.noSuratJalan}
-              onValueChange={(value) => onFilterChange("noSuratJalan", value)}
-              placeholder={filterPlaceholder("field.noSuratJalan")}
-              className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-            />
-          </label>
-
-          <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.noPo")}
             <DebouncedFilterInput
               value={filter.noPo}
               onValueChange={(value) => onFilterChange("noPo", value)}
               placeholder={filterPlaceholder("field.noPo")}
+              className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+            />
+          </label>
+
+          <label className="text-sm text-slate-700 dark:text-slate-200">
+            {t("field.noSuratJalan")}
+            <DebouncedFilterInput
+              value={filter.noSuratJalan}
+              onValueChange={(value) => onFilterChange("noSuratJalan", value)}
+              placeholder={filterPlaceholder("field.noSuratJalan")}
               className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
@@ -272,37 +250,15 @@ export function SuratJalanTableFilter({
         </div>
       </div>
 
-      <div className="space-y-4">
-        {groupedRows.length === 0 ? (
+      <div>
+        {rows.length === 0 ? (
           <div className="rounded-xl border border-sky-200 bg-white px-3 py-4 text-center text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
             {t("common.noData")}
           </div>
-        ) : null}
-
-        {groupedRows.map((group) => (
-          <div key={group.noPo} className={`overflow-hidden rounded-xl border ${tone.groupCard}`}>
-            <div className={`flex flex-wrap items-center justify-between gap-2 border-b px-3 py-2 ${tone.groupHeader}`}>
-              <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-                {t("field.noPo")}: {group.noPo}
-              </p>
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs text-slate-500 dark:text-slate-400">
-                  {t("common.totalData", { count: group.items.length })}
-                </span>
-                {canExport ? (
-                  <button
-                    type="button"
-                    onClick={() => onExportNoPo?.(group.noPo)}
-                    className={`rounded-lg px-3 py-1.5 text-xs font-medium ${tone.actionInactive}`}
-                  >
-                    {t("suratJalan.table.exportNoPoButton")}
-                  </button>
-                ) : null}
-              </div>
-            </div>
-
-            <div className="space-y-3 p-3 md:hidden">
-              {group.items.map((row) => {
+        ) : (
+          <>
+            <div className="space-y-3 md:hidden">
+              {rows.map((row) => {
                 const isSelected = selectedId === row.id;
                 const customerLabel = resolveCustomerLabel?.(row.idCustomer) || row.idCustomer || "-";
                 const barangText = barangLabel(row.barang);
@@ -337,6 +293,10 @@ export function SuratJalanTableFilter({
                     <dl className="mt-4 space-y-3 text-sm">
                       <div className="grid gap-3 sm:grid-cols-2">
                         <div>
+                          <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.noPo")}</dt>
+                          <dd className="mt-1 text-slate-700 dark:text-slate-200">{row.noPo || "-"}</dd>
+                        </div>
+                        <div>
                           <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.kodeDepartemen")}</dt>
                           <dd className="mt-1 text-slate-700 dark:text-slate-200">{row.kodeDepartemen || "-"}</dd>
                         </div>
@@ -355,7 +315,7 @@ export function SuratJalanTableFilter({
                       </div>
                     </dl>
 
-                    <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                    <div className="mt-4 grid gap-2 sm:grid-cols-3">
                       <button
                         type="button"
                         onClick={() => onSelectRow?.(row)}
@@ -374,18 +334,28 @@ export function SuratJalanTableFilter({
                           {t("common.export")}
                         </button>
                       ) : null}
+                      {canExport && row.noPo ? (
+                        <button
+                          type="button"
+                          onClick={() => onExportNoPo?.(row.noPo)}
+                          className={`w-full rounded-lg px-3 py-2 text-sm font-medium ${tone.actionInactive}`}
+                        >
+                          {t("suratJalan.table.exportNoPoButton")}
+                        </button>
+                      ) : null}
                     </div>
                   </article>
                 );
               })}
             </div>
 
-            <div className="hidden md:block">
+            <div className={`hidden overflow-hidden rounded-xl border md:block ${tone.groupCard}`}>
               <div className="overflow-x-auto">
-                <table className={`w-full min-w-[1500px] table-fixed ${tableText}`}>
+                <table className={`w-full min-w-[1680px] table-fixed ${tableText}`}>
                   <colgroup>
-                    <col style={{ width: "180px" }} />
+                    <col style={{ width: "260px" }} />
                     <col style={{ width: "140px" }} />
+                    <col style={{ width: "150px" }} />
                     <col style={{ width: "110px" }} />
                     <col style={{ width: "150px" }} />
                     <col style={{ width: "230px" }} />
@@ -397,6 +367,7 @@ export function SuratJalanTableFilter({
                   <thead className={`${tone.header} text-left`}>
                     <tr>
                       <th className={`${cellPadding} font-medium`}>{t("common.action")}</th>
+                      <th className={`${cellPadding} font-medium`}>{t("field.noPo")}</th>
                       <th className={`${cellPadding} font-medium`}>{t("field.noSuratJalan")}</th>
                       <th className={`${cellPadding} font-medium`}>{t("field.tanggal")}</th>
                       <th className={`${cellPadding} font-medium`}>{t("field.kodeDepartemen")}</th>
@@ -408,7 +379,7 @@ export function SuratJalanTableFilter({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 bg-white dark:divide-slate-800 dark:bg-slate-900">
-                    {group.items.map((row, index) => {
+                    {rows.map((row, index) => {
                       const isSelected = selectedId === row.id;
                       const useStripedRow = tableStyle === "striped" && index % 2 === 1;
                       const customerLabel = resolveCustomerLabel?.(row.idCustomer) || row.idCustomer || "-";
@@ -442,7 +413,19 @@ export function SuratJalanTableFilter({
                                   {t("common.export")}
                                 </button>
                               ) : null}
+                              {canExport && row.noPo ? (
+                                <button
+                                  type="button"
+                                  onClick={() => onExportNoPo?.(row.noPo)}
+                                  className={`rounded-lg px-3 py-1.5 text-xs font-medium ${tone.actionInactive}`}
+                                >
+                                  {t("suratJalan.table.exportNoPoButton")}
+                                </button>
+                              ) : null}
                             </div>
+                          </td>
+                          <td className={`truncate ${cellPadding} font-medium text-slate-800 dark:text-slate-100`} title={row.noPo || "-"}>
+                            {row.noPo || "-"}
                           </td>
                           <td className={`truncate ${cellPadding} font-medium text-slate-800 dark:text-slate-100`} title={row.noSuratJalan || "-"}>
                             {row.noSuratJalan}
@@ -473,8 +456,8 @@ export function SuratJalanTableFilter({
                 </table>
               </div>
             </div>
-          </div>
-        ))}
+          </>
+        )}
       </div>
 
       <PaginationControls
@@ -482,18 +465,14 @@ export function SuratJalanTableFilter({
         totalPages={pagination.totalPages}
         totalItems={pagination.totalItems}
         pageSize={pagination.limit}
-        from={groupedRows.length === 0 ? 0 : (pagination.page - 1) * pagination.limit + 1}
-        to={groupedRows.length === 0 ? 0 : (pagination.page - 1) * pagination.limit + groupedRows.length}
+        from={rows.length === 0 ? 0 : (pagination.page - 1) * pagination.limit + 1}
+        to={rows.length === 0 ? 0 : (pagination.page - 1) * pagination.limit + rows.length}
         onPageChange={onPageChange}
         onPageSizeChange={onPageSizeChange}
-        pageSizeOptions={[3, 5, 10, 20]}
       />
 
       <p className="text-sm text-slate-500 dark:text-slate-400">
-        {t("common.filterResultGrouped", {
-          rows: filteredCount,
-          groups: pagination.totalItems,
-        })}
+        {t("common.filterResult", { count: filteredCount })}
       </p>
     </section>
   );
