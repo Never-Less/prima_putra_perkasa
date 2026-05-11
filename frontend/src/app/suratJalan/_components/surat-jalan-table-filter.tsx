@@ -103,7 +103,7 @@ const toneStyles: Record<
 };
 
 const clampedCellClassName =
-  "overflow-hidden break-words [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]";
+  "truncate";
 
 export function SuratJalanTableFilter({
   rows,
@@ -423,7 +423,7 @@ export function SuratJalanTableFilter({
                       return (
                         <tr key={row.id} className={rowClassName}>
                           <td className={`whitespace-nowrap ${cellPadding}`}>
-                            <div className="flex flex-wrap items-center gap-1.5">
+                            <div className="flex flex-nowrap items-center gap-1.5">
                               <button
                                 type="button"
                                 onClick={() => onSelectRow?.(row)}
@@ -444,13 +444,13 @@ export function SuratJalanTableFilter({
                               ) : null}
                             </div>
                           </td>
-                          <td className={`whitespace-nowrap ${cellPadding} font-medium text-slate-800 dark:text-slate-100`}>
+                          <td className={`truncate ${cellPadding} font-medium text-slate-800 dark:text-slate-100`} title={row.noSuratJalan || "-"}>
                             {row.noSuratJalan}
                           </td>
-                          <td className={`whitespace-nowrap ${cellPadding} text-slate-600 dark:text-slate-300`}>
+                          <td className={`truncate ${cellPadding} text-slate-600 dark:text-slate-300`}>
                             {formatTanggal(row.tanggal, locale)}
                           </td>
-                          <td className={`whitespace-nowrap ${cellPadding} text-slate-600 dark:text-slate-300`}>
+                          <td className={`truncate ${cellPadding} text-slate-600 dark:text-slate-300`} title={row.kodeDepartemen || "-"}>
                             {row.kodeDepartemen || "-"}
                           </td>
                           <td className={`${cellPadding} text-slate-600 dark:text-slate-300`} title={customerLabel}>
@@ -459,8 +459,8 @@ export function SuratJalanTableFilter({
                           <td className={`${cellPadding} text-slate-600 dark:text-slate-300`} title={barangText}>
                             <div className={clampedCellClassName}>{barangText}</div>
                           </td>
-                          <td className={`whitespace-nowrap ${cellPadding} text-slate-600 dark:text-slate-300`}>{row.kendaraan}</td>
-                          <td className={`whitespace-nowrap ${cellPadding} text-slate-600 dark:text-slate-300`}>{row.tipe}</td>
+                          <td className={`truncate ${cellPadding} text-slate-600 dark:text-slate-300`} title={row.kendaraan || "-"}>{row.kendaraan}</td>
+                          <td className={`truncate ${cellPadding} text-slate-600 dark:text-slate-300`} title={row.tipe || "-"}>{row.tipe}</td>
                           <td className={`whitespace-nowrap ${cellPadding}`}>
                             <span className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${invoiceStatus.className}`}>
                               {invoiceStatus.label}

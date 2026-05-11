@@ -413,7 +413,18 @@ export function InvoiceEditForm({
   }
 
   function handleNoSuratJalanChange(options: MultiValue<SelectOption>) {
-    const nextValues = options.map((option) => option.value);
+    const nextValueMap = new Map<string, string>();
+
+    options.forEach((option) => {
+      const value = String(option.value || "").trim();
+      const key = value.toLowerCase();
+
+      if (value && !nextValueMap.has(key)) {
+        nextValueMap.set(key, value);
+      }
+    });
+
+    const nextValues = Array.from(nextValueMap.values());
 
     setForm((prev) => ({
       ...prev,

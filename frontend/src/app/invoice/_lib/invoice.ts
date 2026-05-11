@@ -249,15 +249,23 @@ function toText(value: unknown) {
 }
 
 function normalizeNoSuratJalanList(value: unknown) {
-  if (Array.isArray(value)) {
-    return value
-      .map((item) => String(item || "").trim())
-      .filter(Boolean);
-  }
+  const source = Array.isArray(value) ? value : [value];
+  const seen = new Set<string>();
+  const normalized: string[] = [];
 
-  const singleValue = String(value || "").trim();
+  source.forEach((item) => {
+    const noSuratJalan = String(item || "").trim();
+    const key = normalize(noSuratJalan);
 
-  return singleValue ? [singleValue] : [];
+    if (!noSuratJalan || seen.has(key)) {
+      return;
+    }
+
+    seen.add(key);
+    normalized.push(noSuratJalan);
+  });
+
+  return normalized;
 }
 
 function normalizeNoPoList(value: unknown) {
@@ -695,10 +703,7 @@ export function invoiceNoSuratJalanListToText(noSuratJalan: string[]) {
 }
 
 export function invoiceNoSuratJalanTextToList(value: string) {
-  return value
-    .split(/\r?\n/)
-    .map((item) => item.trim())
-    .filter(Boolean);
+  return normalizeNoSuratJalanList(value.split(/\r?\n/));
 }
 
 export function invoiceNoSuratJalanListLabel(noSuratJalan: string[]) {
