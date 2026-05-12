@@ -331,6 +331,10 @@ export const messages: Record<Locale, MessageDictionary> = {
     "suratJalan.invoiceStatus.pending": "Belum Invoice",
     "suratJalan.invoiceStatus.invoiced": "Sudah Invoice",
     "suratJalan.invoiceStatus.notRequired": "Tidak Berlaku",
+    "suratJalan.vehicle.b9021Bva": "(B 9021 BVA)",
+    "suratJalan.vehicle.mobil": "mobil",
+    "suratJalan.vehicle.motor": "motor",
+    "suratJalan.vehicle.truk": "truk",
     "suratJalan.form.title": "Form dan Preview Surat Jalan",
     "suratJalan.form.description":
       "Klik baris pada tabel untuk mengubah data, atau gunakan form ini untuk membuat surat jalan baru.",
@@ -398,7 +402,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "suratJalan.export.noPoLabel": "NO. PO",
     "suratJalan.export.meiloon.noSjLabel": "NO. SJ",
     "suratJalan.export.deliverySentenceStart":
-      "Kami kirimkan barang -barang tersebut dibawah ini dengan kendaraan mobil",
+      "Kami kirimkan barang -barang tersebut dibawah ini dengan kendaraan ",
     "suratJalan.export.table.no": "NO.",
     "suratJalan.export.table.namaBarang": "NAMA BARANG",
     "suratJalan.export.table.jumlah": "JUMLAH",
@@ -864,6 +868,10 @@ export const messages: Record<Locale, MessageDictionary> = {
     "suratJalan.invoiceStatus.pending": "Not Invoiced",
     "suratJalan.invoiceStatus.invoiced": "Invoiced",
     "suratJalan.invoiceStatus.notRequired": "Not Applicable",
+    "suratJalan.vehicle.b9021Bva": "(B 9021 BVA)",
+    "suratJalan.vehicle.mobil": "Car",
+    "suratJalan.vehicle.motor": "Motorcycle",
+    "suratJalan.vehicle.truk": "Truck",
     "suratJalan.form.title": "Delivery Note Form and Preview",
     "suratJalan.form.description":
       "Click a table row to update data, or use this form to create a new delivery note.",

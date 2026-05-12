@@ -24,6 +24,25 @@ type NoPoSelectOption = {
   label: string;
 };
 
+const defaultKendaraanOptions = [
+  {
+    value: "(B 9021 BVA)",
+    labelKey: "suratJalan.vehicle.b9021Bva",
+  },
+  {
+    value: "mobil",
+    labelKey: "suratJalan.vehicle.mobil",
+  },
+  {
+    value: "motor",
+    labelKey: "suratJalan.vehicle.motor",
+  },
+  {
+    value: "truk",
+    labelKey: "suratJalan.vehicle.truk",
+  },
+];
+
 type SuratJalanEditFormProps = {
   item?: SuratJalanItem;
   onNewData?: () => void;
@@ -255,6 +274,22 @@ export function SuratJalanEditForm({
       label: noPoOption,
     }));
   }, [normalizedNoPoOptions]);
+  const kendaraanOptions = useMemo(() => {
+    const options = [...defaultKendaraanOptions];
+    const currentKendaraan = String(form.kendaraan || "").trim();
+
+    if (
+      currentKendaraan &&
+      !options.some((option) => option.value.toLowerCase() === currentKendaraan.toLowerCase())
+    ) {
+      options.push({
+        value: currentKendaraan,
+        labelKey: "",
+      });
+    }
+
+    return options;
+  }, [form.kendaraan]);
   const selectedNoPoOption = useMemo<NoPoSelectOption | null>(() => {
     const noPoValue = String(form.noPo || "").trim();
 
@@ -384,12 +419,18 @@ export function SuratJalanEditForm({
 
             <label className={`text-sm ${tone.label}`}>
               {t("field.kendaraan")}
-              <input
+              <select
                 value={form.kendaraan}
                 onChange={(event) => setForm((prev) => ({ ...prev, kendaraan: event.target.value }))}
-                placeholder={inputPlaceholder("field.kendaraan")}
                 className={inputClassName}
-              />
+              >
+                <option value="">{selectPlaceholder("field.kendaraan")}</option>
+                {kendaraanOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.labelKey ? t(option.labelKey) : option.value}
+                  </option>
+                ))}
+              </select>
             </label>
 
             <label className={`text-sm sm:col-span-2 ${tone.label}`}>
