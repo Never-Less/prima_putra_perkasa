@@ -6,6 +6,7 @@ function normalizeBarangList(barangInput, fallbackKodeDepartemen = "") {
   }
 
   return barangInput.map((barang) => ({
+    id: barang?._id,
     nama: barang?.nama,
     spesifikasi: barang?.spesifikasi,
     kodeDepartemen: String(barang?.kodeDepartemen || fallbackKode).trim(),

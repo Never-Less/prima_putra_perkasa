@@ -11,6 +11,7 @@ export type SuratJalanTipe = "partial" | "non partial";
 type Locale = "id" | "en";
 
 export type SuratJalanBarang = {
+  id: string;
   nama: string;
   spesifikasi: string | null;
   kodeDepartemen: string;
@@ -164,6 +165,7 @@ function toSuratJalanBarang(value: unknown): SuratJalanBarang | null {
   }
 
   const barang = value as Record<string, unknown>;
+  const id = toText(barang.id || barang._id).trim();
   const nama = toText(barang.nama).trim();
   const spesifikasi = toText(barang.spesifikasi).trim() || null;
   const kodeDepartemen = toText(barang.kodeDepartemen).trim();
@@ -175,6 +177,7 @@ function toSuratJalanBarang(value: unknown): SuratJalanBarang | null {
   }
 
   return {
+    id,
     nama,
     spesifikasi,
     kodeDepartemen,

@@ -30,7 +30,7 @@ type PurchaseOrderTableFilterProps = {
 };
 
 const clampedCellClassName =
-  "overflow-hidden break-words [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]";
+  "truncate";
 
 export function PurchaseOrderTableFilter({
   rows,
@@ -289,13 +289,13 @@ export function PurchaseOrderTableFilter({
                         {isSelected ? t("common.selected") : t("common.selectRow")}
                       </button>
                     </td>
-                    <td className="whitespace-nowrap px-3 py-2 font-medium text-slate-800 dark:text-slate-100">{row.noPo || "-"}</td>
-                    <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{formatTanggal(row.tanggalPo, locale)}</td>
+                    <td className="truncate px-3 py-2 font-medium text-slate-800 dark:text-slate-100" title={row.noPo || "-"}>{row.noPo || "-"}</td>
+                    <td className="truncate px-3 py-2 text-slate-600 dark:text-slate-300">{formatTanggal(row.tanggalPo, locale)}</td>
                     <td className="px-3 py-2 text-slate-600 dark:text-slate-300" title={customerLabel}>
                       <div className={clampedCellClassName}>{customerLabel}</div>
                     </td>
-                    <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{formatRupiah(row.nominalPo, locale)}</td>
-                    <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{formatTanggal(row.tanggalInvoice, locale)}</td>
+                    <td className="truncate px-3 py-2 text-slate-600 dark:text-slate-300">{formatRupiah(row.nominalPo, locale)}</td>
+                    <td className="truncate px-3 py-2 text-slate-600 dark:text-slate-300">{formatTanggal(row.tanggalInvoice, locale)}</td>
                     <td className="px-3 py-2 text-slate-600 dark:text-slate-300" title={invoiceLabel}>
                       <div className={clampedCellClassName}>{invoiceLabel}</div>
                     </td>

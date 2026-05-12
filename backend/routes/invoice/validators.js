@@ -42,6 +42,45 @@ function parseBoolean(value) {
   return null;
 }
 
+function normalizeBarangSources(sourcesInput) {
+  if (!Array.isArray(sourcesInput)) {
+    return [];
+  }
+
+  const normalized = [];
+
+  for (const source of sourcesInput) {
+    const suratJalanId = String(source?.suratJalanId || "").trim();
+    const noSuratJalan = String(source?.noSuratJalan || "").trim();
+    const noPo = String(source?.noPo || "").trim();
+    const barangId = String(source?.barangId || "").trim();
+    const kuantitas = parseNumber(source?.kuantitas);
+
+    if (
+      !noSuratJalan ||
+      !noPo ||
+      kuantitas === null ||
+      kuantitas <= 0 ||
+      suratJalanId.length > 100 ||
+      noSuratJalan.length > 100 ||
+      noPo.length > 100 ||
+      barangId.length > 120
+    ) {
+      return null;
+    }
+
+    normalized.push({
+      suratJalanId,
+      noSuratJalan,
+      noPo,
+      barangId,
+      kuantitas,
+    });
+  }
+
+  return normalized;
+}
+
 function normalizeBarangList(barangInput) {
   if (!Array.isArray(barangInput) || barangInput.length === 0) {
     return null;
@@ -56,6 +95,8 @@ function normalizeBarangList(barangInput) {
     const unit = String(item?.unit || "").trim();
     const hargasatuan = parseNumber(item?.hargaSatuan);
     const jumlah = parseNumber(item?.jumlah);
+    const noPoManual = String(item?.noPoManual || "").trim();
+    const sources = normalizeBarangSources(item?.sources);
 
     if (
       !namaBarang ||
@@ -65,7 +106,9 @@ function normalizeBarangList(barangInput) {
       hargasatuan === null ||
       hargasatuan < 0 ||
       jumlah === null ||
-      jumlah < 0
+      jumlah < 0 ||
+      noPoManual.length > 100 ||
+      sources === null
     ) {
       return null;
     }
@@ -77,6 +120,8 @@ function normalizeBarangList(barangInput) {
       unit: unit,
       hargaSatuan: hargasatuan,
       jumlah: jumlah,
+      noPoManual: noPoManual,
+      sources: sources,
     });
   }
 

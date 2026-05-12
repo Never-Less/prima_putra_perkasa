@@ -290,7 +290,7 @@ export default function InvoiceExportPage() {
               ) : (
                 <>
                   <div className="overflow-x-auto border border-slate-300 print:overflow-visible">
-                    <table className="w-full border-collapse text-sm text-slate-800 print:text-[11px]">
+                    <table className="w-full table-fixed border-collapse text-sm text-slate-800 print:text-[11px]">
                       <thead className="bg-slate-100">
                         <tr>
                           <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">
@@ -326,26 +326,26 @@ export default function InvoiceExportPage() {
 
                           return (
                             <tr key={row.id} className={index % 2 ? "bg-slate-50" : "bg-white"}>
-                              <td className="border border-slate-300 px-3 py-2 print:px-2 print:py-1.5">
+                              <td className="truncate border border-slate-300 px-3 py-2 print:px-2 print:py-1.5">
                                 {formatTanggal(row.tanggal, locale)}
                               </td>
-                              <td className="border border-slate-300 px-3 py-2 font-medium print:px-2 print:py-1.5">
+                              <td className="truncate border border-slate-300 px-3 py-2 font-medium print:px-2 print:py-1.5" title={row.noInvoice || "-"}>
                                 {row.noInvoice || "-"}
                               </td>
-                              <td className="border border-slate-300 px-3 py-2 print:px-2 print:py-1.5">
+                              <td className="truncate border border-slate-300 px-3 py-2 print:px-2 print:py-1.5" title={customerLabel}>
                                 {customerLabel}
                               </td>
-                              <td className="border border-slate-300 px-3 py-2 print:px-2 print:py-1.5">
+                              <td className="truncate border border-slate-300 px-3 py-2 print:px-2 print:py-1.5">
                                 {formatRupiah(row.subtotal, locale)}
                               </td>
-                              <td className="border border-slate-300 px-3 py-2 print:px-2 print:py-1.5">
+                              <td className="truncate border border-slate-300 px-3 py-2 print:px-2 print:py-1.5">
                                 {formatRupiah(row.ppnAmount, locale)}
                               </td>
-                              <td className="border border-slate-300 px-3 py-2 font-medium print:px-2 print:py-1.5">
+                              <td className="truncate border border-slate-300 px-3 py-2 font-medium print:px-2 print:py-1.5">
                                 {formatRupiah(row.grandTotal, locale)}
                               </td>
                               <td
-                                className={`border border-slate-300 px-3 py-2 font-medium print:px-2 print:py-1.5 ${
+                                className={`truncate border border-slate-300 px-3 py-2 font-medium print:px-2 print:py-1.5 ${
                                   row.isPaid
                                     ? "bg-emerald-100 text-emerald-900"
                                     : "bg-rose-100 text-rose-900"
@@ -353,7 +353,7 @@ export default function InvoiceExportPage() {
                               >
                                 {row.isPaid ? paidLabel : unpaidLabel}
                               </td>
-                              <td className="border border-slate-300 px-3 py-2 print:px-2 print:py-1.5">
+                              <td className="truncate border border-slate-300 px-3 py-2 print:px-2 print:py-1.5">
                                 {formatTanggal(row.tanggalBayar, locale)}
                               </td>
                             </tr>
@@ -364,17 +364,17 @@ export default function InvoiceExportPage() {
                         <tr>
                           <td
                             colSpan={3}
-                            className="border border-slate-300 px-3 py-2 text-right font-semibold print:px-2 print:py-1.5"
+                            className="truncate border border-slate-300 px-3 py-2 text-right font-semibold print:px-2 print:py-1.5"
                           >
                             {t("invoice.exportPage.grandTotalRowLabel")}
                           </td>
-                          <td className="border border-slate-300 px-3 py-2 font-semibold print:px-2 print:py-1.5">
+                          <td className="truncate border border-slate-300 px-3 py-2 font-semibold print:px-2 print:py-1.5">
                             {formatRupiah(totals.subtotal, locale)}
                           </td>
-                          <td className="border border-slate-300 px-3 py-2 font-semibold print:px-2 print:py-1.5">
+                          <td className="truncate border border-slate-300 px-3 py-2 font-semibold print:px-2 print:py-1.5">
                             {formatRupiah(totals.ppnAmount, locale)}
                           </td>
-                          <td className="border border-slate-300 px-3 py-2 font-semibold print:px-2 print:py-1.5">
+                          <td className="truncate border border-slate-300 px-3 py-2 font-semibold print:px-2 print:py-1.5">
                             {formatRupiah(totals.grandTotal, locale)}
                           </td>
                           <td className="border border-slate-300 px-3 py-2 font-semibold print:px-2 print:py-1.5" />
@@ -407,7 +407,7 @@ export default function InvoiceExportPage() {
               </div>
 
               <div className="overflow-x-auto border border-slate-300 print:overflow-visible">
-                <table className="w-full border-collapse text-sm text-slate-800 print:text-[11px]">
+                <table className="w-full table-fixed border-collapse text-sm text-slate-800 print:text-[11px]">
                   <colgroup>
                     <col style={{ width: "10%" }} />
                     <col style={{ width: "60%" }} />
@@ -429,13 +429,13 @@ export default function InvoiceExportPage() {
                   <tbody>
                     {factoryBillingRows.map((row, index) => (
                       <tr key={`${row.namaCustomer}-${index}`} className={index % 2 ? "bg-slate-50" : "bg-white"}>
-                        <td className="border border-slate-300 px-3 py-2 align-top print:px-2 print:py-1.5">
+                        <td className="truncate border border-slate-300 px-3 py-2 align-top print:px-2 print:py-1.5">
                           {index + 1}
                         </td>
-                        <td className="border border-slate-300 px-3 py-2 align-top break-words print:px-2 print:py-1.5">
+                        <td className="truncate border border-slate-300 px-3 py-2 align-top print:px-2 print:py-1.5" title={row.namaCustomer}>
                           {row.namaCustomer}
                         </td>
-                        <td className="border border-slate-300 px-3 py-2 text-right align-top print:px-2 print:py-1.5">
+                        <td className="truncate border border-slate-300 px-3 py-2 text-right align-top print:px-2 print:py-1.5">
                           {formatRupiah(row.totalInvoice, locale)}
                         </td>
                       </tr>
@@ -443,10 +443,10 @@ export default function InvoiceExportPage() {
                   </tbody>
                   <tfoot>
                     <tr className="bg-slate-100 font-semibold">
-                      <td className="border border-slate-300 px-3 py-2 print:px-2 print:py-1.5" colSpan={2}>
+                      <td className="truncate border border-slate-300 px-3 py-2 print:px-2 print:py-1.5" colSpan={2}>
                         {t("invoice.exportPage.factoryBillingGrandTotal")}
                       </td>
-                      <td className="border border-slate-300 px-3 py-2 text-right print:px-2 print:py-1.5">
+                      <td className="truncate border border-slate-300 px-3 py-2 text-right print:px-2 print:py-1.5">
                         {formatRupiah(factoryBillingGrandTotal, locale)}
                       </td>
                     </tr>

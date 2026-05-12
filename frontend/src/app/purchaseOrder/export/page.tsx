@@ -226,22 +226,22 @@ export default function PurchaseOrderExportPage() {
                             invoiceLabelMap.get(row.noInvoice) || row.noInvoice || "-";
                           return (
                             <tr key={row.id} className={index % 2 ? "bg-slate-50" : "bg-white"}>
-                              <td className="border border-slate-300 px-3 py-2 align-top break-words print:px-2 print:py-1.5">
+                              <td className="truncate border border-slate-300 px-3 py-2 align-top print:px-2 print:py-1.5" title={row.noPo || "-"}>
                                 {row.noPo || "-"}
                               </td>
-                              <td className="border border-slate-300 px-3 py-2 align-top break-words print:px-2 print:py-1.5">
+                              <td className="truncate border border-slate-300 px-3 py-2 align-top print:px-2 print:py-1.5">
                                 {formatTanggal(row.tanggalPo, locale)}
                               </td>
-                              <td className="border border-slate-300 px-3 py-2 align-top break-words print:px-2 print:py-1.5">
+                              <td className="truncate border border-slate-300 px-3 py-2 align-top print:px-2 print:py-1.5" title={customerLabel}>
                                 {customerLabel}
                               </td>
-                              <td className="border border-slate-300 px-3 py-2 align-top break-words print:px-2 print:py-1.5">
+                              <td className="truncate border border-slate-300 px-3 py-2 align-top print:px-2 print:py-1.5">
                                 {formatRupiah(row.nominalPo, locale)}
                               </td>
-                              <td className="border border-slate-300 px-3 py-2 align-top break-words print:px-2 print:py-1.5">
+                              <td className="truncate border border-slate-300 px-3 py-2 align-top print:px-2 print:py-1.5">
                                 {formatTanggal(row.tanggalInvoice, locale)}
                               </td>
-                              <td className="border border-slate-300 px-3 py-2 align-top break-words print:px-2 print:py-1.5">
+                              <td className="truncate border border-slate-300 px-3 py-2 align-top print:px-2 print:py-1.5" title={invoiceLabel}>
                                 {invoiceLabel}
                               </td>
                             </tr>

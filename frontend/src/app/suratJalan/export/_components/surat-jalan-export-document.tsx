@@ -78,6 +78,14 @@ function formatTemplateDate(value: string, locale: "id" | "en") {
   return formatAppUppercaseDate(value, locale);
 }
 
+function formatExportKendaraan(value: string) {
+  return String(value || "")
+    .trim()
+    .replace(/^\((.*)\)$/, "$1")
+    .trim()
+    .toUpperCase();
+}
+
 function buildTemplateRows(suratJalan: SuratJalanItem, minimumRows = 8): TemplateRow[] {
   const filledRows = (suratJalan.barang || []).map((barang, index) => {
     const namaBarang = String(barang.nama || "").trim();
@@ -178,10 +186,7 @@ export function SuratJalanExportDocument({
   );
   const customerAddress = useMemo(() => toUpperText(customer?.alamat || ""), [customer?.alamat]);
   const customerAttn = useMemo(() => toUpperText(customer?.atasNama || ""), [customer?.atasNama]);
-  const kendaraan = useMemo(
-    () => String(suratJalan.kendaraan || "").trim().toUpperCase(),
-    [suratJalan.kendaraan]
-  );
+  const kendaraan = useMemo(() => formatExportKendaraan(suratJalan.kendaraan || ""), [suratJalan.kendaraan]).toLocaleLowerCase();
   const isMeiloonCustomer = useMemo(
     () => normalizeCustomerName(customer?.nama || "") === meiloonCustomerName,
     [customer?.nama]
@@ -243,7 +248,7 @@ export function SuratJalanExportDocument({
 
           <p className="mt-1 text-[13px]">
             {t("suratJalan.export.deliverySentenceStart")}{" "}
-            <span className="font-bold">({kendaraan || "-"})</span>
+            <span>{kendaraan || "-"}</span>
           </p>
 
           <div className="mt-1 border-2 border-black">
@@ -382,7 +387,7 @@ export function SuratJalanExportDocument({
 
         <p className="mt-6 text-[13px]">
           {t("suratJalan.export.deliverySentenceStart")}{" "}
-          <span className="font-bold">({kendaraan || "-"})</span>
+          <span>{kendaraan || "-"}</span>
         </p>
 
         <div className="mt-1 border-2 border-black">

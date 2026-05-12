@@ -502,7 +502,7 @@ export default function LaporanKeuanganPage() {
             </div>
           ) : (
             <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
-              <table className="w-full min-w-[860px] text-left text-sm">
+              <table className="w-full min-w-[860px] table-fixed text-left text-sm">
                 <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:bg-slate-900 dark:text-slate-400">
                   <tr>
                     <th className="px-3 py-2">{t("field.tanggal")}</th>
@@ -520,16 +520,18 @@ export default function LaporanKeuanganPage() {
 
                     return (
                       <tr key={row.id} className="text-slate-700 dark:text-slate-200">
-                        <td className="whitespace-nowrap px-3 py-2">{row.tanggal ? row.tanggal.slice(0, 10) : "-"}</td>
-                        <td className="whitespace-nowrap px-3 py-2 font-medium">{row.noInvoice || "-"}</td>
-                        <td className="px-3 py-2">{customerLabelMap.get(row.idCustomer) || row.idCustomer || "-"}</td>
-                        <td className="whitespace-nowrap px-3 py-2 text-right font-medium">
+                        <td className="truncate px-3 py-2">{row.tanggal ? row.tanggal.slice(0, 10) : "-"}</td>
+                        <td className="truncate px-3 py-2 font-medium" title={row.noInvoice || "-"}>{row.noInvoice || "-"}</td>
+                        <td className="truncate px-3 py-2" title={customerLabelMap.get(row.idCustomer) || row.idCustomer || "-"}>
+                          {customerLabelMap.get(row.idCustomer) || row.idCustomer || "-"}
+                        </td>
+                        <td className="truncate px-3 py-2 text-right font-medium">
                           {formatLaporanKeuanganCurrency(row.grandTotal, locale)}
                         </td>
-                        <td className="whitespace-nowrap px-3 py-2 text-right font-medium">
+                        <td className="truncate px-3 py-2 text-right font-medium">
                           {formatLaporanKeuanganCurrency(rowPembelian, locale)}
                         </td>
-                        <td className="whitespace-nowrap px-3 py-2 text-right font-medium">
+                        <td className="truncate px-3 py-2 text-right font-medium">
                           {formatLaporanKeuanganCurrency(rowProfit, locale)}
                         </td>
                       </tr>
@@ -538,10 +540,10 @@ export default function LaporanKeuanganPage() {
                 </tbody>
                 <tfoot className="bg-slate-50 font-semibold text-slate-900 dark:bg-slate-900 dark:text-slate-100">
                   <tr>
-                    <td className="px-3 py-2 text-right" colSpan={3}>{t("field.grossProfit")}</td>
-                    <td className="whitespace-nowrap px-3 py-2 text-right">{formatLaporanKeuanganCurrency(invoiceGrandTotal, locale)}</td>
-                    <td className="whitespace-nowrap px-3 py-2 text-right">{formatLaporanKeuanganCurrency(purchaseTotal, locale)}</td>
-                    <td className="whitespace-nowrap px-3 py-2 text-right">{formatLaporanKeuanganCurrency(grossProfit, locale)}</td>
+                    <td className="truncate px-3 py-2 text-right" colSpan={3}>{t("field.grossProfit")}</td>
+                    <td className="truncate px-3 py-2 text-right">{formatLaporanKeuanganCurrency(invoiceGrandTotal, locale)}</td>
+                    <td className="truncate px-3 py-2 text-right">{formatLaporanKeuanganCurrency(purchaseTotal, locale)}</td>
+                    <td className="truncate px-3 py-2 text-right">{formatLaporanKeuanganCurrency(grossProfit, locale)}</td>
                   </tr>
                 </tfoot>
               </table>
@@ -587,7 +589,7 @@ export default function LaporanKeuanganPage() {
 
             {!isYearlyLoading && !yearlyErrorMessage ? (
               <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
-                <table className="w-full min-w-[920px] text-left text-sm">
+                <table className="w-full min-w-[920px] table-fixed text-left text-sm">
                   <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:bg-slate-900 dark:text-slate-400">
                     <tr>
                       <th className="px-3 py-2">{t("field.bulan")}</th>
@@ -601,22 +603,22 @@ export default function LaporanKeuanganPage() {
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                     {yearlyRows.map((row) => (
                       <tr key={row.bulan} className="text-slate-700 dark:text-slate-200">
-                        <td className="whitespace-nowrap px-3 py-2 font-medium">
+                        <td className="truncate px-3 py-2 font-medium">
                           {formatLaporanKeuanganMonth(row.bulan, locale)}
                         </td>
-                        <td className="whitespace-nowrap px-3 py-2 text-right">
+                        <td className="truncate px-3 py-2 text-right">
                           {formatLaporanKeuanganCurrency(row.totalInvoice, locale)}
                         </td>
-                        <td className="whitespace-nowrap px-3 py-2 text-right">
+                        <td className="truncate px-3 py-2 text-right">
                           {formatLaporanKeuanganCurrency(row.totalPembelian, locale)}
                         </td>
-                        <td className="whitespace-nowrap px-3 py-2 text-right">
+                        <td className="truncate px-3 py-2 text-right">
                           {formatLaporanKeuanganCurrency(row.grossProfit, locale)}
                         </td>
-                        <td className="whitespace-nowrap px-3 py-2 text-right">
+                        <td className="truncate px-3 py-2 text-right">
                           {formatLaporanKeuanganCurrency(row.totalBiayaOperasional, locale)}
                         </td>
-                        <td className={`whitespace-nowrap px-3 py-2 text-right font-semibold ${
+                        <td className={`truncate px-3 py-2 text-right font-semibold ${
                           row.netProfit >= 0
                             ? "text-sky-700 dark:text-sky-300"
                             : "text-red-700 dark:text-red-300"
@@ -628,12 +630,12 @@ export default function LaporanKeuanganPage() {
                   </tbody>
                   <tfoot className="bg-slate-50 font-semibold text-slate-900 dark:bg-slate-900 dark:text-slate-100">
                     <tr>
-                      <td className="px-3 py-2">{t("laporanKeuangan.yearlyTable.total")}</td>
-                      <td className="whitespace-nowrap px-3 py-2 text-right">{formatLaporanKeuanganCurrency(yearlyTotals.totalInvoice, locale)}</td>
-                      <td className="whitespace-nowrap px-3 py-2 text-right">{formatLaporanKeuanganCurrency(yearlyTotals.totalPembelian, locale)}</td>
-                      <td className="whitespace-nowrap px-3 py-2 text-right">{formatLaporanKeuanganCurrency(yearlyTotals.grossProfit, locale)}</td>
-                      <td className="whitespace-nowrap px-3 py-2 text-right">{formatLaporanKeuanganCurrency(yearlyTotals.totalBiayaOperasional, locale)}</td>
-                      <td className={`whitespace-nowrap px-3 py-2 text-right ${
+                      <td className="truncate px-3 py-2">{t("laporanKeuangan.yearlyTable.total")}</td>
+                      <td className="truncate px-3 py-2 text-right">{formatLaporanKeuanganCurrency(yearlyTotals.totalInvoice, locale)}</td>
+                      <td className="truncate px-3 py-2 text-right">{formatLaporanKeuanganCurrency(yearlyTotals.totalPembelian, locale)}</td>
+                      <td className="truncate px-3 py-2 text-right">{formatLaporanKeuanganCurrency(yearlyTotals.grossProfit, locale)}</td>
+                      <td className="truncate px-3 py-2 text-right">{formatLaporanKeuanganCurrency(yearlyTotals.totalBiayaOperasional, locale)}</td>
+                      <td className={`truncate px-3 py-2 text-right ${
                         yearlyTotals.netProfit >= 0
                           ? "text-sky-700 dark:text-sky-300"
                           : "text-red-700 dark:text-red-300"

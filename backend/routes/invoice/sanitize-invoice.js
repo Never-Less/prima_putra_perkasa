@@ -36,6 +36,31 @@ function getInvoiceNoPoList(invoice) {
   return normalizeNoPoList(invoice?.noPo);
 }
 
+function sanitizeBarangList(barangInput) {
+  if (!Array.isArray(barangInput)) {
+    return [];
+  }
+
+  return barangInput.map((barang) => ({
+    namaBarang: barang?.namaBarang,
+    spesifikasi: barang?.spesifikasi || "",
+    kuantitas: barang?.kuantitas,
+    unit: barang?.unit,
+    hargaSatuan: barang?.hargaSatuan,
+    jumlah: barang?.jumlah,
+    noPoManual: normalizeText(barang?.noPoManual),
+    sources: Array.isArray(barang?.sources)
+      ? barang.sources.map((source) => ({
+          suratJalanId: normalizeText(source?.suratJalanId),
+          noSuratJalan: normalizeText(source?.noSuratJalan),
+          noPo: normalizeText(source?.noPo),
+          barangId: normalizeText(source?.barangId),
+          kuantitas: source?.kuantitas,
+        }))
+      : [],
+  }));
+}
+
 function sanitizeInvoice(invoice) {
   const noPoList = getInvoiceNoPoList(invoice);
 
@@ -47,7 +72,7 @@ function sanitizeInvoice(invoice) {
     noPoList,
     noSuratJalan: invoice.noSuratJalan,
     idCustomer: invoice.idCustomer,
-    barang: invoice.barang,
+    barang: sanitizeBarangList(invoice.barang),
     isPpn: invoice.isPpn,
     isPaid: invoice.isPaid,
     tanggalBayar: invoice.tanggalBayar,

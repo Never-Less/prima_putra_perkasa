@@ -97,53 +97,26 @@ router.get("/", async (req, res) => {
     }
 
     const totalRows = await SuratJalan.countDocuments(query);
-    const groupedBasePipeline = [
-      { $match: query },
-      {
-        $group: {
-          _id: "$noPo",
-          latestCreatedAt: { $max: "$createdAt" },
-        },
-      },
-    ];
-    const totalGroupsResult = await SuratJalan.aggregate([
-      ...groupedBasePipeline,
-      { $count: "count" },
-    ]);
-    const totalGroups = Number(totalGroupsResult[0]?.count || 0);
+    const noPoGroups = await SuratJalan.distinct("noPo", query);
+    const totalGroups = noPoGroups.length;
     const pagination = buildPaginationMeta(
-      totalGroups,
+      totalRows,
       hasPagination ? requestedPage : 1,
-      hasPagination ? requestedLimit : Math.max(totalGroups, 1)
+      hasPagination ? requestedLimit : Math.max(totalRows, 1)
     );
 
-    let suratJalanList = [];
+    let suratJalanQuery = SuratJalan.find(query).sort({
+      createdAt: -1,
+      noPo: 1,
+    });
 
-    if (totalGroups > 0) {
-      let groupPipeline = [
-        ...groupedBasePipeline,
-        { $sort: { latestCreatedAt: -1, _id: 1 } },
-      ];
-
-      if (hasPagination) {
-        groupPipeline = groupPipeline.concat([
-          { $skip: (pagination.page - 1) * pagination.limit },
-          { $limit: pagination.limit },
-        ]);
-      }
-
-      const paginatedGroups = await SuratJalan.aggregate(groupPipeline);
-      const noPoValues = paginatedGroups
-        .map((group) => String(group?._id || "").trim())
-        .filter(Boolean);
-
-      if (noPoValues.length > 0) {
-        suratJalanList = await SuratJalan.find({
-          ...query,
-          noPo: { $in: noPoValues },
-        }).sort({ createdAt: -1 });
-      }
+    if (hasPagination) {
+      suratJalanQuery = suratJalanQuery
+        .skip((pagination.page - 1) * pagination.limit)
+        .limit(pagination.limit);
     }
+
+    const suratJalanList = totalRows > 0 ? await suratJalanQuery : [];
 
     return res.json({
       suratJalan: suratJalanList.map(sanitizeSuratJalan),

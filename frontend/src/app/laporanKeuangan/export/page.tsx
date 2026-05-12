@@ -1075,7 +1075,7 @@ export default function LaporanKeuanganExportPage() {
 
               {reportMode === "yearly" ? (
                 <div className="overflow-x-auto border border-slate-300 print:overflow-visible">
-                  <table className="w-full min-w-[900px] border-collapse text-sm text-slate-900 print:text-[11px]">
+                  <table className="w-full min-w-[900px] table-fixed border-collapse text-sm text-slate-900 print:text-[11px]">
                     <thead className="bg-amber-50 text-center font-semibold uppercase">
                       <tr>
                         <th className="w-40 border border-slate-400 px-2 py-2">{t("field.bulan")}</th>
@@ -1089,22 +1089,22 @@ export default function LaporanKeuanganExportPage() {
                     <tbody>
                       {yearlyRows.map((row) => (
                         <tr key={row.bulan}>
-                          <td className="border border-slate-300 px-2 py-1 align-top font-medium">
+                          <td className="truncate border border-slate-300 px-2 py-1 align-top font-medium">
                             {formatLaporanKeuanganMonth(row.bulan, locale)}
                           </td>
-                          <td className="border border-slate-300 px-2 py-1 text-right align-top">
+                          <td className="truncate border border-slate-300 px-2 py-1 text-right align-top">
                             {formatAccountingNumber(row.totalInvoice, locale)}
                           </td>
-                          <td className="border border-slate-300 px-2 py-1 text-right align-top">
+                          <td className="truncate border border-slate-300 px-2 py-1 text-right align-top">
                             {formatAccountingNumber(row.totalPembelian, locale)}
                           </td>
-                          <td className="border border-slate-300 px-2 py-1 text-right align-top">
+                          <td className="truncate border border-slate-300 px-2 py-1 text-right align-top">
                             {formatAccountingNumber(row.grossProfit, locale)}
                           </td>
-                          <td className="border border-slate-300 px-2 py-1 text-right align-top">
+                          <td className="truncate border border-slate-300 px-2 py-1 text-right align-top">
                             {formatAccountingNumber(row.totalBiayaOperasional, locale)}
                           </td>
-                          <td className={`border border-slate-300 px-2 py-1 text-right align-top font-semibold ${
+                          <td className={`truncate border border-slate-300 px-2 py-1 text-right align-top font-semibold ${
                             row.netProfit >= 0 ? "text-slate-900" : "text-red-700"
                           }`}>
                             {formatAccountingNumber(row.netProfit, locale)}
@@ -1112,22 +1112,22 @@ export default function LaporanKeuanganExportPage() {
                         </tr>
                       ))}
                       <tr className="bg-amber-100 font-semibold">
-                        <td className="border border-slate-300 px-2 py-1 align-top">
+                        <td className="truncate border border-slate-300 px-2 py-1 align-top">
                           {t("laporanKeuangan.yearlyTable.total")}
                         </td>
-                        <td className="border border-slate-300 px-2 py-1 text-right align-top">
+                        <td className="truncate border border-slate-300 px-2 py-1 text-right align-top">
                           {formatAccountingNumber(yearlyTotals.totalInvoice, locale)}
                         </td>
-                        <td className="border border-slate-300 px-2 py-1 text-right align-top">
+                        <td className="truncate border border-slate-300 px-2 py-1 text-right align-top">
                           {formatAccountingNumber(yearlyTotals.totalPembelian, locale)}
                         </td>
-                        <td className="border border-slate-300 px-2 py-1 text-right align-top">
+                        <td className="truncate border border-slate-300 px-2 py-1 text-right align-top">
                           {formatAccountingNumber(yearlyTotals.grossProfit, locale)}
                         </td>
-                        <td className="border border-slate-300 px-2 py-1 text-right align-top">
+                        <td className="truncate border border-slate-300 px-2 py-1 text-right align-top">
                           {formatAccountingNumber(yearlyTotals.totalBiayaOperasional, locale)}
                         </td>
-                        <td className={`border border-slate-300 px-2 py-1 text-right align-top ${
+                        <td className={`truncate border border-slate-300 px-2 py-1 text-right align-top ${
                           yearlyTotals.netProfit >= 0 ? "text-slate-900" : "text-red-700"
                         }`}>
                           {formatAccountingNumber(yearlyTotals.netProfit, locale)}
@@ -1138,7 +1138,7 @@ export default function LaporanKeuanganExportPage() {
                 </div>
               ) : (
                 <div className="overflow-x-auto border border-slate-300 print:overflow-visible">
-                  <table className="w-full min-w-[980px] border-collapse text-sm text-slate-900 print:text-[11px]">
+                  <table className="w-full min-w-[980px] table-fixed border-collapse text-sm text-slate-900 print:text-[11px]">
                     <thead className="bg-amber-50 text-center font-semibold uppercase">
                       <tr>
                         <th rowSpan={2} className="w-24 border border-slate-400 px-2 py-2">{t("laporanKeuangan.report.date")}</th>
@@ -1169,21 +1169,21 @@ export default function LaporanKeuanganExportPage() {
 
                         return (
                           <tr key={`${row.kind}-${index}`} className={`${rowClassName} ${isSpacer ? "h-6" : ""}`}>
-                            <td className="border border-slate-300 px-2 py-1 align-top">{row.date || ""}</td>
-                            <td className={`border border-slate-300 px-2 py-1 align-top ${row.kind === "invoiceDetail" ? "pl-8" : ""}`}>
+                            <td className="truncate border border-slate-300 px-2 py-1 align-top">{row.date || ""}</td>
+                            <td className={`truncate border border-slate-300 px-2 py-1 align-top ${row.kind === "invoiceDetail" ? "pl-8" : ""}`} title={row.description || ""}>
                               {row.description || ""}
                             </td>
-                            <td className="border border-slate-300 px-2 py-1 text-right align-top">
+                            <td className="truncate border border-slate-300 px-2 py-1 text-right align-top">
                               {formatAccountingNumber(row.debet, locale)}
                             </td>
-                            <td className="border border-slate-300 px-2 py-1 text-right align-top">
+                            <td className="truncate border border-slate-300 px-2 py-1 text-right align-top">
                               {formatAccountingNumber(row.kreditPpn, locale)}
                             </td>
-                            <td className="border border-slate-300 px-2 py-1 text-right align-top">
+                            <td className="truncate border border-slate-300 px-2 py-1 text-right align-top">
                               {formatAccountingNumber(row.kreditNonPpn, locale)}
                             </td>
                             <td
-                              className={`border border-slate-300 px-2 py-1 align-top ${
+                              className={`truncate border border-slate-300 px-2 py-1 align-top ${
                                 row.isHutang
                                   ? "font-semibold text-red-700"
                                   : row.bayar
@@ -1193,7 +1193,7 @@ export default function LaporanKeuanganExportPage() {
                             >
                               {row.bayar || ""}
                             </td>
-                            <td className="border border-slate-300 px-2 py-1 align-top">{row.note || ""}</td>
+                            <td className="truncate border border-slate-300 px-2 py-1 align-top" title={row.note || ""}>{row.note || ""}</td>
                           </tr>
                         );
                       })}

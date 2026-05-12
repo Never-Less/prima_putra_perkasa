@@ -27,7 +27,7 @@ type PembelianTableFilterProps = {
 };
 
 const clampedCellClassName =
-  "overflow-hidden break-words [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]";
+  "truncate";
 
 export function PembelianTableFilter({
   rows,
@@ -362,30 +362,30 @@ export function PembelianTableFilter({
                               {isSelected ? t("common.selected") : t("common.selectRow")}
                             </button>
                           </td>
-                          <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">
+                          <td className="truncate px-3 py-2 text-slate-600 dark:text-slate-300">
                             {formatTanggal(row.tanggalNota, locale)}
                           </td>
-                          <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">
+                          <td className="truncate px-3 py-2 text-slate-600 dark:text-slate-300" title={group.noInvoice || "-"}>
                             {group.noInvoice || "-"}
                           </td>
                           <td className="px-3 py-2 font-medium text-slate-800 dark:text-slate-100" title={row.namaSupplier || "-"}>
                             <div className={clampedCellClassName}>{row.namaSupplier || "-"}</div>
                           </td>
-                          <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{row.noNota || "-"}</td>
-                          <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">
+                          <td className="truncate px-3 py-2 text-slate-600 dark:text-slate-300" title={row.noNota || "-"}>{row.noNota || "-"}</td>
+                          <td className="truncate px-3 py-2 text-slate-600 dark:text-slate-300">
                             {row.hutang ? t("common.true") : t("common.false")}
                           </td>
-                          <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">
+                          <td className="truncate px-3 py-2 text-slate-600 dark:text-slate-300">
                             {row.ppn ? t("common.true") : t("common.false")}
                           </td>
-                          <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">{row.lamaHutang}</td>
-                          <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">
+                          <td className="truncate px-3 py-2 text-slate-600 dark:text-slate-300">{row.lamaHutang}</td>
+                          <td className="truncate px-3 py-2 text-slate-600 dark:text-slate-300">
                             {formatRupiah(row.nilaiNota, locale)}
                           </td>
-                          <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">
+                          <td className="truncate px-3 py-2 text-slate-600 dark:text-slate-300">
                             {formatTanggal(row.tanggalJatuhTempo, locale)}
                           </td>
-                          <td className="whitespace-nowrap px-3 py-2 text-slate-600 dark:text-slate-300">
+                          <td className="truncate px-3 py-2 text-slate-600 dark:text-slate-300">
                             {formatTanggal(row.tanggalBayar, locale)}
                           </td>
                         </tr>
