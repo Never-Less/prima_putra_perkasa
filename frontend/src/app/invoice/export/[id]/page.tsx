@@ -7,7 +7,7 @@ import { formatAppUppercaseDate } from "../../../_lib/date";
 import { ApiRequestError } from "../../../_lib/api-client";
 import { useI18n } from "../../../_i18n/provider";
 import { fetchCustomerById, type CustomerItem } from "../../../customer/_lib/customer";
-import { fetchInvoiceById, type InvoiceItem } from "../../_lib/invoice";
+import { fetchInvoiceById, invoiceBarangNoPoLabel, type InvoiceItem } from "../../_lib/invoice";
 
 const companyProfile = {
   name: "CV. PRIMA PUTRA PERKASA",
@@ -44,6 +44,7 @@ type DefaultInvoiceTemplateRow = {
   unit: string;
   hargaSatuan: string;
   jumlah: string;
+  noPo: string;
 };
 
 type MeiloonInvoiceTemplateRow = {
@@ -212,6 +213,7 @@ function createEmptyDefaultInvoiceRow(): DefaultInvoiceTemplateRow {
     unit: "",
     hargaSatuan: "",
     jumlah: "",
+    noPo: "",
   };
 }
 
@@ -236,6 +238,7 @@ function buildDefaultTemplateRows(invoice: InvoiceItem | null) {
     unit: toUpperText(barang.unit),
     hargaSatuan: formatPlainNumber(Number(barang.hargaSatuan || 0)),
     jumlah: formatPlainNumber(Number(barang.jumlah || 0)),
+    noPo: invoiceBarangNoPoLabel(barang, invoice?.noPoList || []),
   }));
 }
 
@@ -254,7 +257,7 @@ function buildMeiloonTemplateRows(invoice: InvoiceItem | null) {
       qty: formatQuantity(Number(barang.kuantitas || 0)),
       hargaSatuan: formatPlainNumber(Number(barang.hargaSatuan || 0)),
       jumlah: formatPlainNumber(Number(barang.jumlah || 0)),
-      noPo: String(invoice?.noPo || "").trim(),
+      noPo: invoiceBarangNoPoLabel(barang, invoice?.noPoList || []),
     };
   });
 }
@@ -268,6 +271,25 @@ type DefaultInvoiceTableProps = CommonTemplateProps & {
   className?: string;
 };
 
+type CurrencyTableValueProps = {
+  value: string;
+};
+
+function CurrencyTableValue({ value }: CurrencyTableValueProps) {
+  const normalizedValue = String(value || "").trim();
+
+  if (!normalizedValue) {
+    return null;
+  }
+
+  return (
+    <span className="inline-flex items-baseline justify-center gap-[2px] whitespace-nowrap text-[10px] leading-none">
+      <span>Rp.</span>
+      <span>{normalizedValue}</span>
+    </span>
+  );
+}
+
 function DefaultInvoiceTable({ rows, t, className = "" }: DefaultInvoiceTableProps) {
   return (
     <div className={`flex flex-col border border-black ${className}`.trim()}>
@@ -278,6 +300,7 @@ function DefaultInvoiceTable({ rows, t, className = "" }: DefaultInvoiceTablePro
           <col style={{ width: "50px" }} />
           <col style={{ width: "38px" }} />
           <col style={{ width: "66px" }} />
+          <col style={{ width: "74px" }} />
           <col style={{ width: "74px" }} />
         </colgroup>
         <thead>
@@ -300,6 +323,9 @@ function DefaultInvoiceTable({ rows, t, className = "" }: DefaultInvoiceTablePro
             <th className="px-1 py-0.5 text-center text-[11px] font-bold">
               {t("invoice.export.table.jumlah")}
             </th>
+            <th className="border-l border-black px-1 py-0.5 text-center text-[11px] font-bold">
+              {t("invoice.export.table.noPo")}
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -309,22 +335,13 @@ function DefaultInvoiceTable({ rows, t, className = "" }: DefaultInvoiceTablePro
               <td className="px-1.5 align-middle text-[11px] leading-[1.15]">{row.namaBarang}</td>
               <td className="px-1 text-center align-middle text-[11px]">{row.qty}</td>
               <td className="px-1 text-center align-middle text-[11px]">{row.unit}</td>
-              <td className="px-1 py-0.5 align-middle text-[11px]">
-                {row.hargaSatuan ? (
-                  <div className="flex flex-col items-center justify-center leading-[1.05]">
-                    <span>Rp.</span>
-                    <span>{row.hargaSatuan}</span>
-                  </div>
-                ) : null}
+              <td className="px-0.5 py-0.5 text-center align-middle text-[11px]">
+                <CurrencyTableValue value={row.hargaSatuan} />
               </td>
-              <td className="px-1 py-0.5 align-middle text-[11px]">
-                {row.jumlah ? (
-                  <div className="flex flex-col items-center justify-center leading-[1.05]">
-                    <span>Rp.</span>
-                    <span>{row.jumlah}</span>
-                  </div>
-                ) : null}
+              <td className="px-0.5 py-0.5 text-center align-middle text-[11px]">
+                <CurrencyTableValue value={row.jumlah} />
               </td>
+              <td className="border-l border-black px-1 text-center align-middle text-[10px]">{row.noPo}</td>
             </tr>
           ))}
         </tbody>
@@ -388,21 +405,11 @@ function MeiloonInvoiceTable({ rows, t, className = "" }: MeiloonInvoiceTablePro
               <td className="px-1.5 align-middle text-[11px] leading-[1.15] whitespace-pre-line">{row.spesifikasi}</td>
               <td className="px-1 text-center align-middle text-[11px]">{row.unit}</td>
               <td className="px-1 text-center align-middle text-[11px]">{row.qty}</td>
-              <td className="px-1 py-0.5 align-middle text-[11px]">
-                {row.hargaSatuan ? (
-                  <div className="flex flex-col items-center justify-center leading-[1.05]">
-                    <span>Rp.</span>
-                    <span>{row.hargaSatuan}</span>
-                  </div>
-                ) : null}
+              <td className="px-0.5 py-0.5 text-center align-middle text-[11px]">
+                <CurrencyTableValue value={row.hargaSatuan} />
               </td>
-              <td className="px-1 py-0.5 align-middle text-[11px]">
-                {row.jumlah ? (
-                  <div className="flex flex-col items-center justify-center leading-[1.05]">
-                    <span>Rp.</span>
-                    <span>{row.jumlah}</span>
-                  </div>
-                ) : null}
+              <td className="px-0.5 py-0.5 text-center align-middle text-[11px]">
+                <CurrencyTableValue value={row.jumlah} />
               </td>
               <td className="px-1 text-center align-middle text-[10px]">{row.noPo}</td>
             </tr>

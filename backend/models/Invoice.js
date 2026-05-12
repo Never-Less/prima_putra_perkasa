@@ -1,5 +1,40 @@
 const mongoose = require("mongoose");
 
+const barangInvoiceSourceSchema = new mongoose.Schema(
+  {
+    suratJalanId: {
+      type: String,
+      trim: true,
+      maxlength: 100,
+      default: "",
+    },
+    noSuratJalan: {
+      type: String,
+      trim: true,
+      maxlength: 100,
+      default: "",
+    },
+    noPo: {
+      type: String,
+      trim: true,
+      maxlength: 100,
+      default: "",
+    },
+    barangId: {
+      type: String,
+      trim: true,
+      maxlength: 120,
+      default: "",
+    },
+    kuantitas: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+  },
+  { _id: false }
+);
+
 const barangInvoiceSchema = new mongoose.Schema(
   {
     namaBarang: {
@@ -34,6 +69,16 @@ const barangInvoiceSchema = new mongoose.Schema(
       type: Number,
       required: true,
       min: 0,
+    },
+    noPoManual: {
+      type: String,
+      trim: true,
+      maxlength: 100,
+      default: "",
+    },
+    sources: {
+      type: [barangInvoiceSourceSchema],
+      default: [],
     },
   },
   { _id: false }

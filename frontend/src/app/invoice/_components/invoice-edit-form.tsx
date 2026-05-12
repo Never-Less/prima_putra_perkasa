@@ -14,6 +14,7 @@ import {
   invoiceNoSuratJalanListLabel,
   invoiceNoSuratJalanListToText,
   invoiceNoSuratJalanTextToList,
+  invoiceBarangNoPoLabel,
   invoiceBarangRowsToList,
   invoiceNoPoListLabel,
   toInvoiceFormState,
@@ -182,6 +183,7 @@ export function InvoiceEditForm({
       const noSuratJalanValues = Array.isArray(option.noSuratJalan)
         ? option.noSuratJalan
             .map((item) => ({
+              suratJalanId: String(item.suratJalanId || "").trim(),
               noSuratJalan: String(item.noSuratJalan || "").trim(),
               barang: Array.isArray(item.barang) ? item.barang : [],
             }))
@@ -229,6 +231,7 @@ export function InvoiceEditForm({
             index === 0
               ? noSuratJalanList.map((value) => ({
                   noSuratJalan: value,
+                  suratJalanId: "",
                   barang: [],
                 }))
               : [],
@@ -243,6 +246,7 @@ export function InvoiceEditForm({
           if (!rowMap.has(value)) {
             rowMap.set(value, {
               noSuratJalan: value,
+              suratJalanId: "",
               barang: [],
             });
           }
@@ -609,8 +613,20 @@ export function InvoiceEditForm({
                   return (
                     <div
                       key={`invoice-barang-row-${index}`}
-                      className="grid gap-2 sm:grid-cols-[1.1fr_1.1fr_0.7fr_0.7fr_1fr_1fr]"
+                      className="grid gap-2 sm:grid-cols-[0.9fr_1.1fr_1.1fr_0.65fr_0.65fr_0.9fr_0.9fr]"
                     >
+                      <input
+                        type="text"
+                        value={row.noPoManual}
+                        placeholder={t("field.noPo")}
+                        readOnly={row.sources.length > 0}
+                        onChange={(event) => updateBarangRow(index, "noPoManual", event.target.value)}
+                        className={`w-full rounded-lg border border-sky-100 px-3 py-2 text-sm shadow-sm dark:border-slate-700 dark:text-slate-100 ${
+                          row.sources.length > 0
+                            ? "bg-sky-100/70 text-slate-700 dark:bg-slate-900 dark:text-slate-300"
+                            : "bg-white text-slate-900 dark:bg-slate-800"
+                        }`}
+                      />
                       <input
                         type="text"
                         value={row.namaBarang}
@@ -761,7 +777,7 @@ export function InvoiceEditForm({
               <ul className="space-y-1 text-sm text-slate-700 dark:text-slate-200">
                 {barangList.map((barang, index) => (
                   <li key={`preview-barang-${index}`}>
-                    {formatInvoiceBarangLabel(barang.namaBarang, barang.spesifikasi)}: {barang.kuantitas} {barang.unit} x{" "}
+                    {invoiceBarangNoPoLabel(barang, form.noPoList)} - {formatInvoiceBarangLabel(barang.namaBarang, barang.spesifikasi)}: {barang.kuantitas} {barang.unit} x{" "}
                     {formatRupiah(barang.hargaSatuan, locale)} = {formatRupiah(barang.jumlah, locale)}
                   </li>
                 ))}

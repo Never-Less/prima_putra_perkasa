@@ -4,7 +4,7 @@ const { SuratJalan } = require("../../models/SuratJalan");
 
 const router = express.Router();
 
-function normalizeBarangOptions(value, defaultKodeDepartemen = "") {
+function normalizeBarangOptions(value, defaultKodeDepartemen = "", noSuratJalan = "") {
   if (!Array.isArray(value)) {
     return [];
   }
@@ -12,18 +12,21 @@ function normalizeBarangOptions(value, defaultKodeDepartemen = "") {
   const fallbackKodeDepartemen = String(defaultKodeDepartemen || "").trim();
 
   return value
-    .map((item) => {
+    .map((item, index) => {
       const nama = String(item?.nama || "").trim();
       const spesifikasi = String(item?.spesifikasi || "").trim();
       const kodeDepartemen = String(item?.kodeDepartemen || fallbackKodeDepartemen).trim();
       const jumlah = Number(item?.jumlah);
       const unit = String(item?.unit || "").trim();
+      const barangId = String(item?._id || item?.id || "").trim() ||
+        `legacy:${String(noSuratJalan || "").trim()}:${index}`;
 
       if (!nama || !Number.isFinite(jumlah) || jumlah <= 0) {
         return null;
       }
 
       return {
+        barangId,
         nama,
         spesifikasi,
         kodeDepartemen,
@@ -49,7 +52,8 @@ router.get("/invoice-options", async (_req, res) => {
       const noPo = String(item?.noPo || "").trim();
       const noSuratJalan = String(item?.noSuratJalan || "").trim();
       const idCustomer = String(item?.idCustomer || "").trim();
-      const barang = normalizeBarangOptions(item?.barang, item?.kodeDepartemen);
+      const suratJalanId = String(item?._id || "").trim();
+      const barang = normalizeBarangOptions(item?.barang, item?.kodeDepartemen, noSuratJalan);
 
       if (!noPo || !noSuratJalan) {
         return;
@@ -60,6 +64,7 @@ router.get("/invoice-options", async (_req, res) => {
       if (existingGroup) {
         existingGroup.idCustomer = existingGroup.idCustomer || idCustomer;
         existingGroup.noSuratJalanMap.set(noSuratJalan, {
+          suratJalanId,
           noSuratJalan,
           barang,
         });
@@ -72,8 +77,9 @@ router.get("/invoice-options", async (_req, res) => {
           [
             noSuratJalan,
             {
-              noSuratJalan,
-              barang,
+            noSuratJalan,
+            suratJalanId,
+            barang,
             },
           ],
         ]),

@@ -110,6 +110,16 @@ export function buildInvoicePrefillFromSuratJalan(row: SuratJalanItem): InvoiceP
         spesifikasi: buildSuratJalanInvoiceSpesifikasi(barang.spesifikasi, barang.kodeDepartemen),
         kuantitas: Number(barang.jumlah || 0),
         unit: barang.unit,
+        noPoManual: row.noPo,
+        sources: [
+          {
+            suratJalanId: row.id,
+            noSuratJalan: row.noSuratJalan,
+            noPo: row.noPo,
+            barangId: barang.id,
+            kuantitas: Number(barang.jumlah || 0),
+          },
+        ],
       }))
       .filter((barang) => barang.namaBarang && barang.kuantitas > 0),
     isPpn: true,
@@ -127,6 +137,8 @@ export function buildInvoicePrefillFromReadyInvoicePoGroup(
       spesifikasi: string;
       kuantitas: number;
       unit: string;
+      noPoManual: string;
+      sources: NonNullable<InvoicePrefillPayload["barang"][number]["sources"]>;
     }
   >();
   const noSuratJalan = group.suratJalanRows
@@ -150,10 +162,18 @@ export function buildInvoicePrefillFromReadyInvoicePoGroup(
       }
 
       const key = `${namaBarang.toLowerCase()}::${spesifikasi.toLowerCase()}::${unit.toLowerCase()}`;
+      const source = {
+        suratJalanId: row.id,
+        noSuratJalan: row.noSuratJalan,
+        noPo: row.noPo,
+        barangId: barang.id,
+        kuantitas,
+      };
       const existingBarang = barangMap.get(key);
 
       if (existingBarang) {
         existingBarang.kuantitas += kuantitas;
+        existingBarang.sources.push(source);
         return;
       }
 
@@ -162,6 +182,8 @@ export function buildInvoicePrefillFromReadyInvoicePoGroup(
         spesifikasi,
         kuantitas,
         unit,
+        noPoManual: row.noPo,
+        sources: [source],
       });
     });
   });

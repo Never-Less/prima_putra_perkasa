@@ -35,8 +35,7 @@ const barangSchema = new mongoose.Schema(
       maxlength: 50,
       default: "",
     },
-  },
-  { _id: false }
+  }
 );
 
 const suratJalanSchema = new mongoose.Schema(

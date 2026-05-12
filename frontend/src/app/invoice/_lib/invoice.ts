@@ -7,6 +7,14 @@ import {
   type ServerListResult,
 } from "../../_lib/pagination";
 
+export type InvoiceBarangSource = {
+  suratJalanId: string;
+  noSuratJalan: string;
+  noPo: string;
+  barangId: string;
+  kuantitas: number;
+};
+
 export type InvoiceBarang = {
   namaBarang: string;
   spesifikasi: string;
@@ -14,6 +22,8 @@ export type InvoiceBarang = {
   unit: string;
   hargaSatuan: number;
   jumlah: number;
+  noPoManual: string;
+  sources: InvoiceBarangSource[];
 };
 
 type Locale = "id" | "en";
@@ -42,6 +52,8 @@ export type InvoiceBarangFormRow = {
   kuantitas: string;
   unit: string;
   hargaSatuan: string;
+  noPoManual: string;
+  sources: InvoiceBarangSource[];
 };
 
 export type InvoiceFormState = {
@@ -63,6 +75,8 @@ export type InvoicePrefillBarang = {
   spesifikasi: string;
   kuantitas: number;
   unit: string;
+  noPoManual?: string;
+  sources?: InvoiceBarangSource[];
 };
 
 export type InvoicePrefillPayload = {
@@ -92,6 +106,7 @@ export type InvoiceFilter = {
 export type InvoiceListQuery = InvoiceFilter & PaginationQueryState;
 
 export type InvoiceSuratJalanBarangOption = {
+  barangId: string;
   nama: string;
   spesifikasi: string;
   kodeDepartemen: string;
@@ -100,6 +115,7 @@ export type InvoiceSuratJalanBarangOption = {
 };
 
 export type InvoiceSuratJalanRowOption = {
+  suratJalanId: string;
   noSuratJalan: string;
   barang: InvoiceSuratJalanBarangOption[];
 };
@@ -160,6 +176,8 @@ export const sampleInvoiceRows: InvoiceItem[] = [
         unit: "zak",
         hargaSatuan: 75000,
         jumlah: 9000000,
+        noPoManual: "PO-90011",
+        sources: [],
       },
       {
         namaBarang: "Pasir Halus",
@@ -168,6 +186,8 @@ export const sampleInvoiceRows: InvoiceItem[] = [
         unit: "m3",
         hargaSatuan: 300000,
         jumlah: 12000000,
+        noPoManual: "PO-90011",
+        sources: [],
       },
     ],
     isPpn: true,
@@ -194,6 +214,8 @@ export const sampleInvoiceRows: InvoiceItem[] = [
         unit: "batang",
         hargaSatuan: 95000,
         jumlah: 7600000,
+        noPoManual: "PO-90012",
+        sources: [],
       },
     ],
     isPpn: false,
@@ -220,6 +242,8 @@ export const sampleInvoiceRows: InvoiceItem[] = [
         unit: "kaleng",
         hargaSatuan: 150000,
         jumlah: 3600000,
+        noPoManual: "PO-90013",
+        sources: [],
       },
     ],
     isPpn: true,
@@ -288,6 +312,41 @@ function normalizeNoPoList(value: unknown) {
   return normalized;
 }
 
+function normalizeInvoiceBarangSources(value: unknown) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  const normalized: InvoiceBarangSource[] = [];
+
+  value.forEach((source) => {
+    if (!source || typeof source !== "object") {
+      return;
+    }
+
+    const item = source as Record<string, unknown>;
+    const suratJalanId = toText(item.suratJalanId).trim();
+    const noSuratJalan = toText(item.noSuratJalan).trim();
+    const noPo = toText(item.noPo).trim();
+    const barangId = toText(item.barangId).trim();
+    const kuantitas = parseNumberFromUnknown(item.kuantitas);
+
+    if (!noSuratJalan || !noPo || kuantitas <= 0) {
+      return;
+    }
+
+    normalized.push({
+      suratJalanId,
+      noSuratJalan,
+      noPo,
+      barangId,
+      kuantitas,
+    });
+  });
+
+  return normalized;
+}
+
 export function buildSuratJalanInvoiceSpesifikasi(spesifikasiValue: unknown, kodeDepartemenValue: unknown) {
   const spesifikasi = toText(spesifikasiValue).trim();
   const kodeDepartemen = toText(kodeDepartemenValue).trim();
@@ -301,6 +360,7 @@ function toInvoiceSuratJalanBarangOption(value: unknown): InvoiceSuratJalanBaran
   }
 
   const item = value as Record<string, unknown>;
+  const barangId = toText(item.barangId || item.id || item._id).trim();
   const nama = toText(item.nama).trim();
   const spesifikasi = toText(item.spesifikasi).trim();
   const kodeDepartemen = toText(item.kodeDepartemen).trim();
@@ -312,6 +372,7 @@ function toInvoiceSuratJalanBarangOption(value: unknown): InvoiceSuratJalanBaran
   }
 
   return {
+    barangId,
     nama,
     spesifikasi,
     kodeDepartemen,
@@ -329,6 +390,7 @@ function toInvoiceSuratJalanRowOption(value: unknown): InvoiceSuratJalanRowOptio
     }
 
     return {
+      suratJalanId: "",
       noSuratJalan,
       barang: [],
     };
@@ -339,6 +401,7 @@ function toInvoiceSuratJalanRowOption(value: unknown): InvoiceSuratJalanRowOptio
   }
 
   const item = value as Record<string, unknown>;
+  const suratJalanId = toText(item.suratJalanId || item.id || item._id).trim();
   const noSuratJalan = toText(item.noSuratJalan).trim();
   const barang = Array.isArray(item.barang)
     ? item.barang
@@ -351,6 +414,7 @@ function toInvoiceSuratJalanRowOption(value: unknown): InvoiceSuratJalanRowOptio
   }
 
   return {
+    suratJalanId,
     noSuratJalan,
     barang,
   };
@@ -436,6 +500,8 @@ function toInvoiceBarang(value: unknown): InvoiceBarang | null {
   const unit = toText(item.unit).trim();
   const hargaSatuan = parseNumberFromUnknown(item.hargaSatuan);
   const jumlah = parseNumberFromUnknown(item.jumlah, roundCurrency(kuantitas * hargaSatuan));
+  const noPoManual = toText(item.noPoManual).trim();
+  const sources = normalizeInvoiceBarangSources(item.sources);
 
   if (!namaBarang || !unit || kuantitas < 0 || hargaSatuan < 0 || jumlah < 0) {
     return null;
@@ -448,6 +514,8 @@ function toInvoiceBarang(value: unknown): InvoiceBarang | null {
     unit,
     hargaSatuan,
     jumlah,
+    noPoManual,
+    sources,
   };
 }
 
@@ -501,6 +569,8 @@ function normalizePrefillBarang(value: unknown): InvoicePrefillBarang | null {
   const spesifikasi = toText(item.spesifikasi).trim();
   const kuantitas = parseNumberFromUnknown(item.kuantitas);
   const unit = toText(item.unit).trim();
+  const noPoManual = toText(item.noPoManual).trim();
+  const sources = normalizeInvoiceBarangSources(item.sources);
 
   if (!namaBarang || kuantitas <= 0) {
     return null;
@@ -511,6 +581,8 @@ function normalizePrefillBarang(value: unknown): InvoicePrefillBarang | null {
     spesifikasi,
     kuantitas,
     unit,
+    noPoManual,
+    sources,
   };
 }
 
@@ -737,6 +809,8 @@ export function createEmptyInvoiceBarangRow(): InvoiceBarangFormRow {
     kuantitas: "",
     unit: "",
     hargaSatuan: "",
+    noPoManual: "",
+    sources: [],
   };
 }
 
@@ -746,7 +820,9 @@ export function isInvoiceBarangRowFilled(row: InvoiceBarangFormRow) {
       row.spesifikasi.trim() ||
       row.kuantitas.trim() ||
       row.unit.trim() ||
-      row.hargaSatuan.trim()
+      row.hargaSatuan.trim() ||
+      row.noPoManual.trim() ||
+      row.sources.length > 0
   );
 }
 
@@ -757,6 +833,8 @@ export function ensureTrailingEmptyInvoiceBarangRow(rows: InvoiceBarangFormRow[]
     kuantitas: String(row.kuantitas || ""),
     unit: String(row.unit || ""),
     hargaSatuan: String(row.hargaSatuan || ""),
+    noPoManual: String(row.noPoManual || ""),
+    sources: normalizeInvoiceBarangSources(row.sources),
   }));
 
   if (normalizedRows.length === 0) {
@@ -799,10 +877,56 @@ function normalizeInvoiceBarangIdentityPart(value: string) {
   return normalize(value).replace(/\s+/g, " ");
 }
 
-function createInvoiceBarangIdentityKey(namaBarang: string, spesifikasi: string, unit: string) {
+function createInvoiceBarangIdentityKey(namaBarang: string, spesifikasi: string, unit: string, noPo = "") {
   return `${normalizeInvoiceBarangIdentityPart(namaBarang)}::${normalizeInvoiceBarangIdentityPart(
     spesifikasi
-  )}::${normalizeInvoiceBarangIdentityPart(unit)}`;
+  )}::${normalizeInvoiceBarangIdentityPart(unit)}::${normalizeInvoiceBarangIdentityPart(noPo)}`;
+}
+
+function invoiceBarangSourceNoPoList(sources: InvoiceBarangSource[]) {
+  const seen = new Set<string>();
+  const values: string[] = [];
+
+  normalizeInvoiceBarangSources(sources).forEach((source) => {
+    const noPo = toText(source.noPo).trim();
+    const key = normalize(noPo);
+
+    if (!noPo || seen.has(key)) {
+      return;
+    }
+
+    seen.add(key);
+    values.push(noPo);
+  });
+
+  return values;
+}
+
+function invoiceBarangRowNoPoLabel(row: InvoiceBarangFormRow) {
+  const sourceNoPoList = invoiceBarangSourceNoPoList(row.sources);
+
+  if (sourceNoPoList.length > 0) {
+    return sourceNoPoList.join(", ");
+  }
+
+  return toText(row.noPoManual).trim();
+}
+
+export function invoiceBarangNoPoLabel(barang: Pick<InvoiceBarang, "noPoManual" | "sources">, fallbackNoPoList: string[] = []) {
+  const sourceNoPoList = invoiceBarangSourceNoPoList(barang.sources);
+
+  if (sourceNoPoList.length > 0) {
+    return sourceNoPoList.join(", ");
+  }
+
+  const noPoManual = toText(barang.noPoManual).trim();
+
+  if (noPoManual) {
+    return noPoManual;
+  }
+
+  const normalizedFallbackNoPoList = normalizeNoPoList(fallbackNoPoList);
+  return normalizedFallbackNoPoList.length === 1 ? normalizedFallbackNoPoList[0] : "-";
 }
 
 export function buildInvoiceBarangRowsFromSuratJalanSelection(
@@ -832,12 +956,13 @@ export function buildInvoiceBarangRowsFromSuratJalanSelection(
     const namaBarang = toText(row.namaBarang).trim();
     const spesifikasi = toText(row.spesifikasi).trim();
     const unit = toText(row.unit).trim();
+    const noPo = invoiceBarangRowNoPoLabel(row);
 
     if (!namaBarang || !unit) {
       return;
     }
 
-    const identityKey = createInvoiceBarangIdentityKey(namaBarang, spesifikasi, unit);
+    const identityKey = createInvoiceBarangIdentityKey(namaBarang, spesifikasi, unit, noPo);
 
     if (!hargaSatuanMap.has(identityKey)) {
       hargaSatuanMap.set(identityKey, toText(row.hargaSatuan).trim());
@@ -856,12 +981,21 @@ export function buildInvoiceBarangRowsFromSuratJalanSelection(
         const namaBarang = toText(barang.nama).trim();
         const spesifikasi = buildSuratJalanInvoiceSpesifikasi(barang.spesifikasi, barang.kodeDepartemen);
         const unit = toText(barang.unit).trim();
-        const identityKey = createInvoiceBarangIdentityKey(namaBarang, spesifikasi, unit);
+        const noPoValue = selectedNoPoOption.noPo;
+        const source: InvoiceBarangSource = {
+          suratJalanId: suratJalan.suratJalanId,
+          noSuratJalan: suratJalan.noSuratJalan,
+          noPo: noPoValue,
+          barangId: barang.barangId,
+          kuantitas: barang.jumlah,
+        };
+        const identityKey = createInvoiceBarangIdentityKey(namaBarang, spesifikasi, unit, noPoValue);
         const existingItem = barangMap.get(identityKey);
 
         if (existingItem) {
           const currentQty = parseNumber(existingItem.kuantitas);
           existingItem.kuantitas = String(currentQty + barang.jumlah);
+          existingItem.sources = [...existingItem.sources, source];
           return;
         }
 
@@ -871,6 +1005,8 @@ export function buildInvoiceBarangRowsFromSuratJalanSelection(
           kuantitas: String(barang.jumlah),
           unit,
           hargaSatuan: hargaSatuanMap.get(identityKey) || "",
+          noPoManual: noPoValue,
+          sources: [source],
         });
       });
     });
@@ -894,6 +1030,8 @@ export function invoiceBarangRowsToList(rows: InvoiceBarangFormRow[]): InvoiceBa
       const hargaSatuan = parseNumber(row.hargaSatuan.trim());
       const unit = row.unit.trim();
       const jumlah = roundCurrency(kuantitas * hargaSatuan);
+      const sources = normalizeInvoiceBarangSources(row.sources);
+      const noPoManual = sources.length > 0 ? invoiceBarangSourceNoPoList(sources).join(", ") : row.noPoManual.trim();
 
       return {
         namaBarang: namaBarang,
@@ -902,6 +1040,8 @@ export function invoiceBarangRowsToList(rows: InvoiceBarangFormRow[]): InvoiceBa
         unit: unit,
         hargaSatuan: hargaSatuan,
         jumlah: jumlah,
+        noPoManual,
+        sources,
       };
     })
     .filter((item) => item.namaBarang && item.unit);
@@ -938,6 +1078,8 @@ export function toInvoiceFormState(item: InvoiceItem): InvoiceFormState {
         kuantitas: String(barang.kuantitas),
         unit: barang.unit,
         hargaSatuan: String(barang.hargaSatuan),
+        noPoManual: barang.noPoManual,
+        sources: barang.sources,
       }))
     ),
   };
@@ -955,6 +1097,8 @@ export function toInvoiceFormStateFromPrefill(prefill: InvoicePrefillPayload): I
       kuantitas: String(item.kuantitas),
       unit: item.unit,
       hargaSatuan: "",
+      noPoManual: item.noPoManual || invoiceBarangSourceNoPoList(item.sources || []).join(", ") || (noPoList.length === 1 ? noPoList[0] : ""),
+      sources: item.sources || [],
     }))
   );
 
