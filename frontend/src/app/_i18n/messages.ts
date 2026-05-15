@@ -426,7 +426,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "pembelian.form.title": "Form dan Preview Pembelian",
     "pembelian.form.description":
       "Lengkapi data pembelian. Lama hutang dan tanggal jatuh tempo wajib diisi saat status hutang aktif.",
-    "pembelian.lamaHutang.note": "Dalam hitungan hari",
+    "pembelian.lamaHutang.note": "Dalam hitungan hari; tanggal jatuh tempo otomatis",
     "pembelian.preview.title": "Preview Pembelian",
     "pembelian.apiLoadError": "Gagal memuat data pembelian dari backend.",
     "pembelian.invoiceLoadError": "Gagal memuat pilihan invoice untuk pembelian.",
@@ -965,7 +965,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "pembelian.form.title": "Purchase Form and Preview",
     "pembelian.form.description":
       "Complete the purchase data. Debt term and due date are required when debt status is active.",
-    "pembelian.lamaHutang.note": "Measured in days",
+    "pembelian.lamaHutang.note": "Measured in days; due date is automatic",
     "pembelian.preview.title": "Purchase Preview",
     "pembelian.apiLoadError": "Failed to load purchase data from backend.",
     "pembelian.invoiceLoadError": "Failed to load invoice options for purchase.",
