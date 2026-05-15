@@ -283,10 +283,7 @@ function CurrencyTableValue({ value }: CurrencyTableValueProps) {
   }
 
   return (
-    <span className="inline-flex items-baseline justify-center gap-[2px] whitespace-nowrap text-[10px] leading-none">
-      <span>Rp.</span>
-      <span>{normalizedValue}</span>
-    </span>
+    <span className="inline-block whitespace-nowrap text-[10px] leading-none">{normalizedValue}</span>
   );
 }
 
@@ -335,10 +332,10 @@ function DefaultInvoiceTable({ rows, t, className = "" }: DefaultInvoiceTablePro
               <td className="px-1.5 align-middle text-[11px] leading-[1.15]">{row.namaBarang}</td>
               <td className="px-1 text-center align-middle text-[11px]">{row.qty}</td>
               <td className="px-1 text-center align-middle text-[11px]">{row.unit}</td>
-              <td className="px-0.5 py-0.5 text-center align-middle text-[11px]">
+              <td className="px-1 py-0.5 text-right align-middle text-[11px]">
                 <CurrencyTableValue value={row.hargaSatuan} />
               </td>
-              <td className="px-0.5 py-0.5 text-center align-middle text-[11px]">
+              <td className="px-1 py-0.5 text-right align-middle text-[11px]">
                 <CurrencyTableValue value={row.jumlah} />
               </td>
               <td className="border-l border-black px-1 text-center align-middle text-[10px]">{row.noPo}</td>
@@ -405,10 +402,10 @@ function MeiloonInvoiceTable({ rows, t, className = "" }: MeiloonInvoiceTablePro
               <td className="px-1.5 align-middle text-[11px] leading-[1.15] whitespace-pre-line">{row.spesifikasi}</td>
               <td className="px-1 text-center align-middle text-[11px]">{row.unit}</td>
               <td className="px-1 text-center align-middle text-[11px]">{row.qty}</td>
-              <td className="px-0.5 py-0.5 text-center align-middle text-[11px]">
+              <td className="px-1 py-0.5 text-right align-middle text-[11px]">
                 <CurrencyTableValue value={row.hargaSatuan} />
               </td>
-              <td className="px-0.5 py-0.5 text-center align-middle text-[11px]">
+              <td className="px-1 py-0.5 text-right align-middle text-[11px]">
                 <CurrencyTableValue value={row.jumlah} />
               </td>
               <td className="px-1 text-center align-middle text-[10px]">{row.noPo}</td>

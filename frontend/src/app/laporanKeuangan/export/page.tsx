@@ -956,7 +956,7 @@ export default function LaporanKeuanganExportPage() {
       {
         name: "Laporan Keuangan",
         rows: reportRows,
-        columnWidths: [12, 48, 16, 16, 16, 12, 28],
+        columnWidths: [9, 60, 16, 12, 12, 10, 18],
         merges: ["A1:A2", "B1:B2", "C1:C2", "D1:E1", "F1:F2", "G1:G2"],
       },
     ]);
@@ -1138,19 +1138,28 @@ export default function LaporanKeuanganExportPage() {
                 </div>
               ) : (
                 <div className="overflow-x-auto border border-slate-300 print:overflow-visible">
-                  <table className="w-full min-w-[980px] table-fixed border-collapse text-sm text-slate-900 print:text-[11px]">
+                  <table className="w-full min-w-[900px] table-fixed border-collapse text-sm text-slate-900 print:text-[11px]">
+                    <colgroup>
+                      <col style={{ width: "8%" }} />
+                      <col style={{ width: "35%" }} />
+                      <col style={{ width: "14%" }} />
+                      <col style={{ width: "11%" }} />
+                      <col style={{ width: "11%" }} />
+                      <col style={{ width: "9%" }} />
+                      <col style={{ width: "12%" }} />
+                    </colgroup>
                     <thead className="bg-amber-50 text-center font-semibold uppercase">
                       <tr>
-                        <th rowSpan={2} className="w-24 border border-slate-400 px-2 py-2">{t("laporanKeuangan.report.date")}</th>
-                        <th rowSpan={2} className="min-w-80 border border-slate-400 px-2 py-2">{t("laporanKeuangan.report.description")}</th>
-                        <th rowSpan={2} className="w-32 border border-slate-400 px-2 py-2">{t("laporanKeuangan.report.debet")}</th>
+                        <th rowSpan={2} className="border border-slate-400 px-2 py-2">{t("laporanKeuangan.report.date")}</th>
+                        <th rowSpan={2} className="border border-slate-400 px-2 py-2">{t("laporanKeuangan.report.description")}</th>
+                        <th rowSpan={2} className="border border-slate-400 px-2 py-2">{t("laporanKeuangan.report.debet")}</th>
                         <th colSpan={2} className="border border-slate-400 px-2 py-1">{t("laporanKeuangan.report.kredit")}</th>
-                        <th rowSpan={2} className="w-20 border border-slate-400 px-2 py-2">{t("laporanKeuangan.report.bayar")}</th>
-                        <th rowSpan={2} className="w-48 border border-slate-400 px-2 py-2">{t("laporanKeuangan.report.note")}</th>
+                        <th rowSpan={2} className="border border-slate-400 px-2 py-2">{t("laporanKeuangan.report.bayar")}</th>
+                        <th rowSpan={2} className="border border-slate-400 px-2 py-2">{t("laporanKeuangan.report.note")}</th>
                       </tr>
                       <tr>
-                        <th className="w-32 border border-slate-400 px-2 py-1">{t("field.ppn")}</th>
-                        <th className="w-32 border border-slate-400 px-2 py-1">{t("laporanKeuangan.report.nonPpn")}</th>
+                        <th className="border border-slate-400 px-2 py-1">{t("field.ppn")}</th>
+                        <th className="border border-slate-400 px-2 py-1">{t("laporanKeuangan.report.nonPpn")}</th>
                       </tr>
                     </thead>
                     <tbody>

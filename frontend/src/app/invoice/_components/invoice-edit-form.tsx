@@ -30,6 +30,7 @@ type SelectOption = {
   value: string;
   label: string;
   idCustomer?: string;
+  noPo?: string;
 };
 
 type InvoiceEditFormProps = {
@@ -333,30 +334,40 @@ export function InvoiceEditForm({
   const availableNoSuratJalanOptions = useMemo<SelectOption[]>(() => {
     const optionMap = new Map<string, SelectOption>();
 
-    selectedNoPoDataList.forEach((option) => {
+    normalizedSuratJalanOptions.forEach((option) => {
       option.noSuratJalan.forEach((value) => {
         if (optionMap.has(value.noSuratJalan)) {
           return;
         }
 
+        const shouldShowNoPo =
+          form.noPoList.length !== 1 || form.noPoList[0] !== option.noPo;
+
         optionMap.set(value.noSuratJalan, {
           value: value.noSuratJalan,
-          label:
-            form.noPoList.length > 1
-              ? `${value.noSuratJalan} - ${option.noPo}`
-              : value.noSuratJalan,
+          label: shouldShowNoPo
+            ? `${value.noSuratJalan} - ${option.noPo}`
+            : value.noSuratJalan,
+          idCustomer: option.idCustomer,
+          noPo: option.noPo,
         });
       });
     });
 
     return Array.from(optionMap.values());
-  }, [form.noPoList.length, selectedNoPoDataList]);
+  }, [form.noPoList, normalizedSuratJalanOptions]);
   const selectedNoSuratJalanOptions = useMemo<SelectOption[]>(() => {
-    return noSuratJalanList.map((value) => ({
-      value,
-      label: value,
-    }));
-  }, [noSuratJalanList]);
+    return noSuratJalanList.map((value) => {
+      const option = availableNoSuratJalanOptions.find((item) => item.value === value);
+
+      return (
+        option || {
+          value,
+          label: value,
+        }
+      );
+    });
+  }, [availableNoSuratJalanOptions, noSuratJalanList]);
   const isCustomerAutoSelected = Boolean(form.noPoList.length > 0 && autoSelectedIdCustomer);
 
   function updateBarangRow(index: number, field: keyof InvoiceBarangFormRow, value: string) {
@@ -430,16 +441,49 @@ export function InvoiceEditForm({
 
     const nextValues = Array.from(nextValueMap.values());
 
-    setForm((prev) => ({
-      ...prev,
-      noSuratJalanText: invoiceNoSuratJalanListToText(nextValues),
-      barangRows: buildInvoiceBarangRowsFromSuratJalanSelection(
-        normalizedSuratJalanOptions,
-        prev.noPoList,
-        nextValues,
-        prev.barangRows
-      ),
-    }));
+    setForm((prev) => {
+      const selectedNoSuratJalanSet = new Set(nextValues);
+      const nextNoPoMap = new Map<string, string>();
+
+      normalizedSuratJalanOptions.forEach((option) => {
+        const hasSelectedSuratJalan = option.noSuratJalan.some((value) =>
+          selectedNoSuratJalanSet.has(value.noSuratJalan)
+        );
+        const noPo = String(option.noPo || "").trim();
+        const noPoKey = noPo.toLowerCase();
+
+        if (hasSelectedSuratJalan && noPo && !nextNoPoMap.has(noPoKey)) {
+          nextNoPoMap.set(noPoKey, noPo);
+        }
+      });
+
+      const nextNoPoList = Array.from(nextNoPoMap.values());
+      const selectedOptions = normalizedSuratJalanOptions.filter((item) =>
+        nextNoPoList.includes(item.noPo)
+      );
+      const selectedCustomerIds = Array.from(
+        new Set(
+          selectedOptions
+            .map((option) => String(option.idCustomer || "").trim())
+            .filter(Boolean)
+        )
+      );
+      const nextIdCustomer = selectedCustomerIds.length === 1 ? selectedCustomerIds[0] : "";
+
+      return {
+        ...prev,
+        noPo: invoiceNoPoListLabel(nextNoPoList),
+        noPoList: nextNoPoList,
+        noSuratJalanText: invoiceNoSuratJalanListToText(nextValues),
+        idCustomer: nextNoPoList.length > 0 ? nextIdCustomer : "",
+        barangRows: buildInvoiceBarangRowsFromSuratJalanSelection(
+          normalizedSuratJalanOptions,
+          nextNoPoList,
+          nextValues,
+          prev.barangRows
+        ),
+      };
+    });
   }
 
   return (
@@ -504,12 +548,8 @@ export function InvoiceEditForm({
                   isMulti={true}
                   value={selectedNoSuratJalanOptions}
                   options={availableNoSuratJalanOptions}
-                  isDisabled={isSaving || isDeleting || form.noPoList.length === 0}
-                  placeholder={
-                    form.noPoList.length > 0
-                      ? t("invoice.form.noSuratJalanSelectPlaceholder")
-                      : t("invoice.form.noSuratJalanDisabledHint")
-                  }
+                  isDisabled={isSaving || isDeleting}
+                  placeholder={t("invoice.form.noSuratJalanSelectPlaceholder")}
                   noOptionsMessage={() => t("invoice.form.noSuratJalanNoOptions")}
                   styles={selectStyles}
                   onChange={handleNoSuratJalanChange}
