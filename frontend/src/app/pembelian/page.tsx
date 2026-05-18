@@ -14,6 +14,7 @@ import {
   defaultPembelianFilter,
   deletePembelian,
   fetchPembelianList,
+  pembelianStockInvoiceId,
   toPembelianFormStateFromPrefill,
   updatePembelian,
   type PembelianFilter,
@@ -235,24 +236,17 @@ export default function PembelianPage() {
     (invoiceId: string) => {
       const key = String(invoiceId || "").trim();
 
-      if (!key) {
-        return "-";
+      if (!key || key === pembelianStockInvoiceId) {
+        return t("pembelian.stockInvoiceLabel");
       }
 
       return invoiceLabelMap.get(key) || key;
     },
-    [invoiceLabelMap]
+    [invoiceLabelMap, t]
   );
 
   const executeSavePembelian = useCallback(
     async (form: PembelianFormState, selectedItem?: PembelianItem) => {
-      if (!String(form.idInvoice || "").trim()) {
-        const message = t("pembelian.invoiceRequired");
-        setActionErrorMessage(message);
-        showToast(message, "error");
-        return;
-      }
-
       setActionErrorMessage("");
       setIsSaving(true);
 

@@ -11,6 +11,42 @@ const {
 
 const router = express.Router();
 
+function matchesStockLabel(value) {
+  const normalizedValue = String(value || "").trim().toLowerCase();
+
+  return "stock".includes(normalizedValue) || "stok".includes(normalizedValue);
+}
+
+function buildSelectedGroupQuery(query, paginatedGroups) {
+  const invoiceIds = paginatedGroups
+    .map((group) => group?._id)
+    .filter((value) => Boolean(value));
+  const includeStockGroup = paginatedGroups.some((group) => !group?._id);
+  const groupConditions = [];
+
+  if (invoiceIds.length > 0) {
+    groupConditions.push({ idInvoice: { $in: invoiceIds } });
+  }
+
+  if (includeStockGroup) {
+    groupConditions.push({ idInvoice: null });
+  }
+
+  if (groupConditions.length === 0) {
+    return null;
+  }
+
+  if (groupConditions.length === 1) {
+    return {
+      $and: [query, groupConditions[0]],
+    };
+  }
+
+  return {
+    $and: [query, { $or: groupConditions }],
+  };
+}
+
 router.get("/", async (req, res) => {
   try {
     const query = {};
@@ -113,8 +149,9 @@ router.get("/", async (req, res) => {
     if (noInvoiceRegex) {
       const invoices = await Invoice.find({ noInvoice: noInvoiceRegex }, "_id").lean();
       const invoiceIds = invoices.map((invoice) => invoice._id);
+      const includeStock = matchesStockLabel(req.query.noInvoice);
 
-      if (invoiceIds.length === 0) {
+      if (invoiceIds.length === 0 && !includeStock) {
         const pagination = buildPaginationMeta(
           0,
           hasPagination ? requestedPage : 1,
@@ -131,9 +168,15 @@ router.get("/", async (req, res) => {
         });
       }
 
-      query.idInvoice = {
-        $in: invoiceIds,
-      };
+      if (invoiceIds.length > 0 && includeStock) {
+        query.$or = [{ idInvoice: { $in: invoiceIds } }, { idInvoice: null }];
+      } else if (invoiceIds.length > 0) {
+        query.idInvoice = {
+          $in: invoiceIds,
+        };
+      } else {
+        query.idInvoice = null;
+      }
     }
 
     const totalRows = await Pembelian.countDocuments(query);
@@ -173,15 +216,10 @@ router.get("/", async (req, res) => {
       }
 
       const paginatedGroups = await Pembelian.aggregate(groupPipeline);
-      const invoiceIds = paginatedGroups
-        .map((group) => group?._id)
-        .filter((value) => Boolean(value));
+      const selectedGroupQuery = buildSelectedGroupQuery(query, paginatedGroups);
 
-      if (invoiceIds.length > 0) {
-        pembelianList = await Pembelian.find({
-          ...query,
-          idInvoice: { $in: invoiceIds },
-        }).sort({ createdAt: -1 });
+      if (selectedGroupQuery) {
+        pembelianList = await Pembelian.find(selectedGroupQuery).sort({ createdAt: -1 });
       }
     }
 

@@ -88,6 +88,8 @@ type PembelianResponse = {
 
 type ResolveInvoiceLabel = (invoiceId: string) => string;
 
+export const pembelianStockInvoiceId = "__pembelian_stock__";
+
 export const defaultPembelianFilter: PembelianFilter = {
   namaSupplier: "",
   noNota: "",
@@ -118,6 +120,31 @@ function toText(value: unknown) {
 
 function normalize(value: string) {
   return value.trim().toLowerCase();
+}
+
+function getMonthValueFromDate(value: string | null) {
+  const textValue = toText(value).trim();
+
+  if (!textValue) {
+    return "";
+  }
+
+  const isoMonthMatch = textValue.match(/^(\d{4}-\d{2})/);
+
+  if (isoMonthMatch) {
+    return isoMonthMatch[1];
+  }
+
+  const date = parseAppDate(textValue);
+
+  if (!date) {
+    return "";
+  }
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+
+  return `${year}-${month}`;
 }
 
 function parseNumberFromUnknown(value: unknown, fallback = 0) {
@@ -230,7 +257,7 @@ function toNormalizedPembelianPayload(form: PembelianFormState) {
     tanggalNota: toText(form.tanggalNota).trim(),
     namaSupplier: toText(form.namaSupplier).trim(),
     noNota: toText(form.noNota).trim(),
-    idInvoice: idInvoice || null,
+    idInvoice: idInvoice && idInvoice !== pembelianStockInvoiceId ? idInvoice : null,
     hutang: form.hutang,
     ppn: form.ppn,
     lamaHutang: lamaHutang,
@@ -360,7 +387,7 @@ export function toPembelianFormState(item: PembelianItem): PembelianFormState {
     tanggalNota: toInputDate(item.tanggalNota),
     namaSupplier: item.namaSupplier,
     noNota: item.noNota,
-    idInvoice: item.idInvoice,
+    idInvoice: item.idInvoice || pembelianStockInvoiceId,
     hutang: item.hutang,
     ppn: item.ppn,
     lamaHutang: String(item.lamaHutang),
@@ -377,7 +404,7 @@ export function toPembelianFormStateFromPrefill(
   const fallbackInvoiceId =
     prefill.idInvoice ||
     invoiceOptions.find((invoice) => invoice.noInvoice === prefill.noInvoice)?.id ||
-    "";
+    pembelianStockInvoiceId;
 
   return {
     tanggalNota: toInputDate(prefill.tanggalNota || null),
@@ -468,4 +495,23 @@ export function filterPembelianRows(
       matchNilaiNotaMax
     );
   });
+}
+
+export function isPembelianStockItem(row: PembelianItem) {
+  return !String(row.idInvoice || "").trim();
+}
+
+export function filterPembelianStockRowsByMonth(rows: PembelianItem[], bulan: string) {
+  const selectedMonth = String(bulan || "").trim();
+
+  return rows.filter(
+    (row) => isPembelianStockItem(row) && getMonthValueFromDate(row.tanggalNota) === selectedMonth
+  );
+}
+
+export function calculatePembelianStockTotalByMonth(rows: PembelianItem[], bulan: string) {
+  return filterPembelianStockRowsByMonth(rows, bulan).reduce(
+    (total, row) => total + Number(row.nilaiNota || 0),
+    0
+  );
 }

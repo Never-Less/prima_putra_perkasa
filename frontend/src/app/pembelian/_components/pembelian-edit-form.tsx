@@ -5,6 +5,7 @@ import { AppDateInput } from "../../_components/app-date-input";
 import {
   formatRupiah,
   formatTanggal,
+  pembelianStockInvoiceId,
   toPembelianFormState,
   type PembelianFormState,
   type PembelianInvoiceOption,
@@ -25,11 +26,17 @@ type PembelianEditFormProps = {
 };
 
 function ensureValidIdInvoice(value: string, options: PembelianInvoiceOption[]) {
-  if (value && options.some((option) => option.id === value)) {
-    return value;
+  const idInvoice = String(value || "").trim();
+
+  if (idInvoice === pembelianStockInvoiceId) {
+    return pembelianStockInvoiceId;
   }
 
-  return options[0]?.id || "";
+  if (idInvoice && options.some((option) => option.id === idInvoice)) {
+    return idInvoice;
+  }
+
+  return options[0]?.id || pembelianStockInvoiceId;
 }
 
 function formatDateInputValue(date: Date) {
@@ -105,6 +112,7 @@ export function PembelianEditForm({
   const { locale, t } = useI18n();
   const inputPlaceholder = (fieldKey: string) =>
     t("common.placeholder.input", { field: t(fieldKey) });
+  const stockInvoiceLabel = t("pembelian.stockInvoiceLabel");
   const [form, setForm] = useState<PembelianFormState>(() =>
     item
       ? (() => {
@@ -126,7 +134,9 @@ export function PembelianEditForm({
   );
 
   const normalizedInvoiceOptions = useMemo(() => {
-    const optionMap = new Map<string, string>();
+    const optionMap = new Map<string, string>([
+      [pembelianStockInvoiceId, stockInvoiceLabel],
+    ]);
 
     invoiceOptions.forEach((option) => {
       const id = String(option.id || "").trim();
@@ -147,9 +157,9 @@ export function PembelianEditForm({
       id,
       noInvoice,
     }));
-  }, [form.idInvoice, invoiceOptions]);
+  }, [form.idInvoice, invoiceOptions, stockInvoiceLabel]);
 
-  const effectiveIdInvoice = form.idInvoice || normalizedInvoiceOptions[0]?.id || "";
+  const effectiveIdInvoice = form.idInvoice || pembelianStockInvoiceId;
   const nilaiNota = Number(form.nilaiNota || 0);
   const normalizedNilaiNota = Number.isFinite(nilaiNota) ? nilaiNota : 0;
 
@@ -216,7 +226,7 @@ export function PembelianEditForm({
             </label>
 
             <label className="text-sm text-slate-700 dark:text-slate-200">
-              {t("field.noInvoice")}
+              {t("pembelian.form.noInvoiceLabel")}
               <select
                 value={effectiveIdInvoice}
                 onChange={(event) => setForm((prev) => ({ ...prev, idInvoice: event.target.value }))}
