@@ -1,6 +1,9 @@
 import { requestApi } from "../../_lib/api-client";
 import type { InvoiceItem } from "../../invoice/_lib/invoice";
-import type { PembelianItem } from "../../pembelian/_lib/pembelian";
+import {
+  calculatePembelianStockTotalByMonth,
+  type PembelianItem,
+} from "../../pembelian/_lib/pembelian";
 
 export type RincianBiayaItem = {
   namaBiaya: string;
@@ -25,6 +28,7 @@ export type LaporanKeuanganMonthSummary = {
   bulan: string;
   totalInvoice: number;
   totalPembelian: number;
+  totalStockBarang: number;
   grossProfit: number;
   totalBiayaOperasional: number;
   netProfit: number;
@@ -205,6 +209,7 @@ export function calculateLaporanKeuanganMonthSummary({
     (total, row) => total + (purchaseTotalByInvoiceId.get(row.id) || 0),
     0
   );
+  const totalStockBarang = calculatePembelianStockTotalByMonth(pembelianRows, bulan);
   const grossProfit = totalInvoice - totalPembelian;
   const totalBiayaOperasional = laporanKeuangan?.totalBiayaOperasional || 0;
   const netProfit = grossProfit - totalBiayaOperasional;
@@ -213,6 +218,7 @@ export function calculateLaporanKeuanganMonthSummary({
     bulan,
     totalInvoice,
     totalPembelian,
+    totalStockBarang,
     grossProfit,
     totalBiayaOperasional,
     netProfit,

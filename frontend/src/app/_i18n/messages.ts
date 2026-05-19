@@ -195,6 +195,9 @@ export const messages: Record<Locale, MessageDictionary> = {
     "laporanKeuangan.invoiceTable.description":
       "Invoice pada bulan {{bulan}} dihitung sebagai gross profit menggunakan grand total invoice.",
     "laporanKeuangan.invoiceTable.empty": "Belum ada invoice untuk bulan ini.",
+    "laporanKeuangan.stockTable.description":
+      "Pembelian tanpa No. Invoice pada bulan {{bulan}} ditampilkan sebagai stock barang.",
+    "laporanKeuangan.stockTable.empty": "Belum ada pembelian stock barang untuk bulan ini.",
     "laporanKeuangan.yearlyTable.title": "Laporan Tahunan",
     "laporanKeuangan.yearlyTable.description":
       "Ringkasan tahun {{tahun}} dihitung per bulan dari invoice, pembelian, dan biaya operasional tersimpan.",
@@ -246,9 +249,9 @@ export const messages: Record<Locale, MessageDictionary> = {
     "invoice.form.noPoSelectPlaceholder": "Pilih satu atau lebih No. PO...",
     "invoice.form.noPoNoOptions": "Belum ada noPo dari surat jalan.",
     "invoice.form.customerAutoHint": "Customer diisi otomatis dari No. PO yang dipilih.",
-    "invoice.form.noSuratJalanHint": "Pilih satu atau lebih No. Surat Jalan berdasarkan No. PO yang dipilih.",
+    "invoice.form.noSuratJalanHint": "Pilih No. PO atau No. Surat Jalan; field terkait akan terisi otomatis.",
     "invoice.form.noSuratJalanSelectPlaceholder": "Pilih No. Surat Jalan...",
-    "invoice.form.noSuratJalanNoOptions": "Belum ada noSuratJalan untuk No. PO ini.",
+    "invoice.form.noSuratJalanNoOptions": "Belum ada No. Surat Jalan.",
     "invoice.form.noSuratJalanDisabledHint": "Pilih No. PO terlebih dahulu.",
     "invoice.form.items.title": "Barang Invoice",
     "invoice.form.items.hint":
@@ -426,7 +429,9 @@ export const messages: Record<Locale, MessageDictionary> = {
     "pembelian.form.title": "Form dan Preview Pembelian",
     "pembelian.form.description":
       "Lengkapi data pembelian. Lama hutang dan tanggal jatuh tempo wajib diisi saat status hutang aktif.",
-    "pembelian.lamaHutang.note": "Dalam hitungan hari",
+    "pembelian.form.noInvoiceLabel": "No. Invoice (CV. Prima)",
+    "pembelian.stockInvoiceLabel": "Stock",
+    "pembelian.lamaHutang.note": "Dalam hitungan hari; tanggal jatuh tempo otomatis",
     "pembelian.preview.title": "Preview Pembelian",
     "pembelian.apiLoadError": "Gagal memuat data pembelian dari backend.",
     "pembelian.invoiceLoadError": "Gagal memuat pilihan invoice untuk pembelian.",
@@ -544,6 +549,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "field.grossProfit": "Gross Profit",
     "field.totalInvoice": "Total Invoice",
     "field.totalPembelian": "Total Pembelian",
+    "field.stockBarang": "Stock Barang",
     "field.netProfit": "Net Profit",
   },
   en: {
@@ -733,6 +739,9 @@ export const messages: Record<Locale, MessageDictionary> = {
     "laporanKeuangan.invoiceTable.description":
       "Invoices in {{bulan}} are calculated as gross profit using invoice grand totals.",
     "laporanKeuangan.invoiceTable.empty": "No invoices are available for this month.",
+    "laporanKeuangan.stockTable.description":
+      "Purchases without an Invoice No. in {{bulan}} are shown as goods stock.",
+    "laporanKeuangan.stockTable.empty": "No goods stock purchases are available for this month.",
     "laporanKeuangan.yearlyTable.title": "Yearly Report",
     "laporanKeuangan.yearlyTable.description":
       "The {{tahun}} summary is calculated per month from invoices, purchases, and saved operational costs.",
@@ -784,9 +793,9 @@ export const messages: Record<Locale, MessageDictionary> = {
     "invoice.form.noPoSelectPlaceholder": "Select one or more PO Nos...",
     "invoice.form.noPoNoOptions": "No noPo options from delivery notes yet.",
     "invoice.form.customerAutoHint": "Customer is filled automatically from the selected PO No.",
-    "invoice.form.noSuratJalanHint": "Select one or more delivery notes based on the selected PO Nos.",
+    "invoice.form.noSuratJalanHint": "Select PO Nos. or delivery notes; related fields will fill automatically.",
     "invoice.form.noSuratJalanSelectPlaceholder": "Select Delivery Note No...",
-    "invoice.form.noSuratJalanNoOptions": "No noSuratJalan available for this PO No.",
+    "invoice.form.noSuratJalanNoOptions": "No delivery note available.",
     "invoice.form.noSuratJalanDisabledHint": "Select a PO first.",
     "invoice.form.items.title": "Invoice Items",
     "invoice.form.items.hint": "A new empty row is added when the last row starts being filled.",
@@ -965,7 +974,9 @@ export const messages: Record<Locale, MessageDictionary> = {
     "pembelian.form.title": "Purchase Form and Preview",
     "pembelian.form.description":
       "Complete the purchase data. Debt term and due date are required when debt status is active.",
-    "pembelian.lamaHutang.note": "Measured in days",
+    "pembelian.form.noInvoiceLabel": "Invoice No. (CV. Prima)",
+    "pembelian.stockInvoiceLabel": "Stock",
+    "pembelian.lamaHutang.note": "Measured in days; due date is automatic",
     "pembelian.preview.title": "Purchase Preview",
     "pembelian.apiLoadError": "Failed to load purchase data from backend.",
     "pembelian.invoiceLoadError": "Failed to load invoice options for purchase.",
@@ -1083,6 +1094,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "field.grossProfit": "Gross Profit",
     "field.totalInvoice": "Total Invoice",
     "field.totalPembelian": "Total Purchase",
+    "field.stockBarang": "Goods Stock",
     "field.netProfit": "Net Profit",
   },
 };

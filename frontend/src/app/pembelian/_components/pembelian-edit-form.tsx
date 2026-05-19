@@ -5,6 +5,7 @@ import { AppDateInput } from "../../_components/app-date-input";
 import {
   formatRupiah,
   formatTanggal,
+  pembelianStockInvoiceId,
   toPembelianFormState,
   type PembelianFormState,
   type PembelianInvoiceOption,
@@ -25,11 +26,61 @@ type PembelianEditFormProps = {
 };
 
 function ensureValidIdInvoice(value: string, options: PembelianInvoiceOption[]) {
-  if (value && options.some((option) => option.id === value)) {
-    return value;
+  const idInvoice = String(value || "").trim();
+
+  if (idInvoice === pembelianStockInvoiceId) {
+    return pembelianStockInvoiceId;
   }
 
-  return options[0]?.id || "";
+  if (idInvoice && options.some((option) => option.id === idInvoice)) {
+    return idInvoice;
+  }
+
+  return options[0]?.id || pembelianStockInvoiceId;
+}
+
+function formatDateInputValue(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function calculateTanggalJatuhTempo(tanggalNota: string, lamaHutang: string, hutang: boolean) {
+  if (!hutang) {
+    return "";
+  }
+
+  const tanggalNotaValue = String(tanggalNota || "").trim();
+  const lamaHutangValue = Math.trunc(Number(lamaHutang || "0"));
+
+  if (!tanggalNotaValue || !Number.isFinite(lamaHutangValue) || lamaHutangValue <= 0) {
+    return "";
+  }
+
+  const isoDateMatch = tanggalNotaValue.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  const tanggalNotaDate = isoDateMatch
+    ? new Date(Number(isoDateMatch[1]), Number(isoDateMatch[2]) - 1, Number(isoDateMatch[3]))
+    : new Date(tanggalNotaValue);
+
+  if (Number.isNaN(tanggalNotaDate.getTime())) {
+    return "";
+  }
+
+  tanggalNotaDate.setDate(tanggalNotaDate.getDate() + lamaHutangValue);
+  return formatDateInputValue(tanggalNotaDate);
+}
+
+function withCalculatedTanggalJatuhTempo(form: PembelianFormState): PembelianFormState {
+  return {
+    ...form,
+    tanggalJatuhTempo: calculateTanggalJatuhTempo(
+      form.tanggalNota,
+      form.lamaHutang,
+      form.hutang
+    ),
+  };
 }
 
 function createEmptyPembelianFormState(invoiceOptions: PembelianInvoiceOption[]): PembelianFormState {
@@ -61,28 +112,31 @@ export function PembelianEditForm({
   const { locale, t } = useI18n();
   const inputPlaceholder = (fieldKey: string) =>
     t("common.placeholder.input", { field: t(fieldKey) });
+  const stockInvoiceLabel = t("pembelian.stockInvoiceLabel");
   const [form, setForm] = useState<PembelianFormState>(() =>
     item
       ? (() => {
           const mappedForm = toPembelianFormState(item);
 
-          return {
+          return withCalculatedTanggalJatuhTempo({
             ...mappedForm,
             idInvoice: ensureValidIdInvoice(mappedForm.idInvoice, invoiceOptions),
             tanggalBayar: mappedForm.hutang ? "" : mappedForm.tanggalBayar,
-          };
+          });
         })()
       : initialForm
-        ? {
+        ? withCalculatedTanggalJatuhTempo({
             ...initialForm,
             idInvoice: ensureValidIdInvoice(initialForm.idInvoice, invoiceOptions),
             tanggalBayar: initialForm.hutang ? "" : initialForm.tanggalBayar,
-          }
+          })
         : createEmptyPembelianFormState(invoiceOptions)
   );
 
   const normalizedInvoiceOptions = useMemo(() => {
-    const optionMap = new Map<string, string>();
+    const optionMap = new Map<string, string>([
+      [pembelianStockInvoiceId, stockInvoiceLabel],
+    ]);
 
     invoiceOptions.forEach((option) => {
       const id = String(option.id || "").trim();
@@ -103,9 +157,9 @@ export function PembelianEditForm({
       id,
       noInvoice,
     }));
-  }, [form.idInvoice, invoiceOptions]);
+  }, [form.idInvoice, invoiceOptions, stockInvoiceLabel]);
 
-  const effectiveIdInvoice = form.idInvoice || normalizedInvoiceOptions[0]?.id || "";
+  const effectiveIdInvoice = form.idInvoice || pembelianStockInvoiceId;
   const nilaiNota = Number(form.nilaiNota || 0);
   const normalizedNilaiNota = Number.isFinite(nilaiNota) ? nilaiNota : 0;
 
@@ -128,7 +182,13 @@ export function PembelianEditForm({
               {t("field.tanggalNota")}
               <AppDateInput
                 value={form.tanggalNota}
-                onValueChange={(value) => setForm((prev) => ({ ...prev, tanggalNota: value }))}
+                onValueChange={(value) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    tanggalNota: value,
+                    tanggalJatuhTempo: calculateTanggalJatuhTempo(value, prev.lamaHutang, prev.hutang),
+                  }))
+                }
                 className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               />
             </label>
@@ -166,7 +226,7 @@ export function PembelianEditForm({
             </label>
 
             <label className="text-sm text-slate-700 dark:text-slate-200">
-              {t("field.noInvoice")}
+              {t("pembelian.form.noInvoiceLabel")}
               <select
                 value={effectiveIdInvoice}
                 onChange={(event) => setForm((prev) => ({ ...prev, idInvoice: event.target.value }))}
@@ -196,7 +256,7 @@ export function PembelianEditForm({
                     ...prev,
                     hutang: isHutang,
                     lamaHutang: isHutang ? prev.lamaHutang : "0",
-                    tanggalJatuhTempo: isHutang ? prev.tanggalJatuhTempo : "",
+                    tanggalJatuhTempo: calculateTanggalJatuhTempo(prev.tanggalNota, prev.lamaHutang, isHutang),
                     tanggalBayar: isHutang ? "" : prev.tanggalBayar,
                   }));
                 }}
@@ -232,7 +292,15 @@ export function PembelianEditForm({
                 min={0}
                 value={form.lamaHutang}
                 disabled={!form.hutang}
-                onChange={(event) => setForm((prev) => ({ ...prev, lamaHutang: event.target.value }))}
+                onChange={(event) => {
+                  const lamaHutang = event.target.value;
+
+                  setForm((prev) => ({
+                    ...prev,
+                    lamaHutang,
+                    tanggalJatuhTempo: calculateTanggalJatuhTempo(prev.tanggalNota, lamaHutang, prev.hutang),
+                  }));
+                }}
                 placeholder={inputPlaceholder("field.lamaHutang")}
                 className="mt-1 h-10 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm disabled:cursor-not-allowed disabled:bg-sky-100/70 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
               />
@@ -246,7 +314,8 @@ export function PembelianEditForm({
               <AppDateInput
                 value={form.tanggalJatuhTempo}
                 disabled={!form.hutang}
-                onValueChange={(value) => setForm((prev) => ({ ...prev, tanggalJatuhTempo: value }))}
+                readOnly={form.hutang}
+                onValueChange={() => undefined}
                 className="mt-1 h-10 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm disabled:cursor-not-allowed disabled:bg-sky-100/70 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
               />
             </label>
@@ -297,20 +366,20 @@ export function PembelianEditForm({
                 if (item) {
                   const resetForm = toPembelianFormState(item);
 
-                  setForm({
+                  setForm(withCalculatedTanggalJatuhTempo({
                     ...resetForm,
                     idInvoice: ensureValidIdInvoice(resetForm.idInvoice, invoiceOptions),
                     tanggalBayar: resetForm.hutang ? "" : resetForm.tanggalBayar,
-                  });
+                  }));
                   return;
                 }
 
                 if (initialForm) {
-                  setForm({
+                  setForm(withCalculatedTanggalJatuhTempo({
                     ...initialForm,
                     idInvoice: ensureValidIdInvoice(initialForm.idInvoice, invoiceOptions),
                     tanggalBayar: initialForm.hutang ? "" : initialForm.tanggalBayar,
-                  });
+                  }));
                   return;
                 }
 
