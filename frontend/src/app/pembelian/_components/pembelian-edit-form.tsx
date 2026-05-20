@@ -1,6 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
+import type { SingleValue, StylesConfig } from "react-select";
+import CreatableSelect from "react-select/creatable";
 import { AppDateInput } from "../../_components/app-date-input";
 import {
   formatRupiah,
@@ -11,12 +13,21 @@ import {
   type PembelianInvoiceOption,
   type PembelianItem,
 } from "../_lib/pembelian";
+import { type SupplierItem } from "../../supplier/_lib/supplier";
 import { useI18n } from "../../_i18n/provider";
+import { useTheme } from "../../_theme/provider";
+
+type SupplierSelectOption = {
+  value: string;
+  label: string;
+  supplier?: SupplierItem;
+};
 
 type PembelianEditFormProps = {
   item?: PembelianItem;
   initialForm?: PembelianFormState;
   invoiceOptions?: PembelianInvoiceOption[];
+  supplierOptions?: SupplierItem[];
   isSaving?: boolean;
   isDeleting?: boolean;
   actionErrorMessage?: string;
@@ -87,6 +98,7 @@ function createEmptyPembelianFormState(invoiceOptions: PembelianInvoiceOption[])
   return {
     tanggalNota: "",
     namaSupplier: "",
+    idSupplier: "",
     noNota: "",
     idInvoice: ensureValidIdInvoice("", invoiceOptions),
     hutang: false,
@@ -102,6 +114,7 @@ export function PembelianEditForm({
   item,
   initialForm,
   invoiceOptions = [],
+  supplierOptions = [],
   isSaving = false,
   isDeleting = false,
   actionErrorMessage = "",
@@ -110,9 +123,14 @@ export function PembelianEditForm({
   onDelete,
 }: PembelianEditFormProps) {
   const { locale, t } = useI18n();
+  const { theme } = useTheme();
+  const supplierSelectId = useId();
   const inputPlaceholder = (fieldKey: string) =>
     t("common.placeholder.input", { field: t(fieldKey) });
+  const selectPlaceholder = (fieldKey: string) =>
+    t("common.placeholder.select", { field: t(fieldKey) });
   const stockInvoiceLabel = t("pembelian.stockInvoiceLabel");
+  const [supplierInputValue, setSupplierInputValue] = useState("");
   const [form, setForm] = useState<PembelianFormState>(() =>
     item
       ? (() => {
@@ -159,6 +177,76 @@ export function PembelianEditForm({
     }));
   }, [form.idInvoice, invoiceOptions, stockInvoiceLabel]);
 
+  const normalizedSupplierOptions = useMemo(() => {
+    const supplierMap = new Map<string, SupplierItem>();
+
+    supplierOptions.forEach((supplier) => {
+      const id = String(supplier.id || "").trim();
+      const namaSupplier = String(supplier.namaSupplier || "").trim();
+
+      if (!id || !namaSupplier) {
+        return;
+      }
+
+      supplierMap.set(id, {
+        ...supplier,
+        namaSupplier,
+      });
+    });
+
+    if (form.idSupplier && form.namaSupplier && !supplierMap.has(form.idSupplier)) {
+      supplierMap.set(form.idSupplier, {
+        id: form.idSupplier,
+        namaSupplier: form.namaSupplier,
+        hutang: form.hutang,
+        lamaHutang: form.hutang ? Number(form.lamaHutang || 0) : null,
+        createdAt: "",
+        updatedAt: "",
+      });
+    }
+
+    return Array.from(supplierMap.values());
+  }, [form.hutang, form.idSupplier, form.lamaHutang, form.namaSupplier, supplierOptions]);
+
+  const supplierSelectOptions = useMemo<SupplierSelectOption[]>(() => {
+    return normalizedSupplierOptions.map((supplier) => ({
+      value: supplier.id,
+      label: supplier.namaSupplier,
+      supplier,
+    }));
+  }, [normalizedSupplierOptions]);
+
+  const selectedSupplierOption = useMemo<SupplierSelectOption | null>(() => {
+    const idSupplier = String(form.idSupplier || "").trim();
+    const namaSupplier = String(form.namaSupplier || "").trim();
+    const normalizedNamaSupplier = namaSupplier.toLowerCase();
+
+    if (idSupplier) {
+      const optionById = supplierSelectOptions.find((option) => option.value === idSupplier);
+
+      if (optionById) {
+        return optionById;
+      }
+    }
+
+    if (normalizedNamaSupplier) {
+      const optionByName = supplierSelectOptions.find(
+        (option) => option.label.trim().toLowerCase() === normalizedNamaSupplier
+      );
+
+      if (optionByName) {
+        return optionByName;
+      }
+
+      return {
+        value: idSupplier || `current:${namaSupplier}`,
+        label: namaSupplier,
+      };
+    }
+
+    return null;
+  }, [form.idSupplier, form.namaSupplier, supplierSelectOptions]);
+
   const effectiveIdInvoice = form.idInvoice || pembelianStockInvoiceId;
   const nilaiNota = Number(form.nilaiNota || 0);
   const normalizedNilaiNota = Number.isFinite(nilaiNota) ? nilaiNota : 0;
@@ -167,6 +255,131 @@ export function PembelianEditForm({
     return new Map(normalizedInvoiceOptions.map((option) => [option.id, option.noInvoice]));
   }, [normalizedInvoiceOptions]);
   const previewInvoiceLabel = invoiceLabelMap.get(effectiveIdInvoice) || effectiveIdInvoice || "-";
+  const isDark = theme === "dark";
+  const selectStyles = useMemo<StylesConfig<SupplierSelectOption, false>>(
+    () => ({
+      control: (base, state) => ({
+        ...base,
+        minHeight: 42,
+        borderRadius: 8,
+        borderColor: state.isFocused ? (isDark ? "#38bdf8" : "#7dd3fc") : isDark ? "#334155" : "#bae6fd",
+        backgroundColor: isDark ? "#1e293b" : "#ffffff",
+        boxShadow: state.isFocused ? `0 0 0 1px ${isDark ? "#38bdf8" : "#0ea5e9"}` : "none",
+        "&:hover": {
+          borderColor: isDark ? "#38bdf8" : "#0ea5e9",
+        },
+      }),
+      menu: (base) => ({
+        ...base,
+        zIndex: 20,
+        borderRadius: 8,
+        overflow: "hidden",
+        backgroundColor: isDark ? "#0f172a" : "#ffffff",
+      }),
+      menuList: (base) => ({
+        ...base,
+        backgroundColor: isDark ? "#0f172a" : "#ffffff",
+      }),
+      option: (base, state) => ({
+        ...base,
+        backgroundColor: state.isSelected
+          ? isDark
+            ? "#38bdf8"
+            : "#0ea5e9"
+          : state.isFocused
+            ? isDark
+              ? "#1e293b"
+              : "#e0f2fe"
+            : isDark
+              ? "#0f172a"
+              : "#ffffff",
+        color: state.isSelected ? (isDark ? "#020617" : "#ffffff") : isDark ? "#e2e8f0" : "#0f172a",
+      }),
+      input: (base) => ({
+        ...base,
+        color: isDark ? "#e2e8f0" : "#0f172a",
+      }),
+      singleValue: (base) => ({
+        ...base,
+        color: isDark ? "#e2e8f0" : "#0f172a",
+      }),
+      placeholder: (base) => ({
+        ...base,
+        color: isDark ? "#94a3b8" : "#64748b",
+      }),
+    }),
+    [isDark]
+  );
+
+  function handleSupplierChange(option: SingleValue<SupplierSelectOption>) {
+    setSupplierInputValue("");
+
+    if (!option) {
+      setForm((prev) => ({
+        ...prev,
+        idSupplier: "",
+        namaSupplier: "",
+        hutang: false,
+        lamaHutang: "0",
+        tanggalJatuhTempo: "",
+      }));
+      return;
+    }
+
+    const selectedSupplier = option.supplier;
+
+    if (!selectedSupplier) {
+      setForm((prev) => ({
+        ...prev,
+        idSupplier: "",
+        namaSupplier: option.label,
+      }));
+      return;
+    }
+
+    const nextHutang = Boolean(selectedSupplier.hutang);
+    const nextLamaHutang = nextHutang ? String(selectedSupplier.lamaHutang || "") : "0";
+
+    setForm((prev) => ({
+      ...prev,
+      idSupplier: selectedSupplier.id,
+      namaSupplier: selectedSupplier.namaSupplier,
+      hutang: nextHutang,
+      lamaHutang: nextLamaHutang,
+      tanggalJatuhTempo: calculateTanggalJatuhTempo(prev.tanggalNota, nextLamaHutang, nextHutang),
+      tanggalBayar: nextHutang ? "" : prev.tanggalBayar,
+    }));
+  }
+
+  function applyManualSupplierName(namaSupplier: string) {
+    const nextNamaSupplier = String(namaSupplier || "").trim();
+
+    if (!nextNamaSupplier) {
+      return;
+    }
+
+    setForm((prev) => ({
+      ...prev,
+      idSupplier: "",
+      namaSupplier: nextNamaSupplier,
+    }));
+  }
+
+  function handleSupplierCreate(namaSupplier: string) {
+    applyManualSupplierName(namaSupplier);
+    setSupplierInputValue("");
+  }
+
+  function buildSaveForm() {
+    const manualSupplierName = supplierInputValue.trim();
+
+    return {
+      ...form,
+      idSupplier: manualSupplierName ? "" : selectedSupplierOption?.supplier?.id || form.idSupplier,
+      namaSupplier: manualSupplierName || form.namaSupplier,
+      idInvoice: effectiveIdInvoice,
+    };
+  }
 
   return (
     <section className="rounded-2xl border border-sky-200 bg-sky-50/40 p-5 shadow-sm dark:border-sky-900/70 dark:bg-slate-950/85">
@@ -207,11 +420,32 @@ export function PembelianEditForm({
 
             <label className="text-sm text-slate-700 dark:text-slate-200 sm:col-span-2">
               {t("field.namaSupplier")}
-              <input
-                value={form.namaSupplier}
-                onChange={(event) => setForm((prev) => ({ ...prev, namaSupplier: event.target.value }))}
-                placeholder={inputPlaceholder("field.namaSupplier")}
-                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+              <CreatableSelect<SupplierSelectOption, false>
+                inputId={supplierSelectId}
+                instanceId="pembelian-supplier-select"
+                value={selectedSupplierOption}
+                inputValue={supplierInputValue}
+                options={supplierSelectOptions}
+                onChange={handleSupplierChange}
+                onCreateOption={handleSupplierCreate}
+                onInputChange={(value, actionMeta) => {
+                  if (actionMeta.action === "input-change") {
+                    setSupplierInputValue(value);
+                  }
+                }}
+                onBlur={() => {
+                  applyManualSupplierName(supplierInputValue);
+                  setSupplierInputValue("");
+                }}
+                formatCreateLabel={(value) =>
+                  t("pembelian.form.createSupplierOption", { namaSupplier: value })
+                }
+                isValidNewOption={(value) => Boolean(value.trim())}
+                placeholder={selectPlaceholder("field.namaSupplier")}
+                noOptionsMessage={() => t("common.noData")}
+                isClearable
+                styles={selectStyles}
+                className="mt-1"
               />
             </label>
 
@@ -336,10 +570,7 @@ export function PembelianEditForm({
               type="button"
               onClick={() =>
                 void onSave?.(
-                  {
-                    ...form,
-                    idInvoice: effectiveIdInvoice,
-                  },
+                  buildSaveForm(),
                   item
                 )
               }

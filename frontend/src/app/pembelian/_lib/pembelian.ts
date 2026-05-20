@@ -19,6 +19,7 @@ export type PembelianItem = {
   id: string;
   tanggalNota: string;
   namaSupplier: string;
+  idSupplier: string;
   noNota: string;
   idInvoice: string;
   hutang: boolean;
@@ -53,6 +54,7 @@ export type PembelianFilter = {
 export type PembelianFormState = {
   tanggalNota: string;
   namaSupplier: string;
+  idSupplier: string;
   noNota: string;
   idInvoice: string;
   hutang: boolean;
@@ -174,6 +176,23 @@ function parseInvoiceId(value: unknown) {
   return toText(value).trim();
 }
 
+function parseReferenceId(value: unknown) {
+  if (!value) {
+    return "";
+  }
+
+  if (typeof value === "string") {
+    return value.trim();
+  }
+
+  if (typeof value === "object") {
+    const reference = value as Record<string, unknown>;
+    return toText(reference.id || reference._id).trim();
+  }
+
+  return toText(value).trim();
+}
+
 function toPembelianItem(value: unknown): PembelianItem | null {
   if (!value || typeof value !== "object") {
     return null;
@@ -190,6 +209,7 @@ function toPembelianItem(value: unknown): PembelianItem | null {
     id: id,
     tanggalNota: toText(row.tanggalNota).trim(),
     namaSupplier: toText(row.namaSupplier).trim(),
+    idSupplier: parseReferenceId(row.idSupplier),
     noNota: toText(row.noNota).trim(),
     idInvoice: parseInvoiceId(row.idInvoice),
     hutang: Boolean(row.hutang),
@@ -256,6 +276,7 @@ function toNormalizedPembelianPayload(form: PembelianFormState) {
   return {
     tanggalNota: toText(form.tanggalNota).trim(),
     namaSupplier: toText(form.namaSupplier).trim(),
+    idSupplier: toText(form.idSupplier).trim() || null,
     noNota: toText(form.noNota).trim(),
     idInvoice: idInvoice && idInvoice !== pembelianStockInvoiceId ? idInvoice : null,
     hutang: form.hutang,
@@ -386,6 +407,7 @@ export function toPembelianFormState(item: PembelianItem): PembelianFormState {
   return {
     tanggalNota: toInputDate(item.tanggalNota),
     namaSupplier: item.namaSupplier,
+    idSupplier: item.idSupplier,
     noNota: item.noNota,
     idInvoice: item.idInvoice || pembelianStockInvoiceId,
     hutang: item.hutang,
@@ -409,6 +431,7 @@ export function toPembelianFormStateFromPrefill(
   return {
     tanggalNota: toInputDate(prefill.tanggalNota || null),
     namaSupplier: "",
+    idSupplier: "",
     noNota: "",
     idInvoice: fallbackInvoiceId,
     hutang: false,

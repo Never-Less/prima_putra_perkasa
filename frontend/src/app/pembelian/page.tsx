@@ -24,6 +24,7 @@ import {
 } from "./_lib/pembelian";
 import { useI18n } from "../_i18n/provider";
 import { fetchInvoiceRows } from "../invoice/_lib/invoice";
+import { fetchSupplierRows, type SupplierItem } from "../supplier/_lib/supplier";
 
 type ToastState = {
   id: number;
@@ -47,6 +48,7 @@ export default function PembelianPage() {
   });
   const [filteredCount, setFilteredCount] = useState(0);
   const [invoiceOptions, setInvoiceOptions] = useState<PembelianInvoiceOption[]>([]);
+  const [supplierOptions, setSupplierOptions] = useState<SupplierItem[]>([]);
   const [prefillOnLoad] = useState(() => consumePembelianPrefill());
   const [selectedId, setSelectedId] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -168,6 +170,21 @@ export default function PembelianPage() {
     }
   }, [prefillOnLoad, showToast, t]);
 
+  const loadSupplierOptions = useCallback(async () => {
+    try {
+      const suppliers = await fetchSupplierRows();
+      setSupplierOptions(suppliers);
+    } catch (error) {
+      setSupplierOptions([]);
+
+      if (error instanceof ApiRequestError) {
+        showToast(error.message || t("pembelian.supplierLoadError"), "error");
+      } else {
+        showToast(t("pembelian.supplierLoadError"), "error");
+      }
+    }
+  }, [showToast, t]);
+
   useEffect(() => {
     void loadPembelianRows();
   }, [loadPembelianRows]);
@@ -175,6 +192,10 @@ export default function PembelianPage() {
   useEffect(() => {
     void loadInvoiceOptions();
   }, [loadInvoiceOptions]);
+
+  useEffect(() => {
+    void loadSupplierOptions();
+  }, [loadSupplierOptions]);
 
   const handleFilterChange = useCallback(
     <K extends keyof PembelianFilter,>(key: K, value: PembelianFilter[K]) => {
@@ -438,6 +459,7 @@ export default function PembelianPage() {
                 item={selectedRow}
                 initialForm={selectedRow ? undefined : initialForm || undefined}
                 invoiceOptions={invoiceOptions}
+                supplierOptions={supplierOptions}
                 isSaving={isSaving}
                 isDeleting={isDeleting}
                 actionErrorMessage={actionErrorMessage}

@@ -36,6 +36,7 @@ export function AppNavbar() {
         { href: "/suratJalan", label: t("nav.suratJalan") },
         { href: "/invoice", label: t("nav.invoice") },
         { href: "/pembelian", label: t("nav.pembelian") },
+        { href: "/supplier", label: t("nav.supplier") },
         isAdminAccess ? { href: "/laporanKeuangan", label: t("nav.laporanKeuangan") } : null,
       ].filter((item): item is { href: string; label: string } => Boolean(item)),
     [isAdminAccess, t]

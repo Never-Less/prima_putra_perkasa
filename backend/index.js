@@ -17,6 +17,7 @@ const laporanKeuanganRoutes = require("./routes/laporan-keuangan");
 const pembelianRoutes = require("./routes/pembelian");
 const purchaseOrderRoutes = require("./routes/purchase-order");
 const suratJalanRoutes = require("./routes/surat-jalan");
+const supplierRoutes = require("./routes/supplier");
 const userRoutes = require("./routes/user");
 
 const app = express();
@@ -53,6 +54,7 @@ app.use("/api/laporan-keuangan", laporanKeuanganRoutes);
 app.use("/api/pembelian", pembelianRoutes);
 app.use("/api/purchase-orders", purchaseOrderRoutes);
 app.use("/api/surat-jalan", suratJalanRoutes);
+app.use("/api/suppliers", supplierRoutes);
 app.use("/api/users", userRoutes);
 
 app.use((error, _req, res, next) => {

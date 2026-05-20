@@ -12,6 +12,12 @@ const pembelianSchema = new mongoose.Schema(
       trim: true,
       maxlength: 150,
     },
+    idSupplier: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Supplier",
+      default: null,
+      index: true,
+    },
     noNota: {
       type: String,
       trim: true,
