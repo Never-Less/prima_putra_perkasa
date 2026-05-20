@@ -2,6 +2,7 @@ const express = require("express");
 
 const { Invoice } = require("../../models/Invoice");
 const { Pembelian } = require("../../models/Pembelian");
+const { Supplier } = require("../../models/Supplier");
 const { sanitizePembelian } = require("./sanitize-pembelian");
 const { isValidId, parseBoolean, parseDate, parseNumber } = require("./validators");
 
@@ -10,6 +11,7 @@ const router = express.Router();
 router.post("/", async (req, res) => {
   const tanggalNota = parseDate(req.body.tanggalNota);
   const namaSupplier = String(req.body.namaSupplier || "").trim();
+  let idSupplier = null;
   const noNota = String(req.body.noNota || "").trim();
   let idInvoice = null;
   const hutang = req.body.hutang !== undefined ? parseBoolean(req.body.hutang) : false;
@@ -31,6 +33,18 @@ router.post("/", async (req, res) => {
     idInvoice = String(req.body.idInvoice || "").trim();
     if (!isValidId(idInvoice)) {
       return res.status(400).json({ message: "idInvoice tidak valid" });
+    }
+  }
+
+  if (req.body.idSupplier !== undefined && req.body.idSupplier !== null) {
+    idSupplier = String(req.body.idSupplier || "").trim();
+
+    if (idSupplier && !isValidId(idSupplier)) {
+      return res.status(400).json({ message: "idSupplier tidak valid" });
+    }
+
+    if (!idSupplier) {
+      idSupplier = null;
     }
   }
 
@@ -87,9 +101,17 @@ router.post("/", async (req, res) => {
       }
     }
 
+    if (idSupplier) {
+      const supplier = await Supplier.findById(idSupplier);
+      if (!supplier) {
+        return res.status(404).json({ message: "supplier tidak ditemukan" });
+      }
+    }
+
     const pembelian = await Pembelian.create({
       tanggalNota: tanggalNota,
       namaSupplier: namaSupplier,
+      idSupplier: idSupplier,
       noNota: noNota,
       idInvoice: idInvoice,
       hutang: hutang,

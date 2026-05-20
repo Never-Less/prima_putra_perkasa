@@ -17,36 +17,6 @@ function matchesStockLabel(value) {
   return "stock".includes(normalizedValue) || "stok".includes(normalizedValue);
 }
 
-function buildSelectedGroupQuery(query, paginatedGroups) {
-  const invoiceIds = paginatedGroups
-    .map((group) => group?._id)
-    .filter((value) => Boolean(value));
-  const includeStockGroup = paginatedGroups.some((group) => !group?._id);
-  const groupConditions = [];
-
-  if (invoiceIds.length > 0) {
-    groupConditions.push({ idInvoice: { $in: invoiceIds } });
-  }
-
-  if (includeStockGroup) {
-    groupConditions.push({ idInvoice: null });
-  }
-
-  if (groupConditions.length === 0) {
-    return null;
-  }
-
-  if (groupConditions.length === 1) {
-    return {
-      $and: [query, groupConditions[0]],
-    };
-  }
-
-  return {
-    $and: [query, { $or: groupConditions }],
-  };
-}
-
 router.get("/", async (req, res) => {
   try {
     const query = {};
@@ -180,55 +150,28 @@ router.get("/", async (req, res) => {
     }
 
     const totalRows = await Pembelian.countDocuments(query);
-    const groupedBasePipeline = [
-      { $match: query },
-      {
-        $group: {
-          _id: "$idInvoice",
-          latestCreatedAt: { $max: "$createdAt" },
-        },
-      },
-    ];
-    const totalGroupsResult = await Pembelian.aggregate([
-      ...groupedBasePipeline,
-      { $count: "count" },
-    ]);
-    const totalGroups = Number(totalGroupsResult[0]?.count || 0);
     const pagination = buildPaginationMeta(
-      totalGroups,
+      totalRows,
       hasPagination ? requestedPage : 1,
-      hasPagination ? requestedLimit : Math.max(totalGroups, 1)
+      hasPagination ? requestedLimit : Math.max(totalRows, 1)
     );
 
-    let pembelianList = [];
+    let pembelianQuery = Pembelian.find(query).sort({ createdAt: -1 });
 
-    if (totalGroups > 0) {
-      let groupPipeline = [
-        ...groupedBasePipeline,
-        { $sort: { latestCreatedAt: -1, _id: 1 } },
-      ];
-
-      if (hasPagination) {
-        groupPipeline = groupPipeline.concat([
-          { $skip: (pagination.page - 1) * pagination.limit },
-          { $limit: pagination.limit },
-        ]);
-      }
-
-      const paginatedGroups = await Pembelian.aggregate(groupPipeline);
-      const selectedGroupQuery = buildSelectedGroupQuery(query, paginatedGroups);
-
-      if (selectedGroupQuery) {
-        pembelianList = await Pembelian.find(selectedGroupQuery).sort({ createdAt: -1 });
-      }
+    if (hasPagination) {
+      pembelianQuery = pembelianQuery
+        .skip((pagination.page - 1) * pagination.limit)
+        .limit(pagination.limit);
     }
+
+    const pembelianList = await pembelianQuery;
 
     return res.json({
       pembelians: pembelianList.map(sanitizePembelian),
       pagination,
       summary: {
         totalRows,
-        totalGroups,
+        totalGroups: totalRows,
       },
     });
   } catch (_error) {

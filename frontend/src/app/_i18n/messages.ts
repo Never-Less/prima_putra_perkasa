@@ -14,6 +14,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "nav.login": "Login",
     "nav.user": "User",
     "nav.customer": "Customer",
+    "nav.supplier": "Supplier",
     "nav.suratJalan": "Surat Jalan",
     "nav.invoice": "Invoice",
     "nav.purchaseOrder": "Purchase Order",
@@ -29,7 +30,7 @@ export const messages: Record<Locale, MessageDictionary> = {
 
     "home.title": "Frontend Surat Jalan",
     "home.description":
-      "Pilih halaman yang ingin digunakan: Surat Jalan, Invoice, Pembelian, atau Customer.",
+      "Pilih halaman yang ingin digunakan: Surat Jalan, Invoice, Pembelian, Supplier, atau Customer.",
     "home.route.user.title": "User",
     "home.route.user.description":
       "Kelola akun user aplikasi, role, serta password melalui tabel, filter, dan form dalam satu halaman.",
@@ -42,6 +43,10 @@ export const messages: Record<Locale, MessageDictionary> = {
     "home.route.customer.description":
       "Kelola data customer melalui tabel, filter, serta form dan preview dalam satu halaman.",
     "home.route.customer.cta": "Buka Customer",
+    "home.route.supplier.title": "Supplier",
+    "home.route.supplier.description":
+      "Kelola data supplier, status hutang, dan lama hutang melalui tabel, filter, serta form dalam satu halaman.",
+    "home.route.supplier.cta": "Buka Supplier",
     "home.route.suratJalan.title": "Surat Jalan",
     "home.route.suratJalan.description":
       "Kelola data surat jalan melalui tabel, filter, serta form dan preview dalam satu halaman.",
@@ -126,6 +131,26 @@ export const messages: Record<Locale, MessageDictionary> = {
     "customer.toast.createSuccess": "Data customer berhasil ditambahkan.",
     "customer.toast.updateSuccess": "Data customer \"{{nama}}\" berhasil diperbarui.",
     "customer.toast.deleteSuccess": "Data customer \"{{nama}}\" berhasil dihapus.",
+
+    "supplier.page.description":
+      "Kelola data supplier melalui tabel, filter, serta form dan preview pada halaman yang sama.",
+    "supplier.table.title": "Tabel Supplier",
+    "supplier.form.title": "Form dan Preview Supplier",
+    "supplier.form.description":
+      "Tambahkan atau perbarui data supplier. Lama hutang dikosongkan otomatis saat hutang tidak aktif.",
+    "supplier.preview.title": "Preview Supplier",
+    "supplier.apiLoadError": "Gagal memuat data supplier dari backend.",
+    "supplier.mutationError": "Gagal memproses perubahan supplier.",
+    "supplier.adminOnlyAction": "Tambah, ubah, dan hapus supplier hanya untuk admin/staff.",
+    "supplier.confirmUpdateTitle": "Konfirmasi Ubah Supplier",
+    "supplier.confirmUpdateDescription":
+      "Simpan perubahan data supplier \"{{namaSupplier}}\"?",
+    "supplier.confirmDeleteTitle": "Konfirmasi Hapus Supplier",
+    "supplier.confirmDeleteDescription":
+      "Supplier \"{{namaSupplier}}\" akan dihapus permanen. Lanjutkan?",
+    "supplier.toast.createSuccess": "Data supplier berhasil ditambahkan.",
+    "supplier.toast.updateSuccess": "Data supplier \"{{namaSupplier}}\" berhasil diperbarui.",
+    "supplier.toast.deleteSuccess": "Data supplier \"{{namaSupplier}}\" berhasil dihapus.",
 
     "user.page.description":
       "Kelola akun user aplikasi melalui tabel, filter, serta form dan preview pada halaman yang sama. Akses halaman ini khusus admin.",
@@ -435,6 +460,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "pembelian.preview.title": "Preview Pembelian",
     "pembelian.apiLoadError": "Gagal memuat data pembelian dari backend.",
     "pembelian.invoiceLoadError": "Gagal memuat pilihan invoice untuk pembelian.",
+    "pembelian.supplierLoadError": "Gagal memuat pilihan supplier untuk pembelian.",
     "pembelian.mutationError": "Gagal memproses perubahan pembelian.",
     "pembelian.invoiceRequired": "Invoice wajib dipilih sebelum menyimpan pembelian.",
     "pembelian.confirmUpdateTitle": "Konfirmasi Ubah Pembelian",
@@ -523,6 +549,8 @@ export const messages: Record<Locale, MessageDictionary> = {
     "field.lunas": "Lunas",
     "field.ppn": "PPN",
     "field.lamaHutang": "Lama Hutang",
+    "field.lamaHutangMin": "Lama Hutang Minimum",
+    "field.lamaHutangMax": "Lama Hutang Maksimum",
     "field.nilaiNota": "Nilai Nota",
     "field.tanggalJatuhTempo": "Tanggal Jatuh Tempo",
     "field.tanggalBayar": "Tanggal Bayar",
@@ -558,6 +586,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "nav.login": "Login",
     "nav.user": "User",
     "nav.customer": "Customer",
+    "nav.supplier": "Supplier",
     "nav.suratJalan": "Delivery Note",
     "nav.invoice": "Invoice",
     "nav.purchaseOrder": "Purchase Order",
@@ -573,7 +602,7 @@ export const messages: Record<Locale, MessageDictionary> = {
 
     "home.title": "Delivery Frontend",
     "home.description":
-      "Choose a page to use: Delivery Note, Invoice, Purchase, or Customer.",
+      "Choose a page to use: Delivery Note, Invoice, Purchase, Supplier, or Customer.",
     "home.route.user.title": "User",
     "home.route.user.description":
       "Manage application user accounts, roles, and passwords through a single page with table, filter, and form.",
@@ -586,6 +615,10 @@ export const messages: Record<Locale, MessageDictionary> = {
     "home.route.customer.description":
       "Manage customer data using a table, filters, and form plus preview in one page.",
     "home.route.customer.cta": "Open Customer",
+    "home.route.supplier.title": "Supplier",
+    "home.route.supplier.description":
+      "Manage supplier data, debt status, and debt term through a single page with table, filter, and form.",
+    "home.route.supplier.cta": "Open Supplier",
     "home.route.suratJalan.title": "Delivery Note",
     "home.route.suratJalan.description":
       "Manage delivery note data using a table, filters, and form plus preview in one page.",
@@ -670,6 +703,26 @@ export const messages: Record<Locale, MessageDictionary> = {
     "customer.toast.createSuccess": "Customer has been added successfully.",
     "customer.toast.updateSuccess": "Customer \"{{nama}}\" has been updated successfully.",
     "customer.toast.deleteSuccess": "Customer \"{{nama}}\" has been deleted successfully.",
+
+    "supplier.page.description":
+      "Manage supplier data using a table, filters, and form plus preview on the same page.",
+    "supplier.table.title": "Supplier Table",
+    "supplier.form.title": "Supplier Form and Preview",
+    "supplier.form.description":
+      "Add or update supplier data. Debt term is cleared automatically when debt is inactive.",
+    "supplier.preview.title": "Supplier Preview",
+    "supplier.apiLoadError": "Failed to load supplier data from backend.",
+    "supplier.mutationError": "Failed to process supplier changes.",
+    "supplier.adminOnlyAction": "Create, update, and delete supplier are admin/staff actions.",
+    "supplier.confirmUpdateTitle": "Confirm Supplier Update",
+    "supplier.confirmUpdateDescription":
+      "Save changes for supplier \"{{namaSupplier}}\"?",
+    "supplier.confirmDeleteTitle": "Confirm Supplier Deletion",
+    "supplier.confirmDeleteDescription":
+      "Supplier \"{{namaSupplier}}\" will be deleted permanently. Continue?",
+    "supplier.toast.createSuccess": "Supplier has been added successfully.",
+    "supplier.toast.updateSuccess": "Supplier \"{{namaSupplier}}\" has been updated successfully.",
+    "supplier.toast.deleteSuccess": "Supplier \"{{namaSupplier}}\" has been deleted successfully.",
 
     "user.page.description":
       "Manage application user accounts through a single page with table, filter, form, and preview. This page is admin-only.",
@@ -980,6 +1033,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "pembelian.preview.title": "Purchase Preview",
     "pembelian.apiLoadError": "Failed to load purchase data from backend.",
     "pembelian.invoiceLoadError": "Failed to load invoice options for purchase.",
+    "pembelian.supplierLoadError": "Failed to load supplier options for purchase.",
     "pembelian.mutationError": "Failed to process purchase changes.",
     "pembelian.invoiceRequired": "Invoice must be selected before saving purchase data.",
     "pembelian.confirmUpdateTitle": "Confirm Purchase Update",
@@ -1068,6 +1122,8 @@ export const messages: Record<Locale, MessageDictionary> = {
     "field.lunas": "Paid",
     "field.ppn": "VAT",
     "field.lamaHutang": "Debt Term",
+    "field.lamaHutangMin": "Minimum Debt Term",
+    "field.lamaHutangMax": "Maximum Debt Term",
     "field.nilaiNota": "Invoice Amount",
     "field.tanggalJatuhTempo": "Due Date",
     "field.tanggalBayar": "Payment Date",

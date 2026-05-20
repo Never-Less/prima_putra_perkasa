@@ -77,6 +77,12 @@ export default function HomePage() {
       cta: t("home.route.customer.cta"),
     },
     {
+      href: "/supplier",
+      title: t("home.route.supplier.title"),
+      description: t("home.route.supplier.description"),
+      cta: t("home.route.supplier.cta"),
+    },
+    {
       href: "/suratJalan",
       title: t("home.route.suratJalan.title"),
       description: t("home.route.suratJalan.description"),

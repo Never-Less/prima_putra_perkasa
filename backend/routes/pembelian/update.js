@@ -2,6 +2,7 @@ const express = require("express");
 
 const { Invoice } = require("../../models/Invoice");
 const { Pembelian } = require("../../models/Pembelian");
+const { Supplier } = require("../../models/Supplier");
 const { sanitizePembelian } = require("./sanitize-pembelian");
 const { isValidId, parseBoolean, parseDate, parseNumber } = require("./validators");
 
@@ -33,6 +34,22 @@ router.put("/:id", async (req, res) => {
 
     if (req.body.namaSupplier !== undefined) {
       updates.namaSupplier = String(req.body.namaSupplier || "").trim();
+    }
+
+    if (req.body.idSupplier !== undefined) {
+      if (req.body.idSupplier === null) {
+        updates.idSupplier = null;
+      } else {
+        const idSupplier = String(req.body.idSupplier || "").trim();
+
+        if (!idSupplier) {
+          updates.idSupplier = null;
+        } else if (!isValidId(idSupplier)) {
+          return res.status(400).json({ message: "idSupplier tidak valid" });
+        } else {
+          updates.idSupplier = idSupplier;
+        }
+      }
     }
 
     if (req.body.noNota !== undefined) {
@@ -112,7 +129,7 @@ router.put("/:id", async (req, res) => {
     if (Object.keys(updates).length === 0) {
       return res.status(400).json({
         message:
-          "minimal kirim salah satu field: tanggalNota, namaSupplier, noNota, idInvoice, hutang, ppn, lamaHutang, nilaiNota, tanggalJatuhTempo, tanggalBayar",
+          "minimal kirim salah satu field: tanggalNota, namaSupplier, idSupplier, noNota, idInvoice, hutang, ppn, lamaHutang, nilaiNota, tanggalJatuhTempo, tanggalBayar",
       });
     }
 
@@ -134,6 +151,13 @@ router.put("/:id", async (req, res) => {
       const invoice = await Invoice.findById(updates.idInvoice);
       if (!invoice) {
         return res.status(404).json({ message: "invoice tidak ditemukan" });
+      }
+    }
+
+    if (updates.idSupplier) {
+      const supplier = await Supplier.findById(updates.idSupplier);
+      if (!supplier) {
+        return res.status(404).json({ message: "supplier tidak ditemukan" });
       }
     }
 
