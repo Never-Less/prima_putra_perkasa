@@ -1,6 +1,7 @@
 const express = require("express");
 
 const { requireRole } = require("../../middlewares/auth");
+const { Pembelian } = require("../../models/Pembelian");
 const { Supplier } = require("../../models/Supplier");
 const { ROLE_ADMIN, ROLE_STAFF } = require("../../models/User");
 const { isValidId } = require("./validate-id");
@@ -15,6 +16,14 @@ router.delete("/:id", requireRole(ROLE_ADMIN, ROLE_STAFF), async (req, res) => {
   }
 
   try {
+    const referencedPembelianCount = await Pembelian.countDocuments({ idSupplier: id });
+
+    if (referencedPembelianCount > 0) {
+      return res.status(409).json({
+        message: "supplier masih digunakan oleh data pembelian",
+      });
+    }
+
     const supplier = await Supplier.findByIdAndDelete(id);
 
     if (!supplier) {

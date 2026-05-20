@@ -1,8 +1,8 @@
 "use client";
 
 import { useId, useMemo, useState } from "react";
-import Select from "react-select";
 import type { SingleValue, StylesConfig } from "react-select";
+import CreatableSelect from "react-select/creatable";
 import { AppDateInput } from "../../_components/app-date-input";
 import {
   formatRupiah,
@@ -130,6 +130,7 @@ export function PembelianEditForm({
   const selectPlaceholder = (fieldKey: string) =>
     t("common.placeholder.select", { field: t(fieldKey) });
   const stockInvoiceLabel = t("pembelian.stockInvoiceLabel");
+  const [supplierInputValue, setSupplierInputValue] = useState("");
   const [form, setForm] = useState<PembelianFormState>(() =>
     item
       ? (() => {
@@ -311,6 +312,8 @@ export function PembelianEditForm({
   );
 
   function handleSupplierChange(option: SingleValue<SupplierSelectOption>) {
+    setSupplierInputValue("");
+
     if (!option) {
       setForm((prev) => ({
         ...prev,
@@ -346,6 +349,36 @@ export function PembelianEditForm({
       tanggalJatuhTempo: calculateTanggalJatuhTempo(prev.tanggalNota, nextLamaHutang, nextHutang),
       tanggalBayar: nextHutang ? "" : prev.tanggalBayar,
     }));
+  }
+
+  function applyManualSupplierName(namaSupplier: string) {
+    const nextNamaSupplier = String(namaSupplier || "").trim();
+
+    if (!nextNamaSupplier) {
+      return;
+    }
+
+    setForm((prev) => ({
+      ...prev,
+      idSupplier: "",
+      namaSupplier: nextNamaSupplier,
+    }));
+  }
+
+  function handleSupplierCreate(namaSupplier: string) {
+    applyManualSupplierName(namaSupplier);
+    setSupplierInputValue("");
+  }
+
+  function buildSaveForm() {
+    const manualSupplierName = supplierInputValue.trim();
+
+    return {
+      ...form,
+      idSupplier: manualSupplierName ? "" : selectedSupplierOption?.supplier?.id || form.idSupplier,
+      namaSupplier: manualSupplierName || form.namaSupplier,
+      idInvoice: effectiveIdInvoice,
+    };
   }
 
   return (
@@ -387,12 +420,27 @@ export function PembelianEditForm({
 
             <label className="text-sm text-slate-700 dark:text-slate-200 sm:col-span-2">
               {t("field.namaSupplier")}
-              <Select<SupplierSelectOption, false>
+              <CreatableSelect<SupplierSelectOption, false>
                 inputId={supplierSelectId}
                 instanceId="pembelian-supplier-select"
                 value={selectedSupplierOption}
+                inputValue={supplierInputValue}
                 options={supplierSelectOptions}
                 onChange={handleSupplierChange}
+                onCreateOption={handleSupplierCreate}
+                onInputChange={(value, actionMeta) => {
+                  if (actionMeta.action === "input-change") {
+                    setSupplierInputValue(value);
+                  }
+                }}
+                onBlur={() => {
+                  applyManualSupplierName(supplierInputValue);
+                  setSupplierInputValue("");
+                }}
+                formatCreateLabel={(value) =>
+                  t("pembelian.form.createSupplierOption", { namaSupplier: value })
+                }
+                isValidNewOption={(value) => Boolean(value.trim())}
                 placeholder={selectPlaceholder("field.namaSupplier")}
                 noOptionsMessage={() => t("common.noData")}
                 isClearable
@@ -522,11 +570,7 @@ export function PembelianEditForm({
               type="button"
               onClick={() =>
                 void onSave?.(
-                  {
-                    ...form,
-                    idSupplier: selectedSupplierOption?.supplier?.id || form.idSupplier,
-                    idInvoice: effectiveIdInvoice,
-                  },
+                  buildSaveForm(),
                   item
                 )
               }

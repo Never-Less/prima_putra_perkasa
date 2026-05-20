@@ -455,6 +455,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "pembelian.form.description":
       "Lengkapi data pembelian. Lama hutang dan tanggal jatuh tempo wajib diisi saat status hutang aktif.",
     "pembelian.form.noInvoiceLabel": "No. Invoice (CV. Prima)",
+    "pembelian.form.createSupplierOption": "Gunakan \"{{namaSupplier}}\"",
     "pembelian.stockInvoiceLabel": "Stock",
     "pembelian.lamaHutang.note": "Dalam hitungan hari; tanggal jatuh tempo otomatis",
     "pembelian.preview.title": "Preview Pembelian",
@@ -1028,6 +1029,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "pembelian.form.description":
       "Complete the purchase data. Debt term and due date are required when debt status is active.",
     "pembelian.form.noInvoiceLabel": "Invoice No. (CV. Prima)",
+    "pembelian.form.createSupplierOption": "Use \"{{namaSupplier}}\"",
     "pembelian.stockInvoiceLabel": "Stock",
     "pembelian.lamaHutang.note": "Measured in days; due date is automatic",
     "pembelian.preview.title": "Purchase Preview",
