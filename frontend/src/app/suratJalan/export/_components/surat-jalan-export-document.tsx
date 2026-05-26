@@ -195,12 +195,12 @@ export function SuratJalanExportDocument({
   if (isMeiloonCustomer) {
     return (
       <section
-        className={`mx-auto w-full max-w-[210mm] bg-white text-black shadow-xl print:max-w-none print:shadow-none ${className}`.trim()}
+        className={`mx-auto w-full max-w-[8.5in] bg-white text-black shadow-xl print:max-w-none print:shadow-none ${className}`.trim()}
         style={{
           fontFamily: "Arial, Helvetica, sans-serif",
         }}
       >
-        <div className="min-h-[297mm] px-[6mm] py-[8mm] text-[14px] leading-[1.22]">
+        <div className="min-h-[11in] px-[6mm] py-[8mm] text-[14px] leading-[1.22]">
           <div className="grid grid-cols-2 gap-6 pt-7">
             <div className="px-2 py-1">
               <p className="text-[19px] font-bold">{companyProfile.name}</p>
@@ -337,12 +337,12 @@ export function SuratJalanExportDocument({
 
   return (
     <section
-      className={`mx-auto w-full max-w-[210mm] bg-white text-black shadow-xl print:max-w-none print:shadow-none ${className}`.trim()}
+      className={`mx-auto w-full max-w-[8.5in] bg-white text-black shadow-xl print:max-w-none print:shadow-none ${className}`.trim()}
       style={{
         fontFamily: "Arial, Helvetica, sans-serif",
       }}
     >
-      <div className="min-h-[297mm] px-[7mm] py-[9mm] text-[14px] leading-[1.22]">
+      <div className="min-h-[11in] px-[7mm] py-[9mm] text-[14px] leading-[1.22]">
         <div className="grid grid-cols-[1.15fr_0.85fr] gap-5">
           <div className="pt-7">
             <p className="text-[19px] font-bold">{companyProfile.name}</p>
