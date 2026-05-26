@@ -116,7 +116,7 @@ export default function SuratJalanExportPage() {
     <>
       <style jsx global>{`
         @page {
-          size: A4 portrait;
+          size: letter portrait;
           margin: 0;
         }
 
@@ -134,7 +134,7 @@ export default function SuratJalanExportPage() {
       `}</style>
 
       <main className="min-h-screen bg-slate-200/60 px-3 py-4 print:bg-white print:px-0 print:py-0">
-        <div className="mx-auto flex w-full max-w-[210mm] items-center justify-between gap-3 pb-4 print:hidden">
+        <div className="mx-auto flex w-full max-w-[8.5in] items-center justify-between gap-3 pb-4 print:hidden">
           <div>
             <h1 className="text-lg font-semibold text-slate-900">{t("suratJalan.export.previewTitle")}</h1>
             <p className="text-sm text-slate-600">{t("suratJalan.export.previewDescription")}</p>
@@ -158,11 +158,11 @@ export default function SuratJalanExportPage() {
         </div>
 
         {isLoading ? (
-          <div className="mx-auto max-w-[210mm] print:hidden">
+          <div className="mx-auto max-w-[8.5in] print:hidden">
             <ApiLoadingState />
           </div>
         ) : errorMessage ? (
-          <section className="mx-auto max-w-[210mm] rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 print:hidden">
+          <section className="mx-auto max-w-[8.5in] rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 print:hidden">
             <p>{errorMessage}</p>
           </section>
         ) : suratJalan ? (

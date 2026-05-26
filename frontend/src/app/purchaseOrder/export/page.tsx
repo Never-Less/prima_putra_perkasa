@@ -126,7 +126,7 @@ export default function PurchaseOrderExportPage() {
     <>
       <style jsx global>{`
         @page {
-          size: A4 portrait;
+          size: letter portrait;
           margin: 12mm;
         }
       `}</style>
