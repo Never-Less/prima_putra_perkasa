@@ -298,7 +298,9 @@ export function SuratJalanExportDocument({
                     className="h-[23px] border-b border-black last:border-b-0"
                   >
                     <td className="border-r border-black px-1 text-center align-top">{row.no}</td>
-                    <td className="border-r border-black px-1.5 align-top">{row.namaBarang}</td>
+                    <td className="whitespace-normal break-words border-r border-black px-1.5 align-top">
+                      {row.namaBarang}
+                    </td>
                     <td className="border-r border-black px-1.5 align-top whitespace-pre-line">
                       {row.spesifikasi}
                     </td>
@@ -414,9 +416,11 @@ export function SuratJalanExportDocument({
               {templateRows.map((row, index) => (
                 <tr key={`template-row-${index}`} className="h-[23px] border-b border-black last:border-b-0">
                   <td className="border-r border-black px-1 text-center align-middle">{row.no}</td>
-                  <td className="border-r border-black px-2 align-middle">
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="truncate">{row.namaBarang}</span>
+                  <td className="border-r border-black px-2 align-top">
+                    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+                      <span className="whitespace-normal break-words leading-[1.18]">
+                        {row.namaBarang}
+                      </span>
                       <span className="shrink-0">{row.kodeDepartemen}</span>
                     </div>
                   </td>

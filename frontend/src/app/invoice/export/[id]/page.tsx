@@ -329,7 +329,9 @@ function DefaultInvoiceTable({ rows, t, className = "" }: DefaultInvoiceTablePro
           {rows.map((row, index) => (
             <tr key={`default-invoice-row-${index}`} className="h-[24px]">
               <td className="px-1 text-center align-middle text-[11px]">{row.no}</td>
-              <td className="px-1.5 align-middle text-[11px] leading-[1.15]">{row.namaBarang}</td>
+              <td className="whitespace-normal break-words px-1.5 align-middle text-[11px] leading-[1.15]">
+                {row.namaBarang}
+              </td>
               <td className="px-1 text-center align-middle text-[11px]">{row.qty}</td>
               <td className="px-1 text-center align-middle text-[11px]">{row.unit}</td>
               <td className="px-1 py-0.5 text-right align-middle text-[11px]">
@@ -398,7 +400,9 @@ function MeiloonInvoiceTable({ rows, t, className = "" }: MeiloonInvoiceTablePro
           {rows.map((row, index) => (
             <tr key={`meiloon-invoice-row-${index}`} className="h-[19px]">
               <td className="px-1 text-center align-middle text-[11px]">{row.no}</td>
-              <td className="px-1.5 align-middle text-[11px] leading-[1.15]">{row.namaBarang}</td>
+              <td className="whitespace-normal break-words px-1.5 align-middle text-[11px] leading-[1.15]">
+                {row.namaBarang}
+              </td>
               <td className="px-1.5 align-middle text-[11px] leading-[1.15] whitespace-pre-line">{row.spesifikasi}</td>
               <td className="px-1 text-center align-middle text-[11px]">{row.unit}</td>
               <td className="px-1 text-center align-middle text-[11px]">{row.qty}</td>
