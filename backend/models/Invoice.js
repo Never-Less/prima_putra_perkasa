@@ -41,7 +41,6 @@ const barangInvoiceSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      maxlength: 150,
     },
     spesifikasi: {
       type: String,

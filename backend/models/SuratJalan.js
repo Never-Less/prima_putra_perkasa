@@ -6,7 +6,6 @@ const barangSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      maxlength: 120,
     },
     spesifikasi: {
       type: String,
