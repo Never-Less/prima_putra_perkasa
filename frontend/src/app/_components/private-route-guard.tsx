@@ -33,6 +33,8 @@ function isAdminOnlyPath(pathname: string) {
   return (
     pathname === "/user" ||
     pathname.startsWith("/user/") ||
+    pathname === "/pembayaranAllCustomer" ||
+    pathname.startsWith("/pembayaranAllCustomer/") ||
     pathname === "/laporanKeuangan" ||
     pathname.startsWith("/laporanKeuangan/")
   );

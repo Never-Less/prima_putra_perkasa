@@ -68,6 +68,12 @@ export default function HomePage() {
             description: t("home.route.laporanKeuangan.description"),
             cta: t("home.route.laporanKeuangan.cta"),
           },
+          {
+            href: "/pembayaranAllCustomer",
+            title: t("home.route.pembayaranAllCustomer.title"),
+            description: t("home.route.pembayaranAllCustomer.description"),
+            cta: t("home.route.pembayaranAllCustomer.cta"),
+          },
         ]
       : []),
     {

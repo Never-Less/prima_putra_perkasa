@@ -20,6 +20,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "nav.purchaseOrder": "Purchase Order",
     "nav.pembelian": "Pembelian",
     "nav.laporanKeuangan": "Laporan Keuangan",
+    "nav.pembayaranAllCustomer": "Pembayaran All Customer",
     "nav.menu": "Menu",
     "nav.theme": "Tema",
     "nav.logout": "Logout",
@@ -39,6 +40,10 @@ export const messages: Record<Locale, MessageDictionary> = {
     "home.route.laporanKeuangan.description":
       "Input biaya operasional bulanan dengan rincian biaya dinamis. Akses halaman ini khusus admin.",
     "home.route.laporanKeuangan.cta": "Buka Laporan Keuangan",
+    "home.route.pembayaranAllCustomer.title": "Pembayaran All Customer",
+    "home.route.pembayaranAllCustomer.description":
+      "Lihat laporan pembayaran invoice lunas per bulan untuk semua customer, dengan filter pencarian customer.",
+    "home.route.pembayaranAllCustomer.cta": "Buka Pembayaran All Customer",
     "home.route.customer.title": "Customer",
     "home.route.customer.description":
       "Kelola data customer melalui tabel, filter, serta form dan preview dalam satu halaman.",
@@ -513,6 +518,17 @@ export const messages: Record<Locale, MessageDictionary> = {
     "purchaseOrder.toast.deleteSuccess":
       "Purchase order \"{{noPo}}\" berhasil dihapus.",
 
+    "pembayaranAllCustomer.page.description":
+      "Laporan pembayaran invoice lunas berdasarkan tanggal bayar, customer, nomor invoice, nilai invoice, dan total bayar per tanggal/customer.",
+    "pembayaranAllCustomer.reportTitle": "LAPORAN PEMBAYARAN ALL CUSTOMER",
+    "pembayaranAllCustomer.periodTitle": "BULAN {{month}}",
+    "pembayaranAllCustomer.customerSearchLabel": "Cari Customer",
+    "pembayaranAllCustomer.customerSearchPlaceholder": "Ketik nama customer",
+    "pembayaranAllCustomer.totalLabel": "TOTAL PEMBAYARAN BULAN {{month}}",
+    "pembayaranAllCustomer.filteredSummary": "{{rows}} invoice dalam {{groups}} grup pembayaran.",
+    "pembayaranAllCustomer.empty": "Belum ada pembayaran invoice untuk filter ini.",
+    "pembayaranAllCustomer.loadError": "Gagal memuat laporan pembayaran all customer.",
+
     "field.nama": "Nama",
     "field.username": "Username",
     "field.password": "Password",
@@ -553,6 +569,8 @@ export const messages: Record<Locale, MessageDictionary> = {
     "field.lamaHutangMin": "Lama Hutang Minimum",
     "field.lamaHutangMax": "Lama Hutang Maksimum",
     "field.nilaiNota": "Nilai Nota",
+    "field.nilaiInvoice": "Nilai Invoice",
+    "field.totalBayar": "Total Bayar",
     "field.tanggalJatuhTempo": "Tanggal Jatuh Tempo",
     "field.tanggalBayar": "Tanggal Bayar",
     "field.nilaiNotaMin": "Nilai Nota Minimum",
@@ -593,6 +611,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "nav.purchaseOrder": "Purchase Order",
     "nav.pembelian": "Purchase",
     "nav.laporanKeuangan": "Financial Report",
+    "nav.pembayaranAllCustomer": "All Customer Payments",
     "nav.menu": "Menu",
     "nav.theme": "Theme",
     "nav.logout": "Logout",
@@ -612,6 +631,10 @@ export const messages: Record<Locale, MessageDictionary> = {
     "home.route.laporanKeuangan.description":
       "Input monthly operational costs with dynamic cost rows. This page is admin-only.",
     "home.route.laporanKeuangan.cta": "Open Financial Report",
+    "home.route.pembayaranAllCustomer.title": "All Customer Payments",
+    "home.route.pembayaranAllCustomer.description":
+      "View paid invoice payment reports by month for all customers, with customer search filtering.",
+    "home.route.pembayaranAllCustomer.cta": "Open All Customer Payments",
     "home.route.customer.title": "Customer",
     "home.route.customer.description":
       "Manage customer data using a table, filters, and form plus preview in one page.",
@@ -1087,6 +1110,17 @@ export const messages: Record<Locale, MessageDictionary> = {
     "purchaseOrder.toast.deleteSuccess":
       "Purchase order \"{{noPo}}\" has been deleted successfully.",
 
+    "pembayaranAllCustomer.page.description":
+      "Paid invoice payment report by payment date, customer, invoice number, invoice amount, and payment total per date/customer.",
+    "pembayaranAllCustomer.reportTitle": "ALL CUSTOMER PAYMENT REPORT",
+    "pembayaranAllCustomer.periodTitle": "MONTH {{month}}",
+    "pembayaranAllCustomer.customerSearchLabel": "Search Customer",
+    "pembayaranAllCustomer.customerSearchPlaceholder": "Type customer name",
+    "pembayaranAllCustomer.totalLabel": "TOTAL PAYMENTS FOR {{month}}",
+    "pembayaranAllCustomer.filteredSummary": "{{rows}} invoices in {{groups}} payment groups.",
+    "pembayaranAllCustomer.empty": "No invoice payments match this filter.",
+    "pembayaranAllCustomer.loadError": "Failed to load all customer payment report.",
+
     "field.nama": "Name",
     "field.username": "Username",
     "field.password": "Password",
@@ -1127,6 +1161,8 @@ export const messages: Record<Locale, MessageDictionary> = {
     "field.lamaHutangMin": "Minimum Debt Term",
     "field.lamaHutangMax": "Maximum Debt Term",
     "field.nilaiNota": "Invoice Amount",
+    "field.nilaiInvoice": "Invoice Amount",
+    "field.totalBayar": "Payment Total",
     "field.tanggalJatuhTempo": "Due Date",
     "field.tanggalBayar": "Payment Date",
     "field.nilaiNotaMin": "Minimum Invoice Amount",
