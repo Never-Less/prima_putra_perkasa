@@ -52,6 +52,12 @@ Panduan untuk agent yang bekerja di repository `prima_putra_perkasa`.
   - `Style Table`
   - `Style Form`
 - Hindari membuat style alternatif baru yang tidak dipakai. Jika ada style lama tidak terpakai, hapus agar codebase tetap bersih.
+- Untuk input field, gunakan pola/library yang sudah dipakai di project:
+  - Gunakan input lokal yang distyling dengan Tailwind sesuai komponen/form existing.
+  - Gunakan `AppDateInput` untuk field tanggal.
+  - Gunakan `react-select` untuk select/searchable select ketika pola existing membutuhkannya.
+  - Jangan menambahkan library form/input baru tanpa kebutuhan eksplisit.
+- Untuk export/print yang menampilkan nominal uang, gunakan format kolom currency yang memisahkan `Rp` rata kiri dan angka rata kanan. Gunakan komponen/pola shared existing (`ExportCurrencyValue`) agar format uang konsisten di semua export.
 - Gunakan i18n untuk text UI dan copy aplikasi.
   - Default bahasa: `id` (Bahasa Indonesia).
   - Bahasa tambahan saat ini: `en` (English).

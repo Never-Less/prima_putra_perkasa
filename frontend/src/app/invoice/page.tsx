@@ -298,6 +298,14 @@ export default function InvoicePage() {
   const executeSaveInvoice = useCallback(
     async (form: InvoiceFormState, selectedItem?: InvoiceItem) => {
       setActionErrorMessage("");
+
+      if (form.isPaid && !String(form.tanggalBayar || "").trim()) {
+        const message = t("invoice.validation.tanggalBayarRequiredWhenPaid");
+        setActionErrorMessage(message);
+        showToast(message, "error");
+        return;
+      }
+
       setIsSaving(true);
 
       try {

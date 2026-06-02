@@ -3,13 +3,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ApiLoadingState } from "../../_components/api-loading-state";
+import { ExportCurrencyValue } from "../../_components/export-currency-value";
 import { ApiRequestError } from "../../_lib/api-client";
 import { useI18n } from "../../_i18n/provider";
 import {
   defaultPurchaseOrderFilter,
   fetchPurchaseOrderExportRows,
   fetchPurchaseOrderOptions,
-  formatRupiah,
   formatTanggal,
   type PurchaseOrderFilter,
   type PurchaseOrderItem,
@@ -235,8 +235,8 @@ export default function PurchaseOrderExportPage() {
                               <td className="truncate border border-slate-300 px-3 py-2 align-top print:px-2 print:py-1.5" title={customerLabel}>
                                 {customerLabel}
                               </td>
-                              <td className="truncate border border-slate-300 px-3 py-2 align-top print:px-2 print:py-1.5">
-                                {formatRupiah(row.nominalPo, locale)}
+                              <td className="whitespace-nowrap border border-slate-300 px-3 py-2 align-top print:px-2 print:py-1.5">
+                                <ExportCurrencyValue value={row.nominalPo} locale={locale} />
                               </td>
                               <td className="truncate border border-slate-300 px-3 py-2 align-top print:px-2 print:py-1.5">
                                 {formatTanggal(row.tanggalInvoice, locale)}

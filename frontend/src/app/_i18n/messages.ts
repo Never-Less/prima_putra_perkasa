@@ -20,6 +20,8 @@ export const messages: Record<Locale, MessageDictionary> = {
     "nav.purchaseOrder": "Purchase Order",
     "nav.pembelian": "Pembelian",
     "nav.laporanKeuangan": "Laporan Keuangan",
+    "nav.pembayaranAllCustomer": "Pembayaran All Customer",
+    "nav.rekapTagihanPembayaranPabrik": "Rekap Tagihan Pembayaran Pabrik",
     "nav.menu": "Menu",
     "nav.theme": "Tema",
     "nav.logout": "Logout",
@@ -39,6 +41,14 @@ export const messages: Record<Locale, MessageDictionary> = {
     "home.route.laporanKeuangan.description":
       "Input biaya operasional bulanan dengan rincian biaya dinamis. Akses halaman ini khusus admin.",
     "home.route.laporanKeuangan.cta": "Buka Laporan Keuangan",
+    "home.route.pembayaranAllCustomer.title": "Pembayaran All Customer",
+    "home.route.pembayaranAllCustomer.description":
+      "Lihat laporan pembayaran invoice lunas per bulan untuk semua customer, dengan filter pencarian customer.",
+    "home.route.pembayaranAllCustomer.cta": "Buka Pembayaran All Customer",
+    "home.route.rekapTagihanPembayaranPabrik.title": "Rekap Tagihan Pembayaran Pabrik",
+    "home.route.rekapTagihanPembayaranPabrik.description":
+      "Lihat total pembayaran bulan berjalan dan outstanding tagihan sampai akhir bulan per pabrik.",
+    "home.route.rekapTagihanPembayaranPabrik.cta": "Buka Rekap Tagihan",
     "home.route.customer.title": "Customer",
     "home.route.customer.description":
       "Kelola data customer melalui tabel, filter, serta form dan preview dalam satu halaman.",
@@ -268,6 +278,8 @@ export const messages: Record<Locale, MessageDictionary> = {
     "invoice.exportPage.factoryBillingGrandTotal": "Grand Total Tagihan",
     "invoice.status.paid": "Lunas",
     "invoice.status.unpaid": "Belum Lunas",
+    "invoice.validation.tanggalBayarRequiredWhenPaid":
+      "Tanggal bayar wajib diisi jika invoice sudah dibayar.",
     "invoice.form.title": "Form dan Preview Invoice",
     "invoice.form.description":
       "Lengkapi data invoice, pilih No. PO dan surat jalan terkait, lalu biarkan sistem menghitung total secara otomatis.",
@@ -513,6 +525,33 @@ export const messages: Record<Locale, MessageDictionary> = {
     "purchaseOrder.toast.deleteSuccess":
       "Purchase order \"{{noPo}}\" berhasil dihapus.",
 
+    "pembayaranAllCustomer.page.description":
+      "Laporan pembayaran invoice lunas berdasarkan tanggal bayar, customer, nomor invoice, nilai invoice, dan total bayar per tanggal/customer.",
+    "pembayaranAllCustomer.reportTitle": "LAPORAN PEMBAYARAN ALL CUSTOMER",
+    "pembayaranAllCustomer.periodTitle": "BULAN {{month}}",
+    "pembayaranAllCustomer.customerSearchLabel": "Cari Customer",
+    "pembayaranAllCustomer.customerSearchPlaceholder": "Ketik nama customer",
+    "pembayaranAllCustomer.totalLabel": "TOTAL PEMBAYARAN BULAN {{month}}",
+    "pembayaranAllCustomer.filteredSummary": "{{rows}} invoice dalam {{groups}} grup pembayaran.",
+    "pembayaranAllCustomer.empty": "Belum ada pembayaran invoice untuk filter ini.",
+    "pembayaranAllCustomer.loadError": "Gagal memuat laporan pembayaran all customer.",
+
+    "rekapTagihanPembayaranPabrik.page.description":
+      "Rekapitulasi total pembayaran dan outstanding tagihan invoice per pabrik untuk bulan terpilih.",
+    "rekapTagihanPembayaranPabrik.reportLetter": "C.",
+    "rekapTagihanPembayaranPabrik.reportTitle": "REKAPITULASI TAGIHAN DAN PEMBAYARAN PABRIK",
+    "rekapTagihanPembayaranPabrik.periodTitle": "MASA {{month}}",
+    "rekapTagihanPembayaranPabrik.pabrikSearchLabel": "Cari Pabrik",
+    "rekapTagihanPembayaranPabrik.pabrikSearchPlaceholder": "Ketik nama pabrik",
+    "rekapTagihanPembayaranPabrik.totalLabel": "TOTAL JUMLAH",
+    "rekapTagihanPembayaranPabrik.filteredSummary": "{{rows}} pabrik dalam laporan.",
+    "rekapTagihanPembayaranPabrik.empty": "Belum ada tagihan atau pembayaran untuk filter ini.",
+    "rekapTagihanPembayaranPabrik.loadError": "Gagal memuat rekap tagihan dan pembayaran pabrik.",
+    "rekapTagihanPembayaranPabrik.outstandingNote":
+      "outstanding tagihan = semua tagihan yg belum terbayar per akhir {{month}}",
+    "rekapTagihanPembayaranPabrik.paymentNote":
+      "total pembayaran = total pembayaran di bulan {{month}}",
+
     "field.nama": "Nama",
     "field.username": "Username",
     "field.password": "Password",
@@ -528,6 +567,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "field.noSuratJalan": "No. Surat Jalan",
     "field.idCustomer": "Customer",
     "field.namaCustomer": "Nama Customer",
+    "field.namaPabrik": "Nama Pabrik",
     "field.subtotal": "Subtotal",
     "field.ppnAmount": "Nilai PPN",
     "field.grandTotal": "Grand Total",
@@ -553,6 +593,10 @@ export const messages: Record<Locale, MessageDictionary> = {
     "field.lamaHutangMin": "Lama Hutang Minimum",
     "field.lamaHutangMax": "Lama Hutang Maksimum",
     "field.nilaiNota": "Nilai Nota",
+    "field.nilaiInvoice": "Nilai Invoice",
+    "field.totalBayar": "Total Bayar",
+    "field.totalPembayaran": "Total Pembayaran",
+    "field.outstandingTagihan": "Outstanding Tagihan",
     "field.tanggalJatuhTempo": "Tanggal Jatuh Tempo",
     "field.tanggalBayar": "Tanggal Bayar",
     "field.nilaiNotaMin": "Nilai Nota Minimum",
@@ -593,6 +637,8 @@ export const messages: Record<Locale, MessageDictionary> = {
     "nav.purchaseOrder": "Purchase Order",
     "nav.pembelian": "Purchase",
     "nav.laporanKeuangan": "Financial Report",
+    "nav.pembayaranAllCustomer": "All Customer Payments",
+    "nav.rekapTagihanPembayaranPabrik": "Factory Billing Payment Recap",
     "nav.menu": "Menu",
     "nav.theme": "Theme",
     "nav.logout": "Logout",
@@ -612,6 +658,14 @@ export const messages: Record<Locale, MessageDictionary> = {
     "home.route.laporanKeuangan.description":
       "Input monthly operational costs with dynamic cost rows. This page is admin-only.",
     "home.route.laporanKeuangan.cta": "Open Financial Report",
+    "home.route.pembayaranAllCustomer.title": "All Customer Payments",
+    "home.route.pembayaranAllCustomer.description":
+      "View paid invoice payment reports by month for all customers, with customer search filtering.",
+    "home.route.pembayaranAllCustomer.cta": "Open All Customer Payments",
+    "home.route.rekapTagihanPembayaranPabrik.title": "Factory Billing Payment Recap",
+    "home.route.rekapTagihanPembayaranPabrik.description":
+      "View monthly payment totals and outstanding invoice billing through month end by factory.",
+    "home.route.rekapTagihanPembayaranPabrik.cta": "Open Billing Recap",
     "home.route.customer.title": "Customer",
     "home.route.customer.description":
       "Manage customer data using a table, filters, and form plus preview in one page.",
@@ -841,6 +895,8 @@ export const messages: Record<Locale, MessageDictionary> = {
     "invoice.exportPage.factoryBillingGrandTotal": "Grand Billing Total",
     "invoice.status.paid": "Paid",
     "invoice.status.unpaid": "Unpaid",
+    "invoice.validation.tanggalBayarRequiredWhenPaid":
+      "Payment date is required when the invoice is marked paid.",
     "invoice.form.title": "Invoice Form and Preview",
     "invoice.form.description":
       "Complete the invoice details, choose the related PO and delivery notes, and let the system calculate totals automatically.",
@@ -1087,6 +1143,33 @@ export const messages: Record<Locale, MessageDictionary> = {
     "purchaseOrder.toast.deleteSuccess":
       "Purchase order \"{{noPo}}\" has been deleted successfully.",
 
+    "pembayaranAllCustomer.page.description":
+      "Paid invoice payment report by payment date, customer, invoice number, invoice amount, and payment total per date/customer.",
+    "pembayaranAllCustomer.reportTitle": "ALL CUSTOMER PAYMENT REPORT",
+    "pembayaranAllCustomer.periodTitle": "MONTH {{month}}",
+    "pembayaranAllCustomer.customerSearchLabel": "Search Customer",
+    "pembayaranAllCustomer.customerSearchPlaceholder": "Type customer name",
+    "pembayaranAllCustomer.totalLabel": "TOTAL PAYMENTS FOR {{month}}",
+    "pembayaranAllCustomer.filteredSummary": "{{rows}} invoices in {{groups}} payment groups.",
+    "pembayaranAllCustomer.empty": "No invoice payments match this filter.",
+    "pembayaranAllCustomer.loadError": "Failed to load all customer payment report.",
+
+    "rekapTagihanPembayaranPabrik.page.description":
+      "Recap of invoice payment totals and outstanding billing by factory for the selected month.",
+    "rekapTagihanPembayaranPabrik.reportLetter": "C.",
+    "rekapTagihanPembayaranPabrik.reportTitle": "FACTORY BILLING AND PAYMENT RECAPITULATION",
+    "rekapTagihanPembayaranPabrik.periodTitle": "PERIOD {{month}}",
+    "rekapTagihanPembayaranPabrik.pabrikSearchLabel": "Search Factory",
+    "rekapTagihanPembayaranPabrik.pabrikSearchPlaceholder": "Type factory name",
+    "rekapTagihanPembayaranPabrik.totalLabel": "TOTAL AMOUNT",
+    "rekapTagihanPembayaranPabrik.filteredSummary": "{{rows}} factories in the report.",
+    "rekapTagihanPembayaranPabrik.empty": "No billing or payments match this filter.",
+    "rekapTagihanPembayaranPabrik.loadError": "Failed to load factory billing and payment recap.",
+    "rekapTagihanPembayaranPabrik.outstandingNote":
+      "outstanding billing = all unpaid billing as of the end of {{month}}",
+    "rekapTagihanPembayaranPabrik.paymentNote":
+      "payment total = total payments in {{month}}",
+
     "field.nama": "Name",
     "field.username": "Username",
     "field.password": "Password",
@@ -1102,6 +1185,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "field.noSuratJalan": "Delivery Note No.",
     "field.idCustomer": "Customer",
     "field.namaCustomer": "Customer Name",
+    "field.namaPabrik": "Factory Name",
     "field.subtotal": "Subtotal",
     "field.ppnAmount": "VAT Amount",
     "field.grandTotal": "Grand Total",
@@ -1127,6 +1211,10 @@ export const messages: Record<Locale, MessageDictionary> = {
     "field.lamaHutangMin": "Minimum Debt Term",
     "field.lamaHutangMax": "Maximum Debt Term",
     "field.nilaiNota": "Invoice Amount",
+    "field.nilaiInvoice": "Invoice Amount",
+    "field.totalBayar": "Payment Total",
+    "field.totalPembayaran": "Payment Total",
+    "field.outstandingTagihan": "Outstanding Billing",
     "field.tanggalJatuhTempo": "Due Date",
     "field.tanggalBayar": "Payment Date",
     "field.nilaiNotaMin": "Minimum Invoice Amount",

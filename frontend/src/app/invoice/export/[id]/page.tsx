@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ApiLoadingState } from "../../../_components/api-loading-state";
+import { ExportCurrencyValue } from "../../../_components/export-currency-value";
 import { formatAppUppercaseDate } from "../../../_lib/date";
 import { ApiRequestError } from "../../../_lib/api-client";
 import { useI18n } from "../../../_i18n/provider";
@@ -271,6 +272,14 @@ type DefaultInvoiceTableProps = CommonTemplateProps & {
   className?: string;
 };
 
+function isDefaultInvoiceRowEmpty(row: DefaultInvoiceTemplateRow) {
+  return !Object.values(row).some((value) => String(value || "").trim());
+}
+
+function isMeiloonInvoiceRowEmpty(row: MeiloonInvoiceTemplateRow) {
+  return !Object.values(row).some((value) => String(value || "").trim());
+}
+
 type CurrencyTableValueProps = {
   value: string;
 };
@@ -283,50 +292,53 @@ function CurrencyTableValue({ value }: CurrencyTableValueProps) {
   }
 
   return (
-    <span className="inline-block whitespace-nowrap text-[10px] leading-none">{normalizedValue}</span>
+    <ExportCurrencyValue value={normalizedValue} className="whitespace-nowrap text-[10px] leading-none" />
   );
 }
 
 function DefaultInvoiceTable({ rows, t, className = "" }: DefaultInvoiceTableProps) {
+  const filledRows = rows.filter((row) => !isDefaultInvoiceRowEmpty(row));
+  const hasFillerRow = filledRows.length < rows.length;
+
   return (
     <div className={`flex flex-col border border-black ${className}`.trim()}>
-      <table className="h-full w-full border-collapse table-fixed">
+      <table className={`${hasFillerRow ? "h-full" : ""} w-full table-fixed border-collapse`.trim()}>
         <colgroup>
-          <col style={{ width: "36px" }} />
+          <col style={{ width: "32px" }} />
           <col />
-          <col style={{ width: "50px" }} />
+          <col style={{ width: "42px" }} />
           <col style={{ width: "38px" }} />
-          <col style={{ width: "66px" }} />
-          <col style={{ width: "74px" }} />
-          <col style={{ width: "74px" }} />
+          <col style={{ width: "82px" }} />
+          <col style={{ width: "86px" }} />
+          <col style={{ width: "68px" }} />
         </colgroup>
         <thead>
-          <tr className="border-b border-black">
-            <th className="border-r border-black px-1 py-0.5 text-center text-[11px] font-bold">
+          <tr className="h-[24px] border-b border-black">
+            <th className="border-r border-black px-1 py-0.5 text-center align-middle text-[11px] font-bold">
               {t("invoice.export.table.no")}
             </th>
-            <th className="border-r border-black px-1 py-0.5 text-center text-[11px] font-bold">
+            <th className="border-r border-black px-1 py-0.5 text-center align-middle text-[11px] font-bold">
               {t("invoice.export.table.namaBarang")}
             </th>
-            <th className="border-r border-black px-1 py-0.5 text-center text-[11px] font-bold">
+            <th className="border-r border-black px-1 py-0.5 text-center align-middle text-[11px] font-bold">
               {t("invoice.export.table.qty")}
             </th>
-            <th className="border-r border-black px-1 py-0.5 text-center text-[11px] font-bold">
+            <th className="border-r border-black px-1 py-0.5 text-center align-middle text-[11px] font-bold">
               {t("invoice.export.table.unit")}
             </th>
-            <th className="border-r border-black px-1 py-0.5 text-center text-[11px] font-bold leading-tight">
+            <th className="border-r border-black px-1 py-0.5 text-center align-middle text-[11px] font-bold leading-tight">
               {t("invoice.export.table.hargaSatuan")}
             </th>
-            <th className="border-r border-black px-1 py-0.5 text-center text-[11px] font-bold">
+            <th className="border-r border-black px-1 py-0.5 text-center align-middle text-[11px] font-bold">
               {t("invoice.export.table.jumlah")}
             </th>
-            <th className="px-1 py-0.5 text-center text-[11px] font-bold">
+            <th className="px-1 py-0.5 text-center align-middle text-[11px] font-bold">
               {t("invoice.export.table.noPo")}
             </th>
           </tr>
         </thead>
         <tbody>
-          {rows.map((row, index) => (
+          {filledRows.map((row, index) => (
             <tr key={`default-invoice-row-${index}`} className="h-[24px]">
               <td className="border-r border-black px-1 pt-1 text-center align-top text-[11px]">{row.no}</td>
               <td className="whitespace-normal break-words border-r border-black px-1.5 pt-1 align-top text-[11px] leading-[1.15]">
@@ -343,6 +355,17 @@ function DefaultInvoiceTable({ rows, t, className = "" }: DefaultInvoiceTablePro
               <td className="px-1 pt-1 text-center align-top text-[10px]">{row.noPo}</td>
             </tr>
           ))}
+          {hasFillerRow ? (
+            <tr className="h-full">
+              <td className="border-r border-black" />
+              <td className="border-r border-black" />
+              <td className="border-r border-black" />
+              <td className="border-r border-black" />
+              <td className="border-r border-black" />
+              <td className="border-r border-black" />
+              <td />
+            </tr>
+          ) : null}
         </tbody>
       </table>
     </div>
@@ -355,9 +378,12 @@ type MeiloonInvoiceTableProps = CommonTemplateProps & {
 };
 
 function MeiloonInvoiceTable({ rows, t, className = "" }: MeiloonInvoiceTableProps) {
+  const filledRows = rows.filter((row) => !isMeiloonInvoiceRowEmpty(row));
+  const hasFillerRow = filledRows.length < rows.length;
+
   return (
     <div className={`flex flex-col border-2 border-black ${className}`.trim()}>
-      <table className="h-full w-full border-collapse table-fixed">
+      <table className={`${hasFillerRow ? "h-full" : ""} w-full table-fixed border-collapse`.trim()}>
         <colgroup>
           <col style={{ width: "30px" }} />
           <col style={{ width: "19%" }} />
@@ -369,35 +395,35 @@ function MeiloonInvoiceTable({ rows, t, className = "" }: MeiloonInvoiceTablePro
           <col style={{ width: "12%" }} />
         </colgroup>
         <thead>
-          <tr className="border-b-2 border-black">
-            <th className="border-r border-black px-1 py-0.5 text-center text-[12px] font-bold">
+          <tr className="h-[24px] border-b-2 border-black">
+            <th className="border-r border-black px-1 py-0.5 text-center align-middle text-[12px] font-bold">
               {t("invoice.export.table.no")}
             </th>
-            <th className="border-r border-black px-1 py-0.5 text-center text-[12px] font-bold">
+            <th className="border-r border-black px-1 py-0.5 text-center align-middle text-[12px] font-bold">
               {t("invoice.export.table.namaBarang")}
             </th>
-            <th className="border-r border-black px-1 py-0.5 text-center text-[12px] font-bold">
+            <th className="border-r border-black px-1 py-0.5 text-center align-middle text-[12px] font-bold">
               {t("invoice.export.table.spesifikasi")}
             </th>
-            <th className="border-r border-black px-1 py-0.5 text-center text-[12px] font-bold">
+            <th className="border-r border-black px-1 py-0.5 text-center align-middle text-[12px] font-bold">
               {t("invoice.export.table.unit")}
             </th>
-            <th className="border-r border-black px-1 py-0.5 text-center text-[12px] font-bold">
+            <th className="border-r border-black px-1 py-0.5 text-center align-middle text-[12px] font-bold">
               {t("invoice.export.table.qty")}
             </th>
-            <th className="border-r border-black px-1 py-0.5 text-center text-[12px] font-bold leading-tight">
+            <th className="border-r border-black px-1 py-0.5 text-center align-middle text-[12px] font-bold leading-tight">
               {t("invoice.export.table.hargaSatuan")}
             </th>
-            <th className="border-r border-black px-1 py-0.5 text-center text-[12px] font-bold">
+            <th className="border-r border-black px-1 py-0.5 text-center align-middle text-[12px] font-bold">
               {t("invoice.export.table.jumlah")}
             </th>
-            <th className="px-1 py-0.5 text-center text-[12px] font-bold">
+            <th className="px-1 py-0.5 text-center align-middle text-[12px] font-bold">
               {t("invoice.export.table.noPo")}
             </th>
           </tr>
         </thead>
         <tbody>
-          {rows.map((row, index) => (
+          {filledRows.map((row, index) => (
             <tr key={`meiloon-invoice-row-${index}`} className="h-[19px]">
               <td className="border-r border-black px-1 pt-1 text-center align-top text-[11px]">{row.no}</td>
               <td className="whitespace-normal break-words border-r border-black px-1.5 pt-1 align-top text-[11px] leading-[1.15]">
@@ -415,6 +441,18 @@ function MeiloonInvoiceTable({ rows, t, className = "" }: MeiloonInvoiceTablePro
               <td className="px-1 pt-1 text-center align-top text-[10px]">{row.noPo}</td>
             </tr>
           ))}
+          {hasFillerRow ? (
+            <tr className="h-full">
+              <td className="border-r border-black" />
+              <td className="border-r border-black" />
+              <td className="border-r border-black" />
+              <td className="border-r border-black" />
+              <td className="border-r border-black" />
+              <td className="border-r border-black" />
+              <td className="border-r border-black" />
+              <td />
+            </tr>
+          ) : null}
         </tbody>
       </table>
     </div>
@@ -771,23 +809,31 @@ export default function InvoiceExportPage() {
                     <div className="border-2 border-black">
                       <div className="grid grid-cols-[1fr_120px] border-b border-black text-[12px] font-bold last:border-b-0">
                         <div className="border-r border-black px-2 py-1">{t("invoice.export.summary.subtotal")}</div>
-                        <div className="px-2 py-1 text-right">{formatPlainNumber(Number(invoice.subtotal || 0))}</div>
+                        <div className="px-2 py-1">
+                          <CurrencyTableValue value={formatPlainNumber(Number(invoice.subtotal || 0))} />
+                        </div>
                       </div>
                       <div className="grid grid-cols-[1fr_120px] border-b border-black text-[12px] font-bold last:border-b-0">
                         <div className="border-r border-black px-2 py-1">
                           {t("invoice.export.summary.dppNilaiLain", { ratio: dppRatio })}
                         </div>
-                        <div className="px-2 py-1 text-right">{formatPlainNumber(dppValue)}</div>
+                        <div className="px-2 py-1">
+                          <CurrencyTableValue value={formatPlainNumber(dppValue)} />
+                        </div>
                       </div>
                       <div className="grid grid-cols-[1fr_120px] border-b border-black text-[12px] font-bold last:border-b-0">
                         <div className="border-r border-black px-2 py-1">
                           {t("invoice.export.summary.ppn", { rate: meiloonPpnRate })}
                         </div>
-                        <div className="px-2 py-1 text-right">{formatPlainNumber(meiloonPpnAmount)}</div>
+                        <div className="px-2 py-1">
+                          <CurrencyTableValue value={formatPlainNumber(meiloonPpnAmount)} />
+                        </div>
                       </div>
                       <div className="grid grid-cols-[1fr_120px] text-[12px] font-bold">
                         <div className="border-r border-black px-2 py-1">{t("invoice.export.summary.total")}</div>
-                        <div className="px-2 py-1 text-right">{formatPlainNumber(Number(invoice.grandTotal || 0))}</div>
+                        <div className="px-2 py-1">
+                          <CurrencyTableValue value={formatPlainNumber(Number(invoice.grandTotal || 0))} />
+                        </div>
                       </div>
                     </div>
 
@@ -843,23 +889,31 @@ export default function InvoiceExportPage() {
                       <div className="border-2 border-black">
                         <div className="grid grid-cols-[1fr_120px] border-b border-black text-[12px] font-bold last:border-b-0">
                           <div className="border-r border-black px-2 py-1">{t("invoice.export.summary.subtotal")}</div>
-                          <div className="px-2 py-1 text-right">{formatPlainNumber(Number(invoice.subtotal || 0))}</div>
+                          <div className="px-2 py-1">
+                            <CurrencyTableValue value={formatPlainNumber(Number(invoice.subtotal || 0))} />
+                          </div>
                         </div>
                         <div className="grid grid-cols-[1fr_120px] border-b border-black text-[12px] font-bold last:border-b-0">
                           <div className="border-r border-black px-2 py-1">
                             {t("invoice.export.summary.dppNilaiLain", { ratio: dppRatio })}
                           </div>
-                          <div className="px-2 py-1 text-right">{formatPlainNumber(dppValue)}</div>
+                          <div className="px-2 py-1">
+                            <CurrencyTableValue value={formatPlainNumber(dppValue)} />
+                          </div>
                         </div>
                         <div className="grid grid-cols-[1fr_120px] border-b border-black text-[12px] font-bold last:border-b-0">
                           <div className="border-r border-black px-2 py-1">
                             {t("invoice.export.summary.ppn", { rate: meiloonPpnRate })}
                           </div>
-                          <div className="px-2 py-1 text-right">{formatPlainNumber(meiloonPpnAmount)}</div>
+                          <div className="px-2 py-1">
+                            <CurrencyTableValue value={formatPlainNumber(meiloonPpnAmount)} />
+                          </div>
                         </div>
                         <div className="grid grid-cols-[1fr_120px] text-[12px] font-bold">
                           <div className="border-r border-black px-2 py-1">{t("invoice.export.summary.total")}</div>
-                          <div className="px-2 py-1 text-right">{formatPlainNumber(Number(invoice.grandTotal || 0))}</div>
+                          <div className="px-2 py-1">
+                            <CurrencyTableValue value={formatPlainNumber(Number(invoice.grandTotal || 0))} />
+                          </div>
                         </div>
                       </div>
 
@@ -975,17 +1029,23 @@ export default function InvoiceExportPage() {
                     <div className="border border-black">
                       <div className="grid grid-cols-[1fr_120px] border-b border-black text-[12px] last:border-b-0">
                         <div className="border-r border-black px-2 py-0.5">{t("invoice.export.default.summary.beforeTaxTotal")}</div>
-                        <div className="px-2 py-0.5 text-right">{formatPlainNumber(Number(invoice.subtotal || 0))}</div>
+                        <div className="px-2 py-0.5">
+                          <CurrencyTableValue value={formatPlainNumber(Number(invoice.subtotal || 0))} />
+                        </div>
                       </div>
                       <div className="grid grid-cols-[1fr_120px] border-b border-black text-[12px] last:border-b-0">
                         <div className="border-r border-black px-2 py-0.5">
                           {t("invoice.export.summary.ppn", { rate: invoice.ppnRate })}
                         </div>
-                        <div className="px-2 py-0.5 text-right">{formatPlainNumber(Number(invoice.ppnAmount || 0))}</div>
+                        <div className="px-2 py-0.5">
+                          <CurrencyTableValue value={formatPlainNumber(Number(invoice.ppnAmount || 0))} />
+                        </div>
                       </div>
                       <div className="grid grid-cols-[1fr_120px] text-[12px] font-bold">
                         <div className="border-r border-black px-2 py-0.5">{t("invoice.export.summary.total")}</div>
-                        <div className="px-2 py-0.5 text-right">{formatPlainNumber(Number(invoice.grandTotal || 0))}</div>
+                        <div className="px-2 py-0.5">
+                          <CurrencyTableValue value={formatPlainNumber(Number(invoice.grandTotal || 0))} />
+                        </div>
                       </div>
                     </div>
 
@@ -1041,17 +1101,23 @@ export default function InvoiceExportPage() {
                       <div className="border border-black">
                         <div className="grid grid-cols-[1fr_120px] border-b border-black text-[12px] last:border-b-0">
                           <div className="border-r border-black px-2 py-0.5">{t("invoice.export.default.summary.beforeTaxTotal")}</div>
-                          <div className="px-2 py-0.5 text-right">{formatPlainNumber(Number(invoice.subtotal || 0))}</div>
+                          <div className="px-2 py-0.5">
+                            <CurrencyTableValue value={formatPlainNumber(Number(invoice.subtotal || 0))} />
+                          </div>
                         </div>
                         <div className="grid grid-cols-[1fr_120px] border-b border-black text-[12px] last:border-b-0">
                           <div className="border-r border-black px-2 py-0.5">
                             {t("invoice.export.summary.ppn", { rate: invoice.ppnRate })}
                           </div>
-                          <div className="px-2 py-0.5 text-right">{formatPlainNumber(Number(invoice.ppnAmount || 0))}</div>
+                          <div className="px-2 py-0.5">
+                            <CurrencyTableValue value={formatPlainNumber(Number(invoice.ppnAmount || 0))} />
+                          </div>
                         </div>
                         <div className="grid grid-cols-[1fr_120px] text-[12px] font-bold">
                           <div className="border-r border-black px-2 py-0.5">{t("invoice.export.summary.total")}</div>
-                          <div className="px-2 py-0.5 text-right">{formatPlainNumber(Number(invoice.grandTotal || 0))}</div>
+                          <div className="px-2 py-0.5">
+                            <CurrencyTableValue value={formatPlainNumber(Number(invoice.grandTotal || 0))} />
+                          </div>
                         </div>
                       </div>
 

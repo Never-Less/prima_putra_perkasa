@@ -184,6 +184,12 @@ router.put("/:id", async (req, res) => {
       updates.tanggalBayar = null;
     }
 
+    if (effectiveIsPaid && !effectiveTanggalBayar) {
+      return res.status(400).json({
+        message: "tanggalBayar wajib diisi jika invoice sudah dibayar",
+      });
+    }
+
     if (effectiveTanggalBayar && effectiveTanggalBayar < effectiveTanggal) {
       return res.status(400).json({
         message: "tanggalBayar tidak boleh lebih kecil dari tanggal invoice",

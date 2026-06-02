@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ApiLoadingState } from "../../_components/api-loading-state";
+import { ExportCurrencyValue } from "../../_components/export-currency-value";
 import { useI18n } from "../../_i18n/provider";
 import { ApiRequestError } from "../../_lib/api-client";
 import { fetchCustomerRows } from "../../customer/_lib/customer";
@@ -20,7 +21,6 @@ import {
 import {
   calculateLaporanKeuanganMonthSummary,
   fetchLaporanKeuangan,
-  formatLaporanKeuanganCurrency,
   formatLaporanKeuanganMonth,
   getCurrentMonthValue,
   getCurrentYearValue,
@@ -206,7 +206,7 @@ function createExcelStylesXml() {
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
   <numFmts count="1">
-    <numFmt numFmtId="164" formatCode="#,##0;[Red]-#,##0;-"/>
+    <numFmt numFmtId="164" formatCode="_-&quot;Rp&quot;* #,##0_-;[Red]_-&quot;Rp&quot;* -#,##0_-;_-&quot;Rp&quot;* &quot;-&quot;_-;_-@_-"/>
   </numFmts>
   <fonts count="4">
     <font><sz val="11"/><color rgb="FF0F172A"/><name val="Calibri"/><family val="2"/></font>
@@ -474,16 +474,6 @@ function formatSpreadsheetDate(value: string) {
   const month = new Intl.DateTimeFormat("en-US", { month: "short" }).format(date);
 
   return `${day}-${month}`;
-}
-
-function formatAccountingNumber(value: number | undefined, locale: "id" | "en") {
-  if (value === undefined) {
-    return "";
-  }
-
-  return new Intl.NumberFormat(locale === "en" ? "en-US" : "id-ID", {
-    maximumFractionDigits: 0,
-  }).format(value);
 }
 
 function toOptionalAmount(value: number) {
@@ -1102,7 +1092,7 @@ export default function LaporanKeuanganExportPage() {
                     {t("field.netProfit")}
                   </p>
                   <p className={`mt-1 text-lg font-semibold ${exportSummary.netProfit >= 0 ? "text-slate-900" : "text-red-700"}`}>
-                    {formatLaporanKeuanganCurrency(exportSummary.netProfit, locale)}
+                    <ExportCurrencyValue value={exportSummary.netProfit} locale={locale} />
                   </p>
                 </div>
               </div>
@@ -1110,28 +1100,38 @@ export default function LaporanKeuanganExportPage() {
               <div className="grid gap-3 sm:grid-cols-6">
                 <div className="rounded-lg border border-slate-300 px-3 py-2">
                   <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">{t("field.totalInvoice")}</p>
-                  <p className="mt-1 font-semibold text-slate-900">{formatLaporanKeuanganCurrency(exportSummary.totalInvoice, locale)}</p>
+                  <p className="mt-1 font-semibold text-slate-900">
+                    <ExportCurrencyValue value={exportSummary.totalInvoice} locale={locale} />
+                  </p>
                 </div>
                 <div className="rounded-lg border border-slate-300 px-3 py-2">
                   <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">{t("field.totalPembelian")}</p>
-                  <p className="mt-1 font-semibold text-slate-900">{formatLaporanKeuanganCurrency(exportSummary.totalPembelian, locale)}</p>
+                  <p className="mt-1 font-semibold text-slate-900">
+                    <ExportCurrencyValue value={exportSummary.totalPembelian} locale={locale} />
+                  </p>
                 </div>
                 <div className="rounded-lg border border-slate-300 px-3 py-2">
                   <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">{t("field.stockBarang")}</p>
-                  <p className="mt-1 font-semibold text-slate-900">{formatLaporanKeuanganCurrency(exportSummary.totalStockBarang, locale)}</p>
+                  <p className="mt-1 font-semibold text-slate-900">
+                    <ExportCurrencyValue value={exportSummary.totalStockBarang} locale={locale} />
+                  </p>
                 </div>
                 <div className="rounded-lg border border-slate-300 px-3 py-2">
                   <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">{t("field.grossProfit")}</p>
-                  <p className="mt-1 font-semibold text-slate-900">{formatLaporanKeuanganCurrency(exportSummary.grossProfit, locale)}</p>
+                  <p className="mt-1 font-semibold text-slate-900">
+                    <ExportCurrencyValue value={exportSummary.grossProfit} locale={locale} />
+                  </p>
                 </div>
                 <div className="rounded-lg border border-slate-300 px-3 py-2">
                   <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">{t("field.totalBiayaOperasional")}</p>
-                  <p className="mt-1 font-semibold text-slate-900">{formatLaporanKeuanganCurrency(exportSummary.totalBiayaOperasional, locale)}</p>
+                  <p className="mt-1 font-semibold text-slate-900">
+                    <ExportCurrencyValue value={exportSummary.totalBiayaOperasional} locale={locale} />
+                  </p>
                 </div>
                 <div className="rounded-lg border border-slate-300 px-3 py-2">
                   <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">{t("field.netProfit")}</p>
                   <p className={`mt-1 font-semibold ${exportSummary.netProfit >= 0 ? "text-slate-900" : "text-red-700"}`}>
-                    {formatLaporanKeuanganCurrency(exportSummary.netProfit, locale)}
+                    <ExportCurrencyValue value={exportSummary.netProfit} locale={locale} />
                   </p>
                 </div>
               </div>
@@ -1156,25 +1156,25 @@ export default function LaporanKeuanganExportPage() {
                           <td className="truncate border border-slate-300 px-2 py-1 align-top font-medium">
                             {formatLaporanKeuanganMonth(row.bulan, locale)}
                           </td>
-                          <td className="truncate border border-slate-300 px-2 py-1 text-right align-top">
-                            {formatAccountingNumber(row.totalInvoice, locale)}
+                          <td className="truncate border border-slate-300 px-2 py-1 align-top">
+                            <ExportCurrencyValue value={row.totalInvoice} locale={locale} />
                           </td>
-                          <td className="truncate border border-slate-300 px-2 py-1 text-right align-top">
-                            {formatAccountingNumber(row.totalPembelian, locale)}
+                          <td className="truncate border border-slate-300 px-2 py-1 align-top">
+                            <ExportCurrencyValue value={row.totalPembelian} locale={locale} />
                           </td>
-                          <td className="truncate border border-slate-300 px-2 py-1 text-right align-top">
-                            {formatAccountingNumber(row.totalStockBarang, locale)}
+                          <td className="truncate border border-slate-300 px-2 py-1 align-top">
+                            <ExportCurrencyValue value={row.totalStockBarang} locale={locale} />
                           </td>
-                          <td className="truncate border border-slate-300 px-2 py-1 text-right align-top">
-                            {formatAccountingNumber(row.grossProfit, locale)}
+                          <td className="truncate border border-slate-300 px-2 py-1 align-top">
+                            <ExportCurrencyValue value={row.grossProfit} locale={locale} />
                           </td>
-                          <td className="truncate border border-slate-300 px-2 py-1 text-right align-top">
-                            {formatAccountingNumber(row.totalBiayaOperasional, locale)}
+                          <td className="truncate border border-slate-300 px-2 py-1 align-top">
+                            <ExportCurrencyValue value={row.totalBiayaOperasional} locale={locale} />
                           </td>
-                          <td className={`truncate border border-slate-300 px-2 py-1 text-right align-top font-semibold ${
+                          <td className={`truncate border border-slate-300 px-2 py-1 align-top font-semibold ${
                             row.netProfit >= 0 ? "text-slate-900" : "text-red-700"
                           }`}>
-                            {formatAccountingNumber(row.netProfit, locale)}
+                            <ExportCurrencyValue value={row.netProfit} locale={locale} />
                           </td>
                         </tr>
                       ))}
@@ -1182,25 +1182,25 @@ export default function LaporanKeuanganExportPage() {
                         <td className="truncate border border-slate-300 px-2 py-1 align-top">
                           {t("laporanKeuangan.yearlyTable.total")}
                         </td>
-                        <td className="truncate border border-slate-300 px-2 py-1 text-right align-top">
-                          {formatAccountingNumber(yearlyTotals.totalInvoice, locale)}
+                        <td className="truncate border border-slate-300 px-2 py-1 align-top">
+                          <ExportCurrencyValue value={yearlyTotals.totalInvoice} locale={locale} />
                         </td>
-                        <td className="truncate border border-slate-300 px-2 py-1 text-right align-top">
-                          {formatAccountingNumber(yearlyTotals.totalPembelian, locale)}
+                        <td className="truncate border border-slate-300 px-2 py-1 align-top">
+                          <ExportCurrencyValue value={yearlyTotals.totalPembelian} locale={locale} />
                         </td>
-                        <td className="truncate border border-slate-300 px-2 py-1 text-right align-top">
-                          {formatAccountingNumber(yearlyTotals.totalStockBarang, locale)}
+                        <td className="truncate border border-slate-300 px-2 py-1 align-top">
+                          <ExportCurrencyValue value={yearlyTotals.totalStockBarang} locale={locale} />
                         </td>
-                        <td className="truncate border border-slate-300 px-2 py-1 text-right align-top">
-                          {formatAccountingNumber(yearlyTotals.grossProfit, locale)}
+                        <td className="truncate border border-slate-300 px-2 py-1 align-top">
+                          <ExportCurrencyValue value={yearlyTotals.grossProfit} locale={locale} />
                         </td>
-                        <td className="truncate border border-slate-300 px-2 py-1 text-right align-top">
-                          {formatAccountingNumber(yearlyTotals.totalBiayaOperasional, locale)}
+                        <td className="truncate border border-slate-300 px-2 py-1 align-top">
+                          <ExportCurrencyValue value={yearlyTotals.totalBiayaOperasional} locale={locale} />
                         </td>
-                        <td className={`truncate border border-slate-300 px-2 py-1 text-right align-top ${
+                        <td className={`truncate border border-slate-300 px-2 py-1 align-top ${
                           yearlyTotals.netProfit >= 0 ? "text-slate-900" : "text-red-700"
                         }`}>
-                          {formatAccountingNumber(yearlyTotals.netProfit, locale)}
+                          <ExportCurrencyValue value={yearlyTotals.netProfit} locale={locale} />
                         </td>
                       </tr>
                     </tbody>
@@ -1254,14 +1254,14 @@ export default function LaporanKeuanganExportPage() {
                             }`} title={row.description || ""}>
                               {row.description || ""}
                             </td>
-                            <td className="truncate border border-slate-300 px-2 py-1 text-right align-top">
-                              {formatAccountingNumber(row.debet, locale)}
+                            <td className="truncate border border-slate-300 px-2 py-1 align-top">
+                              <ExportCurrencyValue value={row.debet} locale={locale} />
                             </td>
-                            <td className="truncate border border-slate-300 px-2 py-1 text-right align-top">
-                              {formatAccountingNumber(row.kreditPpn, locale)}
+                            <td className="truncate border border-slate-300 px-2 py-1 align-top">
+                              <ExportCurrencyValue value={row.kreditPpn} locale={locale} />
                             </td>
-                            <td className="truncate border border-slate-300 px-2 py-1 text-right align-top">
-                              {formatAccountingNumber(row.kreditNonPpn, locale)}
+                            <td className="truncate border border-slate-300 px-2 py-1 align-top">
+                              <ExportCurrencyValue value={row.kreditNonPpn} locale={locale} />
                             </td>
                             <td
                               className={`truncate border border-slate-300 px-2 py-1 align-top ${

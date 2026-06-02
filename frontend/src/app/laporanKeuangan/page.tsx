@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiLoadingState } from "../_components/api-loading-state";
+import { AppDateInput } from "../_components/app-date-input";
 import { AppToast } from "../_components/app-toast";
 import { useI18n } from "../_i18n/provider";
 import { ApiRequestError } from "../_lib/api-client";
@@ -475,10 +476,10 @@ export default function LaporanKeuanganPage() {
             {reportMode === "monthly" ? (
               <label className="block min-w-48 text-sm font-medium text-slate-700 dark:text-slate-200">
                 {t("field.bulan")}
-                <input
-                  type="month"
+                <AppDateInput
+                  mode="month"
                   value={bulan}
-                  onChange={(event) => setBulan(event.target.value)}
+                  onValueChange={setBulan}
                   className="mt-1 w-full rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-sky-900/60"
                 />
               </label>
