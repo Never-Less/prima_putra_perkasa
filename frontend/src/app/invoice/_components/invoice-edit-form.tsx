@@ -201,6 +201,8 @@ export function InvoiceEditForm({
 
     return calculateInvoiceSummary(barangList, form.isPpn, normalizedPpnRate);
   }, [barangList, form.isPpn, form.ppnRate]);
+  const isPaymentDateMissing = form.isPaid && !String(form.tanggalBayar || "").trim();
+  const paymentDateWarningMessage = t("invoice.validation.tanggalBayarRequiredWhenPaid");
   const normalizedSuratJalanOptions = useMemo(() => {
     const optionMap = new Map<string, InvoiceSuratJalanOption>();
 
@@ -699,8 +701,17 @@ export function InvoiceEditForm({
                 value={form.isPaid ? form.tanggalBayar : ""}
                 onValueChange={(value) => setForm((prev) => ({ ...prev, tanggalBayar: value }))}
                 disabled={!form.isPaid}
-                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
+                className={`mt-1 w-full rounded-lg border bg-white px-3 py-2 text-sm text-slate-900 shadow-sm disabled:cursor-not-allowed disabled:bg-slate-100 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900 ${
+                  isPaymentDateMissing
+                    ? "border-amber-400 dark:border-amber-500"
+                    : "border-sky-100 dark:border-slate-700"
+                }`}
               />
+              {isPaymentDateMissing ? (
+                <p className="mt-1 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+                  {paymentDateWarningMessage}
+                </p>
+              ) : null}
             </label>
 
             <div className="text-sm text-slate-700 dark:text-slate-200 sm:col-span-2">
@@ -795,7 +806,7 @@ export function InvoiceEditForm({
                   item
                 )
               }
-              disabled={isSaving || isDeleting}
+              disabled={isSaving || isDeleting || isPaymentDateMissing}
               className="w-full rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-sky-500 dark:text-slate-950 dark:hover:bg-sky-400 sm:w-auto"
             >
               {isSaving ? t("common.loading") : t("common.saveChanges")}

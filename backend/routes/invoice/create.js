@@ -66,7 +66,18 @@ router.post("/", async (req, res) => {
     return res.status(400).json({ message: "isPaid harus boolean" });
   }
 
-  if (parsedIsPaid && req.body.tanggalBayar !== undefined && req.body.tanggalBayar !== null && !tanggalBayar) {
+  const hasTanggalBayarInput =
+    req.body.tanggalBayar !== undefined &&
+    req.body.tanggalBayar !== null &&
+    String(req.body.tanggalBayar).trim() !== "";
+
+  if (parsedIsPaid && !hasTanggalBayarInput) {
+    return res.status(400).json({
+      message: "tanggalBayar wajib diisi jika invoice sudah dibayar",
+    });
+  }
+
+  if (parsedIsPaid && !tanggalBayar) {
     return res.status(400).json({ message: "tanggalBayar tidak valid" });
   }
 

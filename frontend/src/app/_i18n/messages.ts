@@ -273,6 +273,8 @@ export const messages: Record<Locale, MessageDictionary> = {
     "invoice.exportPage.factoryBillingGrandTotal": "Grand Total Tagihan",
     "invoice.status.paid": "Lunas",
     "invoice.status.unpaid": "Belum Lunas",
+    "invoice.validation.tanggalBayarRequiredWhenPaid":
+      "Tanggal bayar wajib diisi jika invoice sudah dibayar.",
     "invoice.form.title": "Form dan Preview Invoice",
     "invoice.form.description":
       "Lengkapi data invoice, pilih No. PO dan surat jalan terkait, lalu biarkan sistem menghitung total secara otomatis.",
@@ -864,6 +866,8 @@ export const messages: Record<Locale, MessageDictionary> = {
     "invoice.exportPage.factoryBillingGrandTotal": "Grand Billing Total",
     "invoice.status.paid": "Paid",
     "invoice.status.unpaid": "Unpaid",
+    "invoice.validation.tanggalBayarRequiredWhenPaid":
+      "Payment date is required when the invoice is marked paid.",
     "invoice.form.title": "Invoice Form and Preview",
     "invoice.form.description":
       "Complete the invoice details, choose the related PO and delivery notes, and let the system calculate totals automatically.",

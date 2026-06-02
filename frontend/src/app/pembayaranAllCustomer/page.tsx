@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ApiLoadingState } from "../_components/api-loading-state";
 import { AppDateInput } from "../_components/app-date-input";
+import { ExportCurrencyValue } from "../_components/export-currency-value";
 import { ApiRequestError } from "../_lib/api-client";
 import { formatAppDate } from "../_lib/date";
 import { useI18n } from "../_i18n/provider";
@@ -10,7 +11,6 @@ import { fetchCustomerRows, type CustomerItem } from "../customer/_lib/customer"
 import {
   defaultInvoiceFilter,
   fetchInvoiceExportRows,
-  formatRupiah,
   type InvoiceItem,
 } from "../invoice/_lib/invoice";
 
@@ -386,11 +386,11 @@ export default function PembayaranAllCustomerPage() {
                             <td className="border border-black px-2 py-2 text-center align-top">
                               {row.noInvoice || "-"}
                             </td>
-                            <td className="border border-black px-2 py-2 text-right align-top">
-                              {formatRupiah(Number(row.grandTotal || 0), locale)}
+                            <td className="border border-black px-2 py-2 align-top">
+                              <ExportCurrencyValue value={Number(row.grandTotal || 0)} locale={locale} />
                             </td>
-                            <td className="border border-black px-2 py-2 text-right align-top">
-                              {rowIndex === 0 ? formatRupiah(group.totalBayar, locale) : ""}
+                            <td className="border border-black px-2 py-2 align-top">
+                              {rowIndex === 0 ? <ExportCurrencyValue value={group.totalBayar} locale={locale} /> : ""}
                             </td>
                           </tr>
                         ))
@@ -412,8 +412,8 @@ export default function PembayaranAllCustomerPage() {
                       <td colSpan={4} className="border border-black px-2 py-3 text-[15px] font-medium">
                         {totalLabel}
                       </td>
-                      <td className="border border-black px-2 py-3 text-right text-[15px] font-semibold">
-                        {formatRupiah(totalPembayaran, locale)}
+                      <td className="border border-black px-2 py-3 text-[15px] font-semibold">
+                        <ExportCurrencyValue value={totalPembayaran} locale={locale} />
                       </td>
                     </tr>
                   </tfoot>
