@@ -38,6 +38,7 @@ export function AppNavbar() {
         { href: "/pembelian", label: t("nav.pembelian") },
         { href: "/supplier", label: t("nav.supplier") },
         isAdminAccess ? { href: "/pembayaranAllCustomer", label: t("nav.pembayaranAllCustomer") } : null,
+        isAdminAccess ? { href: "/rekapTagihanPembayaranPabrik", label: t("nav.rekapTagihanPembayaranPabrik") } : null,
         isAdminAccess ? { href: "/laporanKeuangan", label: t("nav.laporanKeuangan") } : null,
       ].filter((item): item is { href: string; label: string } => Boolean(item)),
     [isAdminAccess, t]
