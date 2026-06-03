@@ -301,7 +301,7 @@ function DefaultInvoiceTable({ rows, t, className = "" }: DefaultInvoiceTablePro
   const hasFillerRow = filledRows.length < rows.length;
 
   return (
-    <div className={`flex flex-col border border-black ${className}`.trim()}>
+    <div className={`flex flex-col overflow-hidden border border-black ${className}`.trim()}>
       <table className={`${hasFillerRow ? "h-full" : ""} w-full table-fixed border-collapse`.trim()}>
         <colgroup>
           <col style={{ width: "32px" }} />
@@ -382,7 +382,7 @@ function MeiloonInvoiceTable({ rows, t, className = "" }: MeiloonInvoiceTablePro
   const hasFillerRow = filledRows.length < rows.length;
 
   return (
-    <div className={`flex flex-col border-2 border-black ${className}`.trim()}>
+    <div className={`flex flex-col overflow-hidden border-2 border-black ${className}`.trim()}>
       <table className={`${hasFillerRow ? "h-full" : ""} w-full table-fixed border-collapse`.trim()}>
         <colgroup>
           <col style={{ width: "30px" }} />

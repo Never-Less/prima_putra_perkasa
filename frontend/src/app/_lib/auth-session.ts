@@ -18,7 +18,7 @@ type StoredAuthUser = {
 const accessTokenStorageKeys = ["accessToken", "access_token"];
 const refreshTokenStorageKeys = ["refreshToken", "refresh_token"];
 const authUserStorageKey = "authUser";
-const exportAllowedRoles = ["admin"];
+const exportAllowedRoles = ["admin", "staff"];
 const authSessionEventName = "ppp-auth-session-change";
 
 let refreshRequestPromise: Promise<string | null> | null = null;
