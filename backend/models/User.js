@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 const ROLE_ADMIN = "admin";
 const ROLE_STAFF = "staff";
 const ALLOWED_ROLES = [ROLE_ADMIN, ROLE_STAFF];
-const EXPORT_ALLOWED_ROLES = [ROLE_ADMIN];
+const EXPORT_ALLOWED_ROLES = [ROLE_ADMIN, ROLE_STAFF];
 
 function normalizeRole(value) {
   if (typeof value === "string") {
