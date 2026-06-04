@@ -60,14 +60,14 @@ function getSingleLineCustomerNameFontSize(value: string) {
   }
 
   if (length > 34) {
-    return "15px";
+    return "14px";
   }
 
   if (length > 28) {
-    return "17px";
+    return "15px";
   }
 
-  return "19px";
+  return "17px";
 }
 
 function normalizeCustomerName(value: string) {
@@ -186,7 +186,10 @@ export function SuratJalanExportDocument({
   );
   const customerAddress = useMemo(() => toUpperText(customer?.alamat || ""), [customer?.alamat]);
   const customerAttn = useMemo(() => toUpperText(customer?.atasNama || ""), [customer?.atasNama]);
-  const kendaraan = useMemo(() => formatExportKendaraan(suratJalan.kendaraan || ""), [suratJalan.kendaraan]).toLocaleLowerCase();
+  const kendaraan = useMemo(
+    () => formatExportKendaraan(suratJalan.kendaraan || ""),
+    [suratJalan.kendaraan]
+  );
   const isMeiloonCustomer = useMemo(
     () => normalizeCustomerName(customer?.nama || "") === meiloonCustomerName,
     [customer?.nama]
@@ -195,58 +198,58 @@ export function SuratJalanExportDocument({
   if (isMeiloonCustomer) {
     return (
       <section
-        className={`mx-auto w-full max-w-[8.5in] bg-white text-black shadow-xl print:max-w-none print:shadow-none ${className}`.trim()}
+        className={`mx-auto w-full max-w-[24cm] bg-white text-black shadow-xl print:h-[12cm] print:w-[24cm] print:max-w-none print:overflow-hidden print:shadow-none ${className}`.trim()}
         style={{
           fontFamily: "Arial, Helvetica, sans-serif",
         }}
       >
-        <div className="min-h-[11in] px-[6mm] py-[8mm] text-[14px] leading-[1.22]">
-          <div className="grid grid-cols-2 gap-6 pt-7">
-            <div className="px-2 py-1">
-              <p className="text-[19px] font-bold">{companyProfile.name}</p>
+        <div className="h-[12cm] px-[5mm] py-[4mm] text-[12px] leading-[1.15]">
+          <div className="grid grid-cols-[1fr_1.05fr] gap-4 pt-1">
+            <div className="px-1 py-0.5">
+              <p className="text-[17px] font-bold leading-tight">{companyProfile.name}</p>
               {companyProfile.addressLines.map((line) => (
-                <p key={line} className="text-[13px] leading-[1.22]">
+                <p key={line} className="text-[12px] leading-[1.15]">
                   {line}
                 </p>
               ))}
             </div>
 
             <div className="border-2 border-black px-2 py-1">
-              <p className="text-[14px] italic">{t("suratJalan.export.kepadaLabel")}</p>
+              <p className="text-[13px] italic leading-tight">{t("suratJalan.export.kepadaLabel")}</p>
               <p
                 className="whitespace-nowrap font-bold leading-tight"
                 style={{ fontSize: rawCustomerNameFontSize }}
               >
                 {rawCustomerName || meiloonCustomerName}
               </p>
-              <p className="whitespace-pre-line text-[13px] leading-[1.24]">
+              <p className="whitespace-pre-line text-[12px] leading-[1.12]">
                 {rawCustomerAddress || customerAddress || "-"}
               </p>
-              <p className="mt-1 text-[14px] font-bold">
+              <p className="mt-0.5 text-[13px] font-bold leading-tight">
                 {t("suratJalan.export.attnLabel")} : {rawCustomerAttn || customerAttn || "-"}
               </p>
             </div>
           </div>
 
-          <div className="mt-1 flex items-end justify-between gap-4 text-[14px] font-bold leading-tight">
-            <div className="grid grid-cols-[78px_12px_1fr] gap-x-1">
+          <div className="mt-1 flex items-end justify-between gap-4 text-[13px] font-bold leading-tight">
+            <div className="grid grid-cols-[70px_8px_1fr] gap-x-1">
               <span>{t("suratJalan.export.meiloon.noSjLabel")}</span>
               <span>:</span>
               <span>{suratJalan.noSuratJalan || "-"}</span>
             </div>
-            <div className="grid grid-cols-[72px_12px_1fr] gap-x-1">
+            <div className="grid grid-cols-[58px_8px_1fr] gap-x-1">
               <span>{t("suratJalan.export.noPoLabel")}</span>
               <span>:</span>
               <span>{suratJalan.noPo || "-"}</span>
             </div>
-            <div className="grid grid-cols-[72px_10px_1fr] gap-x-1">
+            <div className="grid grid-cols-[62px_8px_1fr] gap-x-1">
               <span>{t("suratJalan.export.tanggalLabel")}</span>
               <span>:</span>
               <span>{templateDate}</span>
             </div>
           </div>
 
-          <p className="mt-1 text-[13px]">
+          <p className="mt-1 text-[12px] leading-tight">
             {t("suratJalan.export.deliverySentenceStart")}{" "}
             <span>{kendaraan || "-"}</span>
           </p>
@@ -258,26 +261,26 @@ export function SuratJalanExportDocument({
                 <col style={{ width: "22%" }} />
                 <col style={{ width: "38%" }} />
                 <col style={{ width: "5%" }} />
-                <col style={{ width: "8%" }} />
-                <col style={{ width: "12%" }} />
-                <col style={{ width: "10%" }} />
                 <col style={{ width: "6%" }} />
+                <col style={{ width: "11%" }} />
+                <col style={{ width: "10%" }} />
+                <col style={{ width: "11%" }} />
               </colgroup>
               <thead>
                 <tr className="border-b-2 border-black">
-                  <th className="border-r border-black px-1 text-center text-[14px] font-bold">
+                  <th className="border-r border-black px-1 text-center text-[13px] font-bold">
                     {t("suratJalan.export.table.no")}
                   </th>
-                  <th className="border-r border-black px-1 text-center text-[14px] font-bold">
+                  <th className="border-r border-black px-1 text-center text-[13px] font-bold">
                     {t("suratJalan.export.table.namaBarang")}
                   </th>
-                  <th className="border-r border-black px-1 text-center text-[14px] font-bold">
+                  <th className="border-r border-black px-1 text-center text-[13px] font-bold">
                     {t("suratJalan.export.meiloon.table.spesifikasi")}
                   </th>
                   <th className="border-r border-black px-1 text-center text-[11px] font-bold leading-tight">
                     {t("suratJalan.export.meiloon.table.qty")}
                   </th>
-                  <th className="border-r border-black px-1 text-center text-[14px] font-bold">
+                  <th className="border-r border-black px-1 text-center text-[13px] font-bold">
                     {t("suratJalan.export.meiloon.table.unit")}
                   </th>
                   <th className="border-r border-black px-1 text-center text-[11px] font-bold leading-tight">
@@ -295,41 +298,40 @@ export function SuratJalanExportDocument({
                 {meiloonTemplateRows.map((row, index) => (
                   <tr
                     key={`meiloon-template-row-${index}`}
-                    className="h-[23px] border-b border-black last:border-b-0"
+                    className="h-[20px] border-b border-black last:border-b-0"
                   >
-                    <td className="border-r border-black px-1 text-center align-top">{row.no}</td>
-                    <td className="whitespace-normal break-words border-r border-black px-1.5 align-top">
+                    <td className="border-r border-black px-1 text-center align-middle">{row.no}</td>
+                    <td className="whitespace-normal break-words border-r border-black px-1.5 align-middle">
                       {row.namaBarang}
                     </td>
-                    <td className="border-r border-black px-1.5 align-top whitespace-pre-line">
+                    <td className="border-r border-black px-1.5 align-middle whitespace-pre-line">
                       {row.spesifikasi}
                     </td>
-                    <td className="border-r border-black px-1 text-center align-top">{row.qty}</td>
-                    <td className="border-r border-black px-1 text-center align-top">{row.unit}</td>
-                    <td className="border-r border-black px-1 text-center align-top">{row.kodeDepartemen}</td>
-                    <td className="border-r border-black px-1 text-center align-top">{row.ttdPenerima}</td>
-                    <td className="px-1 text-center align-top">{row.note}</td>
+                    <td className="border-r border-black px-1 text-center align-middle">{row.qty}</td>
+                    <td className="border-r border-black px-1 text-center align-middle">{row.unit}</td>
+                    <td className="border-r border-black px-1 text-center align-middle">{row.kodeDepartemen}</td>
+                    <td className="border-r border-black px-1 text-center align-middle">{row.ttdPenerima}</td>
+                    <td className="px-1 text-center align-middle">{row.note}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
 
-          <p className="mt-0.5 text-[13px] font-bold">{t("suratJalan.export.returnPolicy")}</p>
-          <br />
+          <p className="mt-0.5 text-[12px] font-bold leading-tight">{t("suratJalan.export.returnPolicy")}</p>
 
           <div className="mt-0.5 grid grid-cols-3 gap-8 text-center">
             <div>
-              <p className="text-[15px] font-bold">{t("suratJalan.export.signature.receiver")}</p>
-              <div className="mt-[72px] mx-auto w-[120px] border-t-[1.5px] border-black" />
+              <p className="text-[14px] font-bold">{t("suratJalan.export.signature.receiver")}</p>
+              <div className="mt-[58px] mx-auto w-[105px] border-t-[1.5px] border-black" />
             </div>
             <div>
-              <p className="text-[15px] font-bold">{t("suratJalan.export.signature.sender")}</p>
-              <div className="mt-[72px] mx-auto w-[120px] border-t-[1.5px] border-black" />
+              <p className="text-[14px] font-bold">{t("suratJalan.export.signature.sender")}</p>
+              <div className="mt-[58px] mx-auto w-[105px] border-t-[1.5px] border-black" />
             </div>
             <div>
-              <p className="text-[15px] font-bold">{t("suratJalan.export.signature.regards")}</p>
-              <div className="mt-[72px] mx-auto w-[130px] border-t-[1.5px] border-black" />
+              <p className="text-[14px] font-bold">{t("suratJalan.export.signature.regards")}</p>
+              <div className="mt-[58px] mx-auto w-[115px] border-t-[1.5px] border-black" />
             </div>
           </div>
         </div>
@@ -339,55 +341,55 @@ export function SuratJalanExportDocument({
 
   return (
     <section
-      className={`mx-auto w-full max-w-[8.5in] bg-white text-black shadow-xl print:max-w-none print:shadow-none ${className}`.trim()}
+      className={`mx-auto w-full max-w-[24cm] bg-white text-black shadow-xl print:h-[12cm] print:w-[24cm] print:max-w-none print:overflow-hidden print:shadow-none ${className}`.trim()}
       style={{
         fontFamily: "Arial, Helvetica, sans-serif",
       }}
     >
-      <div className="min-h-[11in] px-[7mm] py-[9mm] text-[14px] leading-[1.22]">
-        <div className="grid grid-cols-[1.15fr_0.85fr] gap-5">
-          <div className="pt-7">
-            <p className="text-[19px] font-bold">{companyProfile.name}</p>
+      <div className="h-[12cm] px-[5mm] py-[4mm] text-[12px] leading-[1.15]">
+        <div className="grid grid-cols-[0.98fr_1.02fr] gap-5">
+          <div className="pt-1">
+            <p className="text-[17px] font-bold leading-tight">{companyProfile.name}</p>
             {companyProfile.addressLines.map((line) => (
-              <p key={line} className="text-[13px]">
+              <p key={line} className="text-[12px] leading-[1.15]">
                 {line}
               </p>
             ))}
 
-            <div className="mt-5 grid w-full grid-cols-[190px_12px_1fr] gap-x-2 text-[18px] font-bold leading-tight">
-              <span>{t("suratJalan.export.noSuratJalanLabel")}</span>
+            <div className="mt-3 grid w-full grid-cols-[118px_8px_1fr] gap-x-1 text-[13px] font-bold leading-tight">
+              <span className="whitespace-nowrap">{t("suratJalan.export.noSuratJalanLabel")}</span>
               <span>:</span>
-              <span>{suratJalan.noSuratJalan || "-"}</span>
-              <span>{t("suratJalan.export.noPoLabel")}</span>
+              <span className="whitespace-nowrap">{suratJalan.noSuratJalan || "-"}</span>
+              <span className="whitespace-nowrap">{t("suratJalan.export.noPoLabel")}</span>
               <span>:</span>
-              <span>{suratJalan.noPo || "-"}</span>
+              <span className="whitespace-nowrap">{suratJalan.noPo || "-"}</span>
             </div>
           </div>
 
-          <div className="pt-7">
-            <div className="grid grid-cols-[88px_10px_1fr] text-[14px] font-bold leading-tight">
+          <div className="pt-1">
+            <div className="grid grid-cols-[72px_8px_1fr] text-[13px] font-bold leading-tight">
               <span>{t("suratJalan.export.tanggalLabel")}</span>
               <span>:</span>
               <span>{templateDate}</span>
             </div>
 
-            <div className="mt-1 border-2 border-black px-2 py-1.5">
-              <p className="text-[14px] italic">{t("suratJalan.export.kepadaLabel")}</p>
+            <div className="mt-1 min-h-[82px] border-2 border-black px-2.5 py-1.5">
+              <p className="text-[13px] italic leading-tight">{t("suratJalan.export.kepadaLabel")}</p>
               <p
                 className="whitespace-nowrap font-bold leading-tight"
                 style={{ fontSize: customerNameFontSize }}
               >
                 {customerName || "-"}
               </p>
-              <p className="whitespace-pre-line text-[13px] leading-[1.24]">{customerAddress || "-"}</p>
-              <p className="mt-1 text-[14px] font-bold">
+              <p className="whitespace-pre-line text-[12px] leading-[1.12]">{customerAddress || "-"}</p>
+              <p className="mt-0.5 text-[13px] font-bold leading-tight">
                 {t("suratJalan.export.attnLabel")}: {customerAttn || "-"}
               </p>
             </div>
           </div>
         </div>
 
-        <p className="mt-6 text-[13px]">
+        <p className="mt-3 text-[12px] leading-tight">
           {t("suratJalan.export.deliverySentenceStart")}{" "}
           <span>{kendaraan || "-"}</span>
         </p>
@@ -397,27 +399,27 @@ export function SuratJalanExportDocument({
             <colgroup>
               <col style={{ width: "28px" }} />
               <col />
-              <col style={{ width: "100px" }} />
+              <col style={{ width: "90px" }} />
             </colgroup>
             <thead>
               <tr className="border-b-2 border-black">
-                <th className="border-r border-black px-1 text-center text-[14px] font-bold">
+                <th className="border-r border-black px-1 text-center text-[13px] font-bold">
                   {t("suratJalan.export.table.no")}
                 </th>
-                <th className="border-r border-black px-1 text-center text-[14px] font-bold">
+                <th className="border-r border-black px-1 text-center text-[13px] font-bold">
                   {t("suratJalan.export.table.namaBarang")}
                 </th>
-                <th className="px-1 text-center text-[14px] font-bold">
+                <th className="px-1 text-center text-[13px] font-bold">
                   {t("suratJalan.export.table.jumlah")}
                 </th>
               </tr>
             </thead>
             <tbody>
               {templateRows.map((row, index) => (
-                <tr key={`template-row-${index}`} className="h-[23px] border-b border-black last:border-b-0">
+                <tr key={`template-row-${index}`} className="h-[17px] border-b border-black last:border-b-0">
                   <td className="border-r border-black px-1 text-center align-middle">{row.no}</td>
                   <td className="border-r border-black px-2 align-top">
-                    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+                    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
                       <span className="whitespace-normal break-words leading-[1.18]">
                         {row.namaBarang}
                       </span>
@@ -431,20 +433,20 @@ export function SuratJalanExportDocument({
           </table>
         </div>
 
-        <p className="mt-0.5 text-[13px] font-bold">{t("suratJalan.export.returnPolicy")}</p>
+        <p className="mt-0.5 text-[12px] font-bold leading-tight">{t("suratJalan.export.returnPolicy")}</p>
 
         <div className="mt-0.5 grid grid-cols-3 gap-8 text-center">
           <div>
-            <p className="text-[15px] font-bold">{t("suratJalan.export.signature.receiver")}</p>
-            <div className="mt-[76px] mx-auto w-[120px] border-t-[1.5px] border-black" />
+            <p className="text-[14px] font-bold">{t("suratJalan.export.signature.receiver")}</p>
+            <div className="mt-[58px] mx-auto w-[105px] border-t-[1.5px] border-black" />
           </div>
           <div>
-            <p className="text-[15px] font-bold">{t("suratJalan.export.signature.sender")}</p>
-            <div className="mt-[76px] mx-auto w-[120px] border-t-[1.5px] border-black" />
+            <p className="text-[14px] font-bold">{t("suratJalan.export.signature.sender")}</p>
+            <div className="mt-[58px] mx-auto w-[105px] border-t-[1.5px] border-black" />
           </div>
           <div>
-            <p className="text-[15px] font-bold">{t("suratJalan.export.signature.regards")}</p>
-            <div className="mt-[76px] mx-auto w-[130px] border-t-[1.5px] border-black" />
+            <p className="text-[14px] font-bold">{t("suratJalan.export.signature.regards")}</p>
+            <div className="mt-[58px] mx-auto w-[115px] border-t-[1.5px] border-black" />
           </div>
         </div>
       </div>
