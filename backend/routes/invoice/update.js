@@ -190,12 +190,6 @@ router.put("/:id", async (req, res) => {
       });
     }
 
-    if (effectiveTanggalBayar && effectiveTanggalBayar < effectiveTanggal) {
-      return res.status(400).json({
-        message: "tanggalBayar tidak boleh lebih kecil dari tanggal invoice",
-      });
-    }
-
     updates.subtotal = effectiveSubtotal;
     updates.isPpn = effectiveIsPpn;
     updates.ppnRate = effectivePpnRate;

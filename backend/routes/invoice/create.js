@@ -81,12 +81,6 @@ router.post("/", async (req, res) => {
     return res.status(400).json({ message: "tanggalBayar tidak valid" });
   }
 
-  if (parsedIsPaid && tanggalBayar && tanggalBayar < tanggal) {
-    return res.status(400).json({
-      message: "tanggalBayar tidak boleh lebih kecil dari tanggal invoice",
-    });
-  }
-
   if (parsedPpnRate === null || parsedPpnRate < 0 || parsedPpnRate > 100) {
     return res.status(400).json({ message: "ppnRate harus angka 0 - 100" });
   }
