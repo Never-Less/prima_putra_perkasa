@@ -133,7 +133,7 @@ export default function SuratJalanNoPoExportPage() {
     <>
       <style jsx global>{`
         @page {
-          size: 24cm 12cm;
+          size: letter portrait;
           margin: 0;
         }
 
@@ -146,6 +146,13 @@ export default function SuratJalanNoPoExportPage() {
           body {
             margin: 0;
             padding: 0;
+          }
+
+          .surat-jalan-print-page {
+            width: 24cm !important;
+            height: 12cm !important;
+            max-width: none !important;
+            overflow: hidden !important;
           }
         }
       `}</style>
