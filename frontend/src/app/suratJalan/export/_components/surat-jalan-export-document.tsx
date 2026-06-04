@@ -21,6 +21,8 @@ const companyProfile = {
 };
 
 const meiloonCustomerName = "PT. MEILOON TECHNOLOGY INDONESIA";
+const defaultRowsPerPage = 8;
+const meiloonRowsPerPage = 8;
 
 type TemplateRow = {
   no: string;
@@ -48,26 +50,26 @@ function getSingleLineCustomerNameFontSize(value: string) {
   const length = String(value || "").trim().length;
 
   if (length > 58) {
-    return "11px";
+    return "10px";
   }
 
   if (length > 48) {
-    return "12px";
+    return "11px";
   }
 
   if (length > 40) {
-    return "13px";
+    return "12px";
   }
 
   if (length > 34) {
-    return "14px";
+    return "13px";
   }
 
   if (length > 28) {
-    return "15px";
+    return "14px";
   }
 
-  return "17px";
+  return "15px";
 }
 
 function normalizeCustomerName(value: string) {
@@ -86,7 +88,7 @@ function formatExportKendaraan(value: string) {
     .toUpperCase();
 }
 
-function buildTemplateRows(suratJalan: SuratJalanItem, minimumRows = 8): TemplateRow[] {
+function buildTemplateRows(suratJalan: SuratJalanItem, minimumRows = defaultRowsPerPage): TemplateRow[] {
   const filledRows = (suratJalan.barang || []).map((barang, index) => {
     const namaBarang = String(barang.nama || "").trim();
     const spesifikasi = String(barang.spesifikasi || "").trim();
@@ -117,7 +119,7 @@ function buildTemplateRows(suratJalan: SuratJalanItem, minimumRows = 8): Templat
   return rows;
 }
 
-function buildMeiloonTemplateRows(suratJalan: SuratJalanItem, minimumRows = 8): MeiloonTemplateRow[] {
+function buildMeiloonTemplateRows(suratJalan: SuratJalanItem, minimumRows = meiloonRowsPerPage): MeiloonTemplateRow[] {
   const filledRows = (suratJalan.barang || []).map((barang, index) => ({
     no: String(index + 1),
     namaBarang: String(barang.nama || "").trim(),
@@ -148,6 +150,22 @@ function buildMeiloonTemplateRows(suratJalan: SuratJalanItem, minimumRows = 8): 
   return rows;
 }
 
+function chunkRows<T>(rows: T[], rowsPerPage: number, createEmptyRow: () => T) {
+  const chunks: T[][] = [];
+
+  for (let index = 0; index < rows.length; index += rowsPerPage) {
+    const chunk = rows.slice(index, index + rowsPerPage);
+
+    while (chunk.length < rowsPerPage) {
+      chunk.push(createEmptyRow());
+    }
+
+    chunks.push(chunk);
+  }
+
+  return chunks.length > 0 ? chunks : [rows];
+}
+
 type SuratJalanExportDocumentProps = {
   suratJalan: SuratJalanItem;
   customer: ExportCustomer;
@@ -162,6 +180,30 @@ export function SuratJalanExportDocument({
   const { t, locale } = useI18n();
   const templateRows = useMemo(() => buildTemplateRows(suratJalan), [suratJalan]);
   const meiloonTemplateRows = useMemo(() => buildMeiloonTemplateRows(suratJalan), [suratJalan]);
+  const templatePages = useMemo(
+    () =>
+      chunkRows(templateRows, defaultRowsPerPage, () => ({
+        no: "",
+        namaBarang: "",
+        kodeDepartemen: "",
+        jumlah: "",
+      })),
+    [templateRows]
+  );
+  const meiloonTemplatePages = useMemo(
+    () =>
+      chunkRows(meiloonTemplateRows, meiloonRowsPerPage, () => ({
+        no: "",
+        namaBarang: "",
+        spesifikasi: "",
+        qty: "",
+        unit: "",
+        kodeDepartemen: "",
+        ttdPenerima: "",
+        note: "",
+      })),
+    [meiloonTemplateRows]
+  );
   const templateDate = useMemo(
     () => formatTemplateDate(suratJalan.tanggal || "", locale),
     [locale, suratJalan.tanggal]
@@ -197,8 +239,15 @@ export function SuratJalanExportDocument({
 
   if (isMeiloonCustomer) {
     return (
+      <>
+        {meiloonTemplatePages.map((pageRows, pageIndex) => (
       <section
-        className={`mx-auto w-full max-w-[24cm] bg-white text-black shadow-xl print:h-[12cm] print:w-[24cm] print:max-w-none print:overflow-hidden print:shadow-none ${className}`.trim()}
+        key={`meiloon-page-${pageIndex}`}
+        className={`surat-jalan-print-page mx-auto w-full max-w-[24cm] bg-white text-black shadow-xl print:h-[12cm] print:w-[24cm] print:max-w-none print:overflow-hidden print:shadow-none ${
+          pageIndex < meiloonTemplatePages.length - 1
+            ? "mb-4 print:mb-0 print:break-after-page"
+            : ""
+        } ${className}`.trim()}
         style={{
           fontFamily: "Arial, Helvetica, sans-serif",
         }}
@@ -215,17 +264,17 @@ export function SuratJalanExportDocument({
             </div>
 
             <div className="border-2 border-black px-2 py-1">
-              <p className="text-[13px] italic leading-tight">{t("suratJalan.export.kepadaLabel")}</p>
+              <p className="text-[11px] italic leading-tight">{t("suratJalan.export.kepadaLabel")}</p>
               <p
                 className="whitespace-nowrap font-bold leading-tight"
                 style={{ fontSize: rawCustomerNameFontSize }}
               >
                 {rawCustomerName || meiloonCustomerName}
               </p>
-              <p className="whitespace-pre-line text-[12px] leading-[1.12]">
+              <p className="whitespace-pre-line text-[10px] leading-[1.12]">
                 {rawCustomerAddress || customerAddress || "-"}
               </p>
-              <p className="mt-0.5 text-[13px] font-bold leading-tight">
+              <p className="mt-0.5 text-[11px] font-bold leading-tight">
                 {t("suratJalan.export.attnLabel")} : {rawCustomerAttn || customerAttn || "-"}
               </p>
             </div>
@@ -295,7 +344,7 @@ export function SuratJalanExportDocument({
                 </tr>
               </thead>
               <tbody>
-                {meiloonTemplateRows.map((row, index) => (
+                {pageRows.map((row, index) => (
                   <tr
                     key={`meiloon-template-row-${index}`}
                     className="h-[20px] border-b border-black last:border-b-0"
@@ -336,12 +385,21 @@ export function SuratJalanExportDocument({
           </div>
         </div>
       </section>
+        ))}
+      </>
     );
   }
 
   return (
+    <>
+      {templatePages.map((pageRows, pageIndex) => (
     <section
-      className={`mx-auto w-full max-w-[24cm] bg-white text-black shadow-xl print:h-[12cm] print:w-[24cm] print:max-w-none print:overflow-hidden print:shadow-none ${className}`.trim()}
+      key={`default-page-${pageIndex}`}
+      className={`surat-jalan-print-page mx-auto w-full max-w-[24cm] bg-white text-black shadow-xl print:h-[12cm] print:w-[24cm] print:max-w-none print:overflow-hidden print:shadow-none ${
+        pageIndex < templatePages.length - 1
+          ? "mb-4 print:mb-0 print:break-after-page"
+          : ""
+      } ${className}`.trim()}
       style={{
         fontFamily: "Arial, Helvetica, sans-serif",
       }}
@@ -374,15 +432,15 @@ export function SuratJalanExportDocument({
             </div>
 
             <div className="mt-1 min-h-[82px] border-2 border-black px-2.5 py-1.5">
-              <p className="text-[13px] italic leading-tight">{t("suratJalan.export.kepadaLabel")}</p>
+              <p className="text-[11px] italic leading-tight">{t("suratJalan.export.kepadaLabel")}</p>
               <p
                 className="whitespace-nowrap font-bold leading-tight"
                 style={{ fontSize: customerNameFontSize }}
               >
                 {customerName || "-"}
               </p>
-              <p className="whitespace-pre-line text-[12px] leading-[1.12]">{customerAddress || "-"}</p>
-              <p className="mt-0.5 text-[13px] font-bold leading-tight">
+              <p className="whitespace-pre-line text-[10px] leading-[1.12]">{customerAddress || "-"}</p>
+              <p className="mt-0.5 text-[11px] font-bold leading-tight">
                 {t("suratJalan.export.attnLabel")}: {customerAttn || "-"}
               </p>
             </div>
@@ -415,7 +473,7 @@ export function SuratJalanExportDocument({
               </tr>
             </thead>
             <tbody>
-              {templateRows.map((row, index) => (
+              {pageRows.map((row, index) => (
                 <tr key={`template-row-${index}`} className="h-[17px] border-b border-black last:border-b-0">
                   <td className="border-r border-black px-1 text-center align-middle">{row.no}</td>
                   <td className="border-r border-black px-2 align-top">
@@ -451,5 +509,7 @@ export function SuratJalanExportDocument({
         </div>
       </div>
     </section>
+      ))}
+    </>
   );
 }
