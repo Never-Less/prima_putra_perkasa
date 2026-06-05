@@ -45,7 +45,6 @@ type DefaultInvoiceTemplateRow = {
   unit: string;
   hargaSatuan: string;
   jumlah: string;
-  noPo: string;
 };
 
 type MeiloonInvoiceTemplateRow = {
@@ -214,7 +213,6 @@ function createEmptyDefaultInvoiceRow(): DefaultInvoiceTemplateRow {
     unit: "",
     hargaSatuan: "",
     jumlah: "",
-    noPo: "",
   };
 }
 
@@ -239,7 +237,6 @@ function buildDefaultTemplateRows(invoice: InvoiceItem | null) {
     unit: toUpperText(barang.unit),
     hargaSatuan: formatPlainNumber(Number(barang.hargaSatuan || 0)),
     jumlah: formatPlainNumber(Number(barang.jumlah || 0)),
-    noPo: invoiceBarangNoPoLabel(barang, invoice?.noPoList || []),
   }));
 }
 
@@ -305,13 +302,12 @@ function DefaultInvoiceTable({ rows, t, className = "" }: DefaultInvoiceTablePro
     <div className={`flex flex-col overflow-hidden border border-black ${className}`.trim()}>
       <table className={`${hasFillerRow ? "h-full" : ""} w-full table-fixed border-collapse`.trim()}>
         <colgroup>
-          <col style={{ width: "4%" }} />
-          <col style={{ width: "50%" }} />
+          <col style={{ width: "5%" }} />
+          <col style={{ width: "53%" }} />
           <col style={{ width: "6%" }} />
-          <col style={{ width: "6%" }} />
-          <col style={{ width: "13%" }} />
-          <col style={{ width: "13%" }} />
-          <col style={{ width: "9%" }} />
+          <col style={{ width: "8%" }} />
+          <col style={{ width: "14%" }} />
+          <col style={{ width: "14%" }} />
         </colgroup>
         <thead>
           <tr className="h-[24px] border-b border-black">
@@ -330,11 +326,8 @@ function DefaultInvoiceTable({ rows, t, className = "" }: DefaultInvoiceTablePro
             <th className="border-r border-black px-1 py-0.5 text-center align-middle text-[15px] font-bold leading-tight">
               {t("invoice.export.table.hargaSatuan")}
             </th>
-            <th className="border-r border-black px-1 py-0.5 text-center align-middle text-[15px] font-bold">
-              {t("invoice.export.table.jumlah")}
-            </th>
             <th className="px-1 py-0.5 text-center align-middle text-[15px] font-bold">
-              {t("invoice.export.table.noPo")}
+              {t("invoice.export.table.jumlah")}
             </th>
           </tr>
         </thead>
@@ -350,15 +343,13 @@ function DefaultInvoiceTable({ rows, t, className = "" }: DefaultInvoiceTablePro
               <td className="border-r border-black px-1 py-1 text-right align-top text-[14px]">
                 <CurrencyTableValue value={row.hargaSatuan} className="text-[13px] leading-[1.05]" />
               </td>
-              <td className="border-r border-black px-1 py-1 text-right align-top text-[14px]">
+              <td className="px-1 py-1 text-right align-top text-[14px]">
                 <CurrencyTableValue value={row.jumlah} className="text-[13px] leading-[1.05]" />
               </td>
-              <td className="px-1 pt-1 text-center align-top text-[13px]">{row.noPo}</td>
             </tr>
           ))}
           {hasFillerRow ? (
             <tr className="h-full">
-              <td className="border-r border-black" />
               <td className="border-r border-black" />
               <td className="border-r border-black" />
               <td className="border-r border-black" />
@@ -722,7 +713,7 @@ export default function InvoiceExportPage() {
           </section>
         ) : invoice && isMeiloonCustomer ? (
           <section
-            className="mx-auto flex h-[11in] min-h-[11in] w-full max-w-[8.5in] flex-col bg-white text-black shadow-xl print:h-[11in] print:min-h-[11in] print:max-w-none print:shadow-none"
+            className="mx-auto flex h-[11in] min-h-[11in] w-full max-w-[8.5in] flex-col bg-white text-black tracking-[0.03em] shadow-xl print:h-[11in] print:min-h-[11in] print:max-w-none print:shadow-none"
             style={{ fontFamily: "Arial, Helvetica, sans-serif" }}
           >
             <div
@@ -930,7 +921,7 @@ export default function InvoiceExportPage() {
           </section>
         ) : invoice ? (
           <section
-            className="mx-auto flex h-[11in] min-h-[11in] w-full max-w-[8.5in] flex-col bg-white text-black shadow-xl print:h-[11in] print:min-h-[11in] print:max-w-none print:shadow-none"
+            className="mx-auto flex h-[11in] min-h-[11in] w-full max-w-[8.5in] flex-col bg-white text-black tracking-[0.03em] shadow-xl print:h-[11in] print:min-h-[11in] print:max-w-none print:shadow-none"
             style={{ fontFamily: "Arial, Helvetica, sans-serif" }}
           >
             <div
