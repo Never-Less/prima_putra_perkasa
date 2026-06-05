@@ -150,7 +150,7 @@ export default function SuratJalanNoPoExportPage() {
 
           .surat-jalan-print-page {
             width: 24cm !important;
-            height: 12cm !important;
+            height: 14cm !important;
             max-width: none !important;
             overflow: hidden !important;
           }
