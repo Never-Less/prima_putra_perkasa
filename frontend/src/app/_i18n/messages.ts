@@ -449,7 +449,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "suratJalan.export.meiloon.table.spesifikasi": "SPESIFIKASI",
     "suratJalan.export.meiloon.table.qty": "QTY",
     "suratJalan.export.meiloon.table.unit": "UNIT",
-    "suratJalan.export.meiloon.table.kodeDepartemen": "KODE DEPARTEMEN",
+    "suratJalan.export.meiloon.table.kodeDepartemen": "KODE DEPT",
     "suratJalan.export.meiloon.table.ttdPenerima": "TTD PENERIMA",
     "suratJalan.export.meiloon.table.note": "NOTE",
     "suratJalan.export.returnPolicy": "Barang yang sudah di beli tidak dapat dikembalikan.",
