@@ -65,6 +65,15 @@ type PaginatedRows<T> = {
   lastPageRows: T[];
 };
 
+type PaginateRowsConfig<T> = {
+  singlePageCapacity: number;
+  firstPageCapacity: number;
+  middlePageCapacity: number;
+  lastPageCapacity: number;
+  createEmptyRow: () => T;
+  estimateRowUnits: (row: T) => number;
+};
+
 function normalizeCustomerName(value: string) {
   return String(value || "").trim().toUpperCase();
 }
@@ -150,58 +159,196 @@ function resolveInvoiceBarangColumns(
   return splitInvoiceBarangColumns(namaBarang);
 }
 
-function chunkRows<T>(rows: T[], chunkSize: number) {
-  const chunks: T[][] = [];
+function estimateWrappedLineCount(value: string, charactersPerLine: number) {
+  const text = String(value || "").replace(/\s+/g, " ").trim();
+  const normalizedCharactersPerLine = Math.max(1, charactersPerLine);
 
-  for (let index = 0; index < rows.length; index += chunkSize) {
-    chunks.push(rows.slice(index, index + chunkSize));
+  if (!text) {
+    return 1;
   }
 
-  return chunks;
+  const words = text.split(" ");
+  let lines = 1;
+  let currentLineLength = 0;
+
+  for (const word of words) {
+    const wordLength = word.length;
+
+    if (wordLength >= normalizedCharactersPerLine) {
+      if (currentLineLength > 0) {
+        lines += 1;
+        currentLineLength = 0;
+      }
+
+      lines += Math.max(0, Math.ceil(wordLength / normalizedCharactersPerLine) - 1);
+      currentLineLength = wordLength % normalizedCharactersPerLine;
+      continue;
+    }
+
+    if (currentLineLength === 0) {
+      currentLineLength = wordLength;
+      continue;
+    }
+
+    if (currentLineLength + 1 + wordLength > normalizedCharactersPerLine) {
+      lines += 1;
+      currentLineLength = wordLength;
+    } else {
+      currentLineLength += 1 + wordLength;
+    }
+  }
+
+  return lines;
 }
 
-function padRows<T>(rows: T[], totalRows: number, createEmptyRow: () => T) {
-  const paddedRows = [...rows];
+function lineCountToRowUnits(lineCount: number) {
+  return 1 + Math.max(0, lineCount - 1) * 0.55;
+}
 
-  while (paddedRows.length < totalRows) {
-    paddedRows.push(createEmptyRow());
+function estimateDefaultInvoiceRowUnits(row: DefaultInvoiceTemplateRow) {
+  return lineCountToRowUnits(estimateWrappedLineCount(row.namaBarang, 44));
+}
+
+function estimateMeiloonInvoiceRowUnits(row: MeiloonInvoiceTemplateRow) {
+  return lineCountToRowUnits(
+    Math.max(
+      estimateWrappedLineCount(row.namaBarang, 20),
+      estimateWrappedLineCount(row.spesifikasi, 31)
+    )
+  );
+}
+
+function estimateRowsUnits<T>(rows: T[], estimateRowUnits: (row: T) => number) {
+  return rows.reduce((total, row) => total + Math.max(1, estimateRowUnits(row)), 0);
+}
+
+function addFillerRowIfNeeded<T>(
+  rows: T[],
+  capacity: number,
+  estimateRowUnits: (row: T) => number,
+  createEmptyRow: () => T
+) {
+  if (rows.length === 0 || estimateRowsUnits(rows, estimateRowUnits) < capacity) {
+    return [...rows, createEmptyRow()];
   }
 
-  return paddedRows;
+  return rows;
+}
+
+function takeRowsForCapacity<T>(
+  rows: T[],
+  startIndex: number,
+  capacity: number,
+  estimateRowUnits: (row: T) => number,
+  minimumRemainingRows = 0
+) {
+  const pageRows: T[] = [];
+  const lastAllowedIndex = Math.max(startIndex, rows.length - minimumRemainingRows);
+  let nextIndex = startIndex;
+  let usedUnits = 0;
+
+  while (nextIndex < lastAllowedIndex) {
+    const rowUnits = Math.max(1, estimateRowUnits(rows[nextIndex]));
+
+    if (pageRows.length > 0 && usedUnits + rowUnits > capacity) {
+      break;
+    }
+
+    pageRows.push(rows[nextIndex]);
+    usedUnits += rowUnits;
+    nextIndex += 1;
+  }
+
+  return {
+    pageRows,
+    nextIndex,
+  };
 }
 
 function paginateRows<T>(
   rows: T[],
-  config: {
-    firstPageCapacity: number;
-    middlePageCapacity: number;
-    lastPageCapacity: number;
-    createEmptyRow: () => T;
-  }
+  config: PaginateRowsConfig<T>
 ): PaginatedRows<T> {
-  const { firstPageCapacity, middlePageCapacity, lastPageCapacity, createEmptyRow } = config;
+  const {
+    singlePageCapacity,
+    firstPageCapacity,
+    middlePageCapacity,
+    lastPageCapacity,
+    createEmptyRow,
+    estimateRowUnits,
+  } = config;
+  const totalUnits = estimateRowsUnits(rows, estimateRowUnits);
 
-  if (rows.length <= firstPageCapacity) {
+  if (rows.length <= 1 || totalUnits <= singlePageCapacity) {
     return {
       isSinglePage: true,
-      firstPageRows: padRows(rows, firstPageCapacity, createEmptyRow),
+      firstPageRows: addFillerRowIfNeeded(
+        rows,
+        singlePageCapacity,
+        estimateRowUnits,
+        createEmptyRow
+      ),
       middlePages: [],
       lastPageRows: [],
     };
   }
 
-  const lastPageRows = rows.slice(-lastPageCapacity);
-  const headRows = rows.slice(0, -lastPageCapacity);
-  const firstPageRows = headRows.slice(0, firstPageCapacity);
-  const middleRows = headRows.slice(firstPageCapacity);
+  const firstPage = takeRowsForCapacity(
+    rows,
+    0,
+    firstPageCapacity,
+    estimateRowUnits,
+    1
+  );
+  const middlePages: T[][] = [];
+  let nextIndex = firstPage.nextIndex;
+
+  while (
+    nextIndex < rows.length &&
+    estimateRowsUnits(rows.slice(nextIndex), estimateRowUnits) > lastPageCapacity
+  ) {
+    const remainingRows = rows.slice(nextIndex);
+    const remainingUnits = estimateRowsUnits(remainingRows, estimateRowUnits);
+    const middleTargetCapacity = Math.min(
+      middlePageCapacity,
+      Math.max(1, remainingUnits - lastPageCapacity)
+    );
+    const middlePage = takeRowsForCapacity(
+      rows,
+      nextIndex,
+      middleTargetCapacity,
+      estimateRowUnits,
+      1
+    );
+
+    middlePages.push(
+      addFillerRowIfNeeded(
+        middlePage.pageRows,
+        middlePageCapacity,
+        estimateRowUnits,
+        createEmptyRow
+      )
+    );
+    nextIndex = middlePage.nextIndex;
+  }
+
+  const lastPageRows = rows.slice(nextIndex);
 
   return {
     isSinglePage: false,
-    firstPageRows: padRows(firstPageRows, firstPageCapacity, createEmptyRow),
-    middlePages: chunkRows(middleRows, middlePageCapacity).map((pageRows) =>
-      padRows(pageRows, middlePageCapacity, createEmptyRow)
+    firstPageRows: addFillerRowIfNeeded(
+      firstPage.pageRows,
+      firstPageCapacity,
+      estimateRowUnits,
+      createEmptyRow
     ),
-    lastPageRows: padRows(lastPageRows, lastPageCapacity, createEmptyRow),
+    middlePages,
+    lastPageRows: addFillerRowIfNeeded(
+      lastPageRows,
+      lastPageCapacity,
+      estimateRowUnits,
+      createEmptyRow
+    ),
   };
 }
 
@@ -583,10 +730,12 @@ export default function InvoiceExportPage() {
   const defaultPaginatedRows = useMemo(
     () =>
       paginateRows(defaultRows, {
-        firstPageCapacity: 15,
+        singlePageCapacity: 15,
+        firstPageCapacity: 24,
         middlePageCapacity: 28,
         lastPageCapacity: 10,
         createEmptyRow: createEmptyDefaultInvoiceRow,
+        estimateRowUnits: estimateDefaultInvoiceRowUnits,
       }),
     [defaultRows]
   );
@@ -595,10 +744,12 @@ export default function InvoiceExportPage() {
   const meiloonPaginatedRows = useMemo(
     () =>
       paginateRows(meiloonRows, {
-        firstPageCapacity: 23,
+        singlePageCapacity: 23,
+        firstPageCapacity: 32,
         middlePageCapacity: 33,
         lastPageCapacity: 10,
         createEmptyRow: createEmptyMeiloonInvoiceRow,
+        estimateRowUnits: estimateMeiloonInvoiceRowUnits,
       }),
     [meiloonRows]
   );
@@ -713,12 +864,18 @@ export default function InvoiceExportPage() {
           </section>
         ) : invoice && isMeiloonCustomer ? (
           <section
-            className="mx-auto flex h-[11in] min-h-[11in] w-full max-w-[8.5in] flex-col bg-white text-black tracking-[0.03em] shadow-xl print:h-[11in] print:min-h-[11in] print:max-w-none print:shadow-none"
+            className={`mx-auto w-full max-w-[8.5in] text-black tracking-[0.03em] print:max-w-none ${
+              meiloonPaginatedRows.isSinglePage
+                ? "flex h-[11in] min-h-[11in] flex-col bg-white shadow-xl print:h-[11in] print:min-h-[11in] print:shadow-none"
+                : "space-y-4 print:space-y-0"
+            }`}
             style={{ fontFamily: "Arial, Helvetica, sans-serif" }}
           >
             <div
               className={`px-[5mm] py-[7mm] text-[13px] leading-[1.18] ${
-                meiloonPaginatedRows.isSinglePage ? "flex min-h-0 flex-1 flex-col" : "min-h-[11in] break-after-page print:break-after-page"
+                meiloonPaginatedRows.isSinglePage
+                  ? "flex min-h-0 flex-1 flex-col"
+                  : "min-h-[11in] break-after-page bg-white shadow-xl print:break-after-page print:shadow-none"
               }`}
             >
               <div className="flex items-start justify-between gap-8 pt-4">
@@ -841,13 +998,13 @@ export default function InvoiceExportPage() {
                 {meiloonPaginatedRows.middlePages.map((pageRows, pageIndex) => (
                   <div
                     key={`meiloon-middle-page-${pageIndex}`}
-                    className="min-h-[11in] break-after-page px-[5mm] py-[7mm] text-[13px] leading-[1.18] print:break-after-page"
+                    className="min-h-[11in] break-after-page bg-white px-[5mm] py-[7mm] text-[13px] leading-[1.18] shadow-xl print:break-after-page print:shadow-none"
                   >
                     <MeiloonInvoiceTable rows={pageRows} t={t} />
                   </div>
                 ))}
 
-                <div className="min-h-[11in] px-[5mm] py-[7mm] text-[13px] leading-[1.18]">
+                <div className="min-h-[11in] bg-white px-[5mm] py-[7mm] text-[13px] leading-[1.18] shadow-xl print:shadow-none">
                   <MeiloonInvoiceTable rows={meiloonPaginatedRows.lastPageRows} t={t} />
 
                   <div className="mt-2 grid grid-cols-[1.05fr_0.65fr] gap-3">
@@ -921,12 +1078,18 @@ export default function InvoiceExportPage() {
           </section>
         ) : invoice ? (
           <section
-            className="mx-auto flex h-[11in] min-h-[11in] w-full max-w-[8.5in] flex-col bg-white text-black tracking-[0.03em] shadow-xl print:h-[11in] print:min-h-[11in] print:max-w-none print:shadow-none"
+            className={`mx-auto w-full max-w-[8.5in] text-black tracking-[0.03em] print:max-w-none ${
+              defaultPaginatedRows.isSinglePage
+                ? "flex h-[11in] min-h-[11in] flex-col bg-white shadow-xl print:h-[11in] print:min-h-[11in] print:shadow-none"
+                : "space-y-4 print:space-y-0"
+            }`}
             style={{ fontFamily: "Arial, Helvetica, sans-serif" }}
           >
             <div
               className={`px-[4mm] py-[6mm] text-[13px] leading-[1.18] ${
-                defaultPaginatedRows.isSinglePage ? "flex min-h-0 flex-1 flex-col" : "min-h-[11in] break-after-page print:break-after-page"
+                defaultPaginatedRows.isSinglePage
+                  ? "flex min-h-0 flex-1 flex-col"
+                  : "min-h-[11in] break-after-page bg-white shadow-xl print:break-after-page print:shadow-none"
               }`}
             >
               <div className="flex items-start justify-between gap-8 pt-3">
@@ -1053,13 +1216,13 @@ export default function InvoiceExportPage() {
                 {defaultPaginatedRows.middlePages.map((pageRows, pageIndex) => (
                   <div
                     key={`default-middle-page-${pageIndex}`}
-                    className="min-h-[11in] break-after-page px-[4mm] py-[6mm] text-[13px] leading-[1.18] print:break-after-page"
+                    className="min-h-[11in] break-after-page bg-white px-[4mm] py-[6mm] text-[13px] leading-[1.18] shadow-xl print:break-after-page print:shadow-none"
                   >
                     <DefaultInvoiceTable rows={pageRows} t={t} />
                   </div>
                 ))}
 
-                <div className="min-h-[11in] px-[4mm] py-[6mm] text-[13px] leading-[1.18]">
+                <div className="min-h-[11in] bg-white px-[4mm] py-[6mm] text-[13px] leading-[1.18] shadow-xl print:shadow-none">
                   <DefaultInvoiceTable rows={defaultPaginatedRows.lastPageRows} t={t} />
 
                   <div className="mt-2 grid grid-cols-[1fr_0.48fr] gap-3">
