@@ -864,12 +864,12 @@ export default function InvoiceExportPage() {
           </section>
         ) : invoice && isMeiloonCustomer ? (
           <section
-            className={`mx-auto w-full max-w-[8.5in] text-black tracking-[0.03em] print:max-w-none ${
+            className={`mx-auto w-full max-w-[8.5in] font-bold text-black tracking-[0.05em] print:max-w-none ${
               meiloonPaginatedRows.isSinglePage
                 ? "flex h-[11in] min-h-[11in] flex-col bg-white shadow-xl print:h-[11in] print:min-h-[11in] print:shadow-none"
                 : "space-y-4 print:space-y-0"
             }`}
-            style={{ fontFamily: "Arial, Helvetica, sans-serif" }}
+            style={{ fontFamily: '"Courier New", Courier, monospace' }}
           >
             <div
               className={`px-[5mm] py-[7mm] text-[13px] leading-[1.18] ${
@@ -1078,12 +1078,12 @@ export default function InvoiceExportPage() {
           </section>
         ) : invoice ? (
           <section
-            className={`mx-auto w-full max-w-[8.5in] text-black tracking-[0.03em] print:max-w-none ${
+            className={`mx-auto w-full max-w-[8.5in] font-bold text-black tracking-[0.05em] print:max-w-none ${
               defaultPaginatedRows.isSinglePage
                 ? "flex h-[11in] min-h-[11in] flex-col bg-white shadow-xl print:h-[11in] print:min-h-[11in] print:shadow-none"
                 : "space-y-4 print:space-y-0"
             }`}
-            style={{ fontFamily: "Arial, Helvetica, sans-serif" }}
+            style={{ fontFamily: '"Courier New", Courier, monospace' }}
           >
             <div
               className={`px-[4mm] py-[6mm] text-[13px] leading-[1.18] ${

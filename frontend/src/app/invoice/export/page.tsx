@@ -235,7 +235,7 @@ export default function InvoiceExportPage() {
           ) : null}
 
           {!isLoading && !errorMessage ? (
-            <section className="space-y-4 rounded-2xl bg-white p-4 tracking-[0.03em] shadow-sm print:rounded-none print:p-0 print:shadow-none">
+            <section className="space-y-4 rounded-2xl bg-white p-4 tracking-[0.05em] shadow-sm print:rounded-none print:p-0 print:shadow-none">
               <div className="space-y-2">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h2 className="text-base font-semibold text-slate-900">
@@ -399,7 +399,7 @@ export default function InvoiceExportPage() {
           ) : null}
 
           {!isLoading && !errorMessage && rows.length > 0 ? (
-            <section className="space-y-4 rounded-2xl bg-white p-4 tracking-[0.03em] shadow-sm print:break-before-page print:rounded-none print:p-0 print:shadow-none">
+            <section className="space-y-4 rounded-2xl bg-white p-4 tracking-[0.05em] shadow-sm print:break-before-page print:rounded-none print:p-0 print:shadow-none">
               <div className="space-y-1">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h2 className="text-lg font-semibold uppercase tracking-wide text-slate-900 print:text-[18px]">

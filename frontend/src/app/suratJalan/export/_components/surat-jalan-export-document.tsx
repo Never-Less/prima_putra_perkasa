@@ -239,16 +239,16 @@ export function SuratJalanExportDocument({
         {meiloonTemplatePages.map((pageRows, pageIndex) => (
       <section
         key={`meiloon-page-${pageIndex}`}
-        className={`surat-jalan-print-page mx-auto w-full max-w-[24cm] bg-white text-black shadow-xl print:h-[14cm] print:w-[24cm] print:max-w-none print:overflow-hidden print:shadow-none ${
+        className={`surat-jalan-print-page mx-auto w-full max-w-[24cm] bg-white font-bold text-black shadow-xl print:h-[14cm] print:w-[24cm] print:max-w-none print:overflow-hidden print:shadow-none ${
           pageIndex < meiloonTemplatePages.length - 1
             ? "mb-4 print:mb-0 print:break-after-page"
             : ""
         } ${className}`.trim()}
         style={{
-          fontFamily: "Arial, Helvetica, sans-serif",
+          fontFamily: '"Courier New", Courier, monospace',
         }}
       >
-        <div className="flex h-[14cm] flex-col px-[5mm] py-[4mm] text-[13px] leading-[1.18] tracking-[0.03em]">
+        <div className="flex h-[14cm] flex-col px-[5mm] py-[4mm] text-[13px] leading-[1.18] tracking-[0.05em]">
           <div className="grid grid-cols-[1fr_1.05fr] gap-4 pt-1">
             <div className="px-1 py-0.5">
               <p className="text-[20px] font-bold leading-tight">{companyProfile.name}</p>
@@ -393,16 +393,16 @@ export function SuratJalanExportDocument({
       {templatePages.map((pageRows, pageIndex) => (
     <section
       key={`default-page-${pageIndex}`}
-      className={`surat-jalan-print-page mx-auto w-full max-w-[24cm] bg-white text-black shadow-xl print:h-[14cm] print:w-[24cm] print:max-w-none print:overflow-hidden print:shadow-none ${
+      className={`surat-jalan-print-page mx-auto w-full max-w-[24cm] bg-white font-bold text-black shadow-xl print:h-[14cm] print:w-[24cm] print:max-w-none print:overflow-hidden print:shadow-none ${
         pageIndex < templatePages.length - 1
           ? "mb-4 print:mb-0 print:break-after-page"
           : ""
       } ${className}`.trim()}
       style={{
-        fontFamily: "Arial, Helvetica, sans-serif",
+        fontFamily: '"Courier New", Courier, monospace',
       }}
     >
-      <div className="flex h-[14cm] flex-col px-[5mm] py-[4mm] text-[13px] leading-[1.18] tracking-[0.03em]">
+      <div className="flex h-[14cm] flex-col px-[5mm] py-[4mm] text-[13px] leading-[1.18] tracking-[0.05em]">
         <div className="grid grid-cols-[0.98fr_1.02fr] gap-5">
           <div className="pt-1">
             <p className="text-[20px] font-bold leading-tight">{companyProfile.name}</p>
