@@ -206,12 +206,13 @@ function lineCountToRowUnits(lineCount: number) {
 }
 
 function estimateDefaultInvoiceRowUnits(row: DefaultInvoiceTemplateRow) {
-  return lineCountToRowUnits(estimateWrappedLineCount(row.namaBarang, 44));
+  return lineCountToRowUnits(Math.max(2, estimateWrappedLineCount(row.namaBarang, 44)));
 }
 
 function estimateMeiloonInvoiceRowUnits(row: MeiloonInvoiceTemplateRow) {
   return lineCountToRowUnits(
     Math.max(
+      2,
       estimateWrappedLineCount(row.namaBarang, 20),
       estimateWrappedLineCount(row.spesifikasi, 31)
     )
@@ -305,6 +306,7 @@ function paginateRows<T>(
 
   while (
     nextIndex < rows.length &&
+    rows.length - nextIndex > 1 &&
     estimateRowsUnits(rows.slice(nextIndex), estimateRowUnits) > lastPageCapacity
   ) {
     const remainingRows = rows.slice(nextIndex);
@@ -480,7 +482,7 @@ function DefaultInvoiceTable({ rows, t, className = "" }: DefaultInvoiceTablePro
         </thead>
         <tbody>
           {filledRows.map((row, index) => (
-            <tr key={`default-invoice-row-${index}`} className="h-[24px]">
+            <tr key={`default-invoice-row-${index}`} className="h-[38px]">
               <td className="border-r border-black px-1 pt-1 text-center align-top text-[14px]">{row.no}</td>
               <td className="whitespace-normal break-words border-r border-black px-1.5 pt-1 align-top text-[14px] leading-[1.15]">
                 {row.namaBarang}
@@ -563,7 +565,7 @@ function MeiloonInvoiceTable({ rows, t, className = "" }: MeiloonInvoiceTablePro
         </thead>
         <tbody>
           {filledRows.map((row, index) => (
-            <tr key={`meiloon-invoice-row-${index}`} className="h-[19px]">
+            <tr key={`meiloon-invoice-row-${index}`} className="h-[34px]">
               <td className="border-r border-black px-1 pt-1 text-center align-top text-[14px]">{row.no}</td>
               <td className="whitespace-normal break-words border-r border-black px-1.5 pt-1 align-top text-[14px] leading-[1.15]">
                 {row.namaBarang}
@@ -731,7 +733,7 @@ export default function InvoiceExportPage() {
     () =>
       paginateRows(defaultRows, {
         singlePageCapacity: 15,
-        firstPageCapacity: 24,
+        firstPageCapacity: 31,
         middlePageCapacity: 28,
         lastPageCapacity: 10,
         createEmptyRow: createEmptyDefaultInvoiceRow,
@@ -1129,8 +1131,8 @@ export default function InvoiceExportPage() {
                     <p className="whitespace-pre-line text-[12px] leading-[1.12]">{customerAddress || "-"}</p>
                   </div>
 
-                  <div className="pt-0.5 text-[15px] font-bold">
-                    <div className="grid grid-cols-[88px_12px_1fr] gap-x-1">
+                  <div className="pl-[26%] pt-0.5 text-[15px] font-bold">
+                    <div className="grid grid-cols-[88px_8px_1fr] gap-x-0">
                       <span>{t("invoice.export.noPoLabel")}</span>
                       <span>:</span>
                       <span>{invoice.noPo || "-"}</span>
