@@ -7,7 +7,10 @@ import { ApiRequestError } from "../../../_lib/api-client";
 import { useI18n } from "../../../_i18n/provider";
 import { fetchCustomerById, type CustomerItem } from "../../../customer/_lib/customer";
 import { fetchSuratJalanById, type SuratJalanItem } from "../../_lib/surat-jalan";
-import { SuratJalanExportDocument } from "../_components/surat-jalan-export-document";
+import {
+  SuratJalanExportDocument,
+  type SuratJalanExportPaperSize,
+} from "../_components/surat-jalan-export-document";
 
 export default function SuratJalanExportPage() {
   const { t } = useI18n();
@@ -16,6 +19,7 @@ export default function SuratJalanExportPage() {
   const suratJalanId = String(params?.id || "").trim();
   const [suratJalan, setSuratJalan] = useState<SuratJalanItem | null>(null);
   const [customer, setCustomer] = useState<CustomerItem | null>(null);
+  const [paperSize, setPaperSize] = useState<SuratJalanExportPaperSize>("half");
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -132,8 +136,8 @@ export default function SuratJalanExportPage() {
           }
 
           .surat-jalan-print-page {
-            width: 24cm !important;
-            height: 14cm !important;
+            width: var(--surat-jalan-page-width, 24cm) !important;
+            height: var(--surat-jalan-page-height, 14cm) !important;
             max-width: none !important;
             overflow: hidden !important;
           }
@@ -147,6 +151,36 @@ export default function SuratJalanExportPage() {
             <p className="text-sm text-slate-600">{t("suratJalan.export.previewDescription")}</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm font-medium text-slate-700">
+                {t("suratJalan.export.paperSizeLabel")}
+              </span>
+              <div className="flex rounded-lg border border-slate-300 bg-white p-1">
+                {(["half", "full"] as const).map((value) => {
+                  const isActive = paperSize === value;
+
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      aria-pressed={isActive}
+                      onClick={() => setPaperSize(value)}
+                      className={`rounded-md px-3 py-1.5 text-sm ${
+                        isActive
+                          ? "bg-sky-700 text-white"
+                          : "text-slate-700 hover:bg-slate-100"
+                      }`}
+                    >
+                      {t(
+                        value === "half"
+                          ? "suratJalan.export.paperSize.half"
+                          : "suratJalan.export.paperSize.full"
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
             <button
               type="button"
               onClick={() => window.print()}
@@ -173,7 +207,11 @@ export default function SuratJalanExportPage() {
             <p>{errorMessage}</p>
           </section>
         ) : suratJalan ? (
-          <SuratJalanExportDocument suratJalan={suratJalan} customer={customer} />
+          <SuratJalanExportDocument
+            suratJalan={suratJalan}
+            customer={customer}
+            paperSize={paperSize}
+          />
         ) : null}
       </main>
     </>
