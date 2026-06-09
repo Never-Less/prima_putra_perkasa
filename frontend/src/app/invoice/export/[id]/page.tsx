@@ -13,8 +13,7 @@ import { fetchInvoiceById, invoiceBarangNoPoLabel, type InvoiceItem } from "../.
 const companyProfile = {
   name: "CV. PRIMA PUTRA PERKASA",
   addressLines: [
-    "Jl. Hayam Wuruk No.127",
-    "Lindeteves Trade Centre Lt. 2 Blok B20 No. 6",
+    "Lindeteves Trade Centre Lt. 2 Blok B20 No. 6, Jl. Hayam Wuruk No.127, Jakarta",
     "Tel. 021. 6246441, 62320362",
   ],
 };
