@@ -169,6 +169,7 @@ export function SuratJalanEditForm({
   const style = formStyles[formStyle];
   const inputClassName = `mt-1 w-full rounded-lg px-3 py-2 text-sm ${style.input}`;
   const barangInputClassName = `w-full rounded-lg px-3 py-2 text-sm ${style.input}`;
+  const barangTextareaClassName = `min-h-[76px] w-full resize-y rounded-lg px-3 py-2 text-sm ${style.input}`;
   const noPoSelectStyles = useMemo<StylesConfig<NoPoSelectOption, false>>(() => {
     const isDark = theme === "dark";
 
@@ -378,7 +379,7 @@ export function SuratJalanEditForm({
         <p className={`text-sm ${tone.subtitle}`}>{description}</p>
       </div>
 
-      <div className={showPreview ? "grid gap-4 lg:grid-cols-2" : "block"}>
+      <div className={showPreview ? "space-y-4" : "block"}>
         <div className={style.formCard}>
           <div className="grid gap-3 sm:grid-cols-2">
             <label className={`text-sm ${tone.label}`}>
@@ -477,7 +478,7 @@ export function SuratJalanEditForm({
               <p className="text-xs text-slate-500 dark:text-slate-400">{t("suratJalan.form.items.hint")}</p>
               <div className="mt-2 space-y-2">
                 {form.barangRows.map((row, index) => (
-                  <div key={`barang-row-${index}`} className="grid gap-2 sm:grid-cols-[1.2fr_1.2fr_0.8fr_0.7fr_1fr]">
+                  <div key={`barang-row-${index}`} className="grid items-start gap-2 sm:grid-cols-[1.1fr_1.4fr_0.8fr_0.7fr_1fr]">
                     <input
                       type="text"
                       value={row.nama}
@@ -485,12 +486,12 @@ export function SuratJalanEditForm({
                       onChange={(event) => updateBarangRow(index, "nama", event.target.value)}
                       className={barangInputClassName}
                     />
-                    <input
-                      type="text"
+                    <textarea
                       value={row.spesifikasi}
                       placeholder={t("suratJalan.form.items.placeholder.spec")}
                       onChange={(event) => updateBarangRow(index, "spesifikasi", event.target.value)}
-                      className={barangInputClassName}
+                      className={barangTextareaClassName}
+                      rows={2}
                     />
                     <input
                       type="text"

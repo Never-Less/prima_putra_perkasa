@@ -131,25 +131,25 @@ export default function PurchaseOrderExportPage() {
         }
       `}</style>
 
-      <main className="min-h-screen bg-slate-100 px-4 py-4 print:bg-white print:px-0 print:py-0">
+      <main className="export-normal-weight min-h-screen bg-slate-100 px-4 py-4 print:bg-white print:px-0 print:py-0">
         <div className="mx-auto max-w-[1400px] space-y-4 print:max-w-none">
           <header className="flex flex-wrap items-start justify-between gap-3 rounded-2xl bg-white p-4 shadow-sm print:hidden">
             <div>
-              <h1 className="text-xl font-semibold text-slate-900">{t("purchaseOrder.exportPage.title")}</h1>
+              <h1 className="text-xl text-slate-900">{t("purchaseOrder.exportPage.title")}</h1>
               <p className="mt-1 text-sm text-slate-600">{t("purchaseOrder.exportPage.description")}</p>
             </div>
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => window.print()}
-                className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600"
+                className="rounded-lg bg-sky-700 px-4 py-2 text-sm text-white hover:bg-sky-600"
               >
                 {t("common.print")}
               </button>
               <button
                 type="button"
                 onClick={handleClosePage}
-                className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
               >
                 {t("common.close")}
               </button>
@@ -169,7 +169,7 @@ export default function PurchaseOrderExportPage() {
               <section className="space-y-4 rounded-2xl bg-white p-4 shadow-sm print:rounded-none print:p-0 print:shadow-none">
                 <div className="space-y-2">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <h2 className="text-base font-semibold text-slate-900">
+                    <h2 className="text-base text-slate-900">
                       {t("purchaseOrder.exportPage.activeFilters")}
                     </h2>
                     <span className="text-sm text-slate-500">
@@ -210,12 +210,12 @@ export default function PurchaseOrderExportPage() {
                       </colgroup>
                       <thead className="bg-slate-100">
                         <tr>
-                          <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">{t("field.noPo")}</th>
-                          <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">{t("field.tanggalPo")}</th>
-                          <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">{t("field.namaCustomer")}</th>
-                          <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">{t("field.nominalPo")}</th>
-                          <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">{t("field.tanggalInvoice")}</th>
-                          <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">{t("field.noInvoice")}</th>
+                          <th className="border border-slate-300 px-3 py-2 text-left print:px-2 print:py-1.5">{t("field.noPo")}</th>
+                          <th className="border border-slate-300 px-3 py-2 text-left print:px-2 print:py-1.5">{t("field.tanggalPo")}</th>
+                          <th className="border border-slate-300 px-3 py-2 text-left print:px-2 print:py-1.5">{t("field.namaCustomer")}</th>
+                          <th className="border border-slate-300 px-3 py-2 text-left print:px-2 print:py-1.5">{t("field.nominalPo")}</th>
+                          <th className="border border-slate-300 px-3 py-2 text-left print:px-2 print:py-1.5">{t("field.tanggalInvoice")}</th>
+                          <th className="border border-slate-300 px-3 py-2 text-left print:px-2 print:py-1.5">{t("field.noInvoice")}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -260,3 +260,4 @@ export default function PurchaseOrderExportPage() {
     </>
   );
 }
+

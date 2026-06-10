@@ -558,7 +558,7 @@ export function InvoiceEditForm({
         </p>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="space-y-4">
         <div className="rounded-xl border border-sky-100 bg-white/85 p-4 dark:border-slate-800 dark:bg-slate-900/70">
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="text-sm text-slate-700 dark:text-slate-200">
@@ -728,7 +728,7 @@ export function InvoiceEditForm({
                   return (
                     <div
                       key={`invoice-barang-row-${index}`}
-                      className="grid gap-2 sm:grid-cols-[0.9fr_1.1fr_1.1fr_0.65fr_0.65fr_0.9fr_0.9fr]"
+                      className="grid items-start gap-2 sm:grid-cols-[0.9fr_1.1fr_1.1fr_0.65fr_0.65fr_0.9fr_0.9fr]"
                     >
                       <input
                         type="text"
@@ -749,12 +749,12 @@ export function InvoiceEditForm({
                         onChange={(event) => updateBarangRow(index, "namaBarang", event.target.value)}
                         className="w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                       />
-                      <input
-                        type="text"
+                      <textarea
                         value={row.spesifikasi}
                         placeholder={t("invoice.form.items.placeholder.spec")}
                         onChange={(event) => updateBarangRow(index, "spesifikasi", event.target.value)}
-                        className="w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                        className="min-h-[76px] w-full resize-y rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                        rows={2}
                       />
                       <input
                         type="number"

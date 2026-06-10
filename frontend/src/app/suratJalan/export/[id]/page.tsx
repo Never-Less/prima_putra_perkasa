@@ -144,15 +144,15 @@ export default function SuratJalanExportPage() {
         }
       `}</style>
 
-      <main className="min-h-screen bg-slate-200/60 px-3 py-4 print:bg-white print:px-0 print:py-0">
+      <main className="export-normal-weight min-h-screen bg-slate-200/60 px-3 py-4 print:bg-white print:px-0 print:py-0">
         <div className="mx-auto flex w-full max-w-[24cm] items-center justify-between gap-3 pb-4 print:hidden">
           <div>
-            <h1 className="text-lg font-semibold text-slate-900">{t("suratJalan.export.previewTitle")}</h1>
+            <h1 className="text-lg text-slate-900">{t("suratJalan.export.previewTitle")}</h1>
             <p className="text-sm text-slate-600">{t("suratJalan.export.previewDescription")}</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm font-medium text-slate-700">
+              <span className="text-sm text-slate-700">
                 {t("suratJalan.export.paperSizeLabel")}
               </span>
               <div className="flex rounded-lg border border-slate-300 bg-white p-1">
@@ -217,3 +217,4 @@ export default function SuratJalanExportPage() {
     </>
   );
 }
+
