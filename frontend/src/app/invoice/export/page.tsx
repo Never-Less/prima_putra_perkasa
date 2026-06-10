@@ -201,25 +201,25 @@ export default function InvoiceExportPage() {
         }
       `}</style>
 
-      <main className="min-h-screen bg-slate-100 px-4 py-4 print:bg-white print:px-0 print:py-0">
+      <main className="export-normal-weight min-h-screen bg-slate-100 px-4 py-4 print:bg-white print:px-0 print:py-0">
         <div className="mx-auto max-w-[1200px] space-y-4 print:max-w-none">
           <header className="flex flex-wrap items-start justify-between gap-3 rounded-2xl bg-white p-4 shadow-sm print:hidden">
             <div>
-              <h1 className="text-xl font-semibold text-slate-900">{t("invoice.exportPage.title")}</h1>
+              <h1 className="text-xl text-slate-900">{t("invoice.exportPage.title")}</h1>
               <p className="mt-1 text-sm text-slate-600">{t("invoice.exportPage.description")}</p>
             </div>
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => window.print()}
-                className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600"
+                className="rounded-lg bg-sky-700 px-4 py-2 text-sm text-white hover:bg-sky-600"
               >
                 {t("common.print")}
               </button>
               <button
                 type="button"
                 onClick={handleClosePage}
-                className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
               >
                 {t("common.close")}
               </button>
@@ -238,7 +238,7 @@ export default function InvoiceExportPage() {
             <section className="space-y-4 rounded-2xl bg-white p-4 tracking-[0.05em] shadow-sm print:rounded-none print:p-0 print:shadow-none">
               <div className="space-y-2">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h2 className="text-base font-semibold text-slate-900">
+                  <h2 className="text-base text-slate-900">
                     {t("invoice.exportPage.activeFilters")}
                   </h2>
                   <span className="text-sm text-slate-500">
@@ -264,7 +264,7 @@ export default function InvoiceExportPage() {
                 {hasTanggalFilter ? (
                   <div className="grid gap-2 sm:grid-cols-2">
                     <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
-                      <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">
+                      <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
                         {t("field.tanggalDari")}
                       </p>
                       <p className="mt-1 text-slate-800">
@@ -272,7 +272,7 @@ export default function InvoiceExportPage() {
                       </p>
                     </div>
                     <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
-                      <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">
+                      <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
                         {t("field.tanggalSampai")}
                       </p>
                       <p className="mt-1 text-slate-800">
@@ -303,28 +303,28 @@ export default function InvoiceExportPage() {
                       </colgroup>
                       <thead className="bg-slate-100">
                         <tr>
-                          <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">
+                          <th className="border border-slate-300 px-3 py-2 text-left print:px-2 print:py-1.5">
                             {t("field.tanggal")}
                           </th>
-                          <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">
+                          <th className="border border-slate-300 px-3 py-2 text-left print:px-2 print:py-1.5">
                             {t("field.noInvoice")}
                           </th>
-                          <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">
+                          <th className="border border-slate-300 px-3 py-2 text-left print:px-2 print:py-1.5">
                             {t("invoice.exportPage.customerFactoryLabel")}
                           </th>
-                          <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">
+                          <th className="border border-slate-300 px-3 py-2 text-left print:px-2 print:py-1.5">
                             {t("invoice.exportPage.subtotalDppLabel")}
                           </th>
-                          <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">
+                          <th className="border border-slate-300 px-3 py-2 text-left print:px-2 print:py-1.5">
                             {t("invoice.exportPage.ppnLabel")}
                           </th>
-                          <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">
+                          <th className="border border-slate-300 px-3 py-2 text-left print:px-2 print:py-1.5">
                             {t("invoice.exportPage.totalInvoiceLabel")}
                           </th>
-                          <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">
+                          <th className="border border-slate-300 px-3 py-2 text-left print:px-2 print:py-1.5">
                             {t("field.isPaid")}
                           </th>
-                          <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">
+                          <th className="border border-slate-300 px-3 py-2 text-left print:px-2 print:py-1.5">
                             {t("field.tanggalBayar")}
                           </th>
                         </tr>
@@ -339,7 +339,7 @@ export default function InvoiceExportPage() {
                               <td className="whitespace-nowrap border border-slate-300 px-3 py-2 print:px-1.5 print:py-1.5">
                                 {formatTanggal(row.tanggal, locale)}
                               </td>
-                              <td className="whitespace-nowrap border border-slate-300 px-3 py-2 font-medium print:px-1.5 print:py-1.5" title={row.noInvoice || "-"}>
+                              <td className="whitespace-nowrap border border-slate-300 px-3 py-2 print:px-1.5 print:py-1.5" title={row.noInvoice || "-"}>
                                 {row.noInvoice || "-"}
                               </td>
                               <td className="break-words border border-slate-300 px-3 py-2 leading-snug print:px-1.5 print:py-1.5" title={customerLabel}>
@@ -351,11 +351,11 @@ export default function InvoiceExportPage() {
                               <td className="whitespace-nowrap border border-slate-300 px-3 py-2 text-right print:px-1.5 print:py-1.5">
                                 <ExportCurrencyValue value={row.ppnAmount} locale={locale} />
                               </td>
-                              <td className="whitespace-nowrap border border-slate-300 px-3 py-2 text-right font-medium print:px-1.5 print:py-1.5">
+                              <td className="whitespace-nowrap border border-slate-300 px-3 py-2 text-right print:px-1.5 print:py-1.5">
                                 <ExportCurrencyValue value={row.grandTotal} locale={locale} />
                               </td>
                               <td
-                                className={`whitespace-nowrap border border-slate-300 px-3 py-2 text-[11px] font-medium leading-tight print:px-1.5 print:py-1.5 print:text-[7.5px] ${
+                                className={`whitespace-nowrap border border-slate-300 px-3 py-2 text-[11px] leading-tight print:px-1.5 print:py-1.5 print:text-[7.5px] ${
                                   row.isPaid
                                     ? "bg-emerald-100 text-emerald-900"
                                     : "bg-rose-100 text-rose-900"
@@ -374,21 +374,21 @@ export default function InvoiceExportPage() {
                         <tr>
                           <td
                             colSpan={3}
-                            className="border border-slate-300 px-3 py-2 text-right font-semibold print:px-1.5 print:py-1.5"
+                            className="border border-slate-300 px-3 py-2 text-right print:px-1.5 print:py-1.5"
                           >
                             {t("invoice.exportPage.grandTotalRowLabel")}
                           </td>
-                          <td className="whitespace-nowrap border border-slate-300 px-3 py-2 text-right font-semibold print:px-1.5 print:py-1.5">
+                          <td className="whitespace-nowrap border border-slate-300 px-3 py-2 text-right print:px-1.5 print:py-1.5">
                             <ExportCurrencyValue value={totals.subtotal} locale={locale} />
                           </td>
-                          <td className="whitespace-nowrap border border-slate-300 px-3 py-2 text-right font-semibold print:px-1.5 print:py-1.5">
+                          <td className="whitespace-nowrap border border-slate-300 px-3 py-2 text-right print:px-1.5 print:py-1.5">
                             <ExportCurrencyValue value={totals.ppnAmount} locale={locale} />
                           </td>
-                          <td className="whitespace-nowrap border border-slate-300 px-3 py-2 text-right font-semibold print:px-1.5 print:py-1.5">
+                          <td className="whitespace-nowrap border border-slate-300 px-3 py-2 text-right print:px-1.5 print:py-1.5">
                             <ExportCurrencyValue value={totals.grandTotal} locale={locale} />
                           </td>
-                          <td className="border border-slate-300 px-3 py-2 font-semibold print:px-2 print:py-1.5" />
-                          <td className="border border-slate-300 px-3 py-2 font-semibold print:px-2 print:py-1.5" />
+                          <td className="border border-slate-300 px-3 py-2 print:px-2 print:py-1.5" />
+                          <td className="border border-slate-300 px-3 py-2 print:px-2 print:py-1.5" />
                         </tr>
                       </tfoot>
                     </table>
@@ -402,7 +402,7 @@ export default function InvoiceExportPage() {
             <section className="space-y-4 rounded-2xl bg-white p-4 tracking-[0.05em] shadow-sm print:break-before-page print:rounded-none print:p-0 print:shadow-none">
               <div className="space-y-1">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h2 className="text-lg font-semibold uppercase tracking-wide text-slate-900 print:text-[18px]">
+                  <h2 className="text-lg uppercase tracking-wide text-slate-900 print:text-[18px]">
                     {t("invoice.exportPage.factoryBillingTitle")}
                   </h2>
                   <span className="text-sm text-slate-500">
@@ -425,13 +425,13 @@ export default function InvoiceExportPage() {
                   </colgroup>
                   <thead className="bg-slate-100">
                     <tr>
-                      <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">
+                      <th className="border border-slate-300 px-3 py-2 text-left print:px-2 print:py-1.5">
                         {t("invoice.export.table.no")}
                       </th>
-                      <th className="border border-slate-300 px-3 py-2 text-left font-semibold print:px-2 print:py-1.5">
+                      <th className="border border-slate-300 px-3 py-2 text-left print:px-2 print:py-1.5">
                         {t("invoice.exportPage.factoryBillingCustomerColumn")}
                       </th>
-                      <th className="border border-slate-300 px-3 py-2 text-right font-semibold print:px-2 print:py-1.5">
+                      <th className="border border-slate-300 px-3 py-2 text-right print:px-2 print:py-1.5">
                         {t("invoice.exportPage.factoryBillingAmountColumn")}
                       </th>
                     </tr>
@@ -452,7 +452,7 @@ export default function InvoiceExportPage() {
                     ))}
                   </tbody>
                   <tfoot>
-                    <tr className="bg-slate-100 font-semibold">
+                    <tr className="bg-slate-100">
                       <td className="border border-slate-300 px-3 py-2 print:px-1.5 print:py-1.5" colSpan={2}>
                         {t("invoice.exportPage.factoryBillingGrandTotal")}
                       </td>
@@ -470,3 +470,4 @@ export default function InvoiceExportPage() {
     </>
   );
 }
+

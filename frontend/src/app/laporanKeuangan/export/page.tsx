@@ -1028,11 +1028,11 @@ export default function LaporanKeuanganExportPage() {
         }
       `}</style>
 
-      <main className="laporan-keuangan-export min-h-screen bg-slate-100 px-4 py-4 print:bg-white print:px-0 print:py-0">
+      <main className="export-normal-weight laporan-keuangan-export min-h-screen bg-slate-100 px-4 py-4 print:bg-white print:px-0 print:py-0">
         <div className="mx-auto max-w-[900px] space-y-4 print:max-w-none">
           <header className="flex flex-wrap items-start justify-between gap-3 rounded-2xl bg-white p-4 shadow-sm print:hidden">
             <div>
-              <h1 className="text-xl font-semibold text-slate-900">{t("laporanKeuangan.exportPage.title")}</h1>
+              <h1 className="text-xl text-slate-900">{t("laporanKeuangan.exportPage.title")}</h1>
               <p className="mt-1 text-sm text-slate-600">
                 {t(
                   reportMode === "yearly"
@@ -1046,21 +1046,21 @@ export default function LaporanKeuanganExportPage() {
                 type="button"
                 onClick={handleExportExcel}
                 disabled={isLoading || Boolean(errorMessage)}
-                className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-lg bg-emerald-700 px-4 py-2 text-sm text-white hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {t("common.exportExcel")}
               </button>
               <button
                 type="button"
                 onClick={() => window.print()}
-                className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600"
+                className="rounded-lg bg-sky-700 px-4 py-2 text-sm text-white hover:bg-sky-600"
               >
                 {t("common.print")}
               </button>
               <button
                 type="button"
                 onClick={handleClosePage}
-                className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
               >
                 {t("common.close")}
               </button>
@@ -1079,19 +1079,19 @@ export default function LaporanKeuanganExportPage() {
             <section className="space-y-4 rounded-2xl bg-white p-4 shadow-sm print:rounded-none print:p-0 print:shadow-none">
               <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-300 pb-4">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                  <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
                     {t("brand.name")}
                   </p>
-                  <h2 className="mt-2 text-2xl font-semibold text-slate-900">
+                  <h2 className="mt-2 text-2xl text-slate-900">
                     {t("laporanKeuangan.exportPage.heading")}
                   </h2>
                   <p className="mt-1 text-sm text-slate-600">{reportPeriodLabel}</p>
                 </div>
                 <div className="rounded-lg border border-slate-300 px-3 py-2 text-right">
-                  <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">
+                  <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
                     {t("field.netProfit")}
                   </p>
-                  <p className={`mt-1 text-lg font-semibold ${exportSummary.netProfit >= 0 ? "text-slate-900" : "text-red-700"}`}>
+                  <p className={`mt-1 text-lg ${exportSummary.netProfit >= 0 ? "text-slate-900" : "text-red-700"}`}>
                     <ExportCurrencyValue value={exportSummary.netProfit} locale={locale} />
                   </p>
                 </div>
@@ -1099,38 +1099,38 @@ export default function LaporanKeuanganExportPage() {
 
               <div className="grid gap-3 sm:grid-cols-6">
                 <div className="rounded-lg border border-slate-300 px-3 py-2">
-                  <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">{t("field.totalInvoice")}</p>
-                  <p className="mt-1 font-semibold text-slate-900">
+                  <p className="text-xs uppercase tracking-[0.14em] text-slate-500">{t("field.totalInvoice")}</p>
+                  <p className="mt-1 text-slate-900">
                     <ExportCurrencyValue value={exportSummary.totalInvoice} locale={locale} />
                   </p>
                 </div>
                 <div className="rounded-lg border border-slate-300 px-3 py-2">
-                  <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">{t("field.totalPembelian")}</p>
-                  <p className="mt-1 font-semibold text-slate-900">
+                  <p className="text-xs uppercase tracking-[0.14em] text-slate-500">{t("field.totalPembelian")}</p>
+                  <p className="mt-1 text-slate-900">
                     <ExportCurrencyValue value={exportSummary.totalPembelian} locale={locale} />
                   </p>
                 </div>
                 <div className="rounded-lg border border-slate-300 px-3 py-2">
-                  <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">{t("field.stockBarang")}</p>
-                  <p className="mt-1 font-semibold text-slate-900">
+                  <p className="text-xs uppercase tracking-[0.14em] text-slate-500">{t("field.stockBarang")}</p>
+                  <p className="mt-1 text-slate-900">
                     <ExportCurrencyValue value={exportSummary.totalStockBarang} locale={locale} />
                   </p>
                 </div>
                 <div className="rounded-lg border border-slate-300 px-3 py-2">
-                  <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">{t("field.grossProfit")}</p>
-                  <p className="mt-1 font-semibold text-slate-900">
+                  <p className="text-xs uppercase tracking-[0.14em] text-slate-500">{t("field.grossProfit")}</p>
+                  <p className="mt-1 text-slate-900">
                     <ExportCurrencyValue value={exportSummary.grossProfit} locale={locale} />
                   </p>
                 </div>
                 <div className="rounded-lg border border-slate-300 px-3 py-2">
-                  <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">{t("field.totalBiayaOperasional")}</p>
-                  <p className="mt-1 font-semibold text-slate-900">
+                  <p className="text-xs uppercase tracking-[0.14em] text-slate-500">{t("field.totalBiayaOperasional")}</p>
+                  <p className="mt-1 text-slate-900">
                     <ExportCurrencyValue value={exportSummary.totalBiayaOperasional} locale={locale} />
                   </p>
                 </div>
                 <div className="rounded-lg border border-slate-300 px-3 py-2">
-                  <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">{t("field.netProfit")}</p>
-                  <p className={`mt-1 font-semibold ${exportSummary.netProfit >= 0 ? "text-slate-900" : "text-red-700"}`}>
+                  <p className="text-xs uppercase tracking-[0.14em] text-slate-500">{t("field.netProfit")}</p>
+                  <p className={`mt-1 ${exportSummary.netProfit >= 0 ? "text-slate-900" : "text-red-700"}`}>
                     <ExportCurrencyValue value={exportSummary.netProfit} locale={locale} />
                   </p>
                 </div>
@@ -1139,7 +1139,7 @@ export default function LaporanKeuanganExportPage() {
               {reportMode === "yearly" ? (
                 <div className="overflow-x-auto border border-slate-300 print:overflow-visible">
                   <table className="w-full min-w-[1020px] table-fixed border-collapse text-sm text-slate-900 print:text-[11px]">
-                    <thead className="bg-amber-50 text-center font-semibold uppercase">
+                    <thead className="bg-amber-50 text-center uppercase">
                       <tr>
                         <th className="w-40 border border-slate-400 px-2 py-2">{t("field.bulan")}</th>
                         <th className="w-36 border border-slate-400 px-2 py-2">{t("field.totalInvoice")}</th>
@@ -1153,7 +1153,7 @@ export default function LaporanKeuanganExportPage() {
                     <tbody>
                       {yearlyRows.map((row) => (
                         <tr key={row.bulan}>
-                          <td className="truncate border border-slate-300 px-2 py-1 align-top font-medium">
+                          <td className="truncate border border-slate-300 px-2 py-1 align-top">
                             {formatLaporanKeuanganMonth(row.bulan, locale)}
                           </td>
                           <td className="truncate border border-slate-300 px-2 py-1 align-top">
@@ -1171,14 +1171,14 @@ export default function LaporanKeuanganExportPage() {
                           <td className="truncate border border-slate-300 px-2 py-1 align-top">
                             <ExportCurrencyValue value={row.totalBiayaOperasional} locale={locale} />
                           </td>
-                          <td className={`truncate border border-slate-300 px-2 py-1 align-top font-semibold ${
+                          <td className={`truncate border border-slate-300 px-2 py-1 align-top ${
                             row.netProfit >= 0 ? "text-slate-900" : "text-red-700"
                           }`}>
                             <ExportCurrencyValue value={row.netProfit} locale={locale} />
                           </td>
                         </tr>
                       ))}
-                      <tr className="bg-amber-100 font-semibold">
+                      <tr className="bg-amber-100">
                         <td className="truncate border border-slate-300 px-2 py-1 align-top">
                           {t("laporanKeuangan.yearlyTable.total")}
                         </td>
@@ -1218,7 +1218,7 @@ export default function LaporanKeuanganExportPage() {
                       <col style={{ width: "9%" }} />
                       <col style={{ width: "12%" }} />
                     </colgroup>
-                    <thead className="bg-amber-50 text-center font-semibold uppercase">
+                    <thead className="bg-amber-50 text-center uppercase">
                       <tr>
                         <th rowSpan={2} className="border border-slate-400 px-2 py-2">{t("laporanKeuangan.report.date")}</th>
                         <th rowSpan={2} className="border border-slate-400 px-2 py-2">{t("laporanKeuangan.report.description")}</th>
@@ -1237,13 +1237,13 @@ export default function LaporanKeuanganExportPage() {
                         const isSpacer = row.kind === "spacer";
                         const rowClassName =
                           row.kind === "grossProfit"
-                            ? "bg-sky-200 font-semibold"
+                            ? "bg-sky-200"
                             : row.kind === "operationalTotal"
-                              ? "bg-orange-100 font-semibold"
+                              ? "bg-orange-100"
                               : row.kind === "netProfit"
-                                ? "bg-amber-100 font-semibold"
+                                ? "bg-amber-100"
                                 : row.kind === "total" || row.kind === "grandTotal"
-                                  ? "font-semibold"
+                                  ? ""
                                   : "";
 
                         return (
@@ -1266,9 +1266,9 @@ export default function LaporanKeuanganExportPage() {
                             <td
                               className={`truncate border border-slate-300 px-2 py-1 align-top ${
                                 row.isHutang
-                                  ? "font-semibold text-red-700"
+                                  ? " text-red-700"
                                   : row.bayar
-                                    ? "font-semibold text-emerald-700"
+                                    ? " text-emerald-700"
                                     : ""
                               }`}
                             >
@@ -1289,3 +1289,4 @@ export default function LaporanKeuanganExportPage() {
     </>
   );
 }
+
