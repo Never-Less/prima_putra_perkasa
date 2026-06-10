@@ -6,9 +6,14 @@ import { ApiLoadingState } from "../../../_components/api-loading-state";
 import { ExportCurrencyValue } from "../../../_components/export-currency-value";
 import { formatAppUppercaseDate } from "../../../_lib/date";
 import { ApiRequestError } from "../../../_lib/api-client";
+import { downloadExcelHtmlFile, sanitizeExcelFileName, type ExcelHtmlWorksheet } from "../../../_lib/excel-html-export";
 import { useI18n } from "../../../_i18n/provider";
 import { fetchCustomerById, type CustomerItem } from "../../../customer/_lib/customer";
-import { fetchInvoiceById, invoiceBarangNoPoLabel, type InvoiceItem } from "../../_lib/invoice";
+import {
+  fetchInvoiceById,
+  invoiceBarangNoPoLabel,
+  type InvoiceItem,
+} from "../../_lib/invoice";
 
 const companyProfile = {
   name: "CV. PRIMA PUTRA PERKASA",
@@ -807,6 +812,39 @@ export default function InvoiceExportPage() {
     return roundCurrency((dppValue * (rate + 1)) / 100);
   }, [dppValue, invoice?.isPpn, invoice?.ppnAmount, invoice?.ppnRate]);
 
+  function handleExportExcel() {
+    if (!invoice) {
+      return;
+    }
+
+    const worksheets: ExcelHtmlWorksheet[] = [
+      {
+        name: "Detail Barang",
+        rows: [
+          [
+            t("invoice.excel.column.namaBarang"),
+            t("invoice.excel.column.spek"),
+            t("invoice.excel.column.qty"),
+            t("invoice.excel.column.hargaSatuan"),
+            t("invoice.excel.column.hargaTotal"),
+          ],
+          ...invoice.barang.map((barang) => [
+            barang.namaBarang || "-",
+            barang.spesifikasi || "-",
+            barang.kuantitas,
+            barang.hargaSatuan,
+            barang.jumlah,
+          ]),
+        ],
+      },
+    ];
+
+    downloadExcelHtmlFile(
+      `invoice-${sanitizeExcelFileName(invoice.noInvoice || invoice.id || "detail")}.xls`,
+      worksheets
+    );
+  }
+
   return (
     <>
       <style jsx global>{`
@@ -835,6 +873,14 @@ export default function InvoiceExportPage() {
             <p className="text-sm text-slate-600">{t("invoice.export.previewDescription")}</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={handleExportExcel}
+              disabled={!invoice}
+              className="rounded-lg border border-emerald-300 bg-emerald-700 px-4 py-2 text-sm text-white hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {t("common.exportExcel")}
+            </button>
             <button
               type="button"
               onClick={() => window.print()}

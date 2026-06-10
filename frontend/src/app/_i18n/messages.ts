@@ -276,6 +276,11 @@ export const messages: Record<Locale, MessageDictionary> = {
     "invoice.exportPage.factoryBillingCustomerColumn": "Nama Customer (Daftar Tagihan Pabrik)",
     "invoice.exportPage.factoryBillingAmountColumn": "Jumlah Tagihan",
     "invoice.exportPage.factoryBillingGrandTotal": "Grand Total Tagihan",
+    "invoice.excel.column.namaBarang": "Nama barang",
+    "invoice.excel.column.spek": "Spek",
+    "invoice.excel.column.qty": "Qty",
+    "invoice.excel.column.hargaSatuan": "Harga Satuan",
+    "invoice.excel.column.hargaTotal": "Harga Total",
     "invoice.status.paid": "Lunas",
     "invoice.status.unpaid": "Belum Lunas",
     "invoice.validation.tanggalBayarRequiredWhenPaid":
@@ -896,6 +901,11 @@ export const messages: Record<Locale, MessageDictionary> = {
     "invoice.exportPage.factoryBillingCustomerColumn": "Customer Name (Factory Billing List)",
     "invoice.exportPage.factoryBillingAmountColumn": "Billing Amount",
     "invoice.exportPage.factoryBillingGrandTotal": "Grand Billing Total",
+    "invoice.excel.column.namaBarang": "Item name",
+    "invoice.excel.column.spek": "Spec",
+    "invoice.excel.column.qty": "Qty",
+    "invoice.excel.column.hargaSatuan": "Unit Price",
+    "invoice.excel.column.hargaTotal": "Total Price",
     "invoice.status.paid": "Paid",
     "invoice.status.unpaid": "Unpaid",
     "invoice.validation.tanggalBayarRequiredWhenPaid":

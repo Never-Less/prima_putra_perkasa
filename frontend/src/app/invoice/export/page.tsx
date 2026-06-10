@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ApiLoadingState } from "../../_components/api-loading-state";
 import { ExportCurrencyValue } from "../../_components/export-currency-value";
 import { ApiRequestError } from "../../_lib/api-client";
+import { downloadExcelHtmlFile, sanitizeExcelFileName, type ExcelHtmlWorksheet } from "../../_lib/excel-html-export";
 import { useI18n } from "../../_i18n/provider";
 import { fetchCustomerRows, type CustomerItem } from "../../customer/_lib/customer";
 import {
@@ -192,6 +193,39 @@ export default function InvoiceExportPage() {
     }, 150);
   }
 
+  function handleExportExcel() {
+    const detailRows = rows.flatMap((row) =>
+      row.barang.map((barang) => [
+        barang.namaBarang || "-",
+        barang.spesifikasi || "-",
+        barang.kuantitas,
+        barang.hargaSatuan,
+        barang.jumlah,
+      ])
+    );
+    const worksheets: ExcelHtmlWorksheet[] = [
+      {
+        name: "Detail Barang",
+        rows: [
+          [
+            t("invoice.excel.column.namaBarang"),
+            t("invoice.excel.column.spek"),
+            t("invoice.excel.column.qty"),
+            t("invoice.excel.column.hargaSatuan"),
+            t("invoice.excel.column.hargaTotal"),
+          ],
+          ...detailRows,
+        ],
+      },
+    ];
+    const fileSuffix =
+      sanitizeExcelFileName(filter.tanggalDari || filter.tanggalBayarDari || "", "") ||
+      sanitizeExcelFileName(filter.tanggalSampai || filter.tanggalBayarSampai || "", "") ||
+      "data";
+
+    downloadExcelHtmlFile(`invoice-export-${fileSuffix}.xls`, worksheets);
+  }
+
   return (
     <>
       <style jsx global>{`
@@ -209,6 +243,14 @@ export default function InvoiceExportPage() {
               <p className="mt-1 text-sm text-slate-600">{t("invoice.exportPage.description")}</p>
             </div>
             <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleExportExcel}
+                disabled={rows.length === 0}
+                className="rounded-lg border border-emerald-300 bg-emerald-700 px-4 py-2 text-sm text-white hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {t("common.exportExcel")}
+              </button>
               <button
                 type="button"
                 onClick={() => window.print()}
