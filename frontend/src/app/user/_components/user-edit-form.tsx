@@ -120,7 +120,7 @@ export function UserEditForm({
         <p className="text-sm text-sky-800 dark:text-sky-200">{t("user.form.description")}</p>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="space-y-4">
         <div className="rounded-xl border border-sky-100 bg-white/85 p-4 dark:border-slate-800 dark:bg-slate-900/70">
           <div className="grid gap-3">
             <label className="text-sm text-slate-700 dark:text-slate-200">
