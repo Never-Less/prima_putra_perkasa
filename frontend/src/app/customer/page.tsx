@@ -418,12 +418,6 @@ export function CustomerPageContent({ mode = "list", itemId = "" }: CustomerPage
                   <CustomerEditForm
                     key={selectedId || "new"}
                     item={selectedRow}
-                    onNewData={() => {
-                      setActionErrorMessage("");
-                      setToast(null);
-                      setSelectedId("");
-                      router.push("/customer/form");
-                    }}
                     canManageCustomer={canManageCustomer}
                     isSaving={isSaving}
                     isDeleting={isDeleting}

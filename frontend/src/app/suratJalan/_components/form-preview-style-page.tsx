@@ -680,13 +680,6 @@ export function FormPreviewStylePage({ mode = "list", itemId = "" }: FormPreview
                 <SuratJalanEditForm
                   key={selectedId || "new"}
                   item={selectedRow}
-                  onNewData={() => {
-                    setActionErrorMessage("");
-                    setToast(null);
-                    setPostCreateAction(null);
-                    setSelectedId("");
-                    router.push("/suratJalan/form");
-                  }}
                   customerOptions={customerOptions}
                   noPoOptions={noPoOptions}
                   noPoCustomerMap={noPoCustomerMap}

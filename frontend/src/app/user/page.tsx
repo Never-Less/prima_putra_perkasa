@@ -412,12 +412,6 @@ export function UserPageContent({ mode = "list", itemId = "" }: UserPageContentP
                     isSaving={isSaving}
                     isDeleting={isDeleting}
                     actionErrorMessage={actionErrorMessage}
-                    onNewData={() => {
-                      setActionErrorMessage("");
-                      setToast(null);
-                      setSelectedId("");
-                      router.push("/user/form");
-                    }}
                     onSave={handleSaveUser}
                     onDelete={handleDeleteUser}
                   />

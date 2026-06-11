@@ -6,7 +6,6 @@ import { useI18n } from "../../_i18n/provider";
 
 type SupplierEditFormProps = {
   item?: SupplierItem;
-  onNewData?: () => void;
   canManageSupplier?: boolean;
   isSaving?: boolean;
   isDeleting?: boolean;
@@ -25,7 +24,6 @@ function createEmptySupplierFormState(): SupplierFormState {
 
 export function SupplierEditForm({
   item,
-  onNewData,
   canManageSupplier = false,
   isSaving = false,
   isDeleting = false,
@@ -102,17 +100,6 @@ export function SupplierEditForm({
               className="w-full rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-sky-500 dark:text-slate-950 dark:hover:bg-sky-400 sm:w-auto"
             >
               {isSaving ? t("common.loading") : t("common.saveChanges")}
-            </button>
-            <button
-              type="button"
-              disabled={isSaving || isDeleting}
-              onClick={() => {
-                onNewData?.();
-                setForm(createEmptySupplierFormState());
-              }}
-              className="w-full rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm text-sky-700 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800 sm:w-auto"
-            >
-              {t("common.newData")}
             </button>
             <button
               type="button"
