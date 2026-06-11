@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { ApiLoadingState } from "../_components/api-loading-state";
 import { AppToast } from "../_components/app-toast";
 import { ConfirmationModal } from "../_components/confirmation-modal";
@@ -12,6 +13,7 @@ import {
   createCustomer,
   defaultCustomerFilter,
   deleteCustomer,
+  fetchCustomerById,
   fetchCustomerList,
   updateCustomer,
   type CustomerFilter,
@@ -26,8 +28,17 @@ type ToastState = {
   variant: "success" | "error";
 };
 
-export default function CustomerPage() {
+type CustomerPageMode = "list" | "form";
+
+type CustomerPageContentProps = {
+  mode?: CustomerPageMode;
+  itemId?: string;
+};
+
+export function CustomerPageContent({ mode = "list", itemId = "" }: CustomerPageContentProps) {
   const { t } = useI18n();
+  const router = useRouter();
+  const isFormMode = mode === "form";
   const [rows, setRows] = useState<CustomerItem[]>([]);
   const [filter, setFilter] = useState<CustomerFilter>(defaultCustomerFilter);
   const [paginationQuery, setPaginationQuery] = useState({
@@ -41,7 +52,7 @@ export default function CustomerPage() {
     totalPages: 1,
   });
   const [filteredCount, setFilteredCount] = useState(0);
-  const [selectedId, setSelectedId] = useState("");
+  const [selectedId, setSelectedId] = useState(itemId);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -81,6 +92,34 @@ export default function CustomerPage() {
     setErrorMessage("");
 
     try {
+      if (isFormMode) {
+        if (!itemId) {
+          setRows([]);
+          setPagination((prevPagination) => ({
+            ...prevPagination,
+            totalItems: 0,
+            totalPages: 1,
+          }));
+          setFilteredCount(0);
+          setSelectedId("");
+          return;
+        }
+
+        const customer = await fetchCustomerById(itemId);
+        const customerRows = customer ? [customer] : [];
+
+        setRows(customerRows);
+        setPagination({
+          page: 1,
+          limit: 1,
+          totalItems: customerRows.length,
+          totalPages: 1,
+        });
+        setFilteredCount(customerRows.length);
+        setSelectedId(customer?.id || itemId);
+        return;
+      }
+
       const customerResult = await fetchCustomerList({
         ...filter,
         ...paginationQuery,
@@ -118,7 +157,7 @@ export default function CustomerPage() {
         setIsLoading(false);
       }
     }
-  }, [filter, paginationQuery, t]);
+  }, [filter, isFormMode, itemId, paginationQuery, t]);
 
   useEffect(() => {
     void loadCustomers();
@@ -164,7 +203,17 @@ export default function CustomerPage() {
     return rows.find((row) => row.id === selectedId);
   }, [rows, selectedId]);
 
-  const showDataSection = !isLoading && (rows.length > 0 || !errorMessage);
+  const showDataSection = isFormMode
+    ? !isLoading && !errorMessage
+    : !isLoading && (rows.length > 0 || !errorMessage);
+
+  const navigateToForm = useCallback(
+    (id?: string) => {
+      const normalizedId = String(id || "").trim();
+      router.push(normalizedId ? `/customer/form?id=${encodeURIComponent(normalizedId)}` : "/customer/form");
+    },
+    [router]
+  );
 
   const executeSaveCustomer = useCallback(
     async (form: CustomerFormState, selectedItem?: CustomerItem) => {
@@ -183,6 +232,9 @@ export default function CustomerPage() {
           const updatedCustomer = await updateCustomer(selectedItem.id, form);
           await loadCustomers({ showLoading: false });
           setSelectedId(updatedCustomer?.id || selectedItem.id);
+          if (isFormMode) {
+            router.replace(`/customer/form?id=${encodeURIComponent(updatedCustomer?.id || selectedItem.id)}`);
+          }
           showToast(
             t("customer.toast.updateSuccess", {
               nama: form.nama || selectedItem.nama || "-",
@@ -195,6 +247,9 @@ export default function CustomerPage() {
         const createdCustomer = await createCustomer(form);
         await loadCustomers({ showLoading: false });
         setSelectedId(createdCustomer?.id || "");
+        if (isFormMode && createdCustomer?.id) {
+          router.replace(`/customer/form?id=${encodeURIComponent(createdCustomer.id)}`);
+        }
         showToast(t("customer.toast.createSuccess"), "success");
       } catch (error) {
         if (error instanceof ApiRequestError) {
@@ -211,7 +266,7 @@ export default function CustomerPage() {
         setIsSaving(false);
       }
     },
-    [canManageCustomer, loadCustomers, showToast, t]
+    [canManageCustomer, isFormMode, loadCustomers, router, showToast, t]
   );
 
   const executeDeleteCustomer = useCallback(
@@ -230,6 +285,9 @@ export default function CustomerPage() {
         await deleteCustomer(selectedItem.id);
         setSelectedId("");
         await loadCustomers({ showLoading: false });
+        if (isFormMode) {
+          router.push("/customer");
+        }
         showToast(
           t("customer.toast.deleteSuccess", {
             nama: selectedItem.nama || "-",
@@ -251,7 +309,7 @@ export default function CustomerPage() {
         setIsDeleting(false);
       }
     },
-    [canManageCustomer, loadCustomers, showToast, t]
+    [canManageCustomer, isFormMode, loadCustomers, router, showToast, t]
   );
 
   const handleSaveCustomer = useCallback(
@@ -346,38 +404,59 @@ export default function CustomerPage() {
 
           {showDataSection ? (
             <>
-              <CustomerTableFilter
-                rows={rows}
-                filter={filter}
-                filteredCount={filteredCount}
-                pagination={pagination}
-                selectedId={selectedId}
-                onFilterChange={handleFilterChange}
-                onResetFilter={handleResetFilter}
-                onPageChange={handlePageChange}
-                onPageSizeChange={handlePageSizeChange}
-                onSelectRow={(row) => {
-                  setActionErrorMessage("");
-                  setToast(null);
-                  setSelectedId(row.id);
-                }}
-              />
-
-              <CustomerEditForm
-                key={selectedId || "new"}
-                item={selectedRow}
-                onNewData={() => {
-                  setActionErrorMessage("");
-                  setToast(null);
-                  setSelectedId("");
-                }}
-                canManageCustomer={canManageCustomer}
-                isSaving={isSaving}
-                isDeleting={isDeleting}
-                actionErrorMessage={actionErrorMessage}
-                onSave={handleSaveCustomer}
-                onDelete={handleDeleteCustomer}
-              />
+              {isFormMode ? (
+                <>
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => router.push("/customer")}
+                      className="rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm font-medium text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
+                    >
+                      {t("common.close")}
+                    </button>
+                  </div>
+                  <CustomerEditForm
+                    key={selectedId || "new"}
+                    item={selectedRow}
+                    onNewData={() => {
+                      setActionErrorMessage("");
+                      setToast(null);
+                      setSelectedId("");
+                      router.push("/customer/form");
+                    }}
+                    canManageCustomer={canManageCustomer}
+                    isSaving={isSaving}
+                    isDeleting={isDeleting}
+                    actionErrorMessage={actionErrorMessage}
+                    onSave={handleSaveCustomer}
+                    onDelete={handleDeleteCustomer}
+                  />
+                </>
+              ) : (
+                <>
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => navigateToForm()}
+                      className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600 dark:bg-sky-500 dark:text-slate-950 dark:hover:bg-sky-400"
+                    >
+                      {t("common.newData")}
+                    </button>
+                  </div>
+                  <CustomerTableFilter
+                    rows={rows}
+                    filter={filter}
+                    filteredCount={filteredCount}
+                    pagination={pagination}
+                    selectedId=""
+                    onFilterChange={handleFilterChange}
+                    onResetFilter={handleResetFilter}
+                    onPageChange={handlePageChange}
+                    onPageSizeChange={handlePageSizeChange}
+                    onSelectRow={(row) => navigateToForm(row.id)}
+                  />
+                </>
+              )}
             </>
           ) : null}
         </div>
@@ -404,4 +483,8 @@ export default function CustomerPage() {
       />
     </>
   );
+}
+
+export default function CustomerPage() {
+  return <CustomerPageContent mode="list" />;
 }

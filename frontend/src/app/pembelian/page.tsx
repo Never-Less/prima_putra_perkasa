@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { ApiLoadingState } from "../_components/api-loading-state";
 import { AppToast } from "../_components/app-toast";
 import { ConfirmationModal } from "../_components/confirmation-modal";
@@ -13,6 +14,7 @@ import {
   createPembelian,
   defaultPembelianFilter,
   deletePembelian,
+  fetchPembelianById,
   fetchPembelianList,
   pembelianStockInvoiceId,
   toPembelianFormStateFromPrefill,
@@ -32,8 +34,17 @@ type ToastState = {
   variant: "success" | "error";
 };
 
-export default function PembelianPage() {
+type PembelianPageMode = "list" | "form";
+
+type PembelianPageContentProps = {
+  mode?: PembelianPageMode;
+  itemId?: string;
+};
+
+export function PembelianPageContent({ mode = "list", itemId = "" }: PembelianPageContentProps) {
   const { t } = useI18n();
+  const router = useRouter();
+  const isFormMode = mode === "form";
   const [rows, setRows] = useState<PembelianItem[]>([]);
   const [filter, setFilter] = useState<PembelianFilter>(defaultPembelianFilter);
   const [paginationQuery, setPaginationQuery] = useState({
@@ -50,7 +61,7 @@ export default function PembelianPage() {
   const [invoiceOptions, setInvoiceOptions] = useState<PembelianInvoiceOption[]>([]);
   const [supplierOptions, setSupplierOptions] = useState<SupplierItem[]>([]);
   const [prefillOnLoad] = useState(() => consumePembelianPrefill());
-  const [selectedId, setSelectedId] = useState("");
+  const [selectedId, setSelectedId] = useState(itemId);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -93,6 +104,34 @@ export default function PembelianPage() {
       setErrorMessage("");
 
       try {
+        if (isFormMode) {
+          if (!itemId) {
+            setRows([]);
+            setPagination((prevPagination) => ({
+              ...prevPagination,
+              totalItems: 0,
+              totalPages: 1,
+            }));
+            setFilteredCount(0);
+            setSelectedId("");
+            return;
+          }
+
+          const pembelian = await fetchPembelianById(itemId);
+          const pembelianRows = pembelian ? [pembelian] : [];
+
+          setRows(pembelianRows);
+          setPagination({
+            page: 1,
+            limit: 1,
+            totalItems: pembelianRows.length,
+            totalPages: 1,
+          });
+          setFilteredCount(pembelianRows.length);
+          setSelectedId(pembelian?.id || itemId);
+          return;
+        }
+
         const pembelianResult = await fetchPembelianList({
           ...filter,
           ...paginationQuery,
@@ -130,7 +169,7 @@ export default function PembelianPage() {
         }
       }
     },
-    [filter, paginationQuery, t]
+    [filter, isFormMode, itemId, paginationQuery, t]
   );
 
   const loadInvoiceOptions = useCallback(async () => {
@@ -237,6 +276,16 @@ export default function PembelianPage() {
     return rows.find((row) => row.id === selectedId);
   }, [rows, selectedId]);
 
+  const navigateToForm = useCallback(
+    (id?: string) => {
+      const normalizedId = String(id || "").trim();
+      router.push(
+        normalizedId ? `/pembelian/form?id=${encodeURIComponent(normalizedId)}` : "/pembelian/form"
+      );
+    },
+    [router]
+  );
+
   const invoiceLabelMap = useMemo(() => {
     const map = new Map<string, string>();
 
@@ -276,6 +325,9 @@ export default function PembelianPage() {
           const updatedPembelian = await updatePembelian(selectedItem.id, form);
           await loadPembelianRows({ showLoading: false });
           setSelectedId(updatedPembelian?.id || selectedItem.id);
+          if (isFormMode) {
+            router.replace(`/pembelian/form?id=${encodeURIComponent(updatedPembelian?.id || selectedItem.id)}`);
+          }
           showToast(
             t("pembelian.toast.updateSuccess", {
               namaSupplier: form.namaSupplier || selectedItem.namaSupplier || "-",
@@ -288,6 +340,9 @@ export default function PembelianPage() {
         const createdPembelian = await createPembelian(form);
         await loadPembelianRows({ showLoading: false });
         setSelectedId(createdPembelian?.id || "");
+        if (isFormMode && createdPembelian?.id) {
+          router.replace(`/pembelian/form?id=${encodeURIComponent(createdPembelian.id)}`);
+        }
         setInitialForm(null);
         setInitialFormKey(Date.now());
         showToast(t("pembelian.toast.createSuccess"), "success");
@@ -306,7 +361,7 @@ export default function PembelianPage() {
         setIsSaving(false);
       }
     },
-    [loadPembelianRows, showToast, t]
+    [isFormMode, loadPembelianRows, router, showToast, t]
   );
 
   const executeDeletePembelian = useCallback(
@@ -318,6 +373,9 @@ export default function PembelianPage() {
         await deletePembelian(selectedItem.id);
         setSelectedId("");
         await loadPembelianRows({ showLoading: false });
+        if (isFormMode) {
+          router.push("/pembelian");
+        }
         showToast(
           t("pembelian.toast.deleteSuccess", {
             namaSupplier: selectedItem.namaSupplier || "-",
@@ -339,7 +397,7 @@ export default function PembelianPage() {
         setIsDeleting(false);
       }
     },
-    [loadPembelianRows, showToast, t]
+    [isFormMode, loadPembelianRows, router, showToast, t]
   );
 
   const handleSavePembelian = useCallback(
@@ -407,7 +465,9 @@ export default function PembelianPage() {
     };
   }, [pendingConfirmation, t]);
 
-  const showDataSection = !isLoading && (rows.length > 0 || !errorMessage);
+  const showDataSection = isFormMode
+    ? !isLoading && !errorMessage
+    : !isLoading && (rows.length > 0 || !errorMessage);
 
   return (
     <>
@@ -435,44 +495,67 @@ export default function PembelianPage() {
 
           {showDataSection ? (
             <>
-              <PembelianTableFilter
-                rows={rows}
-                filter={filter}
-                filteredCount={filteredCount}
-                pagination={pagination}
-                selectedId={selectedId}
-                resolveInvoiceLabel={resolveInvoiceLabel}
-                onFilterChange={handleFilterChange}
-                onResetFilter={handleResetFilter}
-                onPageChange={handlePageChange}
-                onPageSizeChange={handlePageSizeChange}
-                onSelectRow={(row) => {
-                  setActionErrorMessage("");
-                  setToast(null);
-                  setInitialForm(null);
-                  setSelectedId(row.id);
-                }}
-              />
-
-              <PembelianEditForm
-                key={`${selectedId || "new"}-${initialFormKey}`}
-                item={selectedRow}
-                initialForm={selectedRow ? undefined : initialForm || undefined}
-                invoiceOptions={invoiceOptions}
-                supplierOptions={supplierOptions}
-                isSaving={isSaving}
-                isDeleting={isDeleting}
-                actionErrorMessage={actionErrorMessage}
-                onSave={handleSavePembelian}
-                onDelete={handleDeletePembelian}
-                onNewData={() => {
-                  setActionErrorMessage("");
-                  setToast(null);
-                  setInitialForm(null);
-                  setInitialFormKey(Date.now());
-                  setSelectedId("");
-                }}
-              />
+              {isFormMode ? (
+                <>
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => router.push("/pembelian")}
+                      className="rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm font-medium text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
+                    >
+                      {t("common.close")}
+                    </button>
+                  </div>
+                  <PembelianEditForm
+                    key={`${selectedId || "new"}-${initialFormKey}`}
+                    item={selectedRow}
+                    initialForm={selectedRow ? undefined : initialForm || undefined}
+                    invoiceOptions={invoiceOptions}
+                    supplierOptions={supplierOptions}
+                    isSaving={isSaving}
+                    isDeleting={isDeleting}
+                    actionErrorMessage={actionErrorMessage}
+                    onSave={handleSavePembelian}
+                    onDelete={handleDeletePembelian}
+                    onNewData={() => {
+                      setActionErrorMessage("");
+                      setToast(null);
+                      setInitialForm(null);
+                      setInitialFormKey(Date.now());
+                      setSelectedId("");
+                      router.push("/pembelian/form");
+                    }}
+                  />
+                </>
+              ) : (
+                <>
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => navigateToForm()}
+                      className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600 dark:bg-sky-500 dark:text-slate-950 dark:hover:bg-sky-400"
+                    >
+                      {t("common.newData")}
+                    </button>
+                  </div>
+                  <PembelianTableFilter
+                    rows={rows}
+                    filter={filter}
+                    filteredCount={filteredCount}
+                    pagination={pagination}
+                    selectedId=""
+                    resolveInvoiceLabel={resolveInvoiceLabel}
+                    onFilterChange={handleFilterChange}
+                    onResetFilter={handleResetFilter}
+                    onPageChange={handlePageChange}
+                    onPageSizeChange={handlePageSizeChange}
+                    onSelectRow={(row) => {
+                      setInitialForm(null);
+                      navigateToForm(row.id);
+                    }}
+                  />
+                </>
+              )}
             </>
           ) : null}
         </div>
@@ -500,4 +583,8 @@ export default function PembelianPage() {
       />
     </>
   );
+}
+
+export default function PembelianPage() {
+  return <PembelianPageContent mode="list" />;
 }

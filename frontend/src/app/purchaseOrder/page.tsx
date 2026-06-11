@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { ApiLoadingState } from "../_components/api-loading-state";
 import { AppToast } from "../_components/app-toast";
 import { ConfirmationModal } from "../_components/confirmation-modal";
@@ -14,6 +15,7 @@ import {
   createPurchaseOrder,
   defaultPurchaseOrderFilter,
   deletePurchaseOrder,
+  fetchPurchaseOrderById,
   fetchPurchaseOrderList,
   fetchPurchaseOrderOptions,
   updatePurchaseOrder,
@@ -30,8 +32,17 @@ type ToastState = {
   variant: "success" | "error";
 };
 
-export default function PurchaseOrderPage() {
+type PurchaseOrderPageMode = "list" | "form";
+
+type PurchaseOrderPageContentProps = {
+  mode?: PurchaseOrderPageMode;
+  itemId?: string;
+};
+
+export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: PurchaseOrderPageContentProps) {
   const { t } = useI18n();
+  const router = useRouter();
+  const isFormMode = mode === "form";
   const canExport = useExportAccess();
   const [rows, setRows] = useState<PurchaseOrderItem[]>([]);
   const [filter, setFilter] = useState<PurchaseOrderFilter>(defaultPurchaseOrderFilter);
@@ -48,7 +59,7 @@ export default function PurchaseOrderPage() {
   const [filteredCount, setFilteredCount] = useState(0);
   const [customerOptions, setCustomerOptions] = useState<PurchaseOrderCustomerOption[]>([]);
   const [invoiceOptions, setInvoiceOptions] = useState<PurchaseOrderInvoiceOption[]>([]);
-  const [selectedId, setSelectedId] = useState("");
+  const [selectedId, setSelectedId] = useState(itemId);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -87,6 +98,34 @@ export default function PurchaseOrderPage() {
       setErrorMessage("");
 
       try {
+        if (isFormMode) {
+          if (!itemId) {
+            setRows([]);
+            setPagination((prevPagination) => ({
+              ...prevPagination,
+              totalItems: 0,
+              totalPages: 1,
+            }));
+            setFilteredCount(0);
+            setSelectedId("");
+            return [];
+          }
+
+          const purchaseOrder = await fetchPurchaseOrderById(itemId);
+          const purchaseOrderRows = purchaseOrder ? [purchaseOrder] : [];
+
+          setRows(purchaseOrderRows);
+          setPagination({
+            page: 1,
+            limit: 1,
+            totalItems: purchaseOrderRows.length,
+            totalPages: 1,
+          });
+          setFilteredCount(purchaseOrderRows.length);
+          setSelectedId(purchaseOrder?.id || itemId);
+          return purchaseOrderRows;
+        }
+
         const purchaseOrderResult = await fetchPurchaseOrderList({
           ...filter,
           ...paginationQuery,
@@ -124,7 +163,7 @@ export default function PurchaseOrderPage() {
         }
       }
     },
-    [filter, paginationQuery, t]
+    [filter, isFormMode, itemId, paginationQuery, t]
   );
 
   const loadOptions = useCallback(async () => {
@@ -213,6 +252,18 @@ export default function PurchaseOrderPage() {
     window.open(targetPath, "_blank", "noopener,noreferrer");
   }, [canExport, filter]);
 
+  const navigateToForm = useCallback(
+    (id?: string) => {
+      const normalizedId = String(id || "").trim();
+      router.push(
+        normalizedId
+          ? `/purchaseOrder/form?id=${encodeURIComponent(normalizedId)}`
+          : "/purchaseOrder/form"
+      );
+    },
+    [router]
+  );
+
   const selectedRow = useMemo(() => {
     return rows.find((row) => row.id === selectedId);
   }, [rows, selectedId]);
@@ -261,6 +312,9 @@ export default function PurchaseOrderPage() {
           const updatedPurchaseOrder = await updatePurchaseOrder(selectedItem.id, form);
           await loadPurchaseOrders({ showLoading: false });
           setSelectedId(updatedPurchaseOrder?.id || selectedItem.id);
+          if (isFormMode) {
+            router.replace(`/purchaseOrder/form?id=${encodeURIComponent(updatedPurchaseOrder?.id || selectedItem.id)}`);
+          }
           showToast(
             t("purchaseOrder.toast.updateSuccess", {
               noPo: form.noPo || selectedItem.noPo || "-",
@@ -273,6 +327,9 @@ export default function PurchaseOrderPage() {
         const createdPurchaseOrder = await createPurchaseOrder(form);
         await loadPurchaseOrders({ showLoading: false });
         setSelectedId(createdPurchaseOrder?.id || "");
+        if (isFormMode && createdPurchaseOrder?.id) {
+          router.replace(`/purchaseOrder/form?id=${encodeURIComponent(createdPurchaseOrder.id)}`);
+        }
         showToast(
           t("purchaseOrder.toast.createSuccess", {
             noPo: form.noPo || "-",
@@ -294,7 +351,7 @@ export default function PurchaseOrderPage() {
         setIsSaving(false);
       }
     },
-    [loadPurchaseOrders, showToast, t]
+    [isFormMode, loadPurchaseOrders, router, showToast, t]
   );
 
   const executeDeletePurchaseOrder = useCallback(
@@ -306,6 +363,9 @@ export default function PurchaseOrderPage() {
         await deletePurchaseOrder(selectedItem.id);
         setSelectedId("");
         await loadPurchaseOrders({ showLoading: false });
+        if (isFormMode) {
+          router.push("/purchaseOrder");
+        }
         showToast(
           t("purchaseOrder.toast.deleteSuccess", {
             noPo: selectedItem.noPo || "-",
@@ -327,7 +387,7 @@ export default function PurchaseOrderPage() {
         setIsDeleting(false);
       }
     },
-    [loadPurchaseOrders, showToast, t]
+    [isFormMode, loadPurchaseOrders, router, showToast, t]
   );
 
   const handleSavePurchaseOrder = useCallback(
@@ -395,7 +455,9 @@ export default function PurchaseOrderPage() {
     };
   }, [pendingConfirmation, t]);
 
-  const showDataSection = !isLoading && (rows.length > 0 || !errorMessage);
+  const showDataSection = isFormMode
+    ? !isLoading && !errorMessage
+    : !isLoading && (rows.length > 0 || !errorMessage);
 
   return (
     <>
@@ -423,43 +485,64 @@ export default function PurchaseOrderPage() {
 
           {showDataSection ? (
             <>
-              <PurchaseOrderTableFilter
-                rows={rows}
-                filter={filter}
-                filteredCount={filteredCount}
-                pagination={pagination}
-                selectedId={selectedId}
-                canExport={canExport}
-                resolveCustomerLabel={resolveCustomerLabel}
-                resolveInvoiceLabel={resolveInvoiceLabel}
-                onExportPage={handleOpenExportPage}
-                onFilterChange={handleFilterChange}
-                onResetFilter={handleResetFilter}
-                onPageChange={handlePageChange}
-                onPageSizeChange={handlePageSizeChange}
-                onSelectRow={(row) => {
-                  setActionErrorMessage("");
-                  setToast(null);
-                  setSelectedId(row.id);
-                }}
-              />
-
-              <PurchaseOrderEditForm
-                key={selectedId || "new"}
-                item={selectedRow}
-                customerOptions={customerOptions}
-                invoiceOptions={invoiceOptions}
-                isSaving={isSaving}
-                isDeleting={isDeleting}
-                actionErrorMessage={actionErrorMessage}
-                onSave={handleSavePurchaseOrder}
-                onDelete={handleDeletePurchaseOrder}
-                onNewData={() => {
-                  setActionErrorMessage("");
-                  setToast(null);
-                  setSelectedId("");
-                }}
-              />
+              {isFormMode ? (
+                <>
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => router.push("/purchaseOrder")}
+                      className="rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm font-medium text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
+                    >
+                      {t("common.close")}
+                    </button>
+                  </div>
+                  <PurchaseOrderEditForm
+                    key={selectedId || "new"}
+                    item={selectedRow}
+                    customerOptions={customerOptions}
+                    invoiceOptions={invoiceOptions}
+                    isSaving={isSaving}
+                    isDeleting={isDeleting}
+                    actionErrorMessage={actionErrorMessage}
+                    onSave={handleSavePurchaseOrder}
+                    onDelete={handleDeletePurchaseOrder}
+                    onNewData={() => {
+                      setActionErrorMessage("");
+                      setToast(null);
+                      setSelectedId("");
+                      router.push("/purchaseOrder/form");
+                    }}
+                  />
+                </>
+              ) : (
+                <>
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => navigateToForm()}
+                      className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600 dark:bg-sky-500 dark:text-slate-950 dark:hover:bg-sky-400"
+                    >
+                      {t("common.newData")}
+                    </button>
+                  </div>
+                  <PurchaseOrderTableFilter
+                    rows={rows}
+                    filter={filter}
+                    filteredCount={filteredCount}
+                    pagination={pagination}
+                    selectedId=""
+                    canExport={canExport}
+                    resolveCustomerLabel={resolveCustomerLabel}
+                    resolveInvoiceLabel={resolveInvoiceLabel}
+                    onExportPage={handleOpenExportPage}
+                    onFilterChange={handleFilterChange}
+                    onResetFilter={handleResetFilter}
+                    onPageChange={handlePageChange}
+                    onPageSizeChange={handlePageSizeChange}
+                    onSelectRow={(row) => navigateToForm(row.id)}
+                  />
+                </>
+              )}
             </>
           ) : null}
         </div>
@@ -487,4 +570,8 @@ export default function PurchaseOrderPage() {
       />
     </>
   );
+}
+
+export default function PurchaseOrderPage() {
+  return <PurchaseOrderPageContent mode="list" />;
 }

@@ -152,6 +152,17 @@ export async function fetchSupplierList(
   };
 }
 
+export async function fetchSupplierById(id: string) {
+  const supplierId = toText(id).trim();
+
+  if (!supplierId) {
+    return null;
+  }
+
+  const response = await requestApi<SupplierResponse>(`/api/suppliers/${supplierId}`);
+  return toSupplierItem(response?.supplier);
+}
+
 export async function createSupplier(form: SupplierFormState) {
   const payload = toNormalizedSupplierPayload(form);
   const response = await requestApi<SupplierResponse>("/api/suppliers", {

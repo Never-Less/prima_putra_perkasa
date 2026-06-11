@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { ApiLoadingState } from "../_components/api-loading-state";
 import { AppToast } from "../_components/app-toast";
 import { ConfirmationModal } from "../_components/confirmation-modal";
@@ -13,6 +14,7 @@ import {
   createUser,
   defaultUserFilter,
   deleteUser,
+  fetchUserById,
   fetchUserList,
   updateUser,
   type UserFilter,
@@ -26,8 +28,17 @@ type ToastState = {
   variant: "success" | "error";
 };
 
-export default function UserPage() {
+type UserPageMode = "list" | "form";
+
+type UserPageContentProps = {
+  mode?: UserPageMode;
+  itemId?: string;
+};
+
+export function UserPageContent({ mode = "list", itemId = "" }: UserPageContentProps) {
   const { t } = useI18n();
+  const router = useRouter();
+  const isFormMode = mode === "form";
   const [rows, setRows] = useState<UserItem[]>([]);
   const [filter, setFilter] = useState<UserFilter>(defaultUserFilter);
   const [paginationQuery, setPaginationQuery] = useState({
@@ -41,7 +52,7 @@ export default function UserPage() {
     totalPages: 1,
   });
   const [filteredCount, setFilteredCount] = useState(0);
-  const [selectedId, setSelectedId] = useState("");
+  const [selectedId, setSelectedId] = useState(itemId);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -80,6 +91,34 @@ export default function UserPage() {
       setErrorMessage("");
 
       try {
+        if (isFormMode) {
+          if (!itemId) {
+            setRows([]);
+            setPagination((prevPagination) => ({
+              ...prevPagination,
+              totalItems: 0,
+              totalPages: 1,
+            }));
+            setFilteredCount(0);
+            setSelectedId("");
+            return;
+          }
+
+          const user = await fetchUserById(itemId);
+          const userRows = user ? [user] : [];
+
+          setRows(userRows);
+          setPagination({
+            page: 1,
+            limit: 1,
+            totalItems: userRows.length,
+            totalPages: 1,
+          });
+          setFilteredCount(userRows.length);
+          setSelectedId(user?.id || itemId);
+          return;
+        }
+
         const userResult = await fetchUserList({
           ...filter,
           ...paginationQuery,
@@ -118,7 +157,7 @@ export default function UserPage() {
         }
       }
     },
-    [filter, paginationQuery, t]
+    [filter, isFormMode, itemId, paginationQuery, t]
   );
 
   useEffect(() => {
@@ -165,7 +204,17 @@ export default function UserPage() {
     return rows.find((row) => row.id === selectedId);
   }, [rows, selectedId]);
 
-  const showDataSection = !isLoading && (rows.length > 0 || !errorMessage);
+  const showDataSection = isFormMode
+    ? !isLoading && !errorMessage
+    : !isLoading && (rows.length > 0 || !errorMessage);
+
+  const navigateToForm = useCallback(
+    (id?: string) => {
+      const normalizedId = String(id || "").trim();
+      router.push(normalizedId ? `/user/form?id=${encodeURIComponent(normalizedId)}` : "/user/form");
+    },
+    [router]
+  );
 
   const executeSaveUser = useCallback(
     async (form: UserFormState, selectedItem?: UserItem) => {
@@ -177,6 +226,9 @@ export default function UserPage() {
           const updatedUser = await updateUser(selectedItem.id, form);
           await loadUsers({ showLoading: false });
           setSelectedId(updatedUser?.id || selectedItem.id);
+          if (isFormMode) {
+            router.replace(`/user/form?id=${encodeURIComponent(updatedUser?.id || selectedItem.id)}`);
+          }
           showToast(
             t("user.toast.updateSuccess", {
               username: form.username || selectedItem.username || "-",
@@ -189,6 +241,9 @@ export default function UserPage() {
         const createdUser = await createUser(form);
         await loadUsers({ showLoading: false });
         setSelectedId(createdUser?.id || "");
+        if (isFormMode && createdUser?.id) {
+          router.replace(`/user/form?id=${encodeURIComponent(createdUser.id)}`);
+        }
         showToast(
           t("user.toast.createSuccess", {
             username: form.username || "-",
@@ -210,7 +265,7 @@ export default function UserPage() {
         setIsSaving(false);
       }
     },
-    [loadUsers, showToast, t]
+    [isFormMode, loadUsers, router, showToast, t]
   );
 
   const executeDeleteUser = useCallback(
@@ -222,6 +277,9 @@ export default function UserPage() {
         await deleteUser(selectedItem.id);
         setSelectedId("");
         await loadUsers({ showLoading: false });
+        if (isFormMode) {
+          router.push("/user");
+        }
         showToast(
           t("user.toast.deleteSuccess", {
             username: selectedItem.username || "-",
@@ -243,7 +301,7 @@ export default function UserPage() {
         setIsDeleting(false);
       }
     },
-    [loadUsers, showToast, t]
+    [isFormMode, loadUsers, router, showToast, t]
   );
 
   const handleSaveUser = useCallback(
@@ -337,37 +395,58 @@ export default function UserPage() {
 
           {showDataSection ? (
             <>
-              <UserTableFilter
-                rows={rows}
-                filter={filter}
-                filteredCount={filteredCount}
-                pagination={pagination}
-                selectedId={selectedId}
-                onFilterChange={handleFilterChange}
-                onResetFilter={handleResetFilter}
-                onPageChange={handlePageChange}
-                onPageSizeChange={handlePageSizeChange}
-                onSelectRow={(row) => {
-                  setActionErrorMessage("");
-                  setToast(null);
-                  setSelectedId(row.id);
-                }}
-              />
-
-              <UserEditForm
-                key={selectedId || "new"}
-                item={selectedRow}
-                isSaving={isSaving}
-                isDeleting={isDeleting}
-                actionErrorMessage={actionErrorMessage}
-                onNewData={() => {
-                  setActionErrorMessage("");
-                  setToast(null);
-                  setSelectedId("");
-                }}
-                onSave={handleSaveUser}
-                onDelete={handleDeleteUser}
-              />
+              {isFormMode ? (
+                <>
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => router.push("/user")}
+                      className="rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm font-medium text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
+                    >
+                      {t("common.close")}
+                    </button>
+                  </div>
+                  <UserEditForm
+                    key={selectedId || "new"}
+                    item={selectedRow}
+                    isSaving={isSaving}
+                    isDeleting={isDeleting}
+                    actionErrorMessage={actionErrorMessage}
+                    onNewData={() => {
+                      setActionErrorMessage("");
+                      setToast(null);
+                      setSelectedId("");
+                      router.push("/user/form");
+                    }}
+                    onSave={handleSaveUser}
+                    onDelete={handleDeleteUser}
+                  />
+                </>
+              ) : (
+                <>
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => navigateToForm()}
+                      className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600 dark:bg-sky-500 dark:text-slate-950 dark:hover:bg-sky-400"
+                    >
+                      {t("common.newData")}
+                    </button>
+                  </div>
+                  <UserTableFilter
+                    rows={rows}
+                    filter={filter}
+                    filteredCount={filteredCount}
+                    pagination={pagination}
+                    selectedId=""
+                    onFilterChange={handleFilterChange}
+                    onResetFilter={handleResetFilter}
+                    onPageChange={handlePageChange}
+                    onPageSizeChange={handlePageSizeChange}
+                    onSelectRow={(row) => navigateToForm(row.id)}
+                  />
+                </>
+              )}
             </>
           ) : null}
         </div>
@@ -394,4 +473,8 @@ export default function UserPage() {
       />
     </>
   );
+}
+
+export default function UserPage() {
+  return <UserPageContent mode="list" />;
 }

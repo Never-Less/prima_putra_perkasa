@@ -21,6 +21,7 @@ import {
   createSuratJalan,
   defaultSuratJalanFilter,
   deleteSuratJalan,
+  fetchSuratJalanById,
   fetchSuratJalanList,
   fetchSuratJalanNoPoOptions,
   updateSuratJalan,
@@ -45,9 +46,17 @@ type PostCreateActionState = {
   invoicePrefill: InvoicePrefillPayload;
 };
 
-export function FormPreviewStylePage() {
+type FormPreviewStylePageMode = "list" | "form";
+
+type FormPreviewStylePageProps = {
+  mode?: FormPreviewStylePageMode;
+  itemId?: string;
+};
+
+export function FormPreviewStylePage({ mode = "list", itemId = "" }: FormPreviewStylePageProps) {
   const { t } = useI18n();
   const router = useRouter();
+  const isFormMode = mode === "form";
   const canExport = useExportAccess();
   const [rows, setRows] = useState<SuratJalanItem[]>([]);
   const [filter, setFilter] = useState<SuratJalanFilter>(defaultSuratJalanFilter);
@@ -67,7 +76,7 @@ export function FormPreviewStylePage() {
   const [invoicedSuratJalanNumbers, setInvoicedSuratJalanNumbers] = useState<Set<string>>(
     () => new Set()
   );
-  const [selectedId, setSelectedId] = useState("");
+  const [selectedId, setSelectedId] = useState(itemId);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -107,6 +116,34 @@ export function FormPreviewStylePage() {
       setErrorMessage("");
 
       try {
+        if (isFormMode) {
+          if (!itemId) {
+            setRows([]);
+            setPagination((prevPagination) => ({
+              ...prevPagination,
+              totalItems: 0,
+              totalPages: 1,
+            }));
+            setFilteredCount(0);
+            setSelectedId("");
+            return [];
+          }
+
+          const suratJalan = await fetchSuratJalanById(itemId);
+          const suratJalanRows = suratJalan ? [suratJalan] : [];
+
+          setRows(suratJalanRows);
+          setPagination({
+            page: 1,
+            limit: 1,
+            totalItems: suratJalanRows.length,
+            totalPages: 1,
+          });
+          setFilteredCount(suratJalanRows.length);
+          setSelectedId(suratJalan?.id || itemId);
+          return suratJalanRows;
+        }
+
         const suratJalanResult = await fetchSuratJalanList({
           ...filter,
           ...paginationQuery,
@@ -147,7 +184,7 @@ export function FormPreviewStylePage() {
         }
       }
     },
-    [filter, paginationQuery, t]
+    [filter, isFormMode, itemId, paginationQuery, t]
   );
 
   const loadCustomerOptions = useCallback(async () => {
@@ -277,6 +314,16 @@ export function FormPreviewStylePage() {
     return noPoOptionRows.map((row) => row.noPo);
   }, [noPoOptionRows]);
 
+  const navigateToForm = useCallback(
+    (id?: string) => {
+      const normalizedId = String(id || "").trim();
+      router.push(
+        normalizedId ? `/suratJalan/form?id=${encodeURIComponent(normalizedId)}` : "/suratJalan/form"
+      );
+    },
+    [router]
+  );
+
   const handleExportSuratJalanByNoPo = useCallback((rawNoPo: string) => {
     const noPo = String(rawNoPo || "").trim();
 
@@ -386,6 +433,9 @@ export function FormPreviewStylePage() {
             ? refreshedRows.find((row) => row.id === updatedItem.id) || updatedItem
             : undefined;
           setSelectedId(currentUpdatedItem?.id || selectedItem.id);
+          if (isFormMode) {
+            router.replace(`/suratJalan/form?id=${encodeURIComponent(currentUpdatedItem?.id || selectedItem.id)}`);
+          }
           if (currentUpdatedItem) {
             setPostCreateAction({
               actionType: "update",
@@ -408,6 +458,9 @@ export function FormPreviewStylePage() {
           ? refreshedRows.find((row) => row.id === createdItem.id) || createdItem
           : undefined;
         setSelectedId(currentCreatedItem?.id || "");
+        if (isFormMode && currentCreatedItem?.id) {
+          router.replace(`/suratJalan/form?id=${encodeURIComponent(currentCreatedItem.id)}`);
+        }
         if (currentCreatedItem) {
           setPostCreateAction({
             actionType: "create",
@@ -436,7 +489,7 @@ export function FormPreviewStylePage() {
         setIsSaving(false);
       }
     },
-    [buildInvoicePrefillFromNoPo, loadSuratJalanData, showToast, t]
+    [buildInvoicePrefillFromNoPo, isFormMode, loadSuratJalanData, router, showToast, t]
   );
 
   const executeDeleteSuratJalan = useCallback(
@@ -449,6 +502,9 @@ export function FormPreviewStylePage() {
         setSelectedId("");
         await loadSuratJalanData({ showLoading: false });
         setPostCreateAction(null);
+        if (isFormMode) {
+          router.push("/suratJalan");
+        }
         showToast(
           t("suratJalan.toast.deleteSuccess", {
             noSuratJalan: selectedItem.noSuratJalan || "-",
@@ -470,7 +526,7 @@ export function FormPreviewStylePage() {
         setIsDeleting(false);
       }
     },
-    [loadSuratJalanData, showToast, t]
+    [isFormMode, loadSuratJalanData, router, showToast, t]
   );
 
   const handleSaveSuratJalan = useCallback(
@@ -573,7 +629,7 @@ export function FormPreviewStylePage() {
 
     saveInvoicePrefill(postCreateAction.invoicePrefill);
     setPostCreateAction(null);
-    router.push("/invoice");
+    router.push("/invoice/form");
   }, [postCreateAction, router]);
 
   const handleExportSuratJalan = useCallback((suratJalanId: string) => {
@@ -586,7 +642,9 @@ export function FormPreviewStylePage() {
     window.open(`/suratJalan/export/${id}`, "_blank", "noopener,noreferrer");
   }, [canExport]);
 
-  const showDataSection = !isLoading && (rows.length > 0 || !errorMessage);
+  const showDataSection = isFormMode
+    ? !isLoading && !errorMessage
+    : !isLoading && (rows.length > 0 || !errorMessage);
 
   return (
     <>
@@ -608,54 +666,77 @@ export function FormPreviewStylePage() {
 
         {showDataSection ? (
           <>
-            <SuratJalanTableFilter
-              rows={rows}
-              filter={filter}
-              filteredCount={filteredCount}
-              pagination={pagination}
-              selectedId={selectedId}
-              canExport={canExport}
-              invoicedSuratJalanNumbers={invoicedSuratJalanNumbers}
-              onFilterChange={handleFilterChange}
-              onResetFilter={handleResetFilter}
-              onPageChange={handlePageChange}
-              onPageSizeChange={handlePageSizeChange}
-              onSelectRow={(row) => {
-                setActionErrorMessage("");
-                setToast(null);
-                setPostCreateAction(null);
-                setSelectedId(row.id);
-              }}
-              onExportRow={(row) => handleExportSuratJalan(row.id)}
-              onExportNoPo={handleExportSuratJalanByNoPo}
-              resolveCustomerLabel={resolveCustomerLabel}
-              colorTone="sky"
-              tableStyle="compact"
-            />
-
-            <SuratJalanEditForm
-              key={selectedId || "new"}
-              item={selectedRow}
-              onNewData={() => {
-                setActionErrorMessage("");
-                setToast(null);
-                setPostCreateAction(null);
-                setSelectedId("");
-              }}
-              customerOptions={customerOptions}
-              noPoOptions={noPoOptions}
-              noPoCustomerMap={noPoCustomerMap}
-              isSaving={isSaving}
-              isDeleting={isDeleting}
-              actionErrorMessage={actionErrorMessage}
-              onSave={handleSaveSuratJalan}
-              onDelete={handleDeleteSuratJalan}
-              title={t("suratJalan.form.title")}
-              description={t("suratJalan.form.description")}
-              showPreview={true}
-              colorTone="sky"
-              formStyle="soft"
-            />
+            {isFormMode ? (
+              <>
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => router.push("/suratJalan")}
+                    className="rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm font-medium text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
+                  >
+                    {t("common.close")}
+                  </button>
+                </div>
+                <SuratJalanEditForm
+                  key={selectedId || "new"}
+                  item={selectedRow}
+                  onNewData={() => {
+                    setActionErrorMessage("");
+                    setToast(null);
+                    setPostCreateAction(null);
+                    setSelectedId("");
+                    router.push("/suratJalan/form");
+                  }}
+                  customerOptions={customerOptions}
+                  noPoOptions={noPoOptions}
+                  noPoCustomerMap={noPoCustomerMap}
+                  isSaving={isSaving}
+                  isDeleting={isDeleting}
+                  actionErrorMessage={actionErrorMessage}
+                  onSave={handleSaveSuratJalan}
+                  onDelete={handleDeleteSuratJalan}
+                  title={t("suratJalan.form.title")}
+                  description={t("suratJalan.form.description")}
+                  showPreview={true}
+                  colorTone="sky"
+                  formStyle="soft"
+                />
+              </>
+            ) : (
+              <>
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => navigateToForm()}
+                    className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600 dark:bg-sky-500 dark:text-slate-950 dark:hover:bg-sky-400"
+                  >
+                    {t("common.newData")}
+                  </button>
+                </div>
+                <SuratJalanTableFilter
+                  rows={rows}
+                  filter={filter}
+                  filteredCount={filteredCount}
+                  pagination={pagination}
+                  selectedId=""
+                  canExport={canExport}
+                  invoicedSuratJalanNumbers={invoicedSuratJalanNumbers}
+                  onFilterChange={handleFilterChange}
+                  onResetFilter={handleResetFilter}
+                  onPageChange={handlePageChange}
+                  onPageSizeChange={handlePageSizeChange}
+                  onSelectRow={(row) => {
+                    setPostCreateAction(null);
+                    navigateToForm(row.id);
+                  }}
+                  onExportRow={(row) => handleExportSuratJalan(row.id)}
+                  onExportNoPo={handleExportSuratJalanByNoPo}
+                  resolveCustomerLabel={resolveCustomerLabel}
+                  colorTone="sky"
+                  tableStyle="compact"
+                />
+              </>
+            )}
           </>
         ) : null}
       </div>
