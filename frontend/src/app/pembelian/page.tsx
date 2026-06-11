@@ -517,14 +517,6 @@ export function PembelianPageContent({ mode = "list", itemId = "" }: PembelianPa
                     actionErrorMessage={actionErrorMessage}
                     onSave={handleSavePembelian}
                     onDelete={handleDeletePembelian}
-                    onNewData={() => {
-                      setActionErrorMessage("");
-                      setToast(null);
-                      setInitialForm(null);
-                      setInitialFormKey(Date.now());
-                      setSelectedId("");
-                      router.push("/pembelian/form");
-                    }}
                   />
                 </>
               ) : (

@@ -18,13 +18,13 @@ import {
   invoiceBarangRowsToList,
   invoiceNoPoListLabel,
   toInvoiceFormState,
-  type InvoiceBarangFormRow,
   type InvoiceFormState,
   type InvoiceItem,
   type InvoiceSuratJalanOption,
 } from "../_lib/invoice";
 import { useI18n } from "../../_i18n/provider";
 import { useTheme } from "../../_theme/provider";
+import { InvoiceBarangSpreadsheet } from "./invoice-barang-spreadsheet";
 
 type SelectOption = {
   value: string;
@@ -62,7 +62,6 @@ function filterSelectOptionsByCustomer(options: SelectOption[], idCustomer: stri
 type InvoiceEditFormProps = {
   item?: InvoiceItem;
   initialForm?: InvoiceFormState;
-  onNewData?: () => void;
   customerOptions?: Array<{ id: string; nama: string }>;
   suratJalanOptions?: InvoiceSuratJalanOption[];
   isSaving?: boolean;
@@ -91,7 +90,6 @@ function createEmptyInvoiceFormState(): InvoiceFormState {
 export function InvoiceEditForm({
   item,
   initialForm,
-  onNewData,
   customerOptions = [],
   suratJalanOptions = [],
   isSaving = false,
@@ -421,26 +419,6 @@ export function InvoiceEditForm({
   }, [availableNoSuratJalanOptions, noSuratJalanList]);
   const isCustomerAutoSelected = Boolean(form.noPoList.length > 0 && autoSelectedIdCustomer);
 
-  function updateBarangRow(index: number, field: keyof InvoiceBarangFormRow, value: string) {
-    setForm((prev) => {
-      const nextRows = prev.barangRows.map((row, rowIndex) => {
-        if (rowIndex !== index) {
-          return row;
-        }
-
-        return {
-          ...row,
-          [field]: value,
-        };
-      });
-
-      return {
-        ...prev,
-        barangRows: ensureTrailingEmptyInvoiceBarangRow(nextRows),
-      };
-    });
-  }
-
   function handleNoPoChange(options: MultiValue<SelectOption>) {
     const candidateOptions = Array.from(options);
     const targetIdCustomer = effectiveIdCustomer || getFirstSelectOptionCustomerId(candidateOptions);
@@ -717,78 +695,11 @@ export function InvoiceEditForm({
             <div className="text-sm text-slate-700 dark:text-slate-200 sm:col-span-2">
               <p>{t("invoice.form.items.title")}</p>
               <p className="text-xs text-slate-500 dark:text-slate-400">{t("invoice.form.items.hint")}</p>
-              <div className="mt-2 space-y-2">
-                {form.barangRows.map((row, index) => {
-                  const kuantitas = Number(row.kuantitas || "0");
-                  const hargaSatuan = Number(row.hargaSatuan || "0");
-                  const jumlah = Number.isFinite(kuantitas) && Number.isFinite(hargaSatuan)
-                    ? kuantitas * hargaSatuan
-                    : 0;
-
-                  return (
-                    <div
-                      key={`invoice-barang-row-${index}`}
-                      className="grid items-start gap-2 sm:grid-cols-[0.9fr_1.1fr_1.1fr_0.65fr_0.65fr_0.9fr_0.9fr]"
-                    >
-                      <input
-                        type="text"
-                        value={row.noPoManual}
-                        placeholder={t("field.noPo")}
-                        readOnly={row.sources.length > 0}
-                        onChange={(event) => updateBarangRow(index, "noPoManual", event.target.value)}
-                        className={`w-full rounded-lg border border-sky-100 px-3 py-2 text-sm shadow-sm dark:border-slate-700 dark:text-slate-100 ${
-                          row.sources.length > 0
-                            ? "bg-sky-100/70 text-slate-700 dark:bg-slate-900 dark:text-slate-300"
-                            : "bg-white text-slate-900 dark:bg-slate-800"
-                        }`}
-                      />
-                      <input
-                        type="text"
-                        value={row.namaBarang}
-                        placeholder={t("invoice.form.items.placeholder.name")}
-                        onChange={(event) => updateBarangRow(index, "namaBarang", event.target.value)}
-                        className="w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                      />
-                      <textarea
-                        value={row.spesifikasi}
-                        placeholder={t("invoice.form.items.placeholder.spec")}
-                        onChange={(event) => updateBarangRow(index, "spesifikasi", event.target.value)}
-                        className="min-h-[76px] w-full resize-y rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                        rows={2}
-                      />
-                      <input
-                        type="number"
-                        min={0}
-                        value={row.kuantitas}
-                        placeholder={t("invoice.form.items.placeholder.qty")}
-                        onChange={(event) => updateBarangRow(index, "kuantitas", event.target.value)}
-                        className="w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                      />
-                      <input
-                        type="text"
-                        value={row.unit}
-                        placeholder={t("invoice.form.items.placeholder.unit")}
-                        onChange={(event) => updateBarangRow(index, "unit", event.target.value)}
-                        className="w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                      />
-                      <input
-                        type="number"
-                        min={0}
-                        value={row.hargaSatuan}
-                        placeholder={t("invoice.form.items.placeholder.price")}
-                        onChange={(event) => updateBarangRow(index, "hargaSatuan", event.target.value)}
-                        className="w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                      />
-                      <input
-                        type="text"
-                        value={Number.isFinite(jumlah) ? formatRupiah(jumlah, locale) : formatRupiah(0, locale)}
-                        readOnly
-                        className="w-full rounded-lg border border-sky-100 bg-sky-100/70 px-3 py-2 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
-                      />
-                    </div>
-                  );
-                })}
-              </div>
+              <InvoiceBarangSpreadsheet
+                rows={form.barangRows}
+                disabled={isSaving || isDeleting}
+                onRowsChange={(barangRows) => setForm((prev) => ({ ...prev, barangRows }))}
+              />
             </div>
           </div>
 
@@ -810,17 +721,6 @@ export function InvoiceEditForm({
               className="w-full rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-sky-500 dark:text-slate-950 dark:hover:bg-sky-400 sm:w-auto"
             >
               {isSaving ? t("common.loading") : t("common.saveChanges")}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                onNewData?.();
-                setForm(createEmptyInvoiceFormState());
-              }}
-              disabled={isSaving || isDeleting}
-              className="w-full rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm text-sky-700 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800 sm:w-auto"
-            >
-              {t("common.newData")}
             </button>
             <button
               type="button"

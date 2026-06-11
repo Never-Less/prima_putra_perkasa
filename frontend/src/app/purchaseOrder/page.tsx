@@ -506,12 +506,6 @@ export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: Purchas
                     actionErrorMessage={actionErrorMessage}
                     onSave={handleSavePurchaseOrder}
                     onDelete={handleDeletePurchaseOrder}
-                    onNewData={() => {
-                      setActionErrorMessage("");
-                      setToast(null);
-                      setSelectedId("");
-                      router.push("/purchaseOrder/form");
-                    }}
                   />
                 </>
               ) : (

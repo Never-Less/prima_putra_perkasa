@@ -727,15 +727,6 @@ export function InvoicePageContent({ mode = "list", itemId = "" }: InvoicePageCo
                   actionErrorMessage={actionErrorMessage}
                   onSave={handleSaveInvoice}
                   onDelete={handleDeleteInvoice}
-                  onNewData={() => {
-                    setActionErrorMessage("");
-                    setToast(null);
-                    setPostSaveAction(null);
-                    setInitialForm(null);
-                    setInitialFormKey(Date.now());
-                    setSelectedId("");
-                    router.push("/invoice/form");
-                  }}
                 />
               ) : (
                 <InvoiceTableFilter

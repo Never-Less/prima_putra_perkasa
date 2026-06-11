@@ -99,6 +99,88 @@ body {
   z-index: 60;
 }
 
+.surat-jalan-barang-spreadsheet .jss_container,
+.surat-jalan-barang-spreadsheet .jss_content {
+  width: 100% !important;
+  background: transparent !important;
+}
+
+.surat-jalan-barang-spreadsheet .jss_content {
+  max-width: 100%;
+  overflow: auto !important;
+}
+
+.surat-jalan-barang-spreadsheet table.jss_worksheet {
+  width: 100%;
+  min-width: 980px;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.surat-jalan-barang-spreadsheet .jss_worksheet thead td,
+.surat-jalan-barang-spreadsheet .jss_worksheet tbody td {
+  border-color: #bae6fd !important;
+  color: #000000 !important;
+  font-family: var(--font-geist-sans), "Segoe UI", sans-serif !important;
+  font-size: 0.875rem !important;
+  -webkit-text-fill-color: #000000 !important;
+}
+
+.surat-jalan-barang-spreadsheet .jss_worksheet td *,
+.surat-jalan-barang-spreadsheet .jss_container * {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+}
+
+.surat-jalan-barang-spreadsheet .jss_worksheet thead td {
+  background: #f1f5f9 !important;
+  font-weight: 600 !important;
+}
+
+.surat-jalan-barang-spreadsheet .jss_worksheet tbody td {
+  background: #ffffff !important;
+}
+
+.surat-jalan-barang-spreadsheet .jss_worksheet tbody td.highlight,
+.surat-jalan-barang-spreadsheet .jss_worksheet tbody td.selected {
+  outline-color: #0ea5e9 !important;
+}
+
+.surat-jalan-barang-spreadsheet .jss_textarea {
+  color: #000000 !important;
+  background: #ffffff !important;
+  font-family: var(--font-geist-sans), "Segoe UI", sans-serif !important;
+  font-size: 0.875rem !important;
+  -webkit-text-fill-color: #000000 !important;
+}
+
+.dark .surat-jalan-barang-spreadsheet .jss_worksheet thead td,
+.dark .surat-jalan-barang-spreadsheet .jss_worksheet tbody td {
+  border-color: #334155 !important;
+  color: #e2e8f0 !important;
+  -webkit-text-fill-color: #e2e8f0 !important;
+}
+
+.dark .surat-jalan-barang-spreadsheet .jss_worksheet td *,
+.dark .surat-jalan-barang-spreadsheet .jss_container * {
+  color: #e2e8f0 !important;
+  -webkit-text-fill-color: #e2e8f0 !important;
+}
+
+.dark .surat-jalan-barang-spreadsheet .jss_worksheet thead td {
+  background: #1e293b !important;
+}
+
+.dark .surat-jalan-barang-spreadsheet .jss_worksheet tbody td {
+  background: #0f172a !important;
+}
+
+.dark .surat-jalan-barang-spreadsheet .jss_textarea {
+  color: #e2e8f0 !important;
+  background: #0f172a !important;
+  -webkit-text-fill-color: #e2e8f0 !important;
+}
+
 .export-normal-weight,
 .export-normal-weight * {
   font-weight: 400 !important;

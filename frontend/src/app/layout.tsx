@@ -4,6 +4,8 @@ import { AppShell } from "./_components/app-shell";
 import { I18nProvider } from "./_i18n/provider";
 import { ThemeProvider } from "./_theme/provider";
 import "react-datepicker/dist/react-datepicker.css";
+import "jsuites/dist/jsuites.css";
+import "jspreadsheet-ce/dist/jspreadsheet.css";
 import "./globals.css";
 
 const geistSans = Geist({

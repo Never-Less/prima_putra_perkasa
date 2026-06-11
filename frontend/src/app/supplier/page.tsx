@@ -419,12 +419,6 @@ export function SupplierPageContent({ mode = "list", itemId = "" }: SupplierPage
                   <SupplierEditForm
                     key={selectedId || "new"}
                     item={selectedRow}
-                    onNewData={() => {
-                      setActionErrorMessage("");
-                      setToast(null);
-                      setSelectedId("");
-                      router.push("/supplier/form");
-                    }}
                     canManageSupplier={canManageSupplier}
                     isSaving={isSaving}
                     isDeleting={isDeleting}

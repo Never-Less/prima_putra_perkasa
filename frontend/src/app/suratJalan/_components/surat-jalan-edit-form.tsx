@@ -16,6 +16,7 @@ import {
 } from "../_lib/surat-jalan";
 import { useI18n } from "../../_i18n/provider";
 import { useTheme } from "../../_theme/provider";
+import { SuratJalanBarangSpreadsheet } from "./surat-jalan-barang-spreadsheet";
 
 type ColorTone = "slate" | "sky" | "emerald";
 type FormStyle = "default" | "outlined" | "soft";
@@ -45,7 +46,6 @@ const defaultKendaraanOptions = [
 
 type SuratJalanEditFormProps = {
   item?: SuratJalanItem;
-  onNewData?: () => void;
   customerOptions?: Array<{ id: string; nama: string }>;
   noPoOptions?: string[];
   noPoCustomerMap?: Record<string, string>;
@@ -141,7 +141,6 @@ function createEmptySuratJalanFormState(): SuratJalanFormState {
 
 export function SuratJalanEditForm({
   item,
-  onNewData,
   customerOptions = [],
   noPoOptions = [],
   noPoCustomerMap = {},
@@ -168,8 +167,6 @@ export function SuratJalanEditForm({
   const tone = toneStyles[colorTone];
   const style = formStyles[formStyle];
   const inputClassName = `mt-1 w-full rounded-lg px-3 py-2 text-sm ${style.input}`;
-  const barangInputClassName = `w-full rounded-lg px-3 py-2 text-sm ${style.input}`;
-  const barangTextareaClassName = `min-h-[76px] w-full resize-y rounded-lg px-3 py-2 text-sm ${style.input}`;
   const noPoSelectStyles = useMemo<StylesConfig<NoPoSelectOption, false>>(() => {
     const isDark = theme === "dark";
 
@@ -341,22 +338,11 @@ export function SuratJalanEditForm({
   const previewCustomerLabel =
     customerLabelMap.get(effectiveIdCustomer) || effectiveIdCustomer || "-";
 
-  function updateBarangRow(index: number, field: keyof SuratJalanBarangFormRow, value: string) {
+  function updateBarangRows(rows: SuratJalanBarangFormRow[]) {
     setForm((prev) => {
-      const nextRows = prev.barangRows.map((row, rowIndex) => {
-        if (rowIndex !== index) {
-          return row;
-        }
-
-        return {
-          ...row,
-          [field]: value,
-        };
-      });
-
       return {
         ...prev,
-        barangRows: ensureTrailingEmptyBarangRow(nextRows),
+        barangRows: ensureTrailingEmptyBarangRow(rows),
       };
     });
   }
@@ -476,48 +462,11 @@ export function SuratJalanEditForm({
             <div className={`text-sm sm:col-span-2 ${tone.label}`}>
               <p>{t("suratJalan.form.items.title")}</p>
               <p className="text-xs text-slate-500 dark:text-slate-400">{t("suratJalan.form.items.hint")}</p>
-              <div className="mt-2 space-y-2">
-                {form.barangRows.map((row, index) => (
-                  <div key={`barang-row-${index}`} className="grid items-start gap-2 sm:grid-cols-[1.1fr_1.4fr_0.8fr_0.7fr_1fr]">
-                    <input
-                      type="text"
-                      value={row.nama}
-                      placeholder={t("suratJalan.form.items.placeholder.name")}
-                      onChange={(event) => updateBarangRow(index, "nama", event.target.value)}
-                      className={barangInputClassName}
-                    />
-                    <textarea
-                      value={row.spesifikasi}
-                      placeholder={t("suratJalan.form.items.placeholder.spec")}
-                      onChange={(event) => updateBarangRow(index, "spesifikasi", event.target.value)}
-                      className={barangTextareaClassName}
-                      rows={2}
-                    />
-                    <input
-                      type="text"
-                      value={row.kodeDepartemen}
-                      placeholder={t("suratJalan.form.items.placeholder.kodeDepartemen")}
-                      onChange={(event) => updateBarangRow(index, "kodeDepartemen", event.target.value)}
-                      className={barangInputClassName}
-                    />
-                    <input
-                      type="number"
-                      min={0}
-                      value={row.jumlah}
-                      placeholder={t("suratJalan.form.items.placeholder.qty")}
-                      onChange={(event) => updateBarangRow(index, "jumlah", event.target.value)}
-                      className={barangInputClassName}
-                    />
-                    <input
-                      type="text"
-                      value={row.unit}
-                      placeholder={t("suratJalan.form.items.placeholder.unit")}
-                      onChange={(event) => updateBarangRow(index, "unit", event.target.value)}
-                      className={barangInputClassName}
-                    />
-                  </div>
-                ))}
-              </div>
+              <SuratJalanBarangSpreadsheet
+                rows={form.barangRows}
+                disabled={isSaving || isDeleting}
+                onRowsChange={updateBarangRows}
+              />
             </div>
           </div>
 
@@ -529,17 +478,6 @@ export function SuratJalanEditForm({
               className={`w-full rounded-lg px-4 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto ${tone.primaryButton}`}
             >
               {isSaving ? t("common.loading") : t("common.saveChanges")}
-            </button>
-            <button
-              type="button"
-              disabled={isSaving || isDeleting}
-              onClick={() => {
-                onNewData?.();
-                setForm(createEmptySuratJalanFormState());
-              }}
-              className={`w-full rounded-lg px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto ${tone.resetButton}`}
-            >
-              {t("common.newData")}
             </button>
             <button
               type="button"
