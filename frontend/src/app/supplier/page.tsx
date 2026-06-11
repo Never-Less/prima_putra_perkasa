@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { ApiLoadingState } from "../_components/api-loading-state";
 import { AppToast } from "../_components/app-toast";
 import { ConfirmationModal } from "../_components/confirmation-modal";
@@ -12,6 +13,7 @@ import {
   createSupplier,
   defaultSupplierFilter,
   deleteSupplier,
+  fetchSupplierById,
   fetchSupplierList,
   updateSupplier,
   type SupplierFilter,
@@ -26,8 +28,17 @@ type ToastState = {
   variant: "success" | "error";
 };
 
-export default function SupplierPage() {
+type SupplierPageMode = "list" | "form";
+
+type SupplierPageContentProps = {
+  mode?: SupplierPageMode;
+  itemId?: string;
+};
+
+export function SupplierPageContent({ mode = "list", itemId = "" }: SupplierPageContentProps) {
   const { t } = useI18n();
+  const router = useRouter();
+  const isFormMode = mode === "form";
   const [rows, setRows] = useState<SupplierItem[]>([]);
   const [filter, setFilter] = useState<SupplierFilter>(defaultSupplierFilter);
   const [paginationQuery, setPaginationQuery] = useState({
@@ -41,7 +52,7 @@ export default function SupplierPage() {
     totalPages: 1,
   });
   const [filteredCount, setFilteredCount] = useState(0);
-  const [selectedId, setSelectedId] = useState("");
+  const [selectedId, setSelectedId] = useState(itemId);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -81,6 +92,34 @@ export default function SupplierPage() {
     setErrorMessage("");
 
     try {
+      if (isFormMode) {
+        if (!itemId) {
+          setRows([]);
+          setPagination((prevPagination) => ({
+            ...prevPagination,
+            totalItems: 0,
+            totalPages: 1,
+          }));
+          setFilteredCount(0);
+          setSelectedId("");
+          return;
+        }
+
+        const supplier = await fetchSupplierById(itemId);
+        const supplierRows = supplier ? [supplier] : [];
+
+        setRows(supplierRows);
+        setPagination({
+          page: 1,
+          limit: 1,
+          totalItems: supplierRows.length,
+          totalPages: 1,
+        });
+        setFilteredCount(supplierRows.length);
+        setSelectedId(supplier?.id || itemId);
+        return;
+      }
+
       const supplierResult = await fetchSupplierList({
         ...filter,
         ...paginationQuery,
@@ -118,7 +157,7 @@ export default function SupplierPage() {
         setIsLoading(false);
       }
     }
-  }, [filter, paginationQuery, t]);
+  }, [filter, isFormMode, itemId, paginationQuery, t]);
 
   useEffect(() => {
     void loadSuppliers();
@@ -164,7 +203,17 @@ export default function SupplierPage() {
     return rows.find((row) => row.id === selectedId);
   }, [rows, selectedId]);
 
-  const showDataSection = !isLoading && (rows.length > 0 || !errorMessage);
+  const showDataSection = isFormMode
+    ? !isLoading && !errorMessage
+    : !isLoading && (rows.length > 0 || !errorMessage);
+
+  const navigateToForm = useCallback(
+    (id?: string) => {
+      const normalizedId = String(id || "").trim();
+      router.push(normalizedId ? `/supplier/form?id=${encodeURIComponent(normalizedId)}` : "/supplier/form");
+    },
+    [router]
+  );
 
   const executeSaveSupplier = useCallback(
     async (form: SupplierFormState, selectedItem?: SupplierItem) => {
@@ -183,6 +232,9 @@ export default function SupplierPage() {
           const updatedSupplier = await updateSupplier(selectedItem.id, form);
           await loadSuppliers({ showLoading: false });
           setSelectedId(updatedSupplier?.id || selectedItem.id);
+          if (isFormMode) {
+            router.replace(`/supplier/form?id=${encodeURIComponent(updatedSupplier?.id || selectedItem.id)}`);
+          }
           showToast(
             t("supplier.toast.updateSuccess", {
               namaSupplier: form.namaSupplier || selectedItem.namaSupplier || "-",
@@ -195,6 +247,9 @@ export default function SupplierPage() {
         const createdSupplier = await createSupplier(form);
         await loadSuppliers({ showLoading: false });
         setSelectedId(createdSupplier?.id || "");
+        if (isFormMode && createdSupplier?.id) {
+          router.replace(`/supplier/form?id=${encodeURIComponent(createdSupplier.id)}`);
+        }
         showToast(t("supplier.toast.createSuccess"), "success");
       } catch (error) {
         if (error instanceof ApiRequestError) {
@@ -211,7 +266,7 @@ export default function SupplierPage() {
         setIsSaving(false);
       }
     },
-    [canManageSupplier, loadSuppliers, showToast, t]
+    [canManageSupplier, isFormMode, loadSuppliers, router, showToast, t]
   );
 
   const executeDeleteSupplier = useCallback(
@@ -230,6 +285,9 @@ export default function SupplierPage() {
         await deleteSupplier(selectedItem.id);
         setSelectedId("");
         await loadSuppliers({ showLoading: false });
+        if (isFormMode) {
+          router.push("/supplier");
+        }
         showToast(
           t("supplier.toast.deleteSuccess", {
             namaSupplier: selectedItem.namaSupplier || "-",
@@ -251,7 +309,7 @@ export default function SupplierPage() {
         setIsDeleting(false);
       }
     },
-    [canManageSupplier, loadSuppliers, showToast, t]
+    [canManageSupplier, isFormMode, loadSuppliers, router, showToast, t]
   );
 
   const handleSaveSupplier = useCallback(
@@ -347,38 +405,59 @@ export default function SupplierPage() {
 
           {showDataSection ? (
             <>
-              <SupplierTableFilter
-                rows={rows}
-                filter={filter}
-                filteredCount={filteredCount}
-                pagination={pagination}
-                selectedId={selectedId}
-                onFilterChange={handleFilterChange}
-                onResetFilter={handleResetFilter}
-                onPageChange={handlePageChange}
-                onPageSizeChange={handlePageSizeChange}
-                onSelectRow={(row) => {
-                  setActionErrorMessage("");
-                  setToast(null);
-                  setSelectedId(row.id);
-                }}
-              />
-
-              <SupplierEditForm
-                key={selectedId || "new"}
-                item={selectedRow}
-                onNewData={() => {
-                  setActionErrorMessage("");
-                  setToast(null);
-                  setSelectedId("");
-                }}
-                canManageSupplier={canManageSupplier}
-                isSaving={isSaving}
-                isDeleting={isDeleting}
-                actionErrorMessage={actionErrorMessage}
-                onSave={handleSaveSupplier}
-                onDelete={handleDeleteSupplier}
-              />
+              {isFormMode ? (
+                <>
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => router.push("/supplier")}
+                      className="rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm font-medium text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
+                    >
+                      {t("common.close")}
+                    </button>
+                  </div>
+                  <SupplierEditForm
+                    key={selectedId || "new"}
+                    item={selectedRow}
+                    onNewData={() => {
+                      setActionErrorMessage("");
+                      setToast(null);
+                      setSelectedId("");
+                      router.push("/supplier/form");
+                    }}
+                    canManageSupplier={canManageSupplier}
+                    isSaving={isSaving}
+                    isDeleting={isDeleting}
+                    actionErrorMessage={actionErrorMessage}
+                    onSave={handleSaveSupplier}
+                    onDelete={handleDeleteSupplier}
+                  />
+                </>
+              ) : (
+                <>
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => navigateToForm()}
+                      className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600 dark:bg-sky-500 dark:text-slate-950 dark:hover:bg-sky-400"
+                    >
+                      {t("common.newData")}
+                    </button>
+                  </div>
+                  <SupplierTableFilter
+                    rows={rows}
+                    filter={filter}
+                    filteredCount={filteredCount}
+                    pagination={pagination}
+                    selectedId=""
+                    onFilterChange={handleFilterChange}
+                    onResetFilter={handleResetFilter}
+                    onPageChange={handlePageChange}
+                    onPageSizeChange={handlePageSizeChange}
+                    onSelectRow={(row) => navigateToForm(row.id)}
+                  />
+                </>
+              )}
             </>
           ) : null}
         </div>
@@ -405,4 +484,8 @@ export default function SupplierPage() {
       />
     </>
   );
+}
+
+export default function SupplierPage() {
+  return <SupplierPageContent mode="list" />;
 }

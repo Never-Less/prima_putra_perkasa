@@ -254,6 +254,17 @@ export async function fetchPurchaseOrderExportRows(query: PurchaseOrderFilter) {
     : [];
 }
 
+export async function fetchPurchaseOrderById(id: string) {
+  const purchaseOrderId = toText(id).trim();
+
+  if (!purchaseOrderId) {
+    return null;
+  }
+
+  const response = await requestApi<PurchaseOrderResponse>(`/api/purchase-orders/${purchaseOrderId}`);
+  return toPurchaseOrderItem(response?.purchaseOrder);
+}
+
 export async function fetchPurchaseOrderOptions() {
   const response = await requestApi<PurchaseOrderOptionsResponse>("/api/purchase-orders/options");
 

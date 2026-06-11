@@ -121,6 +121,17 @@ export async function fetchUserList(query: UserListQuery): Promise<ServerListRes
   };
 }
 
+export async function fetchUserById(id: string) {
+  const userId = toText(id).trim();
+
+  if (!userId) {
+    return null;
+  }
+
+  const response = await requestApi<UserResponse>(`/api/users/${userId}`);
+  return toUserItem(response?.user);
+}
+
 export async function createUser(form: UserFormState) {
   const response = await requestApi<UserResponse>("/api/users", {
     method: "POST",

@@ -5,7 +5,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ApiLoadingState } from "../../_components/api-loading-state";
 import { ExportCurrencyValue } from "../../_components/export-currency-value";
 import { ApiRequestError } from "../../_lib/api-client";
-import { downloadExcelHtmlFile, sanitizeExcelFileName, type ExcelHtmlWorksheet } from "../../_lib/excel-html-export";
+import {
+  downloadJspreadsheetXlsxFile,
+  sanitizeExcelFileName,
+  type JspreadsheetExportWorksheet,
+} from "../../_lib/jspreadsheet-xlsx-export";
 import { useI18n } from "../../_i18n/provider";
 import { fetchCustomerRows, type CustomerItem } from "../../customer/_lib/customer";
 import {
@@ -203,7 +207,7 @@ export default function InvoiceExportPage() {
         barang.jumlah,
       ])
     );
-    const worksheets: ExcelHtmlWorksheet[] = [
+    const worksheets: JspreadsheetExportWorksheet[] = [
       {
         name: "Detail Barang",
         rows: [
@@ -223,7 +227,7 @@ export default function InvoiceExportPage() {
       sanitizeExcelFileName(filter.tanggalSampai || filter.tanggalBayarSampai || "", "") ||
       "data";
 
-    downloadExcelHtmlFile(`invoice-export-${fileSuffix}.xls`, worksheets);
+    downloadJspreadsheetXlsxFile(`invoice-export-${fileSuffix}.xlsx`, worksheets);
   }
 
   return (

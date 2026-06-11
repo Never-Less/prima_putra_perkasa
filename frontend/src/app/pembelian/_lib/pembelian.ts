@@ -359,6 +359,17 @@ export async function fetchPembelianList(
   };
 }
 
+export async function fetchPembelianById(id: string) {
+  const pembelianId = toText(id).trim();
+
+  if (!pembelianId) {
+    return null;
+  }
+
+  const response = await requestApi<PembelianResponse>(`/api/pembelian/${pembelianId}`);
+  return toPembelianItem(response?.pembelian);
+}
+
 export async function createPembelian(form: PembelianFormState) {
   const payload = toNormalizedPembelianPayload(form);
   const response = await requestApi<PembelianResponse>("/api/pembelian", {

@@ -6,7 +6,11 @@ import { ApiLoadingState } from "../../../_components/api-loading-state";
 import { ExportCurrencyValue } from "../../../_components/export-currency-value";
 import { formatAppUppercaseDate } from "../../../_lib/date";
 import { ApiRequestError } from "../../../_lib/api-client";
-import { downloadExcelHtmlFile, sanitizeExcelFileName, type ExcelHtmlWorksheet } from "../../../_lib/excel-html-export";
+import {
+  downloadJspreadsheetXlsxFile,
+  sanitizeExcelFileName,
+  type JspreadsheetExportWorksheet,
+} from "../../../_lib/jspreadsheet-xlsx-export";
 import { useI18n } from "../../../_i18n/provider";
 import { fetchCustomerById, type CustomerItem } from "../../../customer/_lib/customer";
 import {
@@ -817,7 +821,7 @@ export default function InvoiceExportPage() {
       return;
     }
 
-    const worksheets: ExcelHtmlWorksheet[] = [
+    const worksheets: JspreadsheetExportWorksheet[] = [
       {
         name: "Detail Barang",
         rows: [
@@ -839,8 +843,8 @@ export default function InvoiceExportPage() {
       },
     ];
 
-    downloadExcelHtmlFile(
-      `invoice-${sanitizeExcelFileName(invoice.noInvoice || invoice.id || "detail")}.xls`,
+    downloadJspreadsheetXlsxFile(
+      `invoice-${sanitizeExcelFileName(invoice.noInvoice || invoice.id || "detail")}.xlsx`,
       worksheets
     );
   }

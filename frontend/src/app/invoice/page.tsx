@@ -23,8 +23,10 @@ import {
   consumeInvoicePrefill,
   createInvoice,
   defaultInvoiceFilter,
+  fetchInvoiceById,
   fetchInvoiceList,
   fetchInvoiceSuratJalanOptions,
+  saveInvoicePrefill,
   toInvoiceFormStateFromPrefill,
   updateInvoice,
   deleteInvoice,
@@ -45,9 +47,17 @@ type PostSaveActionState = {
   invoice: InvoiceItem;
 };
 
-export default function InvoicePage() {
+type InvoicePageMode = "list" | "form";
+
+type InvoicePageContentProps = {
+  mode?: InvoicePageMode;
+  itemId?: string;
+};
+
+export function InvoicePageContent({ mode = "list", itemId = "" }: InvoicePageContentProps) {
   const { t } = useI18n();
   const router = useRouter();
+  const isFormMode = mode === "form";
   const canExport = useExportAccess();
   const [rows, setRows] = useState<InvoiceItem[]>([]);
   const [filter, setFilter] = useState<InvoiceFilter>(defaultInvoiceFilter);
@@ -66,7 +76,7 @@ export default function InvoicePage() {
   const [suratJalanOptions, setSuratJalanOptions] = useState<InvoiceSuratJalanOption[]>([]);
   const [readyInvoicePoGroups, setReadyInvoicePoGroups] = useState<ReadyInvoicePoGroup[]>([]);
   const [selectedReadyNoPo, setSelectedReadyNoPo] = useState("");
-  const [selectedId, setSelectedId] = useState("");
+  const [selectedId, setSelectedId] = useState(itemId);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -111,6 +121,34 @@ export default function InvoicePage() {
       setErrorMessage("");
 
       try {
+        if (isFormMode) {
+          if (!itemId) {
+            setRows([]);
+            setPagination((prevPagination) => ({
+              ...prevPagination,
+              totalItems: 0,
+              totalPages: 1,
+            }));
+            setFilteredCount(0);
+            setSelectedId("");
+            return [];
+          }
+
+          const invoice = await fetchInvoiceById(itemId);
+          const invoiceRows = invoice ? [invoice] : [];
+
+          setRows(invoiceRows);
+          setPagination({
+            page: 1,
+            limit: 1,
+            totalItems: invoiceRows.length,
+            totalPages: 1,
+          });
+          setFilteredCount(invoiceRows.length);
+          setSelectedId(invoice?.id || itemId);
+          return invoiceRows;
+        }
+
         const invoiceResult = await fetchInvoiceList({
           ...filter,
           ...paginationQuery,
@@ -151,7 +189,7 @@ export default function InvoicePage() {
         }
       }
     },
-    [filter, paginationQuery, t]
+    [filter, isFormMode, itemId, paginationQuery, t]
   );
 
   const loadCustomerOptions = useCallback(async () => {
@@ -295,6 +333,14 @@ export default function InvoicePage() {
     );
   }, [readyInvoicePoGroups]);
 
+  const navigateToForm = useCallback(
+    (id?: string) => {
+      const normalizedId = String(id || "").trim();
+      router.push(normalizedId ? `/invoice/form?id=${encodeURIComponent(normalizedId)}` : "/invoice/form");
+    },
+    [router]
+  );
+
   const executeSaveInvoice = useCallback(
     async (form: InvoiceFormState, selectedItem?: InvoiceItem) => {
       setActionErrorMessage("");
@@ -317,6 +363,9 @@ export default function InvoicePage() {
             ? refreshedRows.find((row) => row.id === updatedInvoice.id) || updatedInvoice
             : undefined;
           setSelectedId(currentUpdatedInvoice?.id || selectedItem.id);
+          if (isFormMode) {
+            router.replace(`/invoice/form?id=${encodeURIComponent(currentUpdatedInvoice?.id || selectedItem.id)}`);
+          }
           if (currentUpdatedInvoice) {
             setPostSaveAction({
               actionType: "update",
@@ -339,6 +388,9 @@ export default function InvoicePage() {
           ? refreshedRows.find((row) => row.id === createdInvoice.id) || createdInvoice
           : undefined;
         setSelectedId(currentCreatedInvoice?.id || "");
+        if (isFormMode && currentCreatedInvoice?.id) {
+          router.replace(`/invoice/form?id=${encodeURIComponent(currentCreatedInvoice.id)}`);
+        }
         setInitialForm(null);
         setInitialFormKey(Date.now());
         if (currentCreatedInvoice) {
@@ -368,7 +420,7 @@ export default function InvoicePage() {
         setIsSaving(false);
       }
     },
-    [loadInvoices, loadSuratJalanOptions, showToast, t]
+    [isFormMode, loadInvoices, loadSuratJalanOptions, router, showToast, t]
   );
 
   const executeDeleteInvoice = useCallback(
@@ -382,6 +434,9 @@ export default function InvoicePage() {
         await loadInvoices({ showLoading: false });
         await loadSuratJalanOptions();
         setPostSaveAction(null);
+        if (isFormMode) {
+          router.push("/invoice");
+        }
         showToast(
           t("invoice.toast.deleteSuccess", {
             noInvoice: selectedItem.noInvoice || "-",
@@ -403,7 +458,7 @@ export default function InvoicePage() {
         setIsDeleting(false);
       }
     },
-    [loadInvoices, loadSuratJalanOptions, showToast, t]
+    [isFormMode, loadInvoices, loadSuratJalanOptions, router, showToast, t]
   );
 
   const handleUseReadySuratJalan = useCallback(() => {
@@ -417,11 +472,17 @@ export default function InvoicePage() {
     setToast(null);
     setPostSaveAction(null);
     setSelectedId("");
-    setInitialForm(
-      toInvoiceFormStateFromPrefill(buildInvoicePrefillFromReadyInvoicePoGroup(readyGroup))
-    );
-    setInitialFormKey(Date.now());
-  }, [selectedReadyPoGroup]);
+    const invoicePrefill = buildInvoicePrefillFromReadyInvoicePoGroup(readyGroup);
+
+    if (isFormMode) {
+      setInitialForm(toInvoiceFormStateFromPrefill(invoicePrefill));
+      setInitialFormKey(Date.now());
+      return;
+    }
+
+    saveInvoicePrefill(invoicePrefill);
+    router.push("/invoice/form");
+  }, [isFormMode, router, selectedReadyPoGroup]);
 
   const handleSaveInvoice = useCallback(
     async (form: InvoiceFormState, selectedItem?: InvoiceItem) => {
@@ -521,7 +582,7 @@ export default function InvoicePage() {
     });
 
     setPostSaveAction(null);
-    router.push("/pembelian");
+    router.push("/pembelian/form");
   }, [postSaveAction, router]);
 
   const handleExportInvoice = useCallback((invoiceId: string) => {
@@ -558,7 +619,9 @@ export default function InvoicePage() {
     window.open(targetPath, "_blank", "noopener,noreferrer");
   }, [canExport, filter]);
 
-  const showDataSection = !isLoading && (rows.length > 0 || !errorMessage);
+  const showDataSection = isFormMode
+    ? !isLoading && !errorMessage
+    : !isLoading && (rows.length > 0 || !errorMessage);
 
   return (
     <>
@@ -586,6 +649,28 @@ export default function InvoicePage() {
 
           {showDataSection ? (
             <>
+              {!isFormMode ? (
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => navigateToForm()}
+                    className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600 dark:bg-sky-500 dark:text-slate-950 dark:hover:bg-sky-400"
+                  >
+                    {t("common.newData")}
+                  </button>
+                </div>
+              ) : (
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => router.push("/invoice")}
+                    className="rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm font-medium text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
+                  >
+                    {t("common.close")}
+                  </button>
+                </div>
+              )}
+
               {readyInvoicePoGroups.length > 0 ? (
                 <section className="rounded-2xl border border-amber-200 bg-amber-50/80 p-4 shadow-sm dark:border-amber-900/70 dark:bg-amber-950/30 sm:p-5">
                   <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
@@ -630,49 +715,50 @@ export default function InvoicePage() {
                 </section>
               ) : null}
 
-              <InvoiceTableFilter
-                rows={rows}
-                filter={filter}
-                filteredCount={filteredCount}
-                pagination={pagination}
-                selectedId={selectedId}
-                canExport={canExport}
-                resolveCustomerLabel={resolveCustomerLabel}
-                onFilterChange={handleFilterChange}
-                onResetFilter={handleResetFilter}
-                onPageChange={handlePageChange}
-                onPageSizeChange={handlePageSizeChange}
-                onExportRow={(row) => handleExportInvoice(row.id)}
-                onExportPage={handleOpenExportPage}
-                onSelectRow={(row) => {
-                  setActionErrorMessage("");
-                  setToast(null);
-                  setPostSaveAction(null);
-                  setInitialForm(null);
-                  setSelectedId(row.id);
-                }}
-              />
-
-              <InvoiceEditForm
-                key={`${selectedId || "new"}-${initialFormKey}`}
-                item={selectedRow}
-                initialForm={selectedRow ? undefined : initialForm || undefined}
-                customerOptions={customerOptions}
-                suratJalanOptions={suratJalanOptions}
-                isSaving={isSaving}
-                isDeleting={isDeleting}
-                actionErrorMessage={actionErrorMessage}
-                onSave={handleSaveInvoice}
-                onDelete={handleDeleteInvoice}
-                onNewData={() => {
-                  setActionErrorMessage("");
-                  setToast(null);
-                  setPostSaveAction(null);
-                  setInitialForm(null);
-                  setInitialFormKey(Date.now());
-                  setSelectedId("");
-                }}
-              />
+              {isFormMode ? (
+                <InvoiceEditForm
+                  key={`${selectedId || "new"}-${initialFormKey}`}
+                  item={selectedRow}
+                  initialForm={selectedRow ? undefined : initialForm || undefined}
+                  customerOptions={customerOptions}
+                  suratJalanOptions={suratJalanOptions}
+                  isSaving={isSaving}
+                  isDeleting={isDeleting}
+                  actionErrorMessage={actionErrorMessage}
+                  onSave={handleSaveInvoice}
+                  onDelete={handleDeleteInvoice}
+                  onNewData={() => {
+                    setActionErrorMessage("");
+                    setToast(null);
+                    setPostSaveAction(null);
+                    setInitialForm(null);
+                    setInitialFormKey(Date.now());
+                    setSelectedId("");
+                    router.push("/invoice/form");
+                  }}
+                />
+              ) : (
+                <InvoiceTableFilter
+                  rows={rows}
+                  filter={filter}
+                  filteredCount={filteredCount}
+                  pagination={pagination}
+                  selectedId=""
+                  canExport={canExport}
+                  resolveCustomerLabel={resolveCustomerLabel}
+                  onFilterChange={handleFilterChange}
+                  onResetFilter={handleResetFilter}
+                  onPageChange={handlePageChange}
+                  onPageSizeChange={handlePageSizeChange}
+                  onExportRow={(row) => handleExportInvoice(row.id)}
+                  onExportPage={handleOpenExportPage}
+                  onSelectRow={(row) => {
+                    setPostSaveAction(null);
+                    setInitialForm(null);
+                    navigateToForm(row.id);
+                  }}
+                />
+              )}
             </>
           ) : null}
         </div>
@@ -714,4 +800,8 @@ export default function InvoicePage() {
       />
     </>
   );
+}
+
+export default function InvoicePage() {
+  return <InvoicePageContent mode="list" />;
 }
