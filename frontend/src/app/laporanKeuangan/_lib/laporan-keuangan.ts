@@ -237,6 +237,7 @@ export async function saveLaporanKeuangan(form: LaporanKeuanganFormState) {
   const response = await requestApi<LaporanKeuanganResponse>("/api/laporan-keuangan", {
     method: "POST",
     body: form,
+    invalidateCachePaths: "/api/laporan-keuangan",
   });
 
   return toLaporanKeuanganItem(response?.laporanKeuangan);

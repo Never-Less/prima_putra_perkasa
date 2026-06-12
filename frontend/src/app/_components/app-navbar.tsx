@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useIsAdminAccess } from "../_hooks/use-current-user";
+import { confirmUnsavedChanges } from "../_hooks/use-unsaved-changes-warning";
 import { useI18n } from "../_i18n/provider";
 import { type Locale } from "../_i18n/messages";
 import { requestApi } from "../_lib/api-client";
@@ -74,6 +75,10 @@ export function AppNavbar() {
 
   async function handleLogout() {
     if (isLoggingOut) {
+      return;
+    }
+
+    if (!confirmUnsavedChanges(t("common.unsavedChangesWarning"))) {
       return;
     }
 

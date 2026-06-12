@@ -71,6 +71,12 @@ type PurchaseOrderOptionsResponse = {
   invoiceOptions?: unknown[];
 };
 
+const purchaseOrderMutationCachePaths = [
+  "/api/purchase-orders",
+  "/api/surat-jalan",
+  "/api/invoices",
+];
+
 function buildPurchaseOrderListQueryString(
   query: Partial<PurchaseOrderListQuery>,
   options: { includePagination?: boolean } = {}
@@ -286,6 +292,7 @@ export async function createPurchaseOrder(form: PurchaseOrderFormState) {
   const response = await requestApi<PurchaseOrderResponse>("/api/purchase-orders", {
     method: "POST",
     body: toNormalizedPurchaseOrderPayload(form),
+    invalidateCachePaths: purchaseOrderMutationCachePaths,
   });
 
   return toPurchaseOrderItem(response?.purchaseOrder);
@@ -295,6 +302,7 @@ export async function updatePurchaseOrder(id: string, form: PurchaseOrderFormSta
   const response = await requestApi<PurchaseOrderResponse>(`/api/purchase-orders/${id}`, {
     method: "PUT",
     body: toNormalizedPurchaseOrderPayload(form),
+    invalidateCachePaths: purchaseOrderMutationCachePaths,
   });
 
   return toPurchaseOrderItem(response?.purchaseOrder);
@@ -303,6 +311,7 @@ export async function updatePurchaseOrder(id: string, form: PurchaseOrderFormSta
 export async function deletePurchaseOrder(id: string) {
   await requestApi(`/api/purchase-orders/${id}`, {
     method: "DELETE",
+    invalidateCachePaths: purchaseOrderMutationCachePaths,
   });
 }
 

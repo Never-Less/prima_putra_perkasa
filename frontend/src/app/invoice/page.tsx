@@ -6,6 +6,7 @@ import { ApiLoadingState } from "../_components/api-loading-state";
 import { AppToast } from "../_components/app-toast";
 import { ConfirmationModal } from "../_components/confirmation-modal";
 import { useExportAccess } from "../_hooks/use-export-access";
+import { confirmUnsavedChanges } from "../_hooks/use-unsaved-changes-warning";
 import { ApiRequestError } from "../_lib/api-client";
 import { type ServerPaginationMeta } from "../_lib/pagination";
 import {
@@ -663,7 +664,11 @@ export function InvoicePageContent({ mode = "list", itemId = "" }: InvoicePageCo
                 <div className="flex justify-end">
                   <button
                     type="button"
-                    onClick={() => router.push("/invoice")}
+                    onClick={() => {
+                      if (confirmUnsavedChanges(t("common.unsavedChangesWarning"))) {
+                        router.push("/invoice");
+                      }
+                    }}
                     className="rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm font-medium text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
                   >
                     {t("common.close")}

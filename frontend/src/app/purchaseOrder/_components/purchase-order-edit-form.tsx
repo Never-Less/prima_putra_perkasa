@@ -2,6 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { AppDateInput } from "../../_components/app-date-input";
+import {
+  serializeUnsavedChangesValue,
+  useUnsavedChangesWarning,
+} from "../../_hooks/use-unsaved-changes-warning";
 import { useI18n } from "../../_i18n/provider";
 import {
   formatRupiah,
@@ -48,8 +52,17 @@ export function PurchaseOrderEditForm({
   const { locale, t } = useI18n();
   const inputPlaceholder = (fieldKey: string) =>
     t("common.placeholder.input", { field: t(fieldKey) });
-  const [form, setForm] = useState<PurchaseOrderFormState>(() =>
-    item ? toPurchaseOrderFormState(item) : createEmptyPurchaseOrderFormState()
+  const baselineForm = useMemo(
+    () => (item ? toPurchaseOrderFormState(item) : createEmptyPurchaseOrderFormState()),
+    [item]
+  );
+  const [form, setForm] = useState<PurchaseOrderFormState>(() => baselineForm);
+  const isDirty =
+    serializeUnsavedChangesValue(form) !== serializeUnsavedChangesValue(baselineForm);
+
+  useUnsavedChangesWarning(
+    isDirty && !isSaving && !isDeleting,
+    t("common.unsavedChangesWarning")
   );
 
   const customerLabelMap = useMemo(() => {
@@ -169,7 +182,7 @@ export function PurchaseOrderEditForm({
             <button
               type="button"
               disabled={isSaving || isDeleting}
-              onClick={() => setForm(item ? toPurchaseOrderFormState(item) : createEmptyPurchaseOrderFormState())}
+              onClick={() => setForm(baselineForm)}
               className="w-full rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm text-sky-700 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800 sm:w-auto"
             >
               {t("common.resetForm")}

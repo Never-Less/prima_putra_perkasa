@@ -5,6 +5,10 @@ import type { SingleValue, StylesConfig } from "react-select";
 import CreatableSelect from "react-select/creatable";
 import { AppDateInput } from "../../_components/app-date-input";
 import {
+  serializeUnsavedChangesValue,
+  useUnsavedChangesWarning,
+} from "../../_hooks/use-unsaved-changes-warning";
+import {
   formatRupiah,
   formatTanggal,
   pembelianStockInvoiceId,
@@ -109,6 +113,36 @@ function createEmptyPembelianFormState(invoiceOptions: PembelianInvoiceOption[])
   };
 }
 
+function createInitialPembelianFormState({
+  item,
+  initialForm,
+  invoiceOptions,
+}: {
+  item?: PembelianItem;
+  initialForm?: PembelianFormState;
+  invoiceOptions: PembelianInvoiceOption[];
+}) {
+  if (item) {
+    const mappedForm = toPembelianFormState(item);
+
+    return withCalculatedTanggalJatuhTempo({
+      ...mappedForm,
+      idInvoice: ensureValidIdInvoice(mappedForm.idInvoice, invoiceOptions),
+      tanggalBayar: mappedForm.hutang ? "" : mappedForm.tanggalBayar,
+    });
+  }
+
+  if (initialForm) {
+    return withCalculatedTanggalJatuhTempo({
+      ...initialForm,
+      idInvoice: ensureValidIdInvoice(initialForm.idInvoice, invoiceOptions),
+      tanggalBayar: initialForm.hutang ? "" : initialForm.tanggalBayar,
+    });
+  }
+
+  return createEmptyPembelianFormState(invoiceOptions);
+}
+
 export function PembelianEditForm({
   item,
   initialForm,
@@ -129,24 +163,18 @@ export function PembelianEditForm({
     t("common.placeholder.select", { field: t(fieldKey) });
   const stockInvoiceLabel = t("pembelian.stockInvoiceLabel");
   const [supplierInputValue, setSupplierInputValue] = useState("");
-  const [form, setForm] = useState<PembelianFormState>(() =>
-    item
-      ? (() => {
-          const mappedForm = toPembelianFormState(item);
+  const baselineForm = useMemo(
+    () => createInitialPembelianFormState({ item, initialForm, invoiceOptions }),
+    [initialForm, invoiceOptions, item]
+  );
+  const [form, setForm] = useState<PembelianFormState>(() => baselineForm);
+  const isDirty =
+    serializeUnsavedChangesValue({ form, supplierInputValue }) !==
+    serializeUnsavedChangesValue({ form: baselineForm, supplierInputValue: "" });
 
-          return withCalculatedTanggalJatuhTempo({
-            ...mappedForm,
-            idInvoice: ensureValidIdInvoice(mappedForm.idInvoice, invoiceOptions),
-            tanggalBayar: mappedForm.hutang ? "" : mappedForm.tanggalBayar,
-          });
-        })()
-      : initialForm
-        ? withCalculatedTanggalJatuhTempo({
-            ...initialForm,
-            idInvoice: ensureValidIdInvoice(initialForm.idInvoice, invoiceOptions),
-            tanggalBayar: initialForm.hutang ? "" : initialForm.tanggalBayar,
-          })
-        : createEmptyPembelianFormState(invoiceOptions)
+  useUnsavedChangesWarning(
+    isDirty && !isSaving && !isDeleting,
+    t("common.unsavedChangesWarning")
   );
 
   const normalizedInvoiceOptions = useMemo(() => {
@@ -581,27 +609,8 @@ export function PembelianEditForm({
               type="button"
               disabled={isSaving || isDeleting}
               onClick={() => {
-                if (item) {
-                  const resetForm = toPembelianFormState(item);
-
-                  setForm(withCalculatedTanggalJatuhTempo({
-                    ...resetForm,
-                    idInvoice: ensureValidIdInvoice(resetForm.idInvoice, invoiceOptions),
-                    tanggalBayar: resetForm.hutang ? "" : resetForm.tanggalBayar,
-                  }));
-                  return;
-                }
-
-                if (initialForm) {
-                  setForm(withCalculatedTanggalJatuhTempo({
-                    ...initialForm,
-                    idInvoice: ensureValidIdInvoice(initialForm.idInvoice, invoiceOptions),
-                    tanggalBayar: initialForm.hutang ? "" : initialForm.tanggalBayar,
-                  }));
-                  return;
-                }
-
-                setForm(createEmptyPembelianFormState(invoiceOptions));
+                setSupplierInputValue("");
+                setForm(baselineForm);
               }}
               className="w-full rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm text-sky-700 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800 sm:w-auto"
             >
