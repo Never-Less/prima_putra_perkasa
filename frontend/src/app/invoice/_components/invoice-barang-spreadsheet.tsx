@@ -31,7 +31,7 @@ function normalizeSpreadsheetRow(row: jspreadsheet.CellValue[] = []) {
 }
 
 function normalizeNumericText(value: string) {
-  const text = value.replace(/rp/gi, "").replace(/\s+/g, "").trim();
+  const text = value.replace(/rp\.?/gi, "").replace(/\s+/g, "").trim();
 
   if (!text) {
     return "";
@@ -61,6 +61,19 @@ function parseNumber(value: string) {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+function formatRupiahCell(value: string | number, locale: "id" | "en") {
+  const parsed = typeof value === "number" ? value : parseNumber(value);
+
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return "";
+  }
+
+  const numberLocale = locale === "en" ? "en-US" : "id-ID";
+  return `Rp. ${new Intl.NumberFormat(numberLocale, {
+    maximumFractionDigits: 0,
+  }).format(parsed)}`;
+}
+
 function normalizeNumericCell(value: string) {
   const normalized = normalizeNumericText(value);
 
@@ -72,9 +85,22 @@ function normalizeNumericCell(value: string) {
   return Number.isFinite(parsed) ? String(parsed) : "";
 }
 
+function normalizeNoPoCell(value: string) {
+  const normalized = value.trim();
+  return normalized === "-" ? "" : normalized;
+}
+
+function spreadsheetNoPoLabel(row: InvoiceBarangFormRow) {
+  if (row.sources.length > 0) {
+    return invoiceBarangNoPoLabel(row);
+  }
+
+  return normalizeNoPoCell(row.noPoManual);
+}
+
 function getInvoiceRowKey(row: InvoiceBarangFormRow) {
   return [
-    invoiceBarangNoPoLabel(row),
+    spreadsheetNoPoLabel(row),
     row.namaBarang,
     row.spesifikasi,
     row.unit,
@@ -121,12 +147,12 @@ function rowsToSpreadsheetData(rows: InvoiceBarangFormRow[], locale: "id" | "en"
     const jumlah = parseNumber(row.kuantitas) * parseNumber(row.hargaSatuan);
 
     return [
-      invoiceBarangNoPoLabel(row),
+      spreadsheetNoPoLabel(row),
       row.namaBarang,
       row.spesifikasi,
       row.kuantitas,
       row.unit,
-      row.hargaSatuan,
+      formatRupiahCell(row.hargaSatuan, locale),
       formatRupiah(jumlah, locale),
     ];
   });
@@ -137,7 +163,7 @@ function spreadsheetDataToRows(data: SpreadsheetData, previousRows: InvoiceBaran
   const nextRows = data.map((row) => {
     const [noPoManual, namaBarang, spesifikasi, kuantitas, unit, hargaSatuan] = normalizeSpreadsheetRow(row);
     const nextRow: InvoiceBarangFormRow = {
-      noPoManual,
+      noPoManual: normalizeNoPoCell(noPoManual),
       namaBarang,
       spesifikasi,
       kuantitas: normalizeNumericCell(kuantitas),
@@ -209,7 +235,7 @@ export function InvoiceBarangSpreadsheet({
       },
       {
         title: t("invoice.excel.column.hargaSatuan"),
-        type: "numeric",
+        type: "text",
         width: 150,
       },
       {
@@ -267,7 +293,9 @@ export function InvoiceBarangSpreadsheet({
             editable: !disabled,
             allowDeleteColumn: false,
             allowInsertColumn: false,
+            allowInsertRow: false,
             allowManualInsertColumn: false,
+            allowManualInsertRow: false,
             allowRenameColumn: false,
             columnDrag: false,
             columnSorting: false,

@@ -149,6 +149,7 @@ export async function createCustomer(form: CustomerFormState) {
   const response = await requestApi<CustomerResponse>("/api/customers", {
     method: "POST",
     body: payload,
+    invalidateCachePaths: "/api/customers",
   });
 
   return toCustomerItem(response?.customer);
@@ -159,6 +160,7 @@ export async function updateCustomer(id: string, form: CustomerFormState) {
   const response = await requestApi<CustomerResponse>(`/api/customers/${id}`, {
     method: "PUT",
     body: payload,
+    invalidateCachePaths: "/api/customers",
   });
 
   return toCustomerItem(response?.customer);
@@ -167,6 +169,7 @@ export async function updateCustomer(id: string, form: CustomerFormState) {
 export async function deleteCustomer(id: string) {
   await requestApi(`/api/customers/${id}`, {
     method: "DELETE",
+    invalidateCachePaths: "/api/customers",
   });
 }
 

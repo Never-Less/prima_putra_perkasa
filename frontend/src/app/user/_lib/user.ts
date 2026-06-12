@@ -136,6 +136,7 @@ export async function createUser(form: UserFormState) {
   const response = await requestApi<UserResponse>("/api/users", {
     method: "POST",
     body: toNormalizedUserPayload(form),
+    invalidateCachePaths: "/api/users",
   });
 
   return toUserItem(response?.user);
@@ -145,6 +146,7 @@ export async function updateUser(id: string, form: UserFormState) {
   const response = await requestApi<UserResponse>(`/api/users/${id}`, {
     method: "PUT",
     body: toNormalizedUserPayload(form),
+    invalidateCachePaths: "/api/users",
   });
 
   return toUserItem(response?.user);
@@ -153,6 +155,7 @@ export async function updateUser(id: string, form: UserFormState) {
 export async function deleteUser(id: string) {
   await requestApi(`/api/users/${id}`, {
     method: "DELETE",
+    invalidateCachePaths: "/api/users",
   });
 }
 

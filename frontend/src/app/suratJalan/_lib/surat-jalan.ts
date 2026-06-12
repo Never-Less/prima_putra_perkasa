@@ -89,6 +89,12 @@ type SuratJalanNoPoOptionsResponse = {
 
 type ResolveCustomerLabel = (customerId: string) => string;
 
+const suratJalanMutationCachePaths = [
+  "/api/surat-jalan",
+  "/api/invoices",
+  "/api/purchase-orders",
+];
+
 export const defaultSuratJalanFilter: SuratJalanFilter = {
   noSuratJalan: "",
   noPo: "",
@@ -330,6 +336,7 @@ export async function createSuratJalan(form: SuratJalanFormState) {
   const response = await requestApi<SuratJalanResponse>("/api/surat-jalan", {
     method: "POST",
     body: payload,
+    invalidateCachePaths: suratJalanMutationCachePaths,
   });
 
   return toSuratJalanItem(response?.suratJalan);
@@ -340,6 +347,7 @@ export async function updateSuratJalan(id: string, form: SuratJalanFormState) {
   const response = await requestApi<SuratJalanResponse>(`/api/surat-jalan/${id}`, {
     method: "PUT",
     body: payload,
+    invalidateCachePaths: suratJalanMutationCachePaths,
   });
 
   return toSuratJalanItem(response?.suratJalan);
@@ -348,6 +356,7 @@ export async function updateSuratJalan(id: string, form: SuratJalanFormState) {
 export async function deleteSuratJalan(id: string) {
   await requestApi(`/api/surat-jalan/${id}`, {
     method: "DELETE",
+    invalidateCachePaths: suratJalanMutationCachePaths,
   });
 }
 

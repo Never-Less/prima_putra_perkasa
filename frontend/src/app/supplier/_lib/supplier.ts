@@ -168,6 +168,7 @@ export async function createSupplier(form: SupplierFormState) {
   const response = await requestApi<SupplierResponse>("/api/suppliers", {
     method: "POST",
     body: payload,
+    invalidateCachePaths: "/api/suppliers",
   });
 
   return toSupplierItem(response?.supplier);
@@ -178,6 +179,7 @@ export async function updateSupplier(id: string, form: SupplierFormState) {
   const response = await requestApi<SupplierResponse>(`/api/suppliers/${id}`, {
     method: "PUT",
     body: payload,
+    invalidateCachePaths: "/api/suppliers",
   });
 
   return toSupplierItem(response?.supplier);
@@ -186,6 +188,7 @@ export async function updateSupplier(id: string, form: SupplierFormState) {
 export async function deleteSupplier(id: string) {
   await requestApi(`/api/suppliers/${id}`, {
     method: "DELETE",
+    invalidateCachePaths: "/api/suppliers",
   });
 }
 

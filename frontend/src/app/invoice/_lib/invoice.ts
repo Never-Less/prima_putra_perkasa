@@ -158,6 +158,12 @@ export const defaultInvoiceFilter: InvoiceFilter = {
 };
 
 const invoicePrefillStorageKey = "ppp_invoice_prefill";
+const invoiceMutationCachePaths = [
+  "/api/invoices",
+  "/api/surat-jalan",
+  "/api/purchase-orders",
+  "/api/pembelian",
+];
 
 export const sampleInvoiceRows: InvoiceItem[] = [
   {
@@ -735,6 +741,7 @@ export async function createInvoice(form: InvoiceFormState) {
   const response = await requestApi<InvoiceResponse>("/api/invoices", {
     method: "POST",
     body: payload,
+    invalidateCachePaths: invoiceMutationCachePaths,
   });
 
   return toInvoiceItem(response?.invoice);
@@ -745,6 +752,7 @@ export async function updateInvoice(id: string, form: InvoiceFormState) {
   const response = await requestApi<InvoiceResponse>(`/api/invoices/${id}`, {
     method: "PUT",
     body: payload,
+    invalidateCachePaths: invoiceMutationCachePaths,
   });
 
   return toInvoiceItem(response?.invoice);
@@ -753,6 +761,7 @@ export async function updateInvoice(id: string, form: InvoiceFormState) {
 export async function deleteInvoice(id: string) {
   await requestApi(`/api/invoices/${id}`, {
     method: "DELETE",
+    invalidateCachePaths: invoiceMutationCachePaths,
   });
 }
 

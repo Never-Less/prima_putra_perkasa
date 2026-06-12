@@ -107,6 +107,7 @@ export const defaultPembelianFilter: PembelianFilter = {
 };
 
 const pembelianPrefillStorageKey = "ppp_pembelian_prefill";
+const pembelianMutationCachePaths = ["/api/pembelian", "/api/laporan-keuangan"];
 
 function toText(value: unknown) {
   if (typeof value === "string") {
@@ -375,6 +376,7 @@ export async function createPembelian(form: PembelianFormState) {
   const response = await requestApi<PembelianResponse>("/api/pembelian", {
     method: "POST",
     body: payload,
+    invalidateCachePaths: pembelianMutationCachePaths,
   });
 
   return toPembelianItem(response?.pembelian);
@@ -385,6 +387,7 @@ export async function updatePembelian(id: string, form: PembelianFormState) {
   const response = await requestApi<PembelianResponse>(`/api/pembelian/${id}`, {
     method: "PUT",
     body: payload,
+    invalidateCachePaths: pembelianMutationCachePaths,
   });
 
   return toPembelianItem(response?.pembelian);
@@ -393,6 +396,7 @@ export async function updatePembelian(id: string, form: PembelianFormState) {
 export async function deletePembelian(id: string) {
   await requestApi(`/api/pembelian/${id}`, {
     method: "DELETE",
+    invalidateCachePaths: pembelianMutationCachePaths,
   });
 }
 
