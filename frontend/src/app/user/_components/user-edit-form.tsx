@@ -2,6 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { useCurrentUserId } from "../../_hooks/use-current-user";
+import {
+  serializeUnsavedChangesValue,
+  useUnsavedChangesWarning,
+} from "../../_hooks/use-unsaved-changes-warning";
 import { useI18n } from "../../_i18n/provider";
 import { toUserFormState, userRoleOptions, type UserFormState, type UserItem, type UserRole } from "../_lib/user";
 
@@ -34,12 +38,22 @@ export function UserEditForm({
   const currentUserId = useCurrentUserId();
   const inputPlaceholder = (fieldKey: string) =>
     t("common.placeholder.input", { field: t(fieldKey) });
-  const [form, setForm] = useState<UserFormState>(() =>
-    item ? toUserFormState(item) : createEmptyUserFormState()
+  const baselineForm = useMemo(
+    () => (item ? toUserFormState(item) : createEmptyUserFormState()),
+    [item]
   );
+  const [form, setForm] = useState<UserFormState>(() => baselineForm);
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [validationError, setValidationError] = useState("");
+  const isDirty =
+    serializeUnsavedChangesValue({ form, confirmPassword }) !==
+    serializeUnsavedChangesValue({ form: baselineForm, confirmPassword: "" });
+
+  useUnsavedChangesWarning(
+    isDirty && !isSaving && !isDeleting,
+    t("common.unsavedChangesWarning")
+  );
 
   const roleLabelMap = useMemo(
     () =>
@@ -227,7 +241,7 @@ export function UserEditForm({
             <button
               type="button"
               disabled={isSaving || isDeleting}
-              onClick={() => resetFormState(item ? toUserFormState(item) : createEmptyUserFormState())}
+              onClick={() => resetFormState(baselineForm)}
               className="w-full rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm text-sky-700 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800 sm:w-auto"
             >
               {t("common.resetForm")}

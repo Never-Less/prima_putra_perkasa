@@ -5,6 +5,10 @@ import Select from "react-select";
 import type { SingleValue, StylesConfig } from "react-select";
 import { AppDateInput } from "../../_components/app-date-input";
 import {
+  serializeUnsavedChangesValue,
+  useUnsavedChangesWarning,
+} from "../../_hooks/use-unsaved-changes-warning";
+import {
   barangRowsToList,
   createEmptyBarangRow,
   ensureTrailingEmptyBarangRow,
@@ -139,6 +143,15 @@ function createEmptySuratJalanFormState(): SuratJalanFormState {
   };
 }
 
+function createSuratJalanDirtyValue(form: SuratJalanFormState) {
+  const { barangRows, ...restForm } = form;
+
+  return {
+    ...restForm,
+    barang: barangRowsToList(barangRows),
+  };
+}
+
 export function SuratJalanEditForm({
   item,
   customerOptions = [],
@@ -161,8 +174,18 @@ export function SuratJalanEditForm({
     t("common.placeholder.input", { field: t(fieldKey) });
   const selectPlaceholder = (fieldKey: string) =>
     t("common.placeholder.select", { field: t(fieldKey) });
-  const [form, setForm] = useState<SuratJalanFormState>(() =>
-    item ? toFormState(item) : createEmptySuratJalanFormState()
+  const baselineForm = useMemo(
+    () => (item ? toFormState(item) : createEmptySuratJalanFormState()),
+    [item]
+  );
+  const [form, setForm] = useState<SuratJalanFormState>(() => baselineForm);
+  const isDirty =
+    serializeUnsavedChangesValue(createSuratJalanDirtyValue(form)) !==
+    serializeUnsavedChangesValue(createSuratJalanDirtyValue(baselineForm));
+
+  useUnsavedChangesWarning(
+    isDirty && !isSaving && !isDeleting,
+    t("common.unsavedChangesWarning")
   );
   const tone = toneStyles[colorTone];
   const style = formStyles[formStyle];
@@ -482,7 +505,7 @@ export function SuratJalanEditForm({
             <button
               type="button"
               disabled={isSaving || isDeleting}
-              onClick={() => setForm(item ? toFormState(item) : createEmptySuratJalanFormState())}
+              onClick={() => setForm(baselineForm)}
               className={`w-full rounded-lg px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto ${tone.resetButton}`}
             >
               {t("common.resetForm")}

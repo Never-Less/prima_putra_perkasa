@@ -5,6 +5,11 @@ import { useRouter } from "next/navigation";
 import { ApiLoadingState } from "../_components/api-loading-state";
 import { AppDateInput } from "../_components/app-date-input";
 import { AppToast } from "../_components/app-toast";
+import {
+  confirmUnsavedChanges,
+  serializeUnsavedChangesValue,
+  useUnsavedChangesWarning,
+} from "../_hooks/use-unsaved-changes-warning";
 import { useI18n } from "../_i18n/provider";
 import { ApiRequestError } from "../_lib/api-client";
 import { fetchCustomerRows } from "../customer/_lib/customer";
@@ -95,6 +100,24 @@ function normalizeAmount(value: string) {
   const number = Number(digits);
 
   return Number.isFinite(number) && number >= 0 ? number : null;
+}
+
+function normalizeRowsForDirtyCheck(rows: FormRow[]) {
+  return rows.map((row) => ({
+    namaBiaya: row.namaBiaya,
+    jumlah: row.jumlah,
+  }));
+}
+
+function getSavedRowsForDirtyCheck(item: LaporanKeuanganItem | null) {
+  if (!item?.rincianBiaya.length) {
+    return [{ namaBiaya: "", jumlah: "" }];
+  }
+
+  return item.rincianBiaya.map((row) => ({
+    namaBiaya: row.namaBiaya || "",
+    jumlah: formatAmountInput(row.jumlah),
+  }));
 }
 
 type LaporanKeuanganPageContentProps = {
@@ -325,6 +348,18 @@ export function LaporanKeuanganPageContent({
         };
   const activePeriodLabel = reportMode === "yearly" ? selectedYearLabel : selectedMonthLabel;
   const isActiveLoading = reportMode === "yearly" ? isYearlyLoading : isLoading;
+  const baselineRows = useMemo(
+    () => getSavedRowsForDirtyCheck(lastSavedItem),
+    [lastSavedItem]
+  );
+  const isDirty =
+    serializeUnsavedChangesValue(normalizeRowsForDirtyCheck(rows)) !==
+    serializeUnsavedChangesValue(baselineRows);
+
+  useUnsavedChangesWarning(
+    isFormMode && isDirty && !isSaving && !isLoading,
+    t("common.unsavedChangesWarning")
+  );
 
   const canRemoveRow = rows.length > 1;
 
@@ -470,7 +505,11 @@ export function LaporanKeuanganPageContent({
               {isFormMode ? (
                 <button
                   type="button"
-                  onClick={() => router.push("/laporanKeuangan")}
+                  onClick={() => {
+                    if (confirmUnsavedChanges(t("common.unsavedChangesWarning"))) {
+                      router.push("/laporanKeuangan");
+                    }
+                  }}
                   className="rounded-lg border border-sky-200 bg-white px-4 py-2 text-sm font-medium text-sky-800 shadow-sm transition hover:bg-sky-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
                 >
                   {t("common.close")}

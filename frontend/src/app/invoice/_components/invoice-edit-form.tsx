@@ -4,6 +4,10 @@ import Select, { type MultiValue, type StylesConfig } from "react-select";
 import { useMemo, useState } from "react";
 import { AppDateInput } from "../../_components/app-date-input";
 import {
+  serializeUnsavedChangesValue,
+  useUnsavedChangesWarning,
+} from "../../_hooks/use-unsaved-changes-warning";
+import {
   buildInvoiceBarangRowsFromSuratJalanSelection,
   calculateInvoiceSummary,
   createEmptyInvoiceBarangRow,
@@ -87,6 +91,15 @@ function createEmptyInvoiceFormState(): InvoiceFormState {
   };
 }
 
+function createInvoiceDirtyValue(form: InvoiceFormState) {
+  const { barangRows, ...restForm } = form;
+
+  return {
+    ...restForm,
+    barang: invoiceBarangRowsToList(barangRows),
+  };
+}
+
 export function InvoiceEditForm({
   item,
   initialForm,
@@ -106,15 +119,30 @@ export function InvoiceEditForm({
     t("common.placeholder.select", { field: t(fieldKey) });
   const paidLabel = t("invoice.status.paid");
   const unpaidLabel = t("invoice.status.unpaid");
-  const [form, setForm] = useState<InvoiceFormState>(() =>
-    item
-      ? toInvoiceFormState(item)
-      : initialForm
-        ? {
-            ...initialForm,
-            barangRows: ensureTrailingEmptyInvoiceBarangRow(initialForm.barangRows),
-          }
-        : createEmptyInvoiceFormState()
+  const baselineForm = useMemo(
+    () => (item ? toInvoiceFormState(item) : createEmptyInvoiceFormState()),
+    [item]
+  );
+  const initialFormState = useMemo(
+    () =>
+      item
+        ? baselineForm
+        : initialForm
+          ? {
+              ...initialForm,
+              barangRows: ensureTrailingEmptyInvoiceBarangRow(initialForm.barangRows),
+            }
+          : baselineForm,
+    [baselineForm, initialForm, item]
+  );
+  const [form, setForm] = useState<InvoiceFormState>(() => initialFormState);
+  const isDirty =
+    serializeUnsavedChangesValue(createInvoiceDirtyValue(form)) !==
+    serializeUnsavedChangesValue(createInvoiceDirtyValue(baselineForm));
+
+  useUnsavedChangesWarning(
+    isDirty && !isSaving && !isDeleting,
+    t("common.unsavedChangesWarning")
   );
 
   const barangList = useMemo(() => invoiceBarangRowsToList(form.barangRows), [form.barangRows]);
@@ -724,7 +752,7 @@ export function InvoiceEditForm({
             </button>
             <button
               type="button"
-              onClick={() => setForm(item ? toInvoiceFormState(item) : createEmptyInvoiceFormState())}
+              onClick={() => setForm(baselineForm)}
               disabled={isSaving || isDeleting}
               className="w-full rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm text-sky-700 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800 sm:w-auto"
             >

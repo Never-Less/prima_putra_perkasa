@@ -1,6 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import {
+  serializeUnsavedChangesValue,
+  useUnsavedChangesWarning,
+} from "../../_hooks/use-unsaved-changes-warning";
 import { toSupplierFormState, type SupplierFormState, type SupplierItem } from "../_lib/supplier";
 import { useI18n } from "../../_i18n/provider";
 
@@ -34,8 +38,17 @@ export function SupplierEditForm({
   const { t } = useI18n();
   const inputPlaceholder = (fieldKey: string) =>
     t("common.placeholder.input", { field: t(fieldKey) });
-  const [form, setForm] = useState<SupplierFormState>(() =>
-    item ? toSupplierFormState(item) : createEmptySupplierFormState()
+  const baselineForm = useMemo(
+    () => (item ? toSupplierFormState(item) : createEmptySupplierFormState()),
+    [item]
+  );
+  const [form, setForm] = useState<SupplierFormState>(() => baselineForm);
+  const isDirty =
+    serializeUnsavedChangesValue(form) !== serializeUnsavedChangesValue(baselineForm);
+
+  useUnsavedChangesWarning(
+    isDirty && !isSaving && !isDeleting,
+    t("common.unsavedChangesWarning")
   );
 
   return (
@@ -104,9 +117,7 @@ export function SupplierEditForm({
             <button
               type="button"
               disabled={isSaving || isDeleting}
-              onClick={() =>
-                setForm(item ? toSupplierFormState(item) : createEmptySupplierFormState())
-              }
+              onClick={() => setForm(baselineForm)}
               className="w-full rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm text-sky-700 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800 sm:w-auto"
             >
               {t("common.resetForm")}
