@@ -26,6 +26,75 @@ export type ServerListResult<T> = {
   totalRows: number;
 };
 
+type RawPaginationParams = {
+  page?: string | number | null;
+  limit?: string | number | null;
+};
+
+type RawReturnPaginationParams = {
+  returnPage?: string | number | null;
+  returnLimit?: string | number | null;
+};
+
+function normalizePositiveInteger(value: string | number | null | undefined, fallback: number) {
+  const parsedValue = Number(value);
+
+  if (Number.isFinite(parsedValue) && parsedValue > 0) {
+    return Math.floor(parsedValue);
+  }
+
+  return fallback;
+}
+
+export function normalizePaginationQueryState(
+  params: RawPaginationParams | null | undefined,
+  fallback: PaginationQueryState
+): PaginationQueryState {
+  return {
+    page: normalizePositiveInteger(params?.page, fallback.page),
+    limit: normalizePositiveInteger(params?.limit, fallback.limit),
+  };
+}
+
+export function normalizeReturnPaginationQueryState(
+  params: RawReturnPaginationParams | null | undefined,
+  fallback: PaginationQueryState
+): PaginationQueryState {
+  return normalizePaginationQueryState(
+    {
+      page: params?.returnPage,
+      limit: params?.returnLimit,
+    },
+    fallback
+  );
+}
+
+export function buildListRouteWithPagination(
+  basePath: string,
+  pagination: PaginationQueryState
+) {
+  const queryString = buildListQueryString({
+    page: pagination.page,
+    limit: pagination.limit,
+  });
+
+  return `${basePath}${queryString}`;
+}
+
+export function buildFormRouteWithReturnPagination(
+  basePath: string,
+  id: string | undefined | null,
+  pagination: PaginationQueryState
+) {
+  const queryString = buildListQueryString({
+    id,
+    returnPage: pagination.page,
+    returnLimit: pagination.limit,
+  });
+
+  return `${basePath}${queryString}`;
+}
+
 export function normalizeServerPaginationMeta(
   value: unknown,
   fallback: PaginationQueryState

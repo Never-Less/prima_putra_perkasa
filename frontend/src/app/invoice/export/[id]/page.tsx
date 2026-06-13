@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ApiLoadingState } from "../../../_components/api-loading-state";
 import { ExportCurrencyValue } from "../../../_components/export-currency-value";
@@ -46,6 +46,10 @@ const meiloonInvoiceProfile = {
   attnFallback: "Mr. Pangzi Wang / Bu. Marchia",
 };
 
+const invoiceExportFontFamily = '"NLQ Sans Serif", Arial, "Helvetica Neue", sans-serif';
+const defaultInvoiceBaseRowHeight = 38;
+const meiloonInvoiceBaseRowHeight = 34;
+
 type DefaultInvoiceTemplateRow = {
   no: string;
   namaBarang: string;
@@ -80,6 +84,11 @@ type PaginateRowsConfig<T> = {
   lastPageCapacity: number;
   createEmptyRow: () => T;
   estimateRowUnits: (row: T) => number;
+};
+
+type InvoiceRowMeasurements = {
+  defaultRowHeights: number[];
+  meiloonRowHeights: number[];
 };
 
 function normalizeCustomerName(value: string) {
@@ -362,6 +371,41 @@ function paginateRows<T>(
   };
 }
 
+function createMeasuredRowUnitEstimator<T>(
+  rows: T[],
+  rowHeights: number[] | undefined,
+  baseRowHeight: number,
+  fallbackEstimateRowUnits: (row: T) => number
+) {
+  if (!rowHeights || rowHeights.length !== rows.length) {
+    return fallbackEstimateRowUnits;
+  }
+
+  const rowUnitMap = new Map<T, number>();
+
+  rows.forEach((row, index) => {
+    const measuredHeight = Number(rowHeights[index] || 0);
+
+    if (Number.isFinite(measuredHeight) && measuredHeight > 0) {
+      rowUnitMap.set(row, Math.max(1, measuredHeight / baseRowHeight));
+    }
+  });
+
+  if (rowUnitMap.size !== rows.length) {
+    return fallbackEstimateRowUnits;
+  }
+
+  return (row: T) => rowUnitMap.get(row) ?? fallbackEstimateRowUnits(row);
+}
+
+function areMeasurementsEqual(current: number[] | undefined, next: number[]) {
+  if (!current || current.length !== next.length) {
+    return false;
+  }
+
+  return current.every((value, index) => Math.abs(value - next[index]) < 0.5);
+}
+
 function createEmptyDefaultInvoiceRow(): DefaultInvoiceTemplateRow {
   return {
     no: "",
@@ -490,7 +534,11 @@ function DefaultInvoiceTable({ rows, t, className = "" }: DefaultInvoiceTablePro
         </thead>
         <tbody>
           {filledRows.map((row, index) => (
-            <tr key={`default-invoice-row-${index}`} className="h-[38px]">
+            <tr
+              key={`default-invoice-row-${index}`}
+              className="h-[38px]"
+              data-invoice-export-row="default"
+            >
               <td className="border-r border-black px-1 pt-1 text-center align-top text-[16px]">{row.no}</td>
               <td className="whitespace-normal break-words border-r border-black px-1.5 pt-1 align-top text-[16px] leading-[1.15]">
                 {row.namaBarang}
@@ -573,7 +621,11 @@ function MeiloonInvoiceTable({ rows, t, className = "" }: MeiloonInvoiceTablePro
         </thead>
         <tbody>
           {filledRows.map((row, index) => (
-            <tr key={`meiloon-invoice-row-${index}`} className="h-[34px]">
+            <tr
+              key={`meiloon-invoice-row-${index}`}
+              className="h-[34px]"
+              data-invoice-export-row="meiloon"
+            >
               <td className="border-r border-black px-1 pt-1 text-center align-top text-[16px]">{row.no}</td>
               <td className="whitespace-normal break-words border-r border-black px-1.5 pt-1 align-top text-[16px] leading-[1.15]">
                 {row.namaBarang}
@@ -608,6 +660,104 @@ function MeiloonInvoiceTable({ rows, t, className = "" }: MeiloonInvoiceTablePro
   );
 }
 
+type InvoicePaginationMeasureProps = CommonTemplateProps & {
+  defaultRows: DefaultInvoiceTemplateRow[];
+  meiloonRows: MeiloonInvoiceTemplateRow[];
+  onMeasure: (measurements: InvoiceRowMeasurements) => void;
+};
+
+function InvoicePaginationMeasure({
+  defaultRows,
+  meiloonRows,
+  onMeasure,
+  t,
+}: InvoicePaginationMeasureProps) {
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    let frameId = 0;
+
+    async function measureRows() {
+      if (typeof window === "undefined" || typeof document === "undefined") {
+        return;
+      }
+
+      if ("fonts" in document) {
+        await document.fonts.ready;
+      }
+
+      frameId = window.requestAnimationFrame(() => {
+        if (cancelled || !rootRef.current) {
+          return;
+        }
+
+        const defaultRowElements = Array.from(
+          rootRef.current.querySelectorAll<HTMLElement>(
+            '[data-invoice-measure-table="default"] [data-invoice-export-row="default"]'
+          )
+        );
+        const meiloonRowElements = Array.from(
+          rootRef.current.querySelectorAll<HTMLElement>(
+            '[data-invoice-measure-table="meiloon"] [data-invoice-export-row="meiloon"]'
+          )
+        );
+
+        if (
+          defaultRowElements.length !== defaultRows.length ||
+          meiloonRowElements.length !== meiloonRows.length
+        ) {
+          return;
+        }
+
+        onMeasure({
+          defaultRowHeights: defaultRowElements.map((element) =>
+            element.getBoundingClientRect().height
+          ),
+          meiloonRowHeights: meiloonRowElements.map((element) =>
+            element.getBoundingClientRect().height
+          ),
+        });
+      });
+    }
+
+    void measureRows();
+
+    return () => {
+      cancelled = true;
+
+      if (frameId) {
+        window.cancelAnimationFrame(frameId);
+      }
+    };
+  }, [defaultRows, meiloonRows, onMeasure]);
+
+  return (
+    <div
+      ref={rootRef}
+      aria-hidden="true"
+      className="pointer-events-none fixed left-[-10000px] top-0 z-[-1] w-[8.5in] bg-white text-black tracking-[0.05em] print:hidden"
+      style={{
+        fontFamily: invoiceExportFontFamily,
+        visibility: "hidden",
+      }}
+    >
+      <div
+        data-invoice-measure-table="default"
+        className="w-[8.5in] px-[4mm] py-[6mm] text-[16px] leading-[1.18]"
+      >
+        <DefaultInvoiceTable rows={defaultRows} t={t} />
+      </div>
+      <div
+        data-invoice-measure-table="meiloon"
+        className="w-[8.5in] px-[5mm] py-[7mm] text-[16px] leading-[1.18]"
+      >
+        <MeiloonInvoiceTable rows={meiloonRows} t={t} />
+      </div>
+    </div>
+  );
+}
+
 export default function InvoiceExportPage() {
   const { t, locale } = useI18n();
   const router = useRouter();
@@ -617,6 +767,29 @@ export default function InvoiceExportPage() {
   const [customer, setCustomer] = useState<CustomerItem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [rowMeasurements, setRowMeasurements] = useState<InvoiceRowMeasurements>({
+    defaultRowHeights: [],
+    meiloonRowHeights: [],
+  });
+
+  const handleInvoiceRowsMeasure = useCallback((nextMeasurements: InvoiceRowMeasurements) => {
+    setRowMeasurements((currentMeasurements) => {
+      if (
+        areMeasurementsEqual(
+          currentMeasurements.defaultRowHeights,
+          nextMeasurements.defaultRowHeights
+        ) &&
+        areMeasurementsEqual(
+          currentMeasurements.meiloonRowHeights,
+          nextMeasurements.meiloonRowHeights
+        )
+      ) {
+        return currentMeasurements;
+      }
+
+      return nextMeasurements;
+    });
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -737,32 +910,44 @@ export default function InvoiceExportPage() {
   );
 
   const defaultRows = useMemo(() => buildDefaultTemplateRows(invoice), [invoice]);
-  const defaultPaginatedRows = useMemo(
-    () =>
-      paginateRows(defaultRows, {
+  const defaultPaginatedRows = useMemo(() => {
+    const hasMeasuredRows = rowMeasurements.defaultRowHeights.length === defaultRows.length;
+    const estimateRowUnits = createMeasuredRowUnitEstimator(
+      defaultRows,
+      rowMeasurements.defaultRowHeights,
+      defaultInvoiceBaseRowHeight,
+      estimateDefaultInvoiceRowUnits
+    );
+
+    return paginateRows(defaultRows, {
         singlePageCapacity: 15,
-        firstPageCapacity: 31,
-        middlePageCapacity: 28,
+        firstPageCapacity: hasMeasuredRows ? 19 : 31,
+        middlePageCapacity: hasMeasuredRows ? 24 : 28,
         lastPageCapacity: 10,
         createEmptyRow: createEmptyDefaultInvoiceRow,
-        estimateRowUnits: estimateDefaultInvoiceRowUnits,
-      }),
-    [defaultRows]
-  );
+        estimateRowUnits,
+      });
+  }, [defaultRows, rowMeasurements.defaultRowHeights]);
 
   const meiloonRows = useMemo(() => buildMeiloonTemplateRows(invoice), [invoice]);
-  const meiloonPaginatedRows = useMemo(
-    () =>
-      paginateRows(meiloonRows, {
-        singlePageCapacity: 23,
-        firstPageCapacity: 32,
-        middlePageCapacity: 33,
-        lastPageCapacity: 10,
+  const meiloonPaginatedRows = useMemo(() => {
+    const hasMeasuredRows = rowMeasurements.meiloonRowHeights.length === meiloonRows.length;
+    const estimateRowUnits = createMeasuredRowUnitEstimator(
+      meiloonRows,
+      rowMeasurements.meiloonRowHeights,
+      meiloonInvoiceBaseRowHeight,
+      estimateMeiloonInvoiceRowUnits
+    );
+
+    return paginateRows(meiloonRows, {
+        singlePageCapacity: hasMeasuredRows ? 16 : 23,
+        firstPageCapacity: hasMeasuredRows ? 18 : 32,
+        middlePageCapacity: hasMeasuredRows ? 24 : 33,
+        lastPageCapacity: hasMeasuredRows ? 8 : 10,
         createEmptyRow: createEmptyMeiloonInvoiceRow,
-        estimateRowUnits: estimateMeiloonInvoiceRowUnits,
-      }),
-    [meiloonRows]
-  );
+        estimateRowUnits,
+      });
+  }, [meiloonRows, rowMeasurements.meiloonRowHeights]);
 
   const dppValue = useMemo(() => {
     if (!invoice?.isPpn) {
@@ -867,8 +1052,28 @@ export default function InvoiceExportPage() {
             margin: 0;
             padding: 0;
           }
+
+          .invoice-print-page {
+            overflow: hidden !important;
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
+          }
+
+          .invoice-print-page tr {
+            break-inside: avoid;
+            page-break-inside: avoid;
+          }
         }
       `}</style>
+
+      {invoice ? (
+        <InvoicePaginationMeasure
+          defaultRows={defaultRows}
+          meiloonRows={meiloonRows}
+          onMeasure={handleInvoiceRowsMeasure}
+          t={t}
+        />
+      ) : null}
 
       <main className="export-normal-weight min-h-screen bg-slate-200/60 px-3 py-4 print:bg-white print:px-0 print:py-0">
         <div className="mx-auto flex w-full max-w-[8.5in] items-center justify-between gap-3 pb-4 print:hidden">
@@ -915,15 +1120,15 @@ export default function InvoiceExportPage() {
           </section>
         ) : invoice && isMeiloonCustomer ? (
           <section
-            className={`mx-auto w-full max-w-[8.5in] text-black tracking-[0.05em] print:max-w-none ${
+            className={`invoice-print-page mx-auto w-full max-w-[8.5in] text-black tracking-[0.05em] print:max-w-none ${
               meiloonPaginatedRows.isSinglePage
                 ? "flex h-[11in] min-h-[11in] flex-col bg-white shadow-xl print:h-[11in] print:min-h-[11in] print:shadow-none"
                 : "space-y-4 print:space-y-0"
             }`}
-            style={{ fontFamily: '"NLQ Sans Serif", Arial, sans-serif' }}
+            style={{ fontFamily: invoiceExportFontFamily }}
           >
             <div
-              className={`px-[5mm] py-[7mm] text-[16px] leading-[1.18] ${
+              className={`invoice-print-page px-[5mm] py-[7mm] text-[16px] leading-[1.18] ${
                 meiloonPaginatedRows.isSinglePage
                   ? "flex min-h-0 flex-1 flex-col"
                   : "min-h-[11in] break-after-page bg-white shadow-xl print:break-after-page print:shadow-none"
@@ -1049,13 +1254,13 @@ export default function InvoiceExportPage() {
                 {meiloonPaginatedRows.middlePages.map((pageRows, pageIndex) => (
                   <div
                     key={`meiloon-middle-page-${pageIndex}`}
-                    className="min-h-[11in] break-after-page bg-white px-[5mm] py-[7mm] text-[16px] leading-[1.18] shadow-xl print:break-after-page print:shadow-none"
+                    className="invoice-print-page min-h-[11in] break-after-page bg-white px-[5mm] py-[7mm] text-[16px] leading-[1.18] shadow-xl print:break-after-page print:shadow-none"
                   >
                     <MeiloonInvoiceTable rows={pageRows} t={t} />
                   </div>
                 ))}
 
-                <div className="min-h-[11in] bg-white px-[5mm] py-[7mm] text-[16px] leading-[1.18] shadow-xl print:shadow-none">
+                <div className="invoice-print-page min-h-[11in] bg-white px-[5mm] py-[7mm] text-[16px] leading-[1.18] shadow-xl print:shadow-none">
                   <MeiloonInvoiceTable rows={meiloonPaginatedRows.lastPageRows} t={t} />
 
                   <div className="mt-2 grid grid-cols-[0.9fr_0.8fr] gap-3">
@@ -1129,15 +1334,15 @@ export default function InvoiceExportPage() {
           </section>
         ) : invoice ? (
           <section
-            className={`mx-auto w-full max-w-[8.5in] text-black tracking-[0.05em] print:max-w-none ${
+            className={`invoice-print-page mx-auto w-full max-w-[8.5in] text-black tracking-[0.05em] print:max-w-none ${
               defaultPaginatedRows.isSinglePage
                 ? "flex h-[11in] min-h-[11in] flex-col bg-white shadow-xl print:h-[11in] print:min-h-[11in] print:shadow-none"
                 : "space-y-4 print:space-y-0"
             }`}
-            style={{ fontFamily: '"NLQ Sans Serif", Arial, sans-serif' }}
+            style={{ fontFamily: invoiceExportFontFamily }}
           >
             <div
-              className={`px-[4mm] py-[6mm] text-[16px] leading-[1.18] ${
+              className={`invoice-print-page px-[4mm] py-[6mm] text-[16px] leading-[1.18] ${
                 defaultPaginatedRows.isSinglePage
                   ? "flex min-h-0 flex-1 flex-col"
                   : "min-h-[11in] break-after-page bg-white shadow-xl print:break-after-page print:shadow-none"
@@ -1267,13 +1472,13 @@ export default function InvoiceExportPage() {
                 {defaultPaginatedRows.middlePages.map((pageRows, pageIndex) => (
                   <div
                     key={`default-middle-page-${pageIndex}`}
-                    className="min-h-[11in] break-after-page bg-white px-[4mm] py-[6mm] text-[16px] leading-[1.18] shadow-xl print:break-after-page print:shadow-none"
+                    className="invoice-print-page min-h-[11in] break-after-page bg-white px-[4mm] py-[6mm] text-[16px] leading-[1.18] shadow-xl print:break-after-page print:shadow-none"
                   >
                     <DefaultInvoiceTable rows={pageRows} t={t} />
                   </div>
                 ))}
 
-                <div className="min-h-[11in] bg-white px-[4mm] py-[6mm] text-[16px] leading-[1.18] shadow-xl print:shadow-none">
+                <div className="invoice-print-page min-h-[11in] bg-white px-[4mm] py-[6mm] text-[16px] leading-[1.18] shadow-xl print:shadow-none">
                   <DefaultInvoiceTable rows={defaultPaginatedRows.lastPageRows} t={t} />
 
                   <div className="mt-2 grid grid-cols-[0.86fr_0.68fr] gap-3">

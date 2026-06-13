@@ -1,13 +1,19 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ApiLoadingState } from "../_components/api-loading-state";
 import { AppToast } from "../_components/app-toast";
 import { ConfirmationModal } from "../_components/confirmation-modal";
 import { confirmUnsavedChanges } from "../_hooks/use-unsaved-changes-warning";
 import { ApiRequestError } from "../_lib/api-client";
-import { type ServerPaginationMeta } from "../_lib/pagination";
+import {
+  buildFormRouteWithReturnPagination,
+  buildListRouteWithPagination,
+  normalizePaginationQueryState,
+  normalizeReturnPaginationQueryState,
+  type ServerPaginationMeta,
+} from "../_lib/pagination";
 import { CustomerEditForm } from "./_components/customer-edit-form";
 import { CustomerTableFilter } from "./_components/customer-table-filter";
 import {
@@ -36,19 +42,50 @@ type CustomerPageContentProps = {
   itemId?: string;
 };
 
+const defaultCustomerPaginationQuery = {
+  page: 1,
+  limit: 10,
+};
+
 export function CustomerPageContent({ mode = "list", itemId = "" }: CustomerPageContentProps) {
   const { t } = useI18n();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const isFormMode = mode === "form";
+  const initialPaginationQuery = useMemo(
+    () =>
+      normalizePaginationQueryState(
+        {
+          page: searchParams.get("page"),
+          limit: searchParams.get("limit"),
+        },
+        defaultCustomerPaginationQuery
+      ),
+    [searchParams]
+  );
+  const returnPaginationQuery = useMemo(
+    () =>
+      normalizeReturnPaginationQueryState(
+        {
+          returnPage: searchParams.get("returnPage"),
+          returnLimit: searchParams.get("returnLimit"),
+        },
+        defaultCustomerPaginationQuery
+      ),
+    [searchParams]
+  );
+  const returnListPath = useMemo(
+    () => buildListRouteWithPagination("/customer", returnPaginationQuery),
+    [returnPaginationQuery]
+  );
   const [rows, setRows] = useState<CustomerItem[]>([]);
   const [filter, setFilter] = useState<CustomerFilter>(defaultCustomerFilter);
-  const [paginationQuery, setPaginationQuery] = useState({
-    page: 1,
-    limit: 10,
-  });
+  const [paginationQuery, setPaginationQuery] = useState(() =>
+    isFormMode ? defaultCustomerPaginationQuery : initialPaginationQuery
+  );
   const [pagination, setPagination] = useState<ServerPaginationMeta>({
-    page: 1,
-    limit: 10,
+    page: paginationQuery.page,
+    limit: paginationQuery.limit,
     totalItems: 0,
     totalPages: 1,
   });
@@ -211,9 +248,11 @@ export function CustomerPageContent({ mode = "list", itemId = "" }: CustomerPage
   const navigateToForm = useCallback(
     (id?: string) => {
       const normalizedId = String(id || "").trim();
-      router.push(normalizedId ? `/customer/form?id=${encodeURIComponent(normalizedId)}` : "/customer/form");
+      router.push(
+        buildFormRouteWithReturnPagination("/customer/form", normalizedId, paginationQuery)
+      );
     },
-    [router]
+    [paginationQuery, router]
   );
 
   const executeSaveCustomer = useCallback(
@@ -234,7 +273,13 @@ export function CustomerPageContent({ mode = "list", itemId = "" }: CustomerPage
           await loadCustomers({ showLoading: false });
           setSelectedId(updatedCustomer?.id || selectedItem.id);
           if (isFormMode) {
-            router.replace(`/customer/form?id=${encodeURIComponent(updatedCustomer?.id || selectedItem.id)}`);
+            router.replace(
+              buildFormRouteWithReturnPagination(
+                "/customer/form",
+                updatedCustomer?.id || selectedItem.id,
+                returnPaginationQuery
+              )
+            );
           }
           showToast(
             t("customer.toast.updateSuccess", {
@@ -249,7 +294,13 @@ export function CustomerPageContent({ mode = "list", itemId = "" }: CustomerPage
         await loadCustomers({ showLoading: false });
         setSelectedId(createdCustomer?.id || "");
         if (isFormMode && createdCustomer?.id) {
-          router.replace(`/customer/form?id=${encodeURIComponent(createdCustomer.id)}`);
+          router.replace(
+            buildFormRouteWithReturnPagination(
+              "/customer/form",
+              createdCustomer.id,
+              returnPaginationQuery
+            )
+          );
         }
         showToast(t("customer.toast.createSuccess"), "success");
       } catch (error) {
@@ -267,7 +318,7 @@ export function CustomerPageContent({ mode = "list", itemId = "" }: CustomerPage
         setIsSaving(false);
       }
     },
-    [canManageCustomer, isFormMode, loadCustomers, router, showToast, t]
+    [canManageCustomer, isFormMode, loadCustomers, returnPaginationQuery, router, showToast, t]
   );
 
   const executeDeleteCustomer = useCallback(
@@ -287,7 +338,7 @@ export function CustomerPageContent({ mode = "list", itemId = "" }: CustomerPage
         setSelectedId("");
         await loadCustomers({ showLoading: false });
         if (isFormMode) {
-          router.push("/customer");
+          router.push(returnListPath);
         }
         showToast(
           t("customer.toast.deleteSuccess", {
@@ -310,7 +361,7 @@ export function CustomerPageContent({ mode = "list", itemId = "" }: CustomerPage
         setIsDeleting(false);
       }
     },
-    [canManageCustomer, isFormMode, loadCustomers, router, showToast, t]
+    [canManageCustomer, isFormMode, loadCustomers, returnListPath, router, showToast, t]
   );
 
   const handleSaveCustomer = useCallback(
@@ -412,7 +463,7 @@ export function CustomerPageContent({ mode = "list", itemId = "" }: CustomerPage
                       type="button"
                       onClick={() => {
                         if (confirmUnsavedChanges(t("common.unsavedChangesWarning"))) {
-                          router.push("/customer");
+                          router.push(returnListPath);
                         }
                       }}
                       className="rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm font-medium text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"

@@ -1,13 +1,19 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ApiLoadingState } from "../_components/api-loading-state";
 import { AppToast } from "../_components/app-toast";
 import { ConfirmationModal } from "../_components/confirmation-modal";
 import { confirmUnsavedChanges } from "../_hooks/use-unsaved-changes-warning";
 import { ApiRequestError } from "../_lib/api-client";
-import { type ServerPaginationMeta } from "../_lib/pagination";
+import {
+  buildFormRouteWithReturnPagination,
+  buildListRouteWithPagination,
+  normalizePaginationQueryState,
+  normalizeReturnPaginationQueryState,
+  type ServerPaginationMeta,
+} from "../_lib/pagination";
 import { PembelianEditForm } from "./_components/pembelian-edit-form";
 import { PembelianTableFilter } from "./_components/pembelian-table-filter";
 import {
@@ -42,19 +48,50 @@ type PembelianPageContentProps = {
   itemId?: string;
 };
 
+const defaultPembelianPaginationQuery = {
+  page: 1,
+  limit: 5,
+};
+
 export function PembelianPageContent({ mode = "list", itemId = "" }: PembelianPageContentProps) {
   const { t } = useI18n();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const isFormMode = mode === "form";
+  const initialPaginationQuery = useMemo(
+    () =>
+      normalizePaginationQueryState(
+        {
+          page: searchParams.get("page"),
+          limit: searchParams.get("limit"),
+        },
+        defaultPembelianPaginationQuery
+      ),
+    [searchParams]
+  );
+  const returnPaginationQuery = useMemo(
+    () =>
+      normalizeReturnPaginationQueryState(
+        {
+          returnPage: searchParams.get("returnPage"),
+          returnLimit: searchParams.get("returnLimit"),
+        },
+        defaultPembelianPaginationQuery
+      ),
+    [searchParams]
+  );
+  const returnListPath = useMemo(
+    () => buildListRouteWithPagination("/pembelian", returnPaginationQuery),
+    [returnPaginationQuery]
+  );
   const [rows, setRows] = useState<PembelianItem[]>([]);
   const [filter, setFilter] = useState<PembelianFilter>(defaultPembelianFilter);
-  const [paginationQuery, setPaginationQuery] = useState({
-    page: 1,
-    limit: 5,
-  });
+  const [paginationQuery, setPaginationQuery] = useState(() =>
+    isFormMode ? defaultPembelianPaginationQuery : initialPaginationQuery
+  );
   const [pagination, setPagination] = useState<ServerPaginationMeta>({
-    page: 1,
-    limit: 5,
+    page: paginationQuery.page,
+    limit: paginationQuery.limit,
     totalItems: 0,
     totalPages: 1,
   });
@@ -281,10 +318,10 @@ export function PembelianPageContent({ mode = "list", itemId = "" }: PembelianPa
     (id?: string) => {
       const normalizedId = String(id || "").trim();
       router.push(
-        normalizedId ? `/pembelian/form?id=${encodeURIComponent(normalizedId)}` : "/pembelian/form"
+        buildFormRouteWithReturnPagination("/pembelian/form", normalizedId, paginationQuery)
       );
     },
-    [router]
+    [paginationQuery, router]
   );
 
   const invoiceLabelMap = useMemo(() => {
@@ -327,7 +364,13 @@ export function PembelianPageContent({ mode = "list", itemId = "" }: PembelianPa
           await loadPembelianRows({ showLoading: false });
           setSelectedId(updatedPembelian?.id || selectedItem.id);
           if (isFormMode) {
-            router.replace(`/pembelian/form?id=${encodeURIComponent(updatedPembelian?.id || selectedItem.id)}`);
+            router.replace(
+              buildFormRouteWithReturnPagination(
+                "/pembelian/form",
+                updatedPembelian?.id || selectedItem.id,
+                returnPaginationQuery
+              )
+            );
           }
           showToast(
             t("pembelian.toast.updateSuccess", {
@@ -342,7 +385,13 @@ export function PembelianPageContent({ mode = "list", itemId = "" }: PembelianPa
         await loadPembelianRows({ showLoading: false });
         setSelectedId(createdPembelian?.id || "");
         if (isFormMode && createdPembelian?.id) {
-          router.replace(`/pembelian/form?id=${encodeURIComponent(createdPembelian.id)}`);
+          router.replace(
+            buildFormRouteWithReturnPagination(
+              "/pembelian/form",
+              createdPembelian.id,
+              returnPaginationQuery
+            )
+          );
         }
         setInitialForm(null);
         setInitialFormKey(Date.now());
@@ -362,7 +411,7 @@ export function PembelianPageContent({ mode = "list", itemId = "" }: PembelianPa
         setIsSaving(false);
       }
     },
-    [isFormMode, loadPembelianRows, router, showToast, t]
+    [isFormMode, loadPembelianRows, returnPaginationQuery, router, showToast, t]
   );
 
   const executeDeletePembelian = useCallback(
@@ -375,7 +424,7 @@ export function PembelianPageContent({ mode = "list", itemId = "" }: PembelianPa
         setSelectedId("");
         await loadPembelianRows({ showLoading: false });
         if (isFormMode) {
-          router.push("/pembelian");
+          router.push(returnListPath);
         }
         showToast(
           t("pembelian.toast.deleteSuccess", {
@@ -398,7 +447,7 @@ export function PembelianPageContent({ mode = "list", itemId = "" }: PembelianPa
         setIsDeleting(false);
       }
     },
-    [isFormMode, loadPembelianRows, router, showToast, t]
+    [isFormMode, loadPembelianRows, returnListPath, router, showToast, t]
   );
 
   const handleSavePembelian = useCallback(
@@ -503,7 +552,7 @@ export function PembelianPageContent({ mode = "list", itemId = "" }: PembelianPa
                       type="button"
                       onClick={() => {
                         if (confirmUnsavedChanges(t("common.unsavedChangesWarning"))) {
-                          router.push("/pembelian");
+                          router.push(returnListPath);
                         }
                       }}
                       className="rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm font-medium text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"

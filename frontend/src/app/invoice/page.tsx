@@ -1,14 +1,20 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ApiLoadingState } from "../_components/api-loading-state";
 import { AppToast } from "../_components/app-toast";
 import { ConfirmationModal } from "../_components/confirmation-modal";
 import { useExportAccess } from "../_hooks/use-export-access";
 import { confirmUnsavedChanges } from "../_hooks/use-unsaved-changes-warning";
 import { ApiRequestError } from "../_lib/api-client";
-import { type ServerPaginationMeta } from "../_lib/pagination";
+import {
+  buildFormRouteWithReturnPagination,
+  buildListRouteWithPagination,
+  normalizePaginationQueryState,
+  normalizeReturnPaginationQueryState,
+  type ServerPaginationMeta,
+} from "../_lib/pagination";
 import {
   buildInvoicePrefillFromReadyInvoicePoGroup,
   fetchReadyInvoicePoGroups,
@@ -55,20 +61,51 @@ type InvoicePageContentProps = {
   itemId?: string;
 };
 
+const defaultInvoicePaginationQuery = {
+  page: 1,
+  limit: 10,
+};
+
 export function InvoicePageContent({ mode = "list", itemId = "" }: InvoicePageContentProps) {
   const { t } = useI18n();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const isFormMode = mode === "form";
   const canExport = useExportAccess();
+  const initialPaginationQuery = useMemo(
+    () =>
+      normalizePaginationQueryState(
+        {
+          page: searchParams.get("page"),
+          limit: searchParams.get("limit"),
+        },
+        defaultInvoicePaginationQuery
+      ),
+    [searchParams]
+  );
+  const returnPaginationQuery = useMemo(
+    () =>
+      normalizeReturnPaginationQueryState(
+        {
+          returnPage: searchParams.get("returnPage"),
+          returnLimit: searchParams.get("returnLimit"),
+        },
+        defaultInvoicePaginationQuery
+      ),
+    [searchParams]
+  );
+  const returnListPath = useMemo(
+    () => buildListRouteWithPagination("/invoice", returnPaginationQuery),
+    [returnPaginationQuery]
+  );
   const [rows, setRows] = useState<InvoiceItem[]>([]);
   const [filter, setFilter] = useState<InvoiceFilter>(defaultInvoiceFilter);
-  const [paginationQuery, setPaginationQuery] = useState({
-    page: 1,
-    limit: 10,
-  });
+  const [paginationQuery, setPaginationQuery] = useState(() =>
+    isFormMode ? defaultInvoicePaginationQuery : initialPaginationQuery
+  );
   const [pagination, setPagination] = useState<ServerPaginationMeta>({
-    page: 1,
-    limit: 10,
+    page: paginationQuery.page,
+    limit: paginationQuery.limit,
     totalItems: 0,
     totalPages: 1,
   });
@@ -337,9 +374,9 @@ export function InvoicePageContent({ mode = "list", itemId = "" }: InvoicePageCo
   const navigateToForm = useCallback(
     (id?: string) => {
       const normalizedId = String(id || "").trim();
-      router.push(normalizedId ? `/invoice/form?id=${encodeURIComponent(normalizedId)}` : "/invoice/form");
+      router.push(buildFormRouteWithReturnPagination("/invoice/form", normalizedId, paginationQuery));
     },
-    [router]
+    [paginationQuery, router]
   );
 
   const executeSaveInvoice = useCallback(
@@ -365,7 +402,13 @@ export function InvoicePageContent({ mode = "list", itemId = "" }: InvoicePageCo
             : undefined;
           setSelectedId(currentUpdatedInvoice?.id || selectedItem.id);
           if (isFormMode) {
-            router.replace(`/invoice/form?id=${encodeURIComponent(currentUpdatedInvoice?.id || selectedItem.id)}`);
+            router.replace(
+              buildFormRouteWithReturnPagination(
+                "/invoice/form",
+                currentUpdatedInvoice?.id || selectedItem.id,
+                returnPaginationQuery
+              )
+            );
           }
           if (currentUpdatedInvoice) {
             setPostSaveAction({
@@ -390,7 +433,13 @@ export function InvoicePageContent({ mode = "list", itemId = "" }: InvoicePageCo
           : undefined;
         setSelectedId(currentCreatedInvoice?.id || "");
         if (isFormMode && currentCreatedInvoice?.id) {
-          router.replace(`/invoice/form?id=${encodeURIComponent(currentCreatedInvoice.id)}`);
+          router.replace(
+            buildFormRouteWithReturnPagination(
+              "/invoice/form",
+              currentCreatedInvoice.id,
+              returnPaginationQuery
+            )
+          );
         }
         setInitialForm(null);
         setInitialFormKey(Date.now());
@@ -421,7 +470,7 @@ export function InvoicePageContent({ mode = "list", itemId = "" }: InvoicePageCo
         setIsSaving(false);
       }
     },
-    [isFormMode, loadInvoices, loadSuratJalanOptions, router, showToast, t]
+    [isFormMode, loadInvoices, loadSuratJalanOptions, returnPaginationQuery, router, showToast, t]
   );
 
   const executeDeleteInvoice = useCallback(
@@ -436,7 +485,7 @@ export function InvoicePageContent({ mode = "list", itemId = "" }: InvoicePageCo
         await loadSuratJalanOptions();
         setPostSaveAction(null);
         if (isFormMode) {
-          router.push("/invoice");
+          router.push(returnListPath);
         }
         showToast(
           t("invoice.toast.deleteSuccess", {
@@ -459,7 +508,7 @@ export function InvoicePageContent({ mode = "list", itemId = "" }: InvoicePageCo
         setIsDeleting(false);
       }
     },
-    [isFormMode, loadInvoices, loadSuratJalanOptions, router, showToast, t]
+    [isFormMode, loadInvoices, loadSuratJalanOptions, returnListPath, router, showToast, t]
   );
 
   const handleUseReadySuratJalan = useCallback(() => {
@@ -482,8 +531,8 @@ export function InvoicePageContent({ mode = "list", itemId = "" }: InvoicePageCo
     }
 
     saveInvoicePrefill(invoicePrefill);
-    router.push("/invoice/form");
-  }, [isFormMode, router, selectedReadyPoGroup]);
+    router.push(buildFormRouteWithReturnPagination("/invoice/form", "", paginationQuery));
+  }, [isFormMode, paginationQuery, router, selectedReadyPoGroup]);
 
   const handleSaveInvoice = useCallback(
     async (form: InvoiceFormState, selectedItem?: InvoiceItem) => {
@@ -666,7 +715,7 @@ export function InvoicePageContent({ mode = "list", itemId = "" }: InvoicePageCo
                     type="button"
                     onClick={() => {
                       if (confirmUnsavedChanges(t("common.unsavedChangesWarning"))) {
-                        router.push("/invoice");
+                        router.push(returnListPath);
                       }
                     }}
                     className="rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm font-medium text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"

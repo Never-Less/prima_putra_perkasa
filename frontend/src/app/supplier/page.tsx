@@ -1,13 +1,19 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ApiLoadingState } from "../_components/api-loading-state";
 import { AppToast } from "../_components/app-toast";
 import { ConfirmationModal } from "../_components/confirmation-modal";
 import { confirmUnsavedChanges } from "../_hooks/use-unsaved-changes-warning";
 import { ApiRequestError } from "../_lib/api-client";
-import { type ServerPaginationMeta } from "../_lib/pagination";
+import {
+  buildFormRouteWithReturnPagination,
+  buildListRouteWithPagination,
+  normalizePaginationQueryState,
+  normalizeReturnPaginationQueryState,
+  type ServerPaginationMeta,
+} from "../_lib/pagination";
 import { SupplierEditForm } from "./_components/supplier-edit-form";
 import { SupplierTableFilter } from "./_components/supplier-table-filter";
 import {
@@ -36,19 +42,50 @@ type SupplierPageContentProps = {
   itemId?: string;
 };
 
+const defaultSupplierPaginationQuery = {
+  page: 1,
+  limit: 10,
+};
+
 export function SupplierPageContent({ mode = "list", itemId = "" }: SupplierPageContentProps) {
   const { t } = useI18n();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const isFormMode = mode === "form";
+  const initialPaginationQuery = useMemo(
+    () =>
+      normalizePaginationQueryState(
+        {
+          page: searchParams.get("page"),
+          limit: searchParams.get("limit"),
+        },
+        defaultSupplierPaginationQuery
+      ),
+    [searchParams]
+  );
+  const returnPaginationQuery = useMemo(
+    () =>
+      normalizeReturnPaginationQueryState(
+        {
+          returnPage: searchParams.get("returnPage"),
+          returnLimit: searchParams.get("returnLimit"),
+        },
+        defaultSupplierPaginationQuery
+      ),
+    [searchParams]
+  );
+  const returnListPath = useMemo(
+    () => buildListRouteWithPagination("/supplier", returnPaginationQuery),
+    [returnPaginationQuery]
+  );
   const [rows, setRows] = useState<SupplierItem[]>([]);
   const [filter, setFilter] = useState<SupplierFilter>(defaultSupplierFilter);
-  const [paginationQuery, setPaginationQuery] = useState({
-    page: 1,
-    limit: 10,
-  });
+  const [paginationQuery, setPaginationQuery] = useState(() =>
+    isFormMode ? defaultSupplierPaginationQuery : initialPaginationQuery
+  );
   const [pagination, setPagination] = useState<ServerPaginationMeta>({
-    page: 1,
-    limit: 10,
+    page: paginationQuery.page,
+    limit: paginationQuery.limit,
     totalItems: 0,
     totalPages: 1,
   });
@@ -211,9 +248,11 @@ export function SupplierPageContent({ mode = "list", itemId = "" }: SupplierPage
   const navigateToForm = useCallback(
     (id?: string) => {
       const normalizedId = String(id || "").trim();
-      router.push(normalizedId ? `/supplier/form?id=${encodeURIComponent(normalizedId)}` : "/supplier/form");
+      router.push(
+        buildFormRouteWithReturnPagination("/supplier/form", normalizedId, paginationQuery)
+      );
     },
-    [router]
+    [paginationQuery, router]
   );
 
   const executeSaveSupplier = useCallback(
@@ -234,7 +273,13 @@ export function SupplierPageContent({ mode = "list", itemId = "" }: SupplierPage
           await loadSuppliers({ showLoading: false });
           setSelectedId(updatedSupplier?.id || selectedItem.id);
           if (isFormMode) {
-            router.replace(`/supplier/form?id=${encodeURIComponent(updatedSupplier?.id || selectedItem.id)}`);
+            router.replace(
+              buildFormRouteWithReturnPagination(
+                "/supplier/form",
+                updatedSupplier?.id || selectedItem.id,
+                returnPaginationQuery
+              )
+            );
           }
           showToast(
             t("supplier.toast.updateSuccess", {
@@ -249,7 +294,13 @@ export function SupplierPageContent({ mode = "list", itemId = "" }: SupplierPage
         await loadSuppliers({ showLoading: false });
         setSelectedId(createdSupplier?.id || "");
         if (isFormMode && createdSupplier?.id) {
-          router.replace(`/supplier/form?id=${encodeURIComponent(createdSupplier.id)}`);
+          router.replace(
+            buildFormRouteWithReturnPagination(
+              "/supplier/form",
+              createdSupplier.id,
+              returnPaginationQuery
+            )
+          );
         }
         showToast(t("supplier.toast.createSuccess"), "success");
       } catch (error) {
@@ -267,7 +318,7 @@ export function SupplierPageContent({ mode = "list", itemId = "" }: SupplierPage
         setIsSaving(false);
       }
     },
-    [canManageSupplier, isFormMode, loadSuppliers, router, showToast, t]
+    [canManageSupplier, isFormMode, loadSuppliers, returnPaginationQuery, router, showToast, t]
   );
 
   const executeDeleteSupplier = useCallback(
@@ -287,7 +338,7 @@ export function SupplierPageContent({ mode = "list", itemId = "" }: SupplierPage
         setSelectedId("");
         await loadSuppliers({ showLoading: false });
         if (isFormMode) {
-          router.push("/supplier");
+          router.push(returnListPath);
         }
         showToast(
           t("supplier.toast.deleteSuccess", {
@@ -310,7 +361,7 @@ export function SupplierPageContent({ mode = "list", itemId = "" }: SupplierPage
         setIsDeleting(false);
       }
     },
-    [canManageSupplier, isFormMode, loadSuppliers, router, showToast, t]
+    [canManageSupplier, isFormMode, loadSuppliers, returnListPath, router, showToast, t]
   );
 
   const handleSaveSupplier = useCallback(
@@ -413,7 +464,7 @@ export function SupplierPageContent({ mode = "list", itemId = "" }: SupplierPage
                       type="button"
                       onClick={() => {
                         if (confirmUnsavedChanges(t("common.unsavedChangesWarning"))) {
-                          router.push("/supplier");
+                          router.push(returnListPath);
                         }
                       }}
                       className="rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm font-medium text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
