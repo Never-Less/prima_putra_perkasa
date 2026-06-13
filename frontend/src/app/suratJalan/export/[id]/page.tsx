@@ -140,6 +140,13 @@ export default function SuratJalanExportPage() {
             height: var(--surat-jalan-page-height, 14cm) !important;
             max-width: none !important;
             overflow: hidden !important;
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
+          }
+
+          .surat-jalan-print-page tr {
+            break-inside: avoid;
+            page-break-inside: avoid;
           }
         }
       `}</style>

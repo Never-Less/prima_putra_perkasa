@@ -1,14 +1,20 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ApiLoadingState } from "../_components/api-loading-state";
 import { AppToast } from "../_components/app-toast";
 import { ConfirmationModal } from "../_components/confirmation-modal";
 import { confirmUnsavedChanges } from "../_hooks/use-unsaved-changes-warning";
 import { useI18n } from "../_i18n/provider";
 import { ApiRequestError } from "../_lib/api-client";
-import { type ServerPaginationMeta } from "../_lib/pagination";
+import {
+  buildFormRouteWithReturnPagination,
+  buildListRouteWithPagination,
+  normalizePaginationQueryState,
+  normalizeReturnPaginationQueryState,
+  type ServerPaginationMeta,
+} from "../_lib/pagination";
 import { UserEditForm } from "./_components/user-edit-form";
 import { UserTableFilter } from "./_components/user-table-filter";
 import {
@@ -36,19 +42,50 @@ type UserPageContentProps = {
   itemId?: string;
 };
 
+const defaultUserPaginationQuery = {
+  page: 1,
+  limit: 10,
+};
+
 export function UserPageContent({ mode = "list", itemId = "" }: UserPageContentProps) {
   const { t } = useI18n();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const isFormMode = mode === "form";
+  const initialPaginationQuery = useMemo(
+    () =>
+      normalizePaginationQueryState(
+        {
+          page: searchParams.get("page"),
+          limit: searchParams.get("limit"),
+        },
+        defaultUserPaginationQuery
+      ),
+    [searchParams]
+  );
+  const returnPaginationQuery = useMemo(
+    () =>
+      normalizeReturnPaginationQueryState(
+        {
+          returnPage: searchParams.get("returnPage"),
+          returnLimit: searchParams.get("returnLimit"),
+        },
+        defaultUserPaginationQuery
+      ),
+    [searchParams]
+  );
+  const returnListPath = useMemo(
+    () => buildListRouteWithPagination("/user", returnPaginationQuery),
+    [returnPaginationQuery]
+  );
   const [rows, setRows] = useState<UserItem[]>([]);
   const [filter, setFilter] = useState<UserFilter>(defaultUserFilter);
-  const [paginationQuery, setPaginationQuery] = useState({
-    page: 1,
-    limit: 10,
-  });
+  const [paginationQuery, setPaginationQuery] = useState(() =>
+    isFormMode ? defaultUserPaginationQuery : initialPaginationQuery
+  );
   const [pagination, setPagination] = useState<ServerPaginationMeta>({
-    page: 1,
-    limit: 10,
+    page: paginationQuery.page,
+    limit: paginationQuery.limit,
     totalItems: 0,
     totalPages: 1,
   });
@@ -212,9 +249,9 @@ export function UserPageContent({ mode = "list", itemId = "" }: UserPageContentP
   const navigateToForm = useCallback(
     (id?: string) => {
       const normalizedId = String(id || "").trim();
-      router.push(normalizedId ? `/user/form?id=${encodeURIComponent(normalizedId)}` : "/user/form");
+      router.push(buildFormRouteWithReturnPagination("/user/form", normalizedId, paginationQuery));
     },
-    [router]
+    [paginationQuery, router]
   );
 
   const executeSaveUser = useCallback(
@@ -228,7 +265,13 @@ export function UserPageContent({ mode = "list", itemId = "" }: UserPageContentP
           await loadUsers({ showLoading: false });
           setSelectedId(updatedUser?.id || selectedItem.id);
           if (isFormMode) {
-            router.replace(`/user/form?id=${encodeURIComponent(updatedUser?.id || selectedItem.id)}`);
+            router.replace(
+              buildFormRouteWithReturnPagination(
+                "/user/form",
+                updatedUser?.id || selectedItem.id,
+                returnPaginationQuery
+              )
+            );
           }
           showToast(
             t("user.toast.updateSuccess", {
@@ -243,7 +286,9 @@ export function UserPageContent({ mode = "list", itemId = "" }: UserPageContentP
         await loadUsers({ showLoading: false });
         setSelectedId(createdUser?.id || "");
         if (isFormMode && createdUser?.id) {
-          router.replace(`/user/form?id=${encodeURIComponent(createdUser.id)}`);
+          router.replace(
+            buildFormRouteWithReturnPagination("/user/form", createdUser.id, returnPaginationQuery)
+          );
         }
         showToast(
           t("user.toast.createSuccess", {
@@ -266,7 +311,7 @@ export function UserPageContent({ mode = "list", itemId = "" }: UserPageContentP
         setIsSaving(false);
       }
     },
-    [isFormMode, loadUsers, router, showToast, t]
+    [isFormMode, loadUsers, returnPaginationQuery, router, showToast, t]
   );
 
   const executeDeleteUser = useCallback(
@@ -279,7 +324,7 @@ export function UserPageContent({ mode = "list", itemId = "" }: UserPageContentP
         setSelectedId("");
         await loadUsers({ showLoading: false });
         if (isFormMode) {
-          router.push("/user");
+          router.push(returnListPath);
         }
         showToast(
           t("user.toast.deleteSuccess", {
@@ -302,7 +347,7 @@ export function UserPageContent({ mode = "list", itemId = "" }: UserPageContentP
         setIsDeleting(false);
       }
     },
-    [isFormMode, loadUsers, router, showToast, t]
+    [isFormMode, loadUsers, returnListPath, router, showToast, t]
   );
 
   const handleSaveUser = useCallback(
@@ -403,7 +448,7 @@ export function UserPageContent({ mode = "list", itemId = "" }: UserPageContentP
                       type="button"
                       onClick={() => {
                         if (confirmUnsavedChanges(t("common.unsavedChangesWarning"))) {
-                          router.push("/user");
+                          router.push(returnListPath);
                         }
                       }}
                       className="rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm font-medium text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"

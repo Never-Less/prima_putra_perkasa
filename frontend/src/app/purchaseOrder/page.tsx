@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ApiLoadingState } from "../_components/api-loading-state";
 import { AppToast } from "../_components/app-toast";
 import { ConfirmationModal } from "../_components/confirmation-modal";
@@ -9,7 +9,13 @@ import { useExportAccess } from "../_hooks/use-export-access";
 import { confirmUnsavedChanges } from "../_hooks/use-unsaved-changes-warning";
 import { useI18n } from "../_i18n/provider";
 import { ApiRequestError } from "../_lib/api-client";
-import { type ServerPaginationMeta } from "../_lib/pagination";
+import {
+  buildFormRouteWithReturnPagination,
+  buildListRouteWithPagination,
+  normalizePaginationQueryState,
+  normalizeReturnPaginationQueryState,
+  type ServerPaginationMeta,
+} from "../_lib/pagination";
 import { PurchaseOrderEditForm } from "./_components/purchase-order-edit-form";
 import { PurchaseOrderTableFilter } from "./_components/purchase-order-table-filter";
 import {
@@ -40,20 +46,51 @@ type PurchaseOrderPageContentProps = {
   itemId?: string;
 };
 
+const defaultPurchaseOrderPaginationQuery = {
+  page: 1,
+  limit: 10,
+};
+
 export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: PurchaseOrderPageContentProps) {
   const { t } = useI18n();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const isFormMode = mode === "form";
   const canExport = useExportAccess();
+  const initialPaginationQuery = useMemo(
+    () =>
+      normalizePaginationQueryState(
+        {
+          page: searchParams.get("page"),
+          limit: searchParams.get("limit"),
+        },
+        defaultPurchaseOrderPaginationQuery
+      ),
+    [searchParams]
+  );
+  const returnPaginationQuery = useMemo(
+    () =>
+      normalizeReturnPaginationQueryState(
+        {
+          returnPage: searchParams.get("returnPage"),
+          returnLimit: searchParams.get("returnLimit"),
+        },
+        defaultPurchaseOrderPaginationQuery
+      ),
+    [searchParams]
+  );
+  const returnListPath = useMemo(
+    () => buildListRouteWithPagination("/purchaseOrder", returnPaginationQuery),
+    [returnPaginationQuery]
+  );
   const [rows, setRows] = useState<PurchaseOrderItem[]>([]);
   const [filter, setFilter] = useState<PurchaseOrderFilter>(defaultPurchaseOrderFilter);
-  const [paginationQuery, setPaginationQuery] = useState({
-    page: 1,
-    limit: 10,
-  });
+  const [paginationQuery, setPaginationQuery] = useState(() =>
+    isFormMode ? defaultPurchaseOrderPaginationQuery : initialPaginationQuery
+  );
   const [pagination, setPagination] = useState<ServerPaginationMeta>({
-    page: 1,
-    limit: 10,
+    page: paginationQuery.page,
+    limit: paginationQuery.limit,
     totalItems: 0,
     totalPages: 1,
   });
@@ -257,12 +294,14 @@ export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: Purchas
     (id?: string) => {
       const normalizedId = String(id || "").trim();
       router.push(
-        normalizedId
-          ? `/purchaseOrder/form?id=${encodeURIComponent(normalizedId)}`
-          : "/purchaseOrder/form"
+        buildFormRouteWithReturnPagination(
+          "/purchaseOrder/form",
+          normalizedId,
+          paginationQuery
+        )
       );
     },
-    [router]
+    [paginationQuery, router]
   );
 
   const selectedRow = useMemo(() => {
@@ -314,7 +353,13 @@ export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: Purchas
           await loadPurchaseOrders({ showLoading: false });
           setSelectedId(updatedPurchaseOrder?.id || selectedItem.id);
           if (isFormMode) {
-            router.replace(`/purchaseOrder/form?id=${encodeURIComponent(updatedPurchaseOrder?.id || selectedItem.id)}`);
+            router.replace(
+              buildFormRouteWithReturnPagination(
+                "/purchaseOrder/form",
+                updatedPurchaseOrder?.id || selectedItem.id,
+                returnPaginationQuery
+              )
+            );
           }
           showToast(
             t("purchaseOrder.toast.updateSuccess", {
@@ -329,7 +374,13 @@ export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: Purchas
         await loadPurchaseOrders({ showLoading: false });
         setSelectedId(createdPurchaseOrder?.id || "");
         if (isFormMode && createdPurchaseOrder?.id) {
-          router.replace(`/purchaseOrder/form?id=${encodeURIComponent(createdPurchaseOrder.id)}`);
+          router.replace(
+            buildFormRouteWithReturnPagination(
+              "/purchaseOrder/form",
+              createdPurchaseOrder.id,
+              returnPaginationQuery
+            )
+          );
         }
         showToast(
           t("purchaseOrder.toast.createSuccess", {
@@ -352,7 +403,7 @@ export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: Purchas
         setIsSaving(false);
       }
     },
-    [isFormMode, loadPurchaseOrders, router, showToast, t]
+    [isFormMode, loadPurchaseOrders, returnPaginationQuery, router, showToast, t]
   );
 
   const executeDeletePurchaseOrder = useCallback(
@@ -365,7 +416,7 @@ export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: Purchas
         setSelectedId("");
         await loadPurchaseOrders({ showLoading: false });
         if (isFormMode) {
-          router.push("/purchaseOrder");
+          router.push(returnListPath);
         }
         showToast(
           t("purchaseOrder.toast.deleteSuccess", {
@@ -388,7 +439,7 @@ export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: Purchas
         setIsDeleting(false);
       }
     },
-    [isFormMode, loadPurchaseOrders, router, showToast, t]
+    [isFormMode, loadPurchaseOrders, returnListPath, router, showToast, t]
   );
 
   const handleSavePurchaseOrder = useCallback(
@@ -493,7 +544,7 @@ export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: Purchas
                       type="button"
                       onClick={() => {
                         if (confirmUnsavedChanges(t("common.unsavedChangesWarning"))) {
-                          router.push("/purchaseOrder");
+                          router.push(returnListPath);
                         }
                       }}
                       className="rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm font-medium text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"

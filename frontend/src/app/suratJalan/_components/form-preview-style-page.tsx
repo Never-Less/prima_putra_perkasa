@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ApiLoadingState } from "../../_components/api-loading-state";
 import { AppToast } from "../../_components/app-toast";
 import { ConfirmationModal } from "../../_components/confirmation-modal";
@@ -15,7 +15,13 @@ import {
 import { useExportAccess } from "../../_hooks/use-export-access";
 import { confirmUnsavedChanges } from "../../_hooks/use-unsaved-changes-warning";
 import { ApiRequestError } from "../../_lib/api-client";
-import { type ServerPaginationMeta } from "../../_lib/pagination";
+import {
+  buildFormRouteWithReturnPagination,
+  buildListRouteWithPagination,
+  normalizePaginationQueryState,
+  normalizeReturnPaginationQueryState,
+  type ServerPaginationMeta,
+} from "../../_lib/pagination";
 import { useI18n } from "../../_i18n/provider";
 import { fetchCustomerRows, type CustomerItem } from "../../customer/_lib/customer";
 import {
@@ -54,20 +60,51 @@ type FormPreviewStylePageProps = {
   itemId?: string;
 };
 
+const defaultSuratJalanPaginationQuery = {
+  page: 1,
+  limit: 10,
+};
+
 export function FormPreviewStylePage({ mode = "list", itemId = "" }: FormPreviewStylePageProps) {
   const { t } = useI18n();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const isFormMode = mode === "form";
   const canExport = useExportAccess();
+  const initialPaginationQuery = useMemo(
+    () =>
+      normalizePaginationQueryState(
+        {
+          page: searchParams.get("page"),
+          limit: searchParams.get("limit"),
+        },
+        defaultSuratJalanPaginationQuery
+      ),
+    [searchParams]
+  );
+  const returnPaginationQuery = useMemo(
+    () =>
+      normalizeReturnPaginationQueryState(
+        {
+          returnPage: searchParams.get("returnPage"),
+          returnLimit: searchParams.get("returnLimit"),
+        },
+        defaultSuratJalanPaginationQuery
+      ),
+    [searchParams]
+  );
+  const returnListPath = useMemo(
+    () => buildListRouteWithPagination("/suratJalan", returnPaginationQuery),
+    [returnPaginationQuery]
+  );
   const [rows, setRows] = useState<SuratJalanItem[]>([]);
   const [filter, setFilter] = useState<SuratJalanFilter>(defaultSuratJalanFilter);
-  const [paginationQuery, setPaginationQuery] = useState({
-    page: 1,
-    limit: 5,
-  });
+  const [paginationQuery, setPaginationQuery] = useState(() =>
+    isFormMode ? defaultSuratJalanPaginationQuery : initialPaginationQuery
+  );
   const [pagination, setPagination] = useState<ServerPaginationMeta>({
-    page: 1,
-    limit: 5,
+    page: paginationQuery.page,
+    limit: paginationQuery.limit,
     totalItems: 0,
     totalPages: 1,
   });
@@ -319,10 +356,10 @@ export function FormPreviewStylePage({ mode = "list", itemId = "" }: FormPreview
     (id?: string) => {
       const normalizedId = String(id || "").trim();
       router.push(
-        normalizedId ? `/suratJalan/form?id=${encodeURIComponent(normalizedId)}` : "/suratJalan/form"
+        buildFormRouteWithReturnPagination("/suratJalan/form", normalizedId, paginationQuery)
       );
     },
-    [router]
+    [paginationQuery, router]
   );
 
   const handleExportSuratJalanByNoPo = useCallback((rawNoPo: string) => {
@@ -435,7 +472,13 @@ export function FormPreviewStylePage({ mode = "list", itemId = "" }: FormPreview
             : undefined;
           setSelectedId(currentUpdatedItem?.id || selectedItem.id);
           if (isFormMode) {
-            router.replace(`/suratJalan/form?id=${encodeURIComponent(currentUpdatedItem?.id || selectedItem.id)}`);
+            router.replace(
+              buildFormRouteWithReturnPagination(
+                "/suratJalan/form",
+                currentUpdatedItem?.id || selectedItem.id,
+                returnPaginationQuery
+              )
+            );
           }
           if (currentUpdatedItem) {
             setPostCreateAction({
@@ -460,7 +503,13 @@ export function FormPreviewStylePage({ mode = "list", itemId = "" }: FormPreview
           : undefined;
         setSelectedId(currentCreatedItem?.id || "");
         if (isFormMode && currentCreatedItem?.id) {
-          router.replace(`/suratJalan/form?id=${encodeURIComponent(currentCreatedItem.id)}`);
+          router.replace(
+            buildFormRouteWithReturnPagination(
+              "/suratJalan/form",
+              currentCreatedItem.id,
+              returnPaginationQuery
+            )
+          );
         }
         if (currentCreatedItem) {
           setPostCreateAction({
@@ -490,7 +539,15 @@ export function FormPreviewStylePage({ mode = "list", itemId = "" }: FormPreview
         setIsSaving(false);
       }
     },
-    [buildInvoicePrefillFromNoPo, isFormMode, loadSuratJalanData, router, showToast, t]
+    [
+      buildInvoicePrefillFromNoPo,
+      isFormMode,
+      loadSuratJalanData,
+      returnPaginationQuery,
+      router,
+      showToast,
+      t,
+    ]
   );
 
   const executeDeleteSuratJalan = useCallback(
@@ -504,7 +561,7 @@ export function FormPreviewStylePage({ mode = "list", itemId = "" }: FormPreview
         await loadSuratJalanData({ showLoading: false });
         setPostCreateAction(null);
         if (isFormMode) {
-          router.push("/suratJalan");
+          router.push(returnListPath);
         }
         showToast(
           t("suratJalan.toast.deleteSuccess", {
@@ -527,7 +584,7 @@ export function FormPreviewStylePage({ mode = "list", itemId = "" }: FormPreview
         setIsDeleting(false);
       }
     },
-    [isFormMode, loadSuratJalanData, router, showToast, t]
+    [isFormMode, loadSuratJalanData, returnListPath, router, showToast, t]
   );
 
   const handleSaveSuratJalan = useCallback(
@@ -674,7 +731,7 @@ export function FormPreviewStylePage({ mode = "list", itemId = "" }: FormPreview
                     type="button"
                     onClick={() => {
                       if (confirmUnsavedChanges(t("common.unsavedChangesWarning"))) {
-                        router.push("/suratJalan");
+                        router.push(returnListPath);
                       }
                     }}
                     className="rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm font-medium text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
