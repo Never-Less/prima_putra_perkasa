@@ -16,7 +16,7 @@ router.post("/", requireRole(ROLE_ADMIN, ROLE_STAFF), async (req, res) => {
 
     if (!nama || !alamat || !atasNama) {
       return res.status(400).json({
-        message: "nama, alamat, dan atasNama wajib diisi",
+        message: "Lengkapi nama, alamat, dan atas nama customer sebelum menyimpan.",
       });
     }
 
@@ -32,7 +32,7 @@ router.post("/", requireRole(ROLE_ADMIN, ROLE_STAFF), async (req, res) => {
       customer: sanitizeCustomer(customer),
     });
   } catch (_error) {
-    return res.status(500).json({ message: "failed to create customer" });
+    return res.status(500).json({ message: "Data customer belum bisa disimpan. Coba lagi." });
   }
 });
 

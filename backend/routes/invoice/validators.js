@@ -129,7 +129,7 @@ function normalizeBarangList(barangInput) {
 }
 
 function normalizeStringList(value, options = {}) {
-  const { maxLength = 100, splitOnComma = false } = options;
+  const { allowEmpty = false, maxLength = 100, splitOnComma = false } = options;
 
   const source = Array.isArray(value)
     ? value
@@ -141,7 +141,7 @@ function normalizeStringList(value, options = {}) {
     .filter(Boolean);
 
   if (normalized.length === 0) {
-    return null;
+    return allowEmpty ? [] : null;
   }
 
   for (const item of normalized) {

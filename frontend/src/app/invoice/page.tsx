@@ -6,7 +6,7 @@ import { ApiLoadingState } from "../_components/api-loading-state";
 import { AppToast } from "../_components/app-toast";
 import { ConfirmationModal } from "../_components/confirmation-modal";
 import { useExportAccess } from "../_hooks/use-export-access";
-import { confirmUnsavedChanges } from "../_hooks/use-unsaved-changes-warning";
+import { requestUnsavedChangesConfirmation } from "../_hooks/use-unsaved-changes-warning";
 import { ApiRequestError } from "../_lib/api-client";
 import {
   buildFormRouteWithReturnPagination,
@@ -390,6 +390,21 @@ export function InvoicePageContent({ mode = "list", itemId = "" }: InvoicePageCo
         return;
       }
 
+      const noPoList = form.noPoList.length > 0 ? form.noPoList : [form.noPo];
+      const hasNoPo = noPoList.some((noPo) => String(noPo || "").trim());
+
+      if (
+        !String(form.tanggal || "").trim() ||
+        !String(form.noInvoice || "").trim() ||
+        !hasNoPo ||
+        !String(form.idCustomer || "").trim()
+      ) {
+        const message = t("invoice.validation.requiredFields");
+        setActionErrorMessage(message);
+        showToast(message, "error");
+        return;
+      }
+
       setIsSaving(true);
 
       try {
@@ -522,7 +537,11 @@ export function InvoicePageContent({ mode = "list", itemId = "" }: InvoicePageCo
     setToast(null);
     setPostSaveAction(null);
     setSelectedId("");
-    const invoicePrefill = buildInvoicePrefillFromReadyInvoicePoGroup(readyGroup);
+    const selectedNoPoOption = suratJalanOptions.find((option) => option.noPo === readyGroup.noPo);
+    const invoicePrefill = buildInvoicePrefillFromReadyInvoicePoGroup(
+      readyGroup,
+      selectedNoPoOption?.barang || []
+    );
 
     if (isFormMode) {
       setInitialForm(toInvoiceFormStateFromPrefill(invoicePrefill));
@@ -532,7 +551,7 @@ export function InvoicePageContent({ mode = "list", itemId = "" }: InvoicePageCo
 
     saveInvoicePrefill(invoicePrefill);
     router.push(buildFormRouteWithReturnPagination("/invoice/form", "", paginationQuery));
-  }, [isFormMode, paginationQuery, router, selectedReadyPoGroup]);
+  }, [isFormMode, paginationQuery, router, selectedReadyPoGroup, suratJalanOptions]);
 
   const handleSaveInvoice = useCallback(
     async (form: InvoiceFormState, selectedItem?: InvoiceItem) => {
@@ -714,9 +733,11 @@ export function InvoicePageContent({ mode = "list", itemId = "" }: InvoicePageCo
                   <button
                     type="button"
                     onClick={() => {
-                      if (confirmUnsavedChanges(t("common.unsavedChangesWarning"))) {
-                        router.push(returnListPath);
-                      }
+                      void requestUnsavedChangesConfirmation(t("common.unsavedChangesWarning")).then((canLeave) => {
+                        if (canLeave) {
+                          router.push(returnListPath);
+                        }
+                      });
                     }}
                     className="rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm font-medium text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
                   >
@@ -780,6 +801,20 @@ export function InvoicePageContent({ mode = "list", itemId = "" }: InvoicePageCo
                   isDeleting={isDeleting}
                   actionErrorMessage={actionErrorMessage}
                   onSave={handleSaveInvoice}
+                  onNewData={() => {
+                    setActionErrorMessage("");
+                    setPostSaveAction(null);
+                    setInitialForm(null);
+                    setInitialFormKey(Date.now());
+                    setSelectedId("");
+                    router.replace(
+                      buildFormRouteWithReturnPagination(
+                        "/invoice/form",
+                        "",
+                        returnPaginationQuery
+                      )
+                    );
+                  }}
                   onDelete={handleDeleteInvoice}
                 />
               ) : (

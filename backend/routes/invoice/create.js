@@ -30,6 +30,7 @@ router.post("/", async (req, res) => {
   );
   const noPo = noPoList ? noPoList.join(", ") : "";
   const noSuratJalan = normalizeStringList(req.body.noSuratJalan, {
+    allowEmpty: true,
     maxLength: 100,
   });
   const idCustomer = String(req.body.idCustomer || "").trim();
@@ -45,25 +46,26 @@ router.post("/", async (req, res) => {
   const parsedPpnRate =
     req.body.ppnRate !== undefined ? parseNumber(req.body.ppnRate) : 11;
 
-  if (!tanggal || !noInvoice || !noPoList || !noSuratJalan || !idCustomer) {
+  if (!tanggal || !noInvoice || !noPoList || noSuratJalan === null || !idCustomer) {
     return res.status(400).json({
-      message: "tanggal, noInvoice, noPo, noSuratJalan, dan idCustomer wajib diisi",
+      message:
+        "Lengkapi tanggal, nomor invoice, No. SO, dan customer sebelum menyimpan.",
     });
   }
 
   if (!barang) {
     return res.status(400).json({
       message:
-        "barang harus array minimal 1 item (namaBarang, spesifikasi, kuantitas, unit, hargaSatuan, jumlah)",
+        "Isi minimal satu barang invoice dengan nama barang, qty, unit, dan harga satuan yang valid.",
     });
   }
 
   if (parsedIsPpn === null) {
-    return res.status(400).json({ message: "isPpn harus boolean" });
+    return res.status(400).json({ message: "Status PPN tidak valid." });
   }
 
   if (parsedIsPaid === null) {
-    return res.status(400).json({ message: "isPaid harus boolean" });
+    return res.status(400).json({ message: "Status pembayaran tidak valid." });
   }
 
   const hasTanggalBayarInput =
@@ -73,20 +75,24 @@ router.post("/", async (req, res) => {
 
   if (parsedIsPaid && !hasTanggalBayarInput) {
     return res.status(400).json({
-      message: "tanggalBayar wajib diisi jika invoice sudah dibayar",
+      message: "Isi tanggal bayar sebelum menandai invoice sebagai lunas.",
     });
   }
 
   if (parsedIsPaid && !tanggalBayar) {
-    return res.status(400).json({ message: "tanggalBayar tidak valid" });
+    return res.status(400).json({
+      message: "Tanggal bayar tidak dapat dibaca. Periksa kembali tanggal yang diisi.",
+    });
   }
 
   if (parsedPpnRate === null || parsedPpnRate < 0 || parsedPpnRate > 100) {
-    return res.status(400).json({ message: "ppnRate harus angka 0 - 100" });
+    return res.status(400).json({
+      message: "Tarif PPN harus berupa angka antara 0 sampai 100.",
+    });
   }
 
   if (!isValidId(idCustomer)) {
-    return res.status(400).json({ message: "idCustomer tidak valid" });
+    return res.status(400).json({ message: "Customer yang dipilih tidak valid." });
   }
 
   const subtotal = calculateSubtotal(barang);
@@ -96,7 +102,7 @@ router.post("/", async (req, res) => {
   try {
     const customer = await Customer.findById(idCustomer);
     if (!customer) {
-      return res.status(404).json({ message: "customer tidak ditemukan" });
+      return res.status(404).json({ message: "Customer yang dipilih tidak ditemukan." });
     }
 
     const invoice = await Invoice.create({
@@ -125,7 +131,7 @@ router.post("/", async (req, res) => {
       invoice: sanitizeInvoice(invoice),
     });
   } catch (_error) {
-    return res.status(500).json({ message: "failed to create invoice" });
+    return res.status(500).json({ message: "Data invoice belum bisa disimpan. Coba lagi." });
   }
 });
 

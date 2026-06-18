@@ -104,7 +104,13 @@ export const messages: Record<Locale, MessageDictionary> = {
     "common.cancel": "Batal",
     "common.close": "Tutup",
     "common.resetForm": "Reset Form",
-    "common.unsavedChangesWarning": "Ada perubahan yang belum disimpan. Keluar dari form?",
+    "common.unsavedChangesWarning":
+      "Perubahan di form ini belum disimpan. Kalau lanjut, perubahan tersebut akan hilang.",
+    "common.unsavedChangesTitle": "Perubahan Belum Disimpan",
+    "common.unsavedChangesDescription":
+      "Perubahan di form ini belum disimpan. Jika Anda keluar sekarang, perubahan tersebut akan hilang.",
+    "common.leaveForm": "Keluar dari Form",
+    "common.stayOnForm": "Tetap di Form",
     "common.noItems": "Belum ada barang.",
     "common.loading": "Memuat...",
     "common.true": "Ya",
@@ -138,7 +144,7 @@ export const messages: Record<Locale, MessageDictionary> = {
       "Simpan perubahan data untuk customer \"{{nama}}\"?",
     "customer.confirmDeleteTitle": "Konfirmasi Hapus Customer",
     "customer.confirmDeleteDescription":
-      "Data customer \"{{nama}}\" akan dihapus permanen. Lanjutkan?",
+      "Customer \"{{nama}}\" akan dihapus dan tidak bisa dikembalikan. Tetap lanjut?",
     "customer.toast.createSuccess": "Data customer berhasil ditambahkan.",
     "customer.toast.updateSuccess": "Data customer \"{{nama}}\" berhasil diperbarui.",
     "customer.toast.deleteSuccess": "Data customer \"{{nama}}\" berhasil dihapus.",
@@ -158,7 +164,7 @@ export const messages: Record<Locale, MessageDictionary> = {
       "Simpan perubahan data supplier \"{{namaSupplier}}\"?",
     "supplier.confirmDeleteTitle": "Konfirmasi Hapus Supplier",
     "supplier.confirmDeleteDescription":
-      "Supplier \"{{namaSupplier}}\" akan dihapus permanen. Lanjutkan?",
+      "Supplier \"{{namaSupplier}}\" akan dihapus dan tidak bisa dikembalikan. Tetap lanjut?",
     "supplier.toast.createSuccess": "Data supplier berhasil ditambahkan.",
     "supplier.toast.updateSuccess": "Data supplier \"{{namaSupplier}}\" berhasil diperbarui.",
     "supplier.toast.deleteSuccess": "Data supplier \"{{namaSupplier}}\" berhasil dihapus.",
@@ -172,9 +178,9 @@ export const messages: Record<Locale, MessageDictionary> = {
     "user.form.passwordOptionalHint":
       "Kosongkan password jika tidak ingin mengubah password user ini.",
     "user.form.confirmPasswordRequired":
-      "Password dan konfirmasi password harus diisi dan sama.",
+      "Isi password dan konfirmasi password dengan nilai yang sama.",
     "user.form.passwordMismatch":
-      "Konfirmasi password harus sama dengan password.",
+      "Konfirmasi password belum sama dengan password.",
     "user.form.showPassword": "Lihat",
     "user.form.hidePassword": "Sembunyikan",
     "user.preview.title": "Preview User",
@@ -186,7 +192,7 @@ export const messages: Record<Locale, MessageDictionary> = {
       "Simpan perubahan untuk user \"{{username}}\"?",
     "user.confirmDeleteTitle": "Konfirmasi Hapus User",
     "user.confirmDeleteDescription":
-      "User \"{{username}}\" akan dihapus permanen. Lanjutkan?",
+      "User \"{{username}}\" akan dihapus dan tidak bisa dikembalikan. Tetap lanjut?",
     "user.toast.createSuccess": "User \"{{username}}\" berhasil ditambahkan.",
     "user.toast.updateSuccess": "User \"{{username}}\" berhasil diperbarui.",
     "user.toast.deleteSuccess": "User \"{{username}}\" berhasil dihapus.",
@@ -217,9 +223,9 @@ export const messages: Record<Locale, MessageDictionary> = {
     "laporanKeuangan.exportPage.empty":
       "Belum ada laporan keuangan tersimpan untuk bulan ini.",
     "laporanKeuangan.exportPage.loadError": "Gagal memuat export laporan keuangan.",
-    "laporanKeuangan.validation.bulanRequired": "Bulan laporan wajib dipilih.",
-    "laporanKeuangan.validation.namaBiayaRequired": "Nama biaya wajib diisi.",
-    "laporanKeuangan.validation.jumlahInvalid": "Jumlah harus angka >= 0.",
+    "laporanKeuangan.validation.bulanRequired": "Pilih bulan laporan terlebih dahulu.",
+    "laporanKeuangan.validation.namaBiayaRequired": "Isi nama biaya terlebih dahulu.",
+    "laporanKeuangan.validation.jumlahInvalid": "Isi jumlah dengan angka 0 atau lebih.",
     "laporanKeuangan.toast.saveSuccess": "Laporan keuangan {{bulan}} berhasil disimpan.",
     "laporanKeuangan.summary.title": "Ringkasan Bulan",
     "laporanKeuangan.summary.yearlyTitle": "Ringkasan Tahun",
@@ -284,13 +290,15 @@ export const messages: Record<Locale, MessageDictionary> = {
     "invoice.excel.column.hargaTotal": "Harga Total",
     "invoice.status.paid": "Lunas",
     "invoice.status.unpaid": "Belum Lunas",
+    "invoice.validation.requiredFields":
+      "Lengkapi tanggal, nomor invoice, No. SO, dan customer sebelum menyimpan.",
     "invoice.validation.tanggalBayarRequiredWhenPaid":
-      "Tanggal bayar wajib diisi jika invoice sudah dibayar.",
+      "Isi tanggal bayar sebelum menandai invoice sebagai lunas.",
     "invoice.form.title": "Form dan Preview Invoice",
     "invoice.form.description":
       "Lengkapi data invoice, pilih No. SO dan surat jalan terkait, lalu biarkan sistem menghitung total secara otomatis.",
     "invoice.form.noPoSelectPlaceholder": "Pilih satu atau lebih No. SO...",
-    "invoice.form.noPoNoOptions": "Belum ada No. SO dari surat jalan.",
+    "invoice.form.noPoNoOptions": "Belum ada No. SO dari sales order atau surat jalan.",
     "invoice.form.customerAutoHint": "Customer diisi otomatis dari No. SO yang dipilih.",
     "invoice.form.noSuratJalanHint": "Pilih No. SO atau No. Surat Jalan; field terkait akan terisi otomatis.",
     "invoice.form.noSuratJalanSelectPlaceholder": "Pilih No. Surat Jalan...",
@@ -319,7 +327,7 @@ export const messages: Record<Locale, MessageDictionary> = {
       "Simpan perubahan untuk invoice \"{{noInvoice}}\"?",
     "invoice.confirmDeleteTitle": "Konfirmasi Hapus Invoice",
     "invoice.confirmDeleteDescription":
-      "Invoice \"{{noInvoice}}\" akan dihapus permanen. Lanjutkan?",
+      "Invoice \"{{noInvoice}}\" akan dihapus dan tidak bisa dikembalikan. Tetap lanjut?",
     "invoice.toast.createSuccess": "Invoice \"{{noInvoice}}\" berhasil ditambahkan.",
     "invoice.toast.updateSuccess": "Invoice \"{{noInvoice}}\" berhasil diperbarui.",
     "invoice.toast.deleteSuccess": "Invoice \"{{noInvoice}}\" berhasil dihapus.",
@@ -333,7 +341,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "invoice.postSaveModal.createPembelianButton": "Buat Pembelian Baru",
     "invoice.export.previewTitle": "Preview Export Invoice",
     "invoice.export.previewDescription": "Halaman ini disiapkan untuk print atau simpan ke PDF.",
-    "invoice.export.invalidId": "ID invoice tidak valid.",
+    "invoice.export.invalidId": "Data invoice yang dipilih tidak dapat dibuka.",
     "invoice.export.notFound": "Data invoice tidak ditemukan.",
     "invoice.export.loadError": "Gagal memuat data export invoice.",
     "invoice.export.customerLabel": "Customer",
@@ -407,7 +415,7 @@ export const messages: Record<Locale, MessageDictionary> = {
       "Simpan perubahan untuk surat jalan \"{{noSuratJalan}}\"?",
     "suratJalan.confirmDeleteTitle": "Konfirmasi Hapus Surat Jalan",
     "suratJalan.confirmDeleteDescription":
-      "Surat jalan \"{{noSuratJalan}}\" akan dihapus permanen. Lanjutkan?",
+      "Surat jalan \"{{noSuratJalan}}\" akan dihapus dan tidak bisa dikembalikan. Tetap lanjut?",
     "suratJalan.toast.createSuccess":
       "Surat jalan \"{{noSuratJalan}}\" berhasil ditambahkan.",
     "suratJalan.toast.updateSuccess":
@@ -436,8 +444,8 @@ export const messages: Record<Locale, MessageDictionary> = {
     "suratJalan.export.noPoPreviewTitle": "Preview Export Surat Jalan No. SO",
     "suratJalan.export.noPoPreviewDescription":
       "Halaman ini menampilkan {{count}} surat jalan untuk No. SO {{noPo}} dan siap dicetak.",
-    "suratJalan.export.invalidId": "ID surat jalan tidak valid.",
-    "suratJalan.export.invalidNoPo": "No. SO tidak valid.",
+    "suratJalan.export.invalidId": "Data surat jalan yang dipilih tidak dapat dibuka.",
+    "suratJalan.export.invalidNoPo": "No. SO ini belum bisa dibuka untuk export.",
     "suratJalan.export.notFound": "Data surat jalan tidak ditemukan.",
     "suratJalan.export.loadError": "Gagal memuat data export surat jalan.",
     "suratJalan.export.noPoNotFound":
@@ -474,7 +482,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "pembelian.table.title": "Tabel Pembelian",
     "pembelian.form.title": "Form dan Preview Pembelian",
     "pembelian.form.description":
-      "Lengkapi data pembelian. Lama hutang dan tanggal jatuh tempo wajib diisi saat status hutang aktif.",
+      "Lengkapi data pembelian. Jika status hutang aktif, isi lama hutang dan tanggal jatuh tempo.",
     "pembelian.form.noInvoiceLabel": "No. Invoice (CV. Prima)",
     "pembelian.form.createSupplierOption": "Gunakan \"{{namaSupplier}}\"",
     "pembelian.stockInvoiceLabel": "Stock",
@@ -484,13 +492,13 @@ export const messages: Record<Locale, MessageDictionary> = {
     "pembelian.invoiceLoadError": "Gagal memuat pilihan invoice untuk pembelian.",
     "pembelian.supplierLoadError": "Gagal memuat pilihan supplier untuk pembelian.",
     "pembelian.mutationError": "Gagal memproses perubahan pembelian.",
-    "pembelian.invoiceRequired": "Invoice wajib dipilih sebelum menyimpan pembelian.",
+    "pembelian.invoiceRequired": "Pilih invoice terlebih dahulu sebelum menyimpan pembelian.",
     "pembelian.confirmUpdateTitle": "Konfirmasi Ubah Pembelian",
     "pembelian.confirmUpdateDescription":
       "Simpan perubahan data pembelian untuk supplier \"{{namaSupplier}}\"?",
     "pembelian.confirmDeleteTitle": "Konfirmasi Hapus Pembelian",
     "pembelian.confirmDeleteDescription":
-      "Data pembelian supplier \"{{namaSupplier}}\" akan dihapus permanen. Lanjutkan?",
+      "Data pembelian supplier \"{{namaSupplier}}\" akan dihapus dan tidak bisa dikembalikan. Tetap lanjut?",
     "pembelian.toast.createSuccess": "Data pembelian berhasil ditambahkan.",
     "pembelian.toast.updateSuccess":
       "Data pembelian supplier \"{{namaSupplier}}\" berhasil diperbarui.",
@@ -509,6 +517,23 @@ export const messages: Record<Locale, MessageDictionary> = {
       "Diisi otomatis saat invoice dibuat.",
     "purchaseOrder.form.nominalReplacedFromInvoice":
       "Saat invoice dibuat atau diperbarui, nominal SO akan diganti otomatis dengan grand total invoice (termasuk PPN).",
+    "purchaseOrder.form.items.title": "Barang Sales Order",
+    "purchaseOrder.form.items.hint":
+      "Isi nama barang, spesifikasi, qty, unit, dan harga satuan. Baris kosong baru akan muncul otomatis.",
+    "purchaseOrder.shortcut.createSuratJalan": "Buat Surat Jalan",
+    "purchaseOrder.shortcut.createInvoice": "Buat Invoice",
+    "purchaseOrder.shortcut.emptyItems":
+      "Isi minimal satu barang sales order sebelum membuat surat jalan atau invoice.",
+    "purchaseOrder.shortcut.missingNoPo":
+      "Isi No. SO terlebih dahulu sebelum membuat surat jalan atau invoice.",
+    "purchaseOrder.shortcut.checkError":
+      "Data surat jalan atau invoice untuk No. SO ini belum bisa dicek. Coba lagi.",
+    "purchaseOrder.shortcut.confirmSuratJalanTitle":
+      "No. SO Sudah Memiliki Data",
+    "purchaseOrder.shortcut.confirmInvoiceTitle":
+      "No. SO Sudah Memiliki Data",
+    "purchaseOrder.shortcut.existingDataDescription":
+      "No. SO \"{{noPo}}\" sudah punya {{suratJalanCount}} surat jalan dan {{invoiceCount}} invoice. Tetap buat data baru?",
     "purchaseOrder.preview.title": "Preview Sales Order",
     "purchaseOrder.exportPage.openButton": "Export Data",
     "purchaseOrder.exportPage.title": "Export Sales Order",
@@ -527,7 +552,7 @@ export const messages: Record<Locale, MessageDictionary> = {
       "Simpan perubahan untuk sales order \"{{noPo}}\"?",
     "purchaseOrder.confirmDeleteTitle": "Konfirmasi Hapus Sales Order",
     "purchaseOrder.confirmDeleteDescription":
-      "Sales order \"{{noPo}}\" akan dihapus permanen. Lanjutkan?",
+      "Sales order \"{{noPo}}\" akan dihapus dan tidak bisa dikembalikan. Tetap lanjut?",
     "purchaseOrder.toast.createSuccess": "Sales order \"{{noPo}}\" berhasil ditambahkan.",
     "purchaseOrder.toast.updateSuccess":
       "Sales order \"{{noPo}}\" berhasil diperbarui.",
@@ -730,7 +755,13 @@ export const messages: Record<Locale, MessageDictionary> = {
     "common.cancel": "Cancel",
     "common.close": "Close",
     "common.resetForm": "Reset Form",
-    "common.unsavedChangesWarning": "There are unsaved changes. Leave this form?",
+    "common.unsavedChangesWarning":
+      "This form has unsaved changes. If you continue, those changes will be lost.",
+    "common.unsavedChangesTitle": "Unsaved Changes",
+    "common.unsavedChangesDescription":
+      "This form has unsaved changes. If you leave now, those changes will be lost.",
+    "common.leaveForm": "Leave Form",
+    "common.stayOnForm": "Stay on Form",
     "common.noItems": "No items yet.",
     "common.loading": "Loading...",
     "common.true": "Yes",
@@ -764,7 +795,7 @@ export const messages: Record<Locale, MessageDictionary> = {
       "Save changes for customer \"{{nama}}\"?",
     "customer.confirmDeleteTitle": "Confirm Customer Deletion",
     "customer.confirmDeleteDescription":
-      "Customer \"{{nama}}\" will be deleted permanently. Continue?",
+      "Customer \"{{nama}}\" will be deleted and cannot be restored. Continue?",
     "customer.toast.createSuccess": "Customer has been added successfully.",
     "customer.toast.updateSuccess": "Customer \"{{nama}}\" has been updated successfully.",
     "customer.toast.deleteSuccess": "Customer \"{{nama}}\" has been deleted successfully.",
@@ -784,7 +815,7 @@ export const messages: Record<Locale, MessageDictionary> = {
       "Save changes for supplier \"{{namaSupplier}}\"?",
     "supplier.confirmDeleteTitle": "Confirm Supplier Deletion",
     "supplier.confirmDeleteDescription":
-      "Supplier \"{{namaSupplier}}\" will be deleted permanently. Continue?",
+      "Supplier \"{{namaSupplier}}\" will be deleted and cannot be restored. Continue?",
     "supplier.toast.createSuccess": "Supplier has been added successfully.",
     "supplier.toast.updateSuccess": "Supplier \"{{namaSupplier}}\" has been updated successfully.",
     "supplier.toast.deleteSuccess": "Supplier \"{{namaSupplier}}\" has been deleted successfully.",
@@ -798,9 +829,9 @@ export const messages: Record<Locale, MessageDictionary> = {
     "user.form.passwordOptionalHint":
       "Leave the password blank if you do not want to change this user's password.",
     "user.form.confirmPasswordRequired":
-      "Password and password confirmation must both be filled and match.",
+      "Enter the password and confirmation with the same value.",
     "user.form.passwordMismatch":
-      "Password confirmation must match the password.",
+      "Password confirmation does not match yet.",
     "user.form.showPassword": "Show",
     "user.form.hidePassword": "Hide",
     "user.preview.title": "User Preview",
@@ -812,7 +843,7 @@ export const messages: Record<Locale, MessageDictionary> = {
       "Save changes for user \"{{username}}\"?",
     "user.confirmDeleteTitle": "Confirm User Deletion",
     "user.confirmDeleteDescription":
-      "User \"{{username}}\" will be deleted permanently. Continue?",
+      "User \"{{username}}\" will be deleted and cannot be restored. Continue?",
     "user.toast.createSuccess": "User \"{{username}}\" has been added successfully.",
     "user.toast.updateSuccess": "User \"{{username}}\" has been updated successfully.",
     "user.toast.deleteSuccess": "User \"{{username}}\" has been deleted successfully.",
@@ -843,9 +874,9 @@ export const messages: Record<Locale, MessageDictionary> = {
     "laporanKeuangan.exportPage.empty":
       "No saved financial report is available for this month.",
     "laporanKeuangan.exportPage.loadError": "Failed to load financial report export.",
-    "laporanKeuangan.validation.bulanRequired": "Report month is required.",
-    "laporanKeuangan.validation.namaBiayaRequired": "Cost name is required.",
-    "laporanKeuangan.validation.jumlahInvalid": "Amount must be a number >= 0.",
+    "laporanKeuangan.validation.bulanRequired": "Select the report month first.",
+    "laporanKeuangan.validation.namaBiayaRequired": "Enter the cost name first.",
+    "laporanKeuangan.validation.jumlahInvalid": "Enter an amount of 0 or more.",
     "laporanKeuangan.toast.saveSuccess": "Financial report for {{bulan}} has been saved.",
     "laporanKeuangan.summary.title": "Monthly Summary",
     "laporanKeuangan.summary.yearlyTitle": "Yearly Summary",
@@ -910,13 +941,15 @@ export const messages: Record<Locale, MessageDictionary> = {
     "invoice.excel.column.hargaTotal": "Total Price",
     "invoice.status.paid": "Paid",
     "invoice.status.unpaid": "Unpaid",
+    "invoice.validation.requiredFields":
+      "Please complete the date, invoice number, SO number, and customer before saving.",
     "invoice.validation.tanggalBayarRequiredWhenPaid":
-      "Payment date is required when the invoice is marked paid.",
+      "Enter the payment date before marking this invoice as paid.",
     "invoice.form.title": "Invoice Form and Preview",
     "invoice.form.description":
       "Complete the invoice details, choose the related SO and delivery notes, and let the system calculate totals automatically.",
     "invoice.form.noPoSelectPlaceholder": "Select one or more SO Nos...",
-    "invoice.form.noPoNoOptions": "No SO No. options from delivery notes yet.",
+    "invoice.form.noPoNoOptions": "No SO No. options from sales orders or delivery notes yet.",
     "invoice.form.customerAutoHint": "Customer is filled automatically from the selected SO No.",
     "invoice.form.noSuratJalanHint": "Select SO Nos. or delivery notes; related fields will fill automatically.",
     "invoice.form.noSuratJalanSelectPlaceholder": "Select Delivery Note No...",
@@ -944,7 +977,7 @@ export const messages: Record<Locale, MessageDictionary> = {
       "Save changes for invoice \"{{noInvoice}}\"?",
     "invoice.confirmDeleteTitle": "Confirm Invoice Deletion",
     "invoice.confirmDeleteDescription":
-      "Invoice \"{{noInvoice}}\" will be deleted permanently. Continue?",
+      "Invoice \"{{noInvoice}}\" will be deleted and cannot be restored. Continue?",
     "invoice.toast.createSuccess": "Invoice \"{{noInvoice}}\" has been added successfully.",
     "invoice.toast.updateSuccess": "Invoice \"{{noInvoice}}\" has been updated successfully.",
     "invoice.toast.deleteSuccess": "Invoice \"{{noInvoice}}\" has been deleted successfully.",
@@ -958,7 +991,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "invoice.postSaveModal.createPembelianButton": "Create New Purchase",
     "invoice.export.previewTitle": "Invoice Export Preview",
     "invoice.export.previewDescription": "This page is prepared for print or save to PDF.",
-    "invoice.export.invalidId": "Invalid invoice ID.",
+    "invoice.export.invalidId": "The selected invoice cannot be opened.",
     "invoice.export.notFound": "Invoice data was not found.",
     "invoice.export.loadError": "Failed to load invoice export data.",
     "invoice.export.customerLabel": "Customer",
@@ -1034,7 +1067,7 @@ export const messages: Record<Locale, MessageDictionary> = {
       "Save changes for delivery note \"{{noSuratJalan}}\"?",
     "suratJalan.confirmDeleteTitle": "Confirm Delivery Note Deletion",
     "suratJalan.confirmDeleteDescription":
-      "Delivery note \"{{noSuratJalan}}\" will be deleted permanently. Continue?",
+      "Delivery note \"{{noSuratJalan}}\" will be deleted and cannot be restored. Continue?",
     "suratJalan.toast.createSuccess":
       "Delivery note \"{{noSuratJalan}}\" has been added successfully.",
     "suratJalan.toast.updateSuccess":
@@ -1063,8 +1096,8 @@ export const messages: Record<Locale, MessageDictionary> = {
     "suratJalan.export.noPoPreviewTitle": "SO Delivery Note Export Preview",
     "suratJalan.export.noPoPreviewDescription":
       "This page shows {{count}} delivery notes for SO No. {{noPo}} and is ready to print.",
-    "suratJalan.export.invalidId": "Invalid delivery note ID.",
-    "suratJalan.export.invalidNoPo": "Invalid SO number.",
+    "suratJalan.export.invalidId": "The selected delivery note cannot be opened.",
+    "suratJalan.export.invalidNoPo": "This SO number cannot be opened for export yet.",
     "suratJalan.export.notFound": "Delivery note data was not found.",
     "suratJalan.export.loadError": "Failed to load delivery note export data.",
     "suratJalan.export.noPoNotFound":
@@ -1101,7 +1134,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "pembelian.table.title": "Purchase Table",
     "pembelian.form.title": "Purchase Form and Preview",
     "pembelian.form.description":
-      "Complete the purchase data. Debt term and due date are required when debt status is active.",
+      "Complete the purchase data. If debt is active, enter the debt term and due date.",
     "pembelian.form.noInvoiceLabel": "Invoice No. (CV. Prima)",
     "pembelian.form.createSupplierOption": "Use \"{{namaSupplier}}\"",
     "pembelian.stockInvoiceLabel": "Stock",
@@ -1111,13 +1144,13 @@ export const messages: Record<Locale, MessageDictionary> = {
     "pembelian.invoiceLoadError": "Failed to load invoice options for purchase.",
     "pembelian.supplierLoadError": "Failed to load supplier options for purchase.",
     "pembelian.mutationError": "Failed to process purchase changes.",
-    "pembelian.invoiceRequired": "Invoice must be selected before saving purchase data.",
+    "pembelian.invoiceRequired": "Select an invoice before saving this purchase.",
     "pembelian.confirmUpdateTitle": "Confirm Purchase Update",
     "pembelian.confirmUpdateDescription":
       "Save purchase changes for supplier \"{{namaSupplier}}\"?",
     "pembelian.confirmDeleteTitle": "Confirm Purchase Deletion",
     "pembelian.confirmDeleteDescription":
-      "Purchase data for supplier \"{{namaSupplier}}\" will be deleted permanently. Continue?",
+      "Purchase data for supplier \"{{namaSupplier}}\" will be deleted and cannot be restored. Continue?",
     "pembelian.toast.createSuccess": "Purchase data has been added successfully.",
     "pembelian.toast.updateSuccess":
       "Purchase data for supplier \"{{namaSupplier}}\" has been updated successfully.",
@@ -1136,6 +1169,23 @@ export const messages: Record<Locale, MessageDictionary> = {
       "Filled automatically when the invoice is created.",
     "purchaseOrder.form.nominalReplacedFromInvoice":
       "When an invoice is created or updated, the SO amount will be replaced automatically with the invoice grand total (including VAT).",
+    "purchaseOrder.form.items.title": "Sales Order Items",
+    "purchaseOrder.form.items.hint":
+      "Fill item name, specification, qty, unit, and unit price. A new empty row is added automatically.",
+    "purchaseOrder.shortcut.createSuratJalan": "Create Delivery Note",
+    "purchaseOrder.shortcut.createInvoice": "Create Invoice",
+    "purchaseOrder.shortcut.emptyItems":
+      "Add at least one sales order item before creating a delivery note or invoice.",
+    "purchaseOrder.shortcut.missingNoPo":
+      "Enter the SO No. before creating a delivery note or invoice.",
+    "purchaseOrder.shortcut.checkError":
+      "Delivery note or invoice data for this SO No. could not be checked yet. Try again.",
+    "purchaseOrder.shortcut.confirmSuratJalanTitle":
+      "SO No. Already Has Data",
+    "purchaseOrder.shortcut.confirmInvoiceTitle":
+      "SO No. Already Has Data",
+    "purchaseOrder.shortcut.existingDataDescription":
+      "SO No. \"{{noPo}}\" already has {{suratJalanCount}} delivery note(s) and {{invoiceCount}} invoice(s). Create new data anyway?",
     "purchaseOrder.preview.title": "Sales Order Preview",
     "purchaseOrder.exportPage.openButton": "Export Data",
     "purchaseOrder.exportPage.title": "Sales Order Export",
@@ -1154,7 +1204,7 @@ export const messages: Record<Locale, MessageDictionary> = {
       "Save changes for sales order \"{{noPo}}\"?",
     "purchaseOrder.confirmDeleteTitle": "Confirm Sales Order Deletion",
     "purchaseOrder.confirmDeleteDescription":
-      "Sales order \"{{noPo}}\" will be deleted permanently. Continue?",
+      "Sales order \"{{noPo}}\" will be deleted and cannot be restored. Continue?",
     "purchaseOrder.toast.createSuccess": "Sales order \"{{noPo}}\" has been added successfully.",
     "purchaseOrder.toast.updateSuccess":
       "Sales order \"{{noPo}}\" has been updated successfully.",

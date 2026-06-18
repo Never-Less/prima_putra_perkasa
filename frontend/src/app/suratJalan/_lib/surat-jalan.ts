@@ -45,6 +45,7 @@ export type SuratJalanItem = {
 export type SuratJalanFilter = {
   noSuratJalan: string;
   noPo: string;
+  namaBarang: string;
   kodeDepartemen: string;
   idCustomer: string;
   kendaraan: string;
@@ -63,11 +64,34 @@ export type SuratJalanFormState = {
   barangRows: SuratJalanBarangFormRow[];
 };
 
+export type SuratJalanPrefillPayload = {
+  noPo: string;
+  tanggal: string;
+  idCustomer: string;
+  kendaraan?: string;
+  tipe?: SuratJalanTipe;
+  barang: Array<{
+    nama: string;
+    spesifikasi?: string;
+    kodeDepartemen?: string;
+    jumlah: number;
+    unit: string;
+  }>;
+};
+
 export type SuratJalanListQuery = SuratJalanFilter & PaginationQueryState;
 
 export type SuratJalanNoPoOption = {
   noPo: string;
   idCustomer: string;
+  barang: SuratJalanNoPoBarangOption[];
+};
+
+export type SuratJalanNoPoBarangOption = {
+  namaBarang: string;
+  spesifikasi: string;
+  kuantitas: number;
+  unit: string;
 };
 
 type SuratJalanListResponse = {
@@ -94,10 +118,12 @@ const suratJalanMutationCachePaths = [
   "/api/invoices",
   "/api/purchase-orders",
 ];
+const suratJalanPrefillStorageKey = "ppp_surat_jalan_prefill";
 
 export const defaultSuratJalanFilter: SuratJalanFilter = {
   noSuratJalan: "",
   noPo: "",
+  namaBarang: "",
   kodeDepartemen: "",
   idCustomer: "",
   kendaraan: "",
@@ -154,6 +180,13 @@ function toSuratJalanNoPoOption(value: unknown): SuratJalanNoPoOption | null {
   const item = value as Record<string, unknown>;
   const noPo = toText(item.noPo).trim();
   const idCustomer = parseCustomerId(item.idCustomer);
+  const barang = Array.isArray(item.barang)
+    ? item.barang
+        .map(toSuratJalanNoPoBarangOption)
+        .filter((barangItem): barangItem is SuratJalanNoPoBarangOption =>
+          Boolean(barangItem)
+        )
+    : [];
 
   if (!noPo) {
     return null;
@@ -162,6 +195,30 @@ function toSuratJalanNoPoOption(value: unknown): SuratJalanNoPoOption | null {
   return {
     noPo,
     idCustomer,
+    barang,
+  };
+}
+
+function toSuratJalanNoPoBarangOption(value: unknown): SuratJalanNoPoBarangOption | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const barang = value as Record<string, unknown>;
+  const namaBarang = toText(barang.namaBarang || barang.nama).trim();
+  const spesifikasi = toText(barang.spesifikasi).trim();
+  const kuantitas = toNumber(barang.kuantitas ?? barang.jumlah, 0);
+  const unit = toText(barang.unit).trim();
+
+  if (!namaBarang || kuantitas <= 0 || !unit) {
+    return null;
+  }
+
+  return {
+    namaBarang,
+    spesifikasi,
+    kuantitas,
+    unit,
   };
 }
 
@@ -189,6 +246,64 @@ function toSuratJalanBarang(value: unknown): SuratJalanBarang | null {
     kodeDepartemen,
     jumlah,
     unit,
+  };
+}
+
+function normalizeSuratJalanPrefillBarang(value: unknown) {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const barang = value as Record<string, unknown>;
+  const nama = toText(barang.nama || barang.namaBarang).trim();
+  const spesifikasi = toText(barang.spesifikasi).trim();
+  const kodeDepartemen = toText(barang.kodeDepartemen).trim();
+  const jumlah = toNumber(barang.jumlah ?? barang.kuantitas, 0);
+  const unit = toText(barang.unit).trim();
+
+  if (!nama || jumlah <= 0 || !unit) {
+    return null;
+  }
+
+  return {
+    nama,
+    spesifikasi,
+    kodeDepartemen,
+    jumlah,
+    unit,
+  };
+}
+
+function toSuratJalanPrefillPayload(value: unknown): SuratJalanPrefillPayload | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const payload = value as Record<string, unknown>;
+  const noPo = toText(payload.noPo).trim();
+  const tanggal = toText(payload.tanggal).trim();
+  const idCustomer = parseCustomerId(payload.idCustomer);
+  const kendaraan = toText(payload.kendaraan).trim();
+  const tipe = normalize(payload.tipe) === "non partial" ? "non partial" : "partial";
+  const barang = Array.isArray(payload.barang)
+    ? payload.barang
+        .map(normalizeSuratJalanPrefillBarang)
+        .filter((item): item is NonNullable<ReturnType<typeof normalizeSuratJalanPrefillBarang>> =>
+          Boolean(item)
+        )
+    : [];
+
+  if (!noPo || !idCustomer || barang.length === 0) {
+    return null;
+  }
+
+  return {
+    noPo,
+    tanggal,
+    idCustomer,
+    kendaraan,
+    tipe,
+    barang,
   };
 }
 
@@ -273,6 +388,7 @@ export async function fetchSuratJalanList(
   const requestPath = `/api/surat-jalan${buildListQueryString({
     noSuratJalan: query.noSuratJalan,
     noPo: query.noPo,
+    namaBarang: query.namaBarang,
     kodeDepartemen: query.kodeDepartemen,
     idCustomer: query.idCustomer,
     kendaraan: query.kendaraan,
@@ -393,6 +509,10 @@ export function filterSuratJalanRows(
   return rows.filter((row) => {
     const noSuratJalanMatch = normalize(row.noSuratJalan).includes(normalize(filters.noSuratJalan));
     const noPoMatch = normalize(row.noPo).includes(normalize(filters.noPo));
+    const namaBarangFilter = normalize(filters.namaBarang);
+    const namaBarangMatch =
+      !namaBarangFilter ||
+      row.barang.some((barang) => normalize(barang.nama).includes(namaBarangFilter));
     const kodeDepartemenMatch = normalize(row.kodeDepartemen).includes(
       normalize(filters.kodeDepartemen)
     );
@@ -409,6 +529,7 @@ export function filterSuratJalanRows(
     return (
       noSuratJalanMatch &&
       noPoMatch &&
+      namaBarangMatch &&
       kodeDepartemenMatch &&
       idCustomerMatch &&
       kendaraanMatch &&
@@ -437,6 +558,54 @@ export function toFormState(item: SuratJalanItem): SuratJalanFormState {
       }))
     ),
   };
+}
+
+export function toFormStateFromPrefill(prefill: SuratJalanPrefillPayload): SuratJalanFormState {
+  return {
+    noSuratJalan: "",
+    noPo: prefill.noPo,
+    tanggal: toInputDate(prefill.tanggal),
+    idCustomer: prefill.idCustomer,
+    kendaraan: prefill.kendaraan || "",
+    tipe: prefill.tipe || "partial",
+    barangRows: ensureTrailingEmptyBarangRow(
+      prefill.barang.map((barang) => ({
+        nama: barang.nama,
+        spesifikasi: barang.spesifikasi || "",
+        kodeDepartemen: barang.kodeDepartemen || "",
+        jumlah: String(barang.jumlah),
+        unit: barang.unit,
+      }))
+    ),
+  };
+}
+
+export function saveSuratJalanPrefill(payload: SuratJalanPrefillPayload) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.sessionStorage.setItem(suratJalanPrefillStorageKey, JSON.stringify(payload));
+}
+
+export function consumeSuratJalanPrefill() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const rawValue = window.sessionStorage.getItem(suratJalanPrefillStorageKey);
+
+  if (!rawValue) {
+    return null;
+  }
+
+  window.sessionStorage.removeItem(suratJalanPrefillStorageKey);
+
+  try {
+    return toSuratJalanPrefillPayload(JSON.parse(rawValue));
+  } catch {
+    return null;
+  }
 }
 
 export function createEmptyBarangRow(): SuratJalanBarangFormRow {
@@ -507,4 +676,20 @@ export function barangRowsToList(rows: SuratJalanBarangFormRow[]) {
       };
     })
     .filter((barang) => barang.nama && barang.jumlah > 0 && barang.unit);
+}
+
+export function buildSuratJalanBarangRowsFromNoPoOption(option?: SuratJalanNoPoOption | null) {
+  if (!option || option.barang.length === 0) {
+    return ensureTrailingEmptyBarangRow([createEmptyBarangRow()]);
+  }
+
+  return ensureTrailingEmptyBarangRow(
+    option.barang.map((barang) => ({
+      nama: barang.namaBarang,
+      spesifikasi: barang.spesifikasi,
+      kodeDepartemen: "",
+      jumlah: String(barang.kuantitas),
+      unit: barang.unit,
+    }))
+  );
 }

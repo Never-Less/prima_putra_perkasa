@@ -38,7 +38,7 @@ const laporanKeuanganSchema = new mongoose.Schema(
 
 laporanKeuanganSchema.pre("validate", function validateLaporanKeuangan() {
   if (!Array.isArray(this.rincianBiaya) || this.rincianBiaya.length === 0) {
-    this.invalidate("rincianBiaya", "minimal satu rincianBiaya wajib diisi");
+    this.invalidate("rincianBiaya", "Isi minimal satu rincian biaya.");
   }
 });
 

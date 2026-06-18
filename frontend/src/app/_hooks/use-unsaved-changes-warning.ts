@@ -2,10 +2,38 @@
 
 import { useEffect, useRef } from "react";
 
-const fallbackMessage = "Ada perubahan yang belum disimpan. Keluar dari form?";
+const fallbackMessage =
+  "Perubahan di form ini belum disimpan. Kalau lanjut, perubahan tersebut akan hilang.";
+const unsavedChangesConfirmationEvent = "ppp:unsaved-changes-confirmation";
 
 let isWarningEnabled = false;
 let warningMessage = fallbackMessage;
+let confirmationId = 0;
+let pendingConfirmation: UnsavedChangesConfirmationRequest | null = null;
+
+export type UnsavedChangesConfirmationRequest = {
+  id: number;
+  message: string;
+  href?: string;
+  isExternal?: boolean;
+  resolve: (confirmed: boolean) => void;
+};
+
+function emitConfirmationChange() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.dispatchEvent(new Event(unsavedChangesConfirmationEvent));
+}
+
+function toNavigationHref(url: URL) {
+  if (url.origin !== window.location.origin) {
+    return url.href;
+  }
+
+  return `${url.pathname}${url.search}${url.hash}`;
+}
 
 function getAnchorFromEvent(event: MouseEvent) {
   const target = event.target;
@@ -33,12 +61,57 @@ function isSameDocumentNavigation(url: URL) {
   );
 }
 
-export function confirmUnsavedChanges(message = warningMessage) {
+export function requestUnsavedChangesConfirmation(
+  message = warningMessage,
+  options: { href?: string; isExternal?: boolean } = {}
+) {
   if (!isWarningEnabled) {
-    return true;
+    return Promise.resolve(true);
   }
 
-  return window.confirm(message || fallbackMessage);
+  if (pendingConfirmation) {
+    pendingConfirmation.resolve(false);
+  }
+
+  return new Promise<boolean>((resolve) => {
+    pendingConfirmation = {
+      id: confirmationId + 1,
+      message: message || fallbackMessage,
+      href: options.href,
+      isExternal: options.isExternal,
+      resolve,
+    };
+    confirmationId += 1;
+    emitConfirmationChange();
+  });
+}
+
+export function getPendingUnsavedChangesConfirmation() {
+  return pendingConfirmation;
+}
+
+export function subscribeUnsavedChangesConfirmation(listener: () => void) {
+  if (typeof window === "undefined") {
+    return () => undefined;
+  }
+
+  window.addEventListener(unsavedChangesConfirmationEvent, listener);
+
+  return () => {
+    window.removeEventListener(unsavedChangesConfirmationEvent, listener);
+  };
+}
+
+export function resolveUnsavedChangesConfirmation(confirmed: boolean) {
+  const confirmation = pendingConfirmation;
+
+  if (!confirmation) {
+    return;
+  }
+
+  pendingConfirmation = null;
+  confirmation.resolve(confirmed);
+  emitConfirmationChange();
 }
 
 export function serializeUnsavedChangesValue(value: unknown) {
@@ -95,12 +168,12 @@ export function useUnsavedChangesWarning(enabled: boolean, message = fallbackMes
         return;
       }
 
-      if (window.confirm(messageRef.current || fallbackMessage)) {
-        return;
-      }
-
       event.preventDefault();
       event.stopPropagation();
+      void requestUnsavedChangesConfirmation(messageRef.current || fallbackMessage, {
+        href: toNavigationHref(nextUrl),
+        isExternal: nextUrl.origin !== window.location.origin,
+      });
     }
 
     window.addEventListener("beforeunload", handleBeforeUnload);

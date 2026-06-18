@@ -13,7 +13,7 @@ import {
   type InvoicePrefillPayload,
 } from "../../invoice/_lib/invoice";
 import { useExportAccess } from "../../_hooks/use-export-access";
-import { confirmUnsavedChanges } from "../../_hooks/use-unsaved-changes-warning";
+import { requestUnsavedChangesConfirmation } from "../../_hooks/use-unsaved-changes-warning";
 import { ApiRequestError } from "../../_lib/api-client";
 import {
   buildFormRouteWithReturnPagination,
@@ -25,12 +25,14 @@ import {
 import { useI18n } from "../../_i18n/provider";
 import { fetchCustomerRows, type CustomerItem } from "../../customer/_lib/customer";
 import {
+  consumeSuratJalanPrefill,
   createSuratJalan,
   defaultSuratJalanFilter,
   deleteSuratJalan,
   fetchSuratJalanById,
   fetchSuratJalanList,
   fetchSuratJalanNoPoOptions,
+  toFormStateFromPrefill,
   updateSuratJalan,
   type SuratJalanFilter,
   type SuratJalanFormState,
@@ -122,6 +124,11 @@ export function FormPreviewStylePage({ mode = "list", itemId = "" }: FormPreview
   const [actionErrorMessage, setActionErrorMessage] = useState("");
   const [toast, setToast] = useState<ToastState | null>(null);
   const [postCreateAction, setPostCreateAction] = useState<PostCreateActionState | null>(null);
+  const [prefillOnLoad] = useState(() => consumeSuratJalanPrefill());
+  const [initialForm, setInitialForm] = useState<SuratJalanFormState | null>(() =>
+    prefillOnLoad ? toFormStateFromPrefill(prefillOnLoad) : null
+  );
+  const [initialFormKey, setInitialFormKey] = useState(() => (prefillOnLoad ? Date.now() : 0));
   const [pendingConfirmation, setPendingConfirmation] = useState<
     | {
         type: "update";
@@ -348,9 +355,6 @@ export function FormPreviewStylePage({ mode = "list", itemId = "" }: FormPreview
       nama: customer.nama || customer.id,
     }));
   }, [customerRows]);
-  const noPoOptions = useMemo(() => {
-    return noPoOptionRows.map((row) => row.noPo);
-  }, [noPoOptionRows]);
 
   const navigateToForm = useCallback(
     (id?: string) => {
@@ -730,9 +734,11 @@ export function FormPreviewStylePage({ mode = "list", itemId = "" }: FormPreview
                   <button
                     type="button"
                     onClick={() => {
-                      if (confirmUnsavedChanges(t("common.unsavedChangesWarning"))) {
-                        router.push(returnListPath);
-                      }
+                      void requestUnsavedChangesConfirmation(t("common.unsavedChangesWarning")).then((canLeave) => {
+                        if (canLeave) {
+                          router.push(returnListPath);
+                        }
+                      });
                     }}
                     className="rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm font-medium text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
                   >
@@ -740,15 +746,30 @@ export function FormPreviewStylePage({ mode = "list", itemId = "" }: FormPreview
                   </button>
                 </div>
                 <SuratJalanEditForm
-                  key={selectedId || "new"}
+                  key={`${selectedId || "new"}-${initialFormKey}`}
                   item={selectedRow}
+                  initialForm={selectedRow ? undefined : initialForm || undefined}
                   customerOptions={customerOptions}
-                  noPoOptions={noPoOptions}
+                  noPoOptions={noPoOptionRows}
                   noPoCustomerMap={noPoCustomerMap}
                   isSaving={isSaving}
                   isDeleting={isDeleting}
                   actionErrorMessage={actionErrorMessage}
                   onSave={handleSaveSuratJalan}
+                  onNewData={() => {
+                    setActionErrorMessage("");
+                    setPostCreateAction(null);
+                    setInitialForm(null);
+                    setInitialFormKey(Date.now());
+                    setSelectedId("");
+                    router.replace(
+                      buildFormRouteWithReturnPagination(
+                        "/suratJalan/form",
+                        "",
+                        returnPaginationQuery
+                      )
+                    );
+                  }}
                   onDelete={handleDeleteSuratJalan}
                   title={t("suratJalan.form.title")}
                   description={t("suratJalan.form.description")}

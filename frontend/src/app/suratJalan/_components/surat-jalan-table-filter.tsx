@@ -186,6 +186,16 @@ export function SuratJalanTableFilter({
           </label>
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
+            {t("field.namaBarang")}
+            <DebouncedFilterInput
+              value={filter.namaBarang}
+              onValueChange={(value) => onFilterChange("namaBarang", value)}
+              placeholder={filterPlaceholder("field.namaBarang")}
+              className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+            />
+          </label>
+
+          <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.kodeDepartemen")}
             <DebouncedFilterInput
               value={filter.kodeDepartemen}

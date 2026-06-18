@@ -3,6 +3,7 @@ import {
   fetchInvoiceRows,
   type InvoiceItem,
   type InvoicePrefillPayload,
+  type InvoiceSuratJalanBarangOption,
 } from "../invoice/_lib/invoice";
 import {
   fetchSuratJalanRows,
@@ -97,6 +98,58 @@ export async function fetchReadyInvoicePoGroups() {
   return groupUninvoicedSuratJalanRowsByPo(rows);
 }
 
+function createReadyInvoiceBarangKey(namaBarang: string, spesifikasi: string, unit: string) {
+  return `${namaBarang.trim().toLowerCase()}::${spesifikasi.trim().toLowerCase()}::${unit
+    .trim()
+    .toLowerCase()}`;
+}
+
+function buildSalesOrderHargaSatuanMap(barang: InvoiceSuratJalanBarangOption[] = []) {
+  const hargaSatuanMap = new Map<string, number>();
+
+  barang.forEach((item) => {
+    const namaBarang = String(item.nama || "").trim();
+    const spesifikasi = String(item.spesifikasi || "").trim();
+    const unit = String(item.unit || "").trim();
+    const hargaSatuan = Number(item.hargaSatuan || 0);
+
+    if (!namaBarang || !unit || hargaSatuan <= 0) {
+      return;
+    }
+
+    const key = createReadyInvoiceBarangKey(namaBarang, spesifikasi, unit);
+
+    if (!hargaSatuanMap.has(key)) {
+      hargaSatuanMap.set(key, hargaSatuan);
+    }
+  });
+
+  return hargaSatuanMap;
+}
+
+function findSalesOrderHargaSatuan(
+  hargaSatuanMap: Map<string, number>,
+  namaBarang: string,
+  spesifikasi: string,
+  unit: string,
+  fallbackSpesifikasi = ""
+) {
+  const keys = [
+    createReadyInvoiceBarangKey(namaBarang, spesifikasi, unit),
+    createReadyInvoiceBarangKey(namaBarang, fallbackSpesifikasi, unit),
+  ];
+
+  for (const key of keys) {
+    const hargaSatuan = hargaSatuanMap.get(key);
+
+    if (hargaSatuan) {
+      return hargaSatuan;
+    }
+  }
+
+  return 0;
+}
+
 export function buildInvoicePrefillFromSuratJalan(row: SuratJalanItem): InvoicePrefillPayload {
   return {
     tanggal: row.tanggal,
@@ -128,8 +181,10 @@ export function buildInvoicePrefillFromSuratJalan(row: SuratJalanItem): InvoiceP
 }
 
 export function buildInvoicePrefillFromReadyInvoicePoGroup(
-  group: ReadyInvoicePoGroup
+  group: ReadyInvoicePoGroup,
+  salesOrderBarang: InvoiceSuratJalanBarangOption[] = []
 ): InvoicePrefillPayload {
+  const hargaSatuanMap = buildSalesOrderHargaSatuanMap(salesOrderBarang);
   const barangMap = new Map<
     string,
     {
@@ -137,6 +192,7 @@ export function buildInvoicePrefillFromReadyInvoicePoGroup(
       spesifikasi: string;
       kuantitas: number;
       unit: string;
+      hargaSatuan?: number;
       noPoManual: string;
       sources: NonNullable<InvoicePrefillPayload["barang"][number]["sources"]>;
     }
@@ -154,6 +210,7 @@ export function buildInvoicePrefillFromReadyInvoicePoGroup(
     row.barang.forEach((barang) => {
       const namaBarang = String(barang.nama || "").trim();
       const spesifikasi = buildSuratJalanInvoiceSpesifikasi(barang.spesifikasi, barang.kodeDepartemen);
+      const originalSpesifikasi = String(barang.spesifikasi || "").trim();
       const unit = String(barang.unit || "").trim();
       const kuantitas = Number(barang.jumlah || 0);
 
@@ -162,6 +219,13 @@ export function buildInvoicePrefillFromReadyInvoicePoGroup(
       }
 
       const key = `${namaBarang.toLowerCase()}::${spesifikasi.toLowerCase()}::${unit.toLowerCase()}`;
+      const hargaSatuan = findSalesOrderHargaSatuan(
+        hargaSatuanMap,
+        namaBarang,
+        spesifikasi,
+        unit,
+        originalSpesifikasi
+      );
       const source = {
         suratJalanId: row.id,
         noSuratJalan: row.noSuratJalan,
@@ -173,6 +237,7 @@ export function buildInvoicePrefillFromReadyInvoicePoGroup(
 
       if (existingBarang) {
         existingBarang.kuantitas += kuantitas;
+        existingBarang.hargaSatuan = existingBarang.hargaSatuan || hargaSatuan || undefined;
         existingBarang.sources.push(source);
         return;
       }
@@ -182,6 +247,7 @@ export function buildInvoicePrefillFromReadyInvoicePoGroup(
         spesifikasi,
         kuantitas,
         unit,
+        hargaSatuan: hargaSatuan || undefined,
         noPoManual: row.noPo,
         sources: [source],
       });

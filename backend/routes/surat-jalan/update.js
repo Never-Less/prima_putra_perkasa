@@ -11,7 +11,7 @@ router.put("/:id", async (req, res) => {
   const id = String(req.params.id || "");
 
   if (!isValidId(id)) {
-    return res.status(400).json({ message: "invalid surat jalan id" });
+    return res.status(400).json({ message: "Data surat jalan yang dipilih tidak dapat dibuka." });
   }
 
   const updates = {};
@@ -27,7 +27,7 @@ router.put("/:id", async (req, res) => {
   if (req.body.tanggal !== undefined) {
     const tanggal = parseDate(req.body.tanggal);
     if (!tanggal) {
-      return res.status(400).json({ message: "tanggal tidak valid" });
+      return res.status(400).json({ message: "Tanggal surat jalan tidak dapat dibaca." });
     }
     updates.tanggal = tanggal;
   }
@@ -36,7 +36,7 @@ router.put("/:id", async (req, res) => {
     const idCustomer = String(req.body.idCustomer || "").trim();
 
     if (!isValidId(idCustomer)) {
-      return res.status(400).json({ message: "idCustomer tidak valid" });
+      return res.status(400).json({ message: "Customer yang dipilih tidak valid." });
     }
 
     updates.idCustomer = idCustomer;
@@ -48,7 +48,7 @@ router.put("/:id", async (req, res) => {
     });
     if (!barang) {
       return res.status(400).json({
-        message: "barang harus array minimal 1 item (nama, spesifikasi?, kodeDepartemen?, jumlah, unit)",
+        message: "Isi minimal satu barang surat jalan dengan nama barang, jumlah, dan unit yang valid.",
       });
     }
     updates.barang = barang;
@@ -64,7 +64,7 @@ router.put("/:id", async (req, res) => {
       .toLowerCase();
 
     if (!["partial", "non partial"].includes(tipe)) {
-      return res.status(400).json({ message: "tipe harus partial atau non partial" });
+      return res.status(400).json({ message: "Pilih tipe surat jalan yang valid." });
     }
 
     updates.tipe = tipe;
@@ -72,8 +72,7 @@ router.put("/:id", async (req, res) => {
 
   if (Object.keys(updates).length === 0) {
     return res.status(400).json({
-      message:
-        "minimal kirim salah satu field: noSuratJalan, noPo, tanggal, idCustomer, barang, kendaraan, tipe",
+      message: "Tidak ada perubahan yang bisa disimpan. Ubah minimal satu data terlebih dahulu.",
     });
   }
 
@@ -83,7 +82,7 @@ router.put("/:id", async (req, res) => {
     (updates.kendaraan !== undefined && !updates.kendaraan)
   ) {
     return res.status(400).json({
-      message: "noSuratJalan, noPo, dan kendaraan tidak boleh kosong",
+      message: "Lengkapi No. Surat Jalan, No. SO, dan kendaraan sebelum menyimpan.",
     });
   }
 
@@ -91,7 +90,7 @@ router.put("/:id", async (req, res) => {
     if (updates.idCustomer) {
       const customer = await Customer.findById(updates.idCustomer);
       if (!customer) {
-        return res.status(404).json({ message: "customer tidak ditemukan" });
+        return res.status(404).json({ message: "Customer yang dipilih tidak ditemukan." });
       }
     }
 
@@ -104,7 +103,7 @@ router.put("/:id", async (req, res) => {
         .lean();
 
       if (existingSuratJalan) {
-        return res.status(409).json({ message: "noSuratJalan sudah digunakan" });
+        return res.status(409).json({ message: "No. Surat Jalan ini sudah digunakan." });
       }
     }
 
@@ -114,7 +113,7 @@ router.put("/:id", async (req, res) => {
     });
 
     if (!suratJalan) {
-      return res.status(404).json({ message: "surat jalan not found" });
+      return res.status(404).json({ message: "Data surat jalan tidak ditemukan." });
     }
 
     await SuratJalan.updateMany(
@@ -133,10 +132,10 @@ router.put("/:id", async (req, res) => {
     });
   } catch (error) {
     if (error?.code === 11000 && error?.keyPattern?.noSuratJalan) {
-      return res.status(409).json({ message: "noSuratJalan sudah digunakan" });
+      return res.status(409).json({ message: "No. Surat Jalan ini sudah digunakan." });
     }
 
-    return res.status(500).json({ message: "failed to update surat jalan" });
+    return res.status(500).json({ message: "Data surat jalan belum bisa disimpan. Coba lagi." });
   }
 });
 

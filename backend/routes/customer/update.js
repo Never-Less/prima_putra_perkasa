@@ -12,7 +12,7 @@ router.put("/:id", requireRole(ROLE_ADMIN, ROLE_STAFF), async (req, res) => {
   const id = String(req.params.id || "");
 
   if (!isValidId(id)) {
-    return res.status(400).json({ message: "invalid customer id" });
+    return res.status(400).json({ message: "Data customer yang dipilih tidak dapat dibuka." });
   }
 
   const updates = {};
@@ -35,7 +35,7 @@ router.put("/:id", requireRole(ROLE_ADMIN, ROLE_STAFF), async (req, res) => {
 
   if (Object.keys(updates).length === 0) {
     return res.status(400).json({
-      message: "minimal kirim salah satu field: nama, alamat, atasNama",
+      message: "Tidak ada perubahan yang bisa disimpan. Ubah minimal satu data terlebih dahulu.",
     });
   }
 
@@ -45,7 +45,7 @@ router.put("/:id", requireRole(ROLE_ADMIN, ROLE_STAFF), async (req, res) => {
     (updates.atasNama !== undefined && !updates.atasNama)
   ) {
     return res.status(400).json({
-      message: "nama, alamat, dan atasNama tidak boleh kosong",
+      message: "Lengkapi nama, alamat, dan atas nama customer sebelum menyimpan.",
     });
   }
 
@@ -56,7 +56,7 @@ router.put("/:id", requireRole(ROLE_ADMIN, ROLE_STAFF), async (req, res) => {
     });
 
     if (!customer) {
-      return res.status(404).json({ message: "customer not found" });
+      return res.status(404).json({ message: "Data customer tidak ditemukan." });
     }
 
     return res.json({
@@ -64,7 +64,7 @@ router.put("/:id", requireRole(ROLE_ADMIN, ROLE_STAFF), async (req, res) => {
       customer: sanitizeCustomer(customer),
     });
   } catch (_error) {
-    return res.status(500).json({ message: "failed to update customer" });
+    return res.status(500).json({ message: "Data customer belum bisa disimpan. Coba lagi." });
   }
 });
 

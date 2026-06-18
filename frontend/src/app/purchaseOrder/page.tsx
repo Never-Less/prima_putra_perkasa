@@ -6,7 +6,7 @@ import { ApiLoadingState } from "../_components/api-loading-state";
 import { AppToast } from "../_components/app-toast";
 import { ConfirmationModal } from "../_components/confirmation-modal";
 import { useExportAccess } from "../_hooks/use-export-access";
-import { confirmUnsavedChanges } from "../_hooks/use-unsaved-changes-warning";
+import { requestUnsavedChangesConfirmation } from "../_hooks/use-unsaved-changes-warning";
 import { useI18n } from "../_i18n/provider";
 import { ApiRequestError } from "../_lib/api-client";
 import {
@@ -16,6 +16,17 @@ import {
   normalizeReturnPaginationQueryState,
   type ServerPaginationMeta,
 } from "../_lib/pagination";
+import {
+  defaultInvoiceFilter,
+  fetchInvoiceExportRows,
+  saveInvoicePrefill,
+  type InvoicePrefillPayload,
+} from "../invoice/_lib/invoice";
+import {
+  fetchSuratJalanByNoPo,
+  saveSuratJalanPrefill,
+  type SuratJalanPrefillPayload,
+} from "../suratJalan/_lib/surat-jalan";
 import { PurchaseOrderEditForm } from "./_components/purchase-order-edit-form";
 import { PurchaseOrderTableFilter } from "./_components/purchase-order-table-filter";
 import {
@@ -40,6 +51,17 @@ type ToastState = {
 };
 
 type PurchaseOrderPageMode = "list" | "form";
+type PurchaseOrderShortcutTarget = "suratJalan" | "invoice";
+
+type PurchaseOrderShortcutCheck = {
+  suratJalanCount: number;
+  invoiceCount: number;
+};
+
+type PurchaseOrderShortcutConfirmation = PurchaseOrderShortcutCheck & {
+  target: PurchaseOrderShortcutTarget;
+  item: PurchaseOrderItem;
+};
 
 type PurchaseOrderPageContentProps = {
   mode?: PurchaseOrderPageMode;
@@ -50,6 +72,44 @@ const defaultPurchaseOrderPaginationQuery = {
   page: 1,
   limit: 10,
 };
+
+function buildSuratJalanPrefillFromPurchaseOrder(
+  item: PurchaseOrderItem
+): SuratJalanPrefillPayload {
+  return {
+    noPo: item.noPo,
+    tanggal: item.tanggalPo,
+    idCustomer: item.namaCustomer,
+    barang: item.barang.map((barang) => ({
+      nama: barang.namaBarang,
+      spesifikasi: barang.spesifikasi,
+      kodeDepartemen: "",
+      jumlah: barang.kuantitas,
+      unit: barang.unit,
+    })),
+  };
+}
+
+function buildInvoicePrefillFromPurchaseOrder(item: PurchaseOrderItem): InvoicePrefillPayload {
+  return {
+    tanggal: item.tanggalPo,
+    noPo: item.noPo,
+    noPoList: [item.noPo].filter(Boolean),
+    noSuratJalan: [],
+    idCustomer: item.namaCustomer,
+    barang: item.barang.map((barang) => ({
+      namaBarang: barang.namaBarang,
+      spesifikasi: barang.spesifikasi,
+      kuantitas: barang.kuantitas,
+      unit: barang.unit,
+      hargaSatuan: barang.hargaSatuan,
+      noPoManual: item.noPo,
+      sources: [],
+    })),
+    isPpn: true,
+    ppnRate: 11,
+  };
+}
 
 export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: PurchaseOrderPageContentProps) {
   const { t } = useI18n();
@@ -101,6 +161,7 @@ export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: Purchas
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isShortcutLoading, setIsShortcutLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [actionErrorMessage, setActionErrorMessage] = useState("");
   const [toast, setToast] = useState<ToastState | null>(null);
@@ -116,6 +177,8 @@ export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: Purchas
       }
     | null
   >(null);
+  const [pendingShortcutConfirmation, setPendingShortcutConfirmation] =
+    useState<PurchaseOrderShortcutConfirmation | null>(null);
 
   const showToast = useCallback((message: string, variant: ToastState["variant"]) => {
     setToast({
@@ -442,6 +505,101 @@ export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: Purchas
     [isFormMode, loadPurchaseOrders, returnListPath, router, showToast, t]
   );
 
+  const executePurchaseOrderShortcut = useCallback(
+    (target: PurchaseOrderShortcutTarget, item: PurchaseOrderItem) => {
+      if (target === "suratJalan") {
+        saveSuratJalanPrefill(buildSuratJalanPrefillFromPurchaseOrder(item));
+        router.push("/suratJalan/form");
+        return;
+      }
+
+      saveInvoicePrefill(buildInvoicePrefillFromPurchaseOrder(item));
+      router.push("/invoice/form");
+    },
+    [router]
+  );
+
+  const checkPurchaseOrderLinkedData = useCallback(
+    async (noPo: string): Promise<PurchaseOrderShortcutCheck> => {
+      const normalizedNoPo = String(noPo || "").trim();
+
+      if (!normalizedNoPo) {
+        return {
+          suratJalanCount: 0,
+          invoiceCount: 0,
+        };
+      }
+
+      const [suratJalanRows, invoiceRows] = await Promise.all([
+        fetchSuratJalanByNoPo(normalizedNoPo),
+        fetchInvoiceExportRows({
+          ...defaultInvoiceFilter,
+          noPo: normalizedNoPo,
+        }),
+      ]);
+      const normalizedNoPoKey = normalizedNoPo.toLowerCase();
+      const exactInvoiceRows = invoiceRows.filter((invoice) =>
+        invoice.noPoList.some(
+          (invoiceNoPo) => String(invoiceNoPo || "").trim().toLowerCase() === normalizedNoPoKey
+        )
+      );
+
+      return {
+        suratJalanCount: suratJalanRows.length,
+        invoiceCount: exactInvoiceRows.length,
+      };
+    },
+    []
+  );
+
+  const handlePurchaseOrderShortcut = useCallback(
+    async (target: PurchaseOrderShortcutTarget, item: PurchaseOrderItem) => {
+      if (!(await requestUnsavedChangesConfirmation(t("common.unsavedChangesWarning")))) {
+        return;
+      }
+
+      const noPo = String(item.noPo || "").trim();
+
+      if (!noPo) {
+        showToast(t("purchaseOrder.shortcut.missingNoPo"), "error");
+        return;
+      }
+
+      if (!Array.isArray(item.barang) || item.barang.length === 0) {
+        showToast(t("purchaseOrder.shortcut.emptyItems"), "error");
+        return;
+      }
+
+      setActionErrorMessage("");
+      setIsShortcutLoading(true);
+
+      try {
+        const linkedData = await checkPurchaseOrderLinkedData(noPo);
+
+        if (linkedData.suratJalanCount > 0 || linkedData.invoiceCount > 0) {
+          setPendingShortcutConfirmation({
+            target,
+            item,
+            ...linkedData,
+          });
+          return;
+        }
+
+        executePurchaseOrderShortcut(target, item);
+      } catch (error) {
+        if (error instanceof ApiRequestError) {
+          showToast(error.message || t("purchaseOrder.shortcut.checkError"), "error");
+          return;
+        }
+
+        showToast(t("purchaseOrder.shortcut.checkError"), "error");
+      } finally {
+        setIsShortcutLoading(false);
+      }
+    },
+    [checkPurchaseOrderLinkedData, executePurchaseOrderShortcut, showToast, t]
+  );
+
   const handleSavePurchaseOrder = useCallback(
     async (form: PurchaseOrderFormState, selectedItem?: PurchaseOrderItem) => {
       if (selectedItem?.id) {
@@ -481,6 +639,16 @@ export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: Purchas
     await executeDeletePurchaseOrder(currentConfirmation.selectedItem);
   }, [executeDeletePurchaseOrder, executeSavePurchaseOrder, pendingConfirmation]);
 
+  const handleConfirmShortcut = useCallback(() => {
+    if (!pendingShortcutConfirmation) {
+      return;
+    }
+
+    const currentShortcut = pendingShortcutConfirmation;
+    setPendingShortcutConfirmation(null);
+    executePurchaseOrderShortcut(currentShortcut.target, currentShortcut.item);
+  }, [executePurchaseOrderShortcut, pendingShortcutConfirmation]);
+
   const confirmationConfig = useMemo(() => {
     if (!pendingConfirmation) {
       return null;
@@ -506,6 +674,28 @@ export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: Purchas
       variant: "danger" as const,
     };
   }, [pendingConfirmation, t]);
+
+  const shortcutConfirmationConfig = useMemo(() => {
+    if (!pendingShortcutConfirmation) {
+      return null;
+    }
+
+    return {
+      title:
+        pendingShortcutConfirmation.target === "suratJalan"
+          ? t("purchaseOrder.shortcut.confirmSuratJalanTitle")
+          : t("purchaseOrder.shortcut.confirmInvoiceTitle"),
+      description: t("purchaseOrder.shortcut.existingDataDescription", {
+        noPo: pendingShortcutConfirmation.item.noPo || "-",
+        suratJalanCount: pendingShortcutConfirmation.suratJalanCount,
+        invoiceCount: pendingShortcutConfirmation.invoiceCount,
+      }),
+      confirmLabel:
+        pendingShortcutConfirmation.target === "suratJalan"
+          ? t("purchaseOrder.shortcut.createSuratJalan")
+          : t("purchaseOrder.shortcut.createInvoice"),
+    };
+  }, [pendingShortcutConfirmation, t]);
 
   const showDataSection = isFormMode
     ? !isLoading && !errorMessage
@@ -543,9 +733,11 @@ export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: Purchas
                     <button
                       type="button"
                       onClick={() => {
-                        if (confirmUnsavedChanges(t("common.unsavedChangesWarning"))) {
-                          router.push(returnListPath);
-                        }
+                        void requestUnsavedChangesConfirmation(t("common.unsavedChangesWarning")).then((canLeave) => {
+                          if (canLeave) {
+                            router.push(returnListPath);
+                          }
+                        });
                       }}
                       className="rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm font-medium text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
                     >
@@ -559,9 +751,27 @@ export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: Purchas
                     invoiceOptions={invoiceOptions}
                     isSaving={isSaving}
                     isDeleting={isDeleting}
+                    isShortcutLoading={isShortcutLoading}
                     actionErrorMessage={actionErrorMessage}
                     onSave={handleSavePurchaseOrder}
+                    onNewData={() => {
+                      setActionErrorMessage("");
+                      setSelectedId("");
+                      router.replace(
+                        buildFormRouteWithReturnPagination(
+                          "/purchaseOrder/form",
+                          "",
+                          returnPaginationQuery
+                        )
+                      );
+                    }}
                     onDelete={handleDeletePurchaseOrder}
+                    onCreateSuratJalan={(item) =>
+                      handlePurchaseOrderShortcut("suratJalan", item)
+                    }
+                    onCreateInvoice={(item) =>
+                      handlePurchaseOrderShortcut("invoice", item)
+                    }
                   />
                 </>
               ) : (
@@ -608,6 +818,18 @@ export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: Purchas
         isLoading={isSaving || isDeleting}
         onCancel={() => setPendingConfirmation(null)}
         onConfirm={() => void handleConfirmAction()}
+      />
+
+      <ConfirmationModal
+        isOpen={Boolean(shortcutConfirmationConfig)}
+        title={shortcutConfirmationConfig?.title ?? ""}
+        description={shortcutConfirmationConfig?.description ?? ""}
+        confirmLabel={shortcutConfirmationConfig?.confirmLabel ?? ""}
+        cancelLabel={t("common.cancel")}
+        variant="default"
+        isLoading={false}
+        onCancel={() => setPendingShortcutConfirmation(null)}
+        onConfirm={handleConfirmShortcut}
       />
 
       <AppToast

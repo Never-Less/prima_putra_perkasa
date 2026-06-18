@@ -6,7 +6,7 @@ import { ApiLoadingState } from "../_components/api-loading-state";
 import { AppDateInput } from "../_components/app-date-input";
 import { AppToast } from "../_components/app-toast";
 import {
-  confirmUnsavedChanges,
+  requestUnsavedChangesConfirmation,
   serializeUnsavedChangesValue,
   useUnsavedChangesWarning,
 } from "../_hooks/use-unsaved-changes-warning";
@@ -426,6 +426,19 @@ export function LaporanKeuanganPageContent({
     );
   }, [bulan, router]);
 
+  const handleNewData = useCallback(async () => {
+    const canLeave = await requestUnsavedChangesConfirmation(t("common.unsavedChangesWarning"));
+
+    if (!canLeave) {
+      return;
+    }
+
+    setActionErrorMessage("");
+    setToast(null);
+    setLastSavedItem(null);
+    setRows([createFormRow()]);
+  }, [t]);
+
   async function handleSave() {
     setActionErrorMessage("");
     setToast(null);
@@ -506,9 +519,11 @@ export function LaporanKeuanganPageContent({
                 <button
                   type="button"
                   onClick={() => {
-                    if (confirmUnsavedChanges(t("common.unsavedChangesWarning"))) {
-                      router.push("/laporanKeuangan");
-                    }
+                    void requestUnsavedChangesConfirmation(t("common.unsavedChangesWarning")).then((canLeave) => {
+                      if (canLeave) {
+                        router.push("/laporanKeuangan");
+                      }
+                    });
                   }}
                   className="rounded-lg border border-sky-200 bg-white px-4 py-2 text-sm font-medium text-sky-800 shadow-sm transition hover:bg-sky-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
                 >
@@ -900,14 +915,24 @@ export function LaporanKeuanganPageContent({
                   >
                     {t("laporanKeuangan.addRow")}
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => void handleSave()}
-                    disabled={isSaving}
-                    className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-sky-500 dark:text-slate-950 dark:hover:bg-sky-400"
-                  >
-                    {isSaving ? t("common.loading") : t("common.saveChanges")}
-                  </button>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <button
+                      type="button"
+                      onClick={() => void handleSave()}
+                      disabled={isSaving}
+                      className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-sky-500 dark:text-slate-950 dark:hover:bg-sky-400"
+                    >
+                      {isSaving ? t("common.loading") : t("common.saveChanges")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void handleNewData()}
+                      disabled={isSaving}
+                      className="rounded-lg border border-sky-200 bg-white px-4 py-2 text-sm font-medium text-sky-800 transition hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+                    >
+                      {t("common.newData")}
+                    </button>
+                  </div>
                 </div>
               </div>
             ) : null}

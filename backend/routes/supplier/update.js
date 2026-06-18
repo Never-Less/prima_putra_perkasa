@@ -38,14 +38,14 @@ router.put("/:id", requireRole(ROLE_ADMIN, ROLE_STAFF), async (req, res) => {
   const id = String(req.params.id || "");
 
   if (!isValidId(id)) {
-    return res.status(400).json({ message: "invalid supplier id" });
+    return res.status(400).json({ message: "Data supplier yang dipilih tidak dapat dibuka." });
   }
 
   try {
     const existingSupplier = await Supplier.findById(id);
 
     if (!existingSupplier) {
-      return res.status(404).json({ message: "supplier not found" });
+      return res.status(404).json({ message: "Data supplier tidak ditemukan." });
     }
 
     const updates = {};
@@ -58,7 +58,7 @@ router.put("/:id", requireRole(ROLE_ADMIN, ROLE_STAFF), async (req, res) => {
       const hutang = parseBoolean(req.body.hutang);
 
       if (hutang === null) {
-        return res.status(400).json({ message: "hutang harus boolean" });
+        return res.status(400).json({ message: "Status hutang tidak valid." });
       }
 
       updates.hutang = hutang;
@@ -71,7 +71,7 @@ router.put("/:id", requireRole(ROLE_ADMIN, ROLE_STAFF), async (req, res) => {
         const lamaHutang = parseNumber(req.body.lamaHutang);
 
         if (lamaHutang === null) {
-          return res.status(400).json({ message: "lamaHutang harus angka" });
+          return res.status(400).json({ message: "Lama hutang harus berupa angka." });
         }
 
         updates.lamaHutang = lamaHutang;
@@ -80,12 +80,12 @@ router.put("/:id", requireRole(ROLE_ADMIN, ROLE_STAFF), async (req, res) => {
 
     if (Object.keys(updates).length === 0) {
       return res.status(400).json({
-        message: "minimal kirim salah satu field: namaSupplier, hutang, lamaHutang",
+        message: "Tidak ada perubahan yang bisa disimpan. Ubah minimal satu data terlebih dahulu.",
       });
     }
 
     if (updates.namaSupplier !== undefined && !updates.namaSupplier) {
-      return res.status(400).json({ message: "namaSupplier tidak boleh kosong" });
+      return res.status(400).json({ message: "Isi nama supplier sebelum menyimpan." });
     }
 
     const effectiveHutang = updates.hutang ?? existingSupplier.hutang;
@@ -95,7 +95,7 @@ router.put("/:id", requireRole(ROLE_ADMIN, ROLE_STAFF), async (req, res) => {
     if (effectiveHutang) {
       if (!Number.isFinite(effectiveLamaHutang) || effectiveLamaHutang <= 0) {
         return res.status(400).json({
-          message: "lamaHutang wajib lebih dari 0 saat hutang bernilai true",
+          message: "Isi lama hutang lebih dari 0 hari saat status hutang aktif.",
         });
       }
     } else {
@@ -108,7 +108,7 @@ router.put("/:id", requireRole(ROLE_ADMIN, ROLE_STAFF), async (req, res) => {
     });
 
     if (!supplier) {
-      return res.status(404).json({ message: "supplier not found" });
+      return res.status(404).json({ message: "Data supplier tidak ditemukan." });
     }
 
     return res.json({
@@ -116,7 +116,7 @@ router.put("/:id", requireRole(ROLE_ADMIN, ROLE_STAFF), async (req, res) => {
       supplier: sanitizeSupplier(supplier),
     });
   } catch (_error) {
-    return res.status(500).json({ message: "failed to update supplier" });
+    return res.status(500).json({ message: "Data supplier belum bisa disimpan. Coba lagi." });
   }
 });
 

@@ -10,7 +10,7 @@ router.get("/", async (req, res) => {
   const bulan = normalizeBulan(req.query.bulan);
 
   if (!bulan) {
-    return res.status(400).json({ message: "bulan wajib format YYYY-MM" });
+    return res.status(400).json({ message: "Pilih bulan laporan terlebih dahulu." });
   }
 
   try {

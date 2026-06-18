@@ -5,10 +5,12 @@ import Select from "react-select";
 import type { SingleValue, StylesConfig } from "react-select";
 import { AppDateInput } from "../../_components/app-date-input";
 import {
+  requestUnsavedChangesConfirmation,
   serializeUnsavedChangesValue,
   useUnsavedChangesWarning,
 } from "../../_hooks/use-unsaved-changes-warning";
 import {
+  buildSuratJalanBarangRowsFromNoPoOption,
   barangRowsToList,
   createEmptyBarangRow,
   ensureTrailingEmptyBarangRow,
@@ -17,6 +19,7 @@ import {
   type SuratJalanBarangFormRow,
   type SuratJalanFormState,
   type SuratJalanItem,
+  type SuratJalanNoPoOption,
 } from "../_lib/surat-jalan";
 import { useI18n } from "../../_i18n/provider";
 import { useTheme } from "../../_theme/provider";
@@ -50,13 +53,15 @@ const defaultKendaraanOptions = [
 
 type SuratJalanEditFormProps = {
   item?: SuratJalanItem;
+  initialForm?: SuratJalanFormState;
   customerOptions?: Array<{ id: string; nama: string }>;
-  noPoOptions?: string[];
+  noPoOptions?: SuratJalanNoPoOption[];
   noPoCustomerMap?: Record<string, string>;
   isSaving?: boolean;
   isDeleting?: boolean;
   actionErrorMessage?: string;
   onSave?: (form: SuratJalanFormState, selectedItem?: SuratJalanItem) => Promise<void> | void;
+  onNewData?: () => void;
   onDelete?: (selectedItem: SuratJalanItem) => Promise<void> | void;
   title: string;
   description: string;
@@ -154,6 +159,7 @@ function createSuratJalanDirtyValue(form: SuratJalanFormState) {
 
 export function SuratJalanEditForm({
   item,
+  initialForm,
   customerOptions = [],
   noPoOptions = [],
   noPoCustomerMap = {},
@@ -161,6 +167,7 @@ export function SuratJalanEditForm({
   isDeleting = false,
   actionErrorMessage = "",
   onSave,
+  onNewData,
   onDelete,
   title,
   description,
@@ -178,7 +185,19 @@ export function SuratJalanEditForm({
     () => (item ? toFormState(item) : createEmptySuratJalanFormState()),
     [item]
   );
-  const [form, setForm] = useState<SuratJalanFormState>(() => baselineForm);
+  const initialFormState = useMemo(
+    () =>
+      item
+        ? baselineForm
+        : initialForm
+          ? {
+              ...initialForm,
+              barangRows: ensureTrailingEmptyBarangRow(initialForm.barangRows),
+            }
+          : baselineForm,
+    [baselineForm, initialForm, item]
+  );
+  const [form, setForm] = useState<SuratJalanFormState>(() => initialFormState);
   const isDirty =
     serializeUnsavedChangesValue(createSuratJalanDirtyValue(form)) !==
     serializeUnsavedChangesValue(createSuratJalanDirtyValue(baselineForm));
@@ -190,6 +209,16 @@ export function SuratJalanEditForm({
   const tone = toneStyles[colorTone];
   const style = formStyles[formStyle];
   const inputClassName = `mt-1 w-full rounded-lg px-3 py-2 text-sm ${style.input}`;
+  const handleNewData = async () => {
+    const canLeave = await requestUnsavedChangesConfirmation(t("common.unsavedChangesWarning"));
+
+    if (!canLeave) {
+      return;
+    }
+
+    setForm(createEmptySuratJalanFormState());
+    onNewData?.();
+  };
   const noPoSelectStyles = useMemo<StylesConfig<NoPoSelectOption, false>>(() => {
     const isDark = theme === "dark";
 
@@ -258,7 +287,7 @@ export function SuratJalanEditForm({
     const noPoSet = new Set<string>();
 
     noPoOptions.forEach((option) => {
-      const normalizedOption = String(option || "").trim();
+      const normalizedOption = String(option?.noPo || "").trim();
 
       if (!normalizedOption) {
         return;
@@ -273,8 +302,34 @@ export function SuratJalanEditForm({
 
     return Array.from(noPoSet.values());
   }, [form.noPo, noPoOptions]);
+  const noPoOptionMap = useMemo(() => {
+    const map = new Map<string, SuratJalanNoPoOption>();
+
+    noPoOptions.forEach((option) => {
+      const noPo = String(option?.noPo || "").trim();
+
+      if (!noPo || map.has(noPo)) {
+        return;
+      }
+
+      map.set(noPo, option);
+    });
+
+    return map;
+  }, [noPoOptions]);
   const normalizedNoPoCustomerMap = useMemo(() => {
     const map = new Map<string, string>();
+
+    noPoOptions.forEach((option) => {
+      const noPoKey = String(option?.noPo || "").trim();
+      const idCustomerValue = String(option?.idCustomer || "").trim();
+
+      if (!noPoKey || !idCustomerValue) {
+        return;
+      }
+
+      map.set(noPoKey, idCustomerValue);
+    });
 
     Object.entries(noPoCustomerMap).forEach(([noPo, idCustomer]) => {
       const noPoKey = String(noPo || "").trim();
@@ -288,7 +343,7 @@ export function SuratJalanEditForm({
     });
 
     return map;
-  }, [noPoCustomerMap]);
+  }, [noPoCustomerMap, noPoOptions]);
   const noPoSelectOptions = useMemo(() => {
     return normalizedNoPoOptions.map((noPoOption) => ({
       value: noPoOption,
@@ -373,11 +428,16 @@ export function SuratJalanEditForm({
   function handleNoPoChange(option: SingleValue<NoPoSelectOption>) {
     const noPo = String(option?.value || "").trim();
     const mappedCustomerId = normalizedNoPoCustomerMap.get(noPo) || "";
+    const selectedNoPoOption = noPoOptionMap.get(noPo) || null;
 
     setForm((prev) => ({
       ...prev,
       noPo: noPo,
       idCustomer: mappedCustomerId || prev.idCustomer,
+      barangRows:
+        selectedNoPoOption && selectedNoPoOption.barang.length > 0
+          ? buildSuratJalanBarangRowsFromNoPoOption(selectedNoPoOption)
+          : prev.barangRows,
     }));
   }
 
@@ -501,6 +561,14 @@ export function SuratJalanEditForm({
               className={`w-full rounded-lg px-4 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto ${tone.primaryButton}`}
             >
               {isSaving ? t("common.loading") : t("common.saveChanges")}
+            </button>
+            <button
+              type="button"
+              disabled={isSaving || isDeleting}
+              onClick={() => void handleNewData()}
+              className={`w-full rounded-lg px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto ${tone.resetButton}`}
+            >
+              {t("common.newData")}
             </button>
             <button
               type="button"

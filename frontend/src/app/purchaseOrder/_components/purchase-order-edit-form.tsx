@@ -3,19 +3,26 @@
 import { useMemo, useState } from "react";
 import { AppDateInput } from "../../_components/app-date-input";
 import {
+  requestUnsavedChangesConfirmation,
   serializeUnsavedChangesValue,
   useUnsavedChangesWarning,
 } from "../../_hooks/use-unsaved-changes-warning";
 import { useI18n } from "../../_i18n/provider";
 import {
+  calculatePurchaseOrderBarangTotal,
+  createEmptyPurchaseOrderBarangRow,
+  ensureTrailingEmptyPurchaseOrderBarangRow,
   formatRupiah,
   formatTanggal,
+  purchaseOrderBarangRowsToList,
   toPurchaseOrderFormState,
+  type PurchaseOrderBarangFormRow,
   type PurchaseOrderCustomerOption,
   type PurchaseOrderFormState,
   type PurchaseOrderInvoiceOption,
   type PurchaseOrderItem,
 } from "../_lib/purchase-order";
+import { PurchaseOrderBarangSpreadsheet } from "./purchase-order-barang-spreadsheet";
 
 type PurchaseOrderEditFormProps = {
   item?: PurchaseOrderItem;
@@ -24,8 +31,12 @@ type PurchaseOrderEditFormProps = {
   isSaving?: boolean;
   isDeleting?: boolean;
   actionErrorMessage?: string;
+  isShortcutLoading?: boolean;
   onSave?: (form: PurchaseOrderFormState, selectedItem?: PurchaseOrderItem) => Promise<void> | void;
+  onNewData?: () => void;
   onDelete?: (selectedItem: PurchaseOrderItem) => Promise<void> | void;
+  onCreateSuratJalan?: (selectedItem: PurchaseOrderItem) => Promise<void> | void;
+  onCreateInvoice?: (selectedItem: PurchaseOrderItem) => Promise<void> | void;
 };
 
 function createEmptyPurchaseOrderFormState(): PurchaseOrderFormState {
@@ -34,8 +45,20 @@ function createEmptyPurchaseOrderFormState(): PurchaseOrderFormState {
     tanggalPo: "",
     namaCustomer: "",
     nominalPo: "0",
+    barangRows: ensureTrailingEmptyPurchaseOrderBarangRow([
+      createEmptyPurchaseOrderBarangRow(),
+    ]),
     tanggalInvoice: "",
     noInvoice: "",
+  };
+}
+
+function createPurchaseOrderDirtyValue(form: PurchaseOrderFormState) {
+  const { barangRows, ...restForm } = form;
+
+  return {
+    ...restForm,
+    barang: purchaseOrderBarangRowsToList(barangRows),
   };
 }
 
@@ -46,8 +69,12 @@ export function PurchaseOrderEditForm({
   isSaving = false,
   isDeleting = false,
   actionErrorMessage = "",
+  isShortcutLoading = false,
   onSave,
+  onNewData,
   onDelete,
+  onCreateSuratJalan,
+  onCreateInvoice,
 }: PurchaseOrderEditFormProps) {
   const { locale, t } = useI18n();
   const inputPlaceholder = (fieldKey: string) =>
@@ -58,12 +85,24 @@ export function PurchaseOrderEditForm({
   );
   const [form, setForm] = useState<PurchaseOrderFormState>(() => baselineForm);
   const isDirty =
-    serializeUnsavedChangesValue(form) !== serializeUnsavedChangesValue(baselineForm);
+    serializeUnsavedChangesValue(createPurchaseOrderDirtyValue(form)) !==
+    serializeUnsavedChangesValue(createPurchaseOrderDirtyValue(baselineForm));
 
   useUnsavedChangesWarning(
     isDirty && !isSaving && !isDeleting,
     t("common.unsavedChangesWarning")
   );
+
+  const handleNewData = async () => {
+    const canLeave = await requestUnsavedChangesConfirmation(t("common.unsavedChangesWarning"));
+
+    if (!canLeave) {
+      return;
+    }
+
+    setForm(createEmptyPurchaseOrderFormState());
+    onNewData?.();
+  };
 
   const customerLabelMap = useMemo(() => {
     return new Map(customerOptions.map((option) => [option.id, option.nama]));
@@ -75,6 +114,20 @@ export function PurchaseOrderEditForm({
 
   const previewCustomer = customerLabelMap.get(form.namaCustomer) || form.namaCustomer || "-";
   const previewInvoice = invoiceLabelMap.get(form.noInvoice) || form.noInvoice || "-";
+  const barangList = useMemo(() => purchaseOrderBarangRowsToList(form.barangRows), [form.barangRows]);
+  const barangTotal = useMemo(() => calculatePurchaseOrderBarangTotal(barangList), [barangList]);
+
+  function updateBarangRows(rows: PurchaseOrderBarangFormRow[]) {
+    const nextRows = ensureTrailingEmptyPurchaseOrderBarangRow(rows);
+    const nextBarang = purchaseOrderBarangRowsToList(nextRows);
+    const nextTotal = calculatePurchaseOrderBarangTotal(nextBarang);
+
+    setForm((prev) => ({
+      ...prev,
+      barangRows: nextRows,
+      nominalPo: nextBarang.length > 0 ? String(nextTotal) : prev.nominalPo,
+    }));
+  }
 
   return (
     <section className="rounded-2xl border border-sky-200 bg-sky-50/40 p-5 shadow-sm dark:border-sky-900/70 dark:bg-slate-950/85">
@@ -168,34 +221,72 @@ export function PurchaseOrderEditForm({
                 ))}
               </select>
             </label>
+
+            <div className="text-sm text-slate-700 dark:text-slate-200 sm:col-span-2">
+              <p>{t("purchaseOrder.form.items.title")}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {t("purchaseOrder.form.items.hint")}
+              </p>
+              <PurchaseOrderBarangSpreadsheet
+                rows={form.barangRows}
+                disabled={isSaving || isDeleting}
+                onRowsChange={updateBarangRows}
+              />
+            </div>
           </div>
 
           <div className="mt-3 grid gap-2 sm:flex sm:flex-wrap">
             <button
               type="button"
               onClick={() => void onSave?.(form, item)}
-              disabled={isSaving || isDeleting}
+              disabled={isSaving || isDeleting || isShortcutLoading}
               className="w-full rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-sky-500 dark:text-slate-950 dark:hover:bg-sky-400 sm:w-auto"
             >
               {isSaving ? t("common.loading") : t("common.saveChanges")}
             </button>
             <button
               type="button"
-              disabled={isSaving || isDeleting}
+              disabled={isSaving || isDeleting || isShortcutLoading}
+              onClick={() => void handleNewData()}
+              className="w-full rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm text-sky-700 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800 sm:w-auto"
+            >
+              {t("common.newData")}
+            </button>
+            <button
+              type="button"
+              disabled={isSaving || isDeleting || isShortcutLoading}
               onClick={() => setForm(baselineForm)}
               className="w-full rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm text-sky-700 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800 sm:w-auto"
             >
               {t("common.resetForm")}
             </button>
             {item ? (
-              <button
-                type="button"
-                onClick={() => void onDelete?.(item)}
-                disabled={isSaving || isDeleting}
-                className="w-full rounded-lg border border-red-300 bg-white px-4 py-2 text-sm text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-900 dark:bg-slate-900 dark:text-red-300 dark:hover:bg-red-950/40 sm:w-auto"
-              >
-                {isDeleting ? t("common.loading") : t("common.delete")}
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={() => void onCreateSuratJalan?.(item)}
+                  disabled={isSaving || isDeleting || isShortcutLoading}
+                  className="w-full rounded-lg border border-emerald-300 bg-white px-4 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-900 dark:bg-slate-900 dark:text-emerald-300 dark:hover:bg-emerald-950/40 sm:w-auto"
+                >
+                  {isShortcutLoading ? t("common.loading") : t("purchaseOrder.shortcut.createSuratJalan")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void onCreateInvoice?.(item)}
+                  disabled={isSaving || isDeleting || isShortcutLoading}
+                  className="w-full rounded-lg border border-indigo-300 bg-white px-4 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-indigo-900 dark:bg-slate-900 dark:text-indigo-300 dark:hover:bg-indigo-950/40 sm:w-auto"
+                >
+                  {isShortcutLoading ? t("common.loading") : t("purchaseOrder.shortcut.createInvoice")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void onDelete?.(item)}
+                  disabled={isSaving || isDeleting || isShortcutLoading}
+                  className="w-full rounded-lg border border-red-300 bg-white px-4 py-2 text-sm text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-900 dark:bg-slate-900 dark:text-red-300 dark:hover:bg-red-950/40 sm:w-auto"
+                >
+                  {isDeleting ? t("common.loading") : t("common.delete")}
+                </button>
+              </>
             ) : null}
           </div>
           {actionErrorMessage ? (
@@ -221,11 +312,38 @@ export function PurchaseOrderEditForm({
               <span className="text-slate-500 dark:text-slate-400">{t("field.nominalPo")}:</span> {formatRupiah(Number(form.nominalPo || "0"), locale)}
             </p>
             <p>
+              <span className="text-slate-500 dark:text-slate-400">{t("field.subtotal")}:</span> {formatRupiah(barangTotal, locale)}
+            </p>
+            <p>
               <span className="text-slate-500 dark:text-slate-400">{t("field.tanggalInvoice")}:</span> {formatTanggal(form.tanggalInvoice || null, locale)}
             </p>
             <p>
               <span className="text-slate-500 dark:text-slate-400">{t("field.noInvoice")}:</span> {previewInvoice}
             </p>
+          </div>
+
+          <div className="mt-3 rounded-lg border border-sky-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.15em] text-slate-500 dark:text-slate-400">
+              {t("field.barang")}
+            </p>
+            {barangList.length > 0 ? (
+              <ul className="space-y-1 text-sm text-slate-700 dark:text-slate-200">
+                {barangList.map((barang, index) => (
+                  <li key={`purchase-order-preview-barang-${index}`}>
+                    {barang.spesifikasi
+                      ? `${barang.namaBarang} (${barang.spesifikasi})`
+                      : barang.namaBarang}
+                    : {barang.kuantitas} {barang.unit} x{" "}
+                    {formatRupiah(barang.hargaSatuan, locale)} ={" "}
+                    {formatRupiah(barang.jumlah, locale)}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                {t("common.noItems")}
+              </p>
+            )}
           </div>
         </div>
       </div>

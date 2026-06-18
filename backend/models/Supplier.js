@@ -25,7 +25,10 @@ const supplierSchema = new mongoose.Schema(
 supplierSchema.pre("validate", function validateSupplier() {
   if (this.hutang) {
     if (!Number.isFinite(this.lamaHutang) || this.lamaHutang <= 0) {
-      this.invalidate("lamaHutang", "lamaHutang wajib lebih dari 0 saat hutang bernilai true");
+      this.invalidate(
+        "lamaHutang",
+        "Isi lama hutang lebih dari 0 hari saat status hutang aktif."
+      );
     }
 
     return;

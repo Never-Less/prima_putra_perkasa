@@ -67,19 +67,22 @@ pembelianSchema.pre("validate", function validatePembelian() {
     if (!this.tanggalJatuhTempo) {
       this.invalidate(
         "tanggalJatuhTempo",
-        "tanggalJatuhTempo wajib diisi saat hutang bernilai true"
+        "Isi tanggal jatuh tempo saat status hutang aktif."
       );
     }
 
     if (!Number.isFinite(this.lamaHutang) || this.lamaHutang <= 0) {
-      this.invalidate("lamaHutang", "lamaHutang wajib lebih dari 0 saat hutang bernilai true");
+      this.invalidate(
+        "lamaHutang",
+        "Isi lama hutang lebih dari 0 hari saat status hutang aktif."
+      );
     }
   } else {
     this.lamaHutang = 0;
   }
 
   if (this.tanggalBayar && this.tanggalBayar < this.tanggalNota) {
-    this.invalidate("tanggalBayar", "tanggalBayar tidak boleh lebih kecil dari tanggalNota");
+    this.invalidate("tanggalBayar", "Tanggal bayar tidak boleh lebih awal dari tanggal nota.");
   }
 });
 
