@@ -1,52 +1,52 @@
 const express = require("express");
 
 const { PurchaseOrder } = require("../../models/PurchaseOrder");
+const { sanitizePurchaseOrderBarang } = require("../purchase-order/sanitize-purchase-order");
 
 const router = express.Router();
 
 router.get("/no-po-options", async (_req, res) => {
   try {
-    const optionRows = await PurchaseOrder.aggregate([
+    const optionRows = await PurchaseOrder.find(
       {
-        $match: {
-          noPo: { $exists: true, $ne: null },
-        },
+        noPo: { $exists: true, $ne: null },
       },
-      {
-        $group: {
-          _id: "$noPo",
-          idCustomer: { $first: "$namaCustomer" },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          noPo: "$_id",
-          idCustomer: "$idCustomer",
-        },
-      },
-      {
-        $sort: {
-          noPo: 1,
-        },
-      },
-    ]);
+      "noPo namaCustomer barang createdAt"
+    )
+      .sort({ noPo: 1, createdAt: -1 })
+      .lean();
+    const optionMap = new Map();
 
-    const noPoOptions = optionRows
-      .map((item) => {
-        const noPo = String(item?.noPo || "").trim();
-        const idCustomer = String(item?.idCustomer || "").trim();
+    optionRows.forEach((item) => {
+      const noPo = String(item?.noPo || "").trim();
+      const idCustomer = String(item?.namaCustomer || "").trim();
+      const barang = sanitizePurchaseOrderBarang(item?.barang);
 
-        if (!noPo) {
-          return null;
-        }
+      if (!noPo) {
+        return;
+      }
 
-        return {
+      const existingOption = optionMap.get(noPo);
+
+      if (!existingOption) {
+        optionMap.set(noPo, {
           noPo,
           idCustomer,
-        };
-      })
-      .filter((item) => Boolean(item));
+          barang,
+        });
+        return;
+      }
+
+      existingOption.idCustomer = existingOption.idCustomer || idCustomer;
+
+      if (existingOption.barang.length === 0 && barang.length > 0) {
+        existingOption.barang = barang;
+      }
+    });
+
+    const noPoOptions = Array.from(optionMap.values()).sort((left, right) =>
+      left.noPo.localeCompare(right.noPo)
+    );
 
     return res.json({
       noPoOptions,

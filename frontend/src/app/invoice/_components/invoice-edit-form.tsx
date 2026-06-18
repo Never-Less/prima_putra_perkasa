@@ -4,6 +4,7 @@ import Select, { type MultiValue, type StylesConfig } from "react-select";
 import { useMemo, useState } from "react";
 import { AppDateInput } from "../../_components/app-date-input";
 import {
+  requestUnsavedChangesConfirmation,
   serializeUnsavedChangesValue,
   useUnsavedChangesWarning,
 } from "../../_hooks/use-unsaved-changes-warning";
@@ -72,6 +73,7 @@ type InvoiceEditFormProps = {
   isDeleting?: boolean;
   actionErrorMessage?: string;
   onSave?: (form: InvoiceFormState, selectedItem?: InvoiceItem) => Promise<void> | void;
+  onNewData?: () => void;
   onDelete?: (selectedItem: InvoiceItem) => Promise<void> | void;
 };
 
@@ -109,6 +111,7 @@ export function InvoiceEditForm({
   isDeleting = false,
   actionErrorMessage = "",
   onSave,
+  onNewData,
   onDelete,
 }: InvoiceEditFormProps) {
   const { locale, t } = useI18n();
@@ -144,6 +147,17 @@ export function InvoiceEditForm({
     isDirty && !isSaving && !isDeleting,
     t("common.unsavedChangesWarning")
   );
+
+  const handleNewData = async () => {
+    const canLeave = await requestUnsavedChangesConfirmation(t("common.unsavedChangesWarning"));
+
+    if (!canLeave) {
+      return;
+    }
+
+    setForm(createEmptyInvoiceFormState());
+    onNewData?.();
+  };
 
   const barangList = useMemo(() => invoiceBarangRowsToList(form.barangRows), [form.barangRows]);
   const noSuratJalanList = useMemo(
@@ -244,8 +258,9 @@ export function InvoiceEditForm({
             }))
             .filter((item) => item.noSuratJalan)
         : [];
+      const barangValues = Array.isArray(option.barang) ? option.barang : [];
 
-      if (!noPo || noSuratJalanValues.length === 0) {
+      if (!noPo || (noSuratJalanValues.length === 0 && barangValues.length === 0)) {
         return;
       }
 
@@ -255,6 +270,7 @@ export function InvoiceEditForm({
         optionMap.set(noPo, {
           noPo,
           idCustomer,
+          barang: barangValues,
           noSuratJalan: noSuratJalanValues,
         });
         return;
@@ -271,6 +287,7 @@ export function InvoiceEditForm({
       optionMap.set(noPo, {
         noPo,
         idCustomer: existingOption.idCustomer || idCustomer,
+        barang: existingOption.barang.length > 0 ? existingOption.barang : barangValues,
         noSuratJalan: Array.from(rowMap.values()),
       });
     });
@@ -282,6 +299,7 @@ export function InvoiceEditForm({
         optionMap.set(selectedNoPo, {
           noPo: selectedNoPo,
           idCustomer: form.idCustomer,
+          barang: [],
           noSuratJalan:
             index === 0
               ? noSuratJalanList.map((value) => ({
@@ -310,6 +328,7 @@ export function InvoiceEditForm({
         optionMap.set(selectedNoPo, {
           noPo: existingOption.noPo,
           idCustomer: existingOption.idCustomer || form.idCustomer,
+          barang: existingOption.barang,
           noSuratJalan: Array.from(rowMap.values()),
         });
       }
@@ -749,6 +768,14 @@ export function InvoiceEditForm({
               className="w-full rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-sky-500 dark:text-slate-950 dark:hover:bg-sky-400 sm:w-auto"
             >
               {isSaving ? t("common.loading") : t("common.saveChanges")}
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleNewData()}
+              disabled={isSaving || isDeleting}
+              className="w-full rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm text-sky-700 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800 sm:w-auto"
+            >
+              {t("common.newData")}
             </button>
             <button
               type="button"

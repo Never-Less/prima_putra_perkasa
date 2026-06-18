@@ -5,6 +5,7 @@ import type { SingleValue, StylesConfig } from "react-select";
 import CreatableSelect from "react-select/creatable";
 import { AppDateInput } from "../../_components/app-date-input";
 import {
+  requestUnsavedChangesConfirmation,
   serializeUnsavedChangesValue,
   useUnsavedChangesWarning,
 } from "../../_hooks/use-unsaved-changes-warning";
@@ -36,6 +37,7 @@ type PembelianEditFormProps = {
   isDeleting?: boolean;
   actionErrorMessage?: string;
   onSave?: (form: PembelianFormState, selectedItem?: PembelianItem) => Promise<void> | void;
+  onNewData?: () => void;
   onDelete?: (selectedItem: PembelianItem) => Promise<void> | void;
 };
 
@@ -152,6 +154,7 @@ export function PembelianEditForm({
   isDeleting = false,
   actionErrorMessage = "",
   onSave,
+  onNewData,
   onDelete,
 }: PembelianEditFormProps) {
   const { locale, t } = useI18n();
@@ -176,6 +179,18 @@ export function PembelianEditForm({
     isDirty && !isSaving && !isDeleting,
     t("common.unsavedChangesWarning")
   );
+
+  const handleNewData = async () => {
+    const canLeave = await requestUnsavedChangesConfirmation(t("common.unsavedChangesWarning"));
+
+    if (!canLeave) {
+      return;
+    }
+
+    setSupplierInputValue("");
+    setForm(createEmptyPembelianFormState(invoiceOptions));
+    onNewData?.();
+  };
 
   const normalizedInvoiceOptions = useMemo(() => {
     const optionMap = new Map<string, string>([
@@ -604,6 +619,14 @@ export function PembelianEditForm({
               className="w-full rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-sky-500 dark:text-slate-950 dark:hover:bg-sky-400 sm:w-auto"
             >
               {isSaving ? t("common.loading") : t("common.saveChanges")}
+            </button>
+            <button
+              type="button"
+              disabled={isSaving || isDeleting}
+              onClick={() => void handleNewData()}
+              className="w-full rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm text-sky-700 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800 sm:w-auto"
+            >
+              {t("common.newData")}
             </button>
             <button
               type="button"

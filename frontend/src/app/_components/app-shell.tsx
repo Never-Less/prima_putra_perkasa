@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { type ReactNode } from "react";
 import { AppNavbar } from "./app-navbar";
 import { PrivateRouteGuard } from "./private-route-guard";
+import { UnsavedChangesModal } from "./unsaved-changes-modal";
 
 type AppShellProps = {
   children: ReactNode;
@@ -32,6 +33,7 @@ export function AppShell({ children }: AppShellProps) {
     <PrivateRouteGuard key={pathname}>
       {hideAppChrome ? null : <AppNavbar />}
       <div className={hideAppChrome ? "" : "lg:pl-64"}>{children}</div>
+      <UnsavedChangesModal />
     </PrivateRouteGuard>
   );
 }

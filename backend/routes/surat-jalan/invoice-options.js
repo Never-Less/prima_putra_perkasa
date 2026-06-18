@@ -1,5 +1,6 @@
 const express = require("express");
 
+const { PurchaseOrder } = require("../../models/PurchaseOrder");
 const { SuratJalan } = require("../../models/SuratJalan");
 
 const router = express.Router();
@@ -37,16 +38,81 @@ function normalizeBarangOptions(value, defaultKodeDepartemen = "", noSuratJalan 
     .filter((item) => Boolean(item));
 }
 
+function normalizeSalesOrderBarangOptions(value, noPo = "") {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  const normalizedNoPo = String(noPo || "").trim();
+
+  return value
+    .map((item, index) => {
+      const nama = String(item?.namaBarang || "").trim();
+      const spesifikasi = String(item?.spesifikasi || "").trim();
+      const jumlah = Number(item?.kuantitas);
+      const unit = String(item?.unit || "").trim();
+      const hargaSatuan = Number(item?.hargaSatuan);
+
+      if (!nama || !Number.isFinite(jumlah) || jumlah <= 0) {
+        return null;
+      }
+
+      return {
+        barangId: `sales-order:${normalizedNoPo}:${index + 1}`,
+        nama,
+        spesifikasi,
+        kodeDepartemen: "",
+        jumlah,
+        unit,
+        hargaSatuan: Number.isFinite(hargaSatuan) ? hargaSatuan : 0,
+      };
+    })
+    .filter((item) => Boolean(item));
+}
+
 router.get("/invoice-options", async (_req, res) => {
   try {
-    const suratJalanList = await SuratJalan.find(
-      {},
-      "noPo noSuratJalan idCustomer barang kodeDepartemen"
-    )
-      .sort({ noPo: 1, noSuratJalan: 1 })
-      .lean();
+    const [purchaseOrderList, suratJalanList] = await Promise.all([
+      PurchaseOrder.find({}, "noPo namaCustomer barang createdAt")
+        .sort({ noPo: 1, createdAt: -1 })
+        .lean(),
+      SuratJalan.find(
+        {},
+        "noPo noSuratJalan idCustomer barang kodeDepartemen"
+      )
+        .sort({ noPo: 1, noSuratJalan: 1 })
+        .lean(),
+    ]);
 
     const groupMap = new Map();
+
+    purchaseOrderList.forEach((item) => {
+      const noPo = String(item?.noPo || "").trim();
+      const idCustomer = String(item?.namaCustomer || "").trim();
+      const barang = normalizeSalesOrderBarangOptions(item?.barang, noPo);
+
+      if (!noPo) {
+        return;
+      }
+
+      const existingGroup = groupMap.get(noPo);
+
+      if (existingGroup) {
+        existingGroup.idCustomer = existingGroup.idCustomer || idCustomer;
+
+        if (existingGroup.barang.length === 0 && barang.length > 0) {
+          existingGroup.barang = barang;
+        }
+
+        return;
+      }
+
+      groupMap.set(noPo, {
+        idCustomer,
+        barang,
+        noSuratJalanMap: new Map(),
+      });
+    });
 
     suratJalanList.forEach((item) => {
       const noPo = String(item?.noPo || "").trim();
@@ -73,6 +139,7 @@ router.get("/invoice-options", async (_req, res) => {
 
       groupMap.set(noPo, {
         idCustomer,
+        barang: [],
         noSuratJalanMap: new Map([
           [
             noSuratJalan,
@@ -94,6 +161,7 @@ router.get("/invoice-options", async (_req, res) => {
       return {
         noPo,
         idCustomer: value.idCustomer,
+        barang: value.barang,
         noSuratJalan,
       };
     });

@@ -4,7 +4,13 @@ const { Customer } = require("../../models/Customer");
 const { Invoice } = require("../../models/Invoice");
 const { PurchaseOrder } = require("../../models/PurchaseOrder");
 const { sanitizePurchaseOrder } = require("./sanitize-purchase-order");
-const { isValidId, parseDate, parseNumber } = require("./validators");
+const {
+  calculateBarangSubtotal,
+  isValidId,
+  normalizeBarangList,
+  parseDate,
+  parseNumber,
+} = require("./validators");
 
 const router = express.Router();
 
@@ -12,7 +18,14 @@ router.post("/", async (req, res) => {
   const noPo = String(req.body.noPo || "").trim();
   const tanggalPo = parseDate(req.body.tanggalPo);
   const namaCustomer = String(req.body.namaCustomer || "").trim();
-  const nominalPo = parseNumber(req.body.nominalPo);
+  const barang = normalizeBarangList(req.body.barang);
+  const parsedNominalPo = parseNumber(req.body.nominalPo);
+  const nominalPo =
+    parsedNominalPo !== null
+      ? parsedNominalPo
+      : barang && barang.length > 0
+        ? calculateBarangSubtotal(barang)
+        : null;
   const tanggalInvoice =
     req.body.tanggalInvoice === null
       ? null
@@ -26,38 +39,45 @@ router.post("/", async (req, res) => {
 
   if (!noPo || !tanggalPo || !namaCustomer || nominalPo === null) {
     return res.status(400).json({
-      message: "noPo, tanggalPo, namaCustomer, dan nominalPo wajib diisi",
+      message: "Lengkapi No. SO, tanggal SO, customer, dan nominal SO sebelum menyimpan.",
+    });
+  }
+
+  if (!barang) {
+    return res.status(400).json({
+      message:
+        "Isi barang sales order dengan nama barang, qty, unit, dan harga satuan yang valid.",
     });
   }
 
   if (nominalPo < 0) {
-    return res.status(400).json({ message: "nominalPo harus angka >= 0" });
+    return res.status(400).json({ message: "Nominal SO harus berupa angka 0 atau lebih." });
   }
 
   if (!isValidId(namaCustomer)) {
-    return res.status(400).json({ message: "namaCustomer tidak valid" });
+    return res.status(400).json({ message: "Customer yang dipilih tidak valid." });
   }
 
   if (req.body.tanggalInvoice !== undefined && req.body.tanggalInvoice !== null && !tanggalInvoice) {
-    return res.status(400).json({ message: "tanggalInvoice tidak valid" });
+    return res.status(400).json({ message: "Tanggal invoice tidak dapat dibaca." });
   }
 
   if (noInvoice !== null && !isValidId(noInvoice)) {
-    return res.status(400).json({ message: "noInvoice tidak valid" });
+    return res.status(400).json({ message: "Invoice yang dipilih tidak valid." });
   }
 
   try {
     const customer = await Customer.findById(namaCustomer);
 
     if (!customer) {
-      return res.status(404).json({ message: "customer tidak ditemukan" });
+      return res.status(404).json({ message: "Customer yang dipilih tidak ditemukan." });
     }
 
     if (noInvoice) {
       const invoice = await Invoice.findById(noInvoice);
 
       if (!invoice) {
-        return res.status(404).json({ message: "invoice tidak ditemukan" });
+        return res.status(404).json({ message: "Invoice yang dipilih tidak ditemukan." });
       }
     }
 
@@ -66,6 +86,7 @@ router.post("/", async (req, res) => {
       tanggalPo: tanggalPo,
       namaCustomer: namaCustomer,
       nominalPo: nominalPo,
+      barang: barang,
       tanggalInvoice: tanggalInvoice,
       noInvoice: noInvoice,
     });
@@ -75,7 +96,7 @@ router.post("/", async (req, res) => {
       purchaseOrder: sanitizePurchaseOrder(purchaseOrder),
     });
   } catch (_error) {
-    return res.status(500).json({ message: "failed to create purchase order" });
+    return res.status(500).json({ message: "Data sales order belum bisa disimpan. Coba lagi." });
   }
 });
 

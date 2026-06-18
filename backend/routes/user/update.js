@@ -10,14 +10,14 @@ router.put("/:id", async (req, res) => {
   const id = String(req.params.id || "");
 
   if (!isValidId(id)) {
-    return res.status(400).json({ message: "invalid user id" });
+    return res.status(400).json({ message: "Data user yang dipilih tidak dapat dibuka." });
   }
 
   try {
     const user = await User.findById(id).select("+password");
 
     if (!user) {
-      return res.status(404).json({ message: "user not found" });
+      return res.status(404).json({ message: "Data user tidak ditemukan." });
     }
 
     const nextUsername =
@@ -32,15 +32,15 @@ router.put("/:id", async (req, res) => {
       req.body.role !== undefined ? normalizeRole(req.body.role) : user.role;
 
     if (!nextUsername) {
-      return res.status(400).json({ message: "username wajib diisi" });
+      return res.status(400).json({ message: "Isi username sebelum menyimpan user." });
     }
 
     if (!ALLOWED_ROLES.includes(nextRole)) {
-      return res.status(400).json({ message: "role tidak valid" });
+      return res.status(400).json({ message: "Role yang dipilih tidak valid." });
     }
 
     if (req.body.password !== undefined && nextPassword && nextPassword.length < 8) {
-      return res.status(400).json({ message: "password minimal 8 karakter" });
+      return res.status(400).json({ message: "Password minimal 8 karakter." });
     }
 
     const duplicateUser = await User.findOne({
@@ -49,7 +49,7 @@ router.put("/:id", async (req, res) => {
     });
 
     if (duplicateUser) {
-      return res.status(409).json({ message: "username already exists" });
+      return res.status(409).json({ message: "Username ini sudah digunakan." });
     }
 
     user.username = nextUsername;
@@ -67,10 +67,10 @@ router.put("/:id", async (req, res) => {
     });
   } catch (error) {
     if (error?.code === 11000) {
-      return res.status(409).json({ message: "username already exists" });
+      return res.status(409).json({ message: "Username ini sudah digunakan." });
     }
 
-    return res.status(500).json({ message: "failed to update user" });
+    return res.status(500).json({ message: "Data user belum bisa disimpan. Coba lagi." });
   }
 });
 

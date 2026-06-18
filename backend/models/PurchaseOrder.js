@@ -1,5 +1,43 @@
 const mongoose = require("mongoose");
 
+const barangPurchaseOrderSchema = new mongoose.Schema(
+  {
+    namaBarang: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    spesifikasi: {
+      type: String,
+      trim: true,
+      maxlength: 300,
+      default: "",
+    },
+    kuantitas: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    unit: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 50,
+    },
+    hargaSatuan: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    jumlah: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+  },
+  { _id: false }
+);
+
 const purchaseOrderSchema = new mongoose.Schema(
   {
     noPo: {
@@ -22,6 +60,10 @@ const purchaseOrderSchema = new mongoose.Schema(
       type: Number,
       required: true,
       min: 0,
+    },
+    barang: {
+      type: [barangPurchaseOrderSchema],
+      default: [],
     },
     tanggalInvoice: {
       type: Date,

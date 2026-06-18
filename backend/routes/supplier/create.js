@@ -39,16 +39,16 @@ router.post("/", requireRole(ROLE_ADMIN, ROLE_STAFF), async (req, res) => {
   const lamaHutang = hutang ? parseNumber(req.body.lamaHutang) : null;
 
   if (!namaSupplier) {
-    return res.status(400).json({ message: "namaSupplier wajib diisi" });
+    return res.status(400).json({ message: "Isi nama supplier sebelum menyimpan." });
   }
 
   if (hutang === null) {
-    return res.status(400).json({ message: "hutang harus boolean" });
+    return res.status(400).json({ message: "Status hutang tidak valid." });
   }
 
   if (hutang && (lamaHutang === null || lamaHutang <= 0)) {
     return res.status(400).json({
-      message: "lamaHutang wajib lebih dari 0 saat hutang bernilai true",
+      message: "Isi lama hutang lebih dari 0 hari saat status hutang aktif.",
     });
   }
 
@@ -64,7 +64,7 @@ router.post("/", requireRole(ROLE_ADMIN, ROLE_STAFF), async (req, res) => {
       supplier: sanitizeSupplier(supplier),
     });
   } catch (_error) {
-    return res.status(500).json({ message: "failed to create supplier" });
+    return res.status(500).json({ message: "Data supplier belum bisa disimpan. Coba lagi." });
   }
 });
 

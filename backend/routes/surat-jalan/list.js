@@ -16,6 +16,7 @@ router.get("/", async (req, res) => {
     const query = {};
     const noSuratJalanRegex = buildSearchRegex(req.query.noSuratJalan);
     const noPoRegex = buildSearchRegex(req.query.noPo);
+    const namaBarangRegex = buildSearchRegex(req.query.namaBarang);
     const kodeDepartemenRegex = buildSearchRegex(req.query.kodeDepartemen);
     const customerRegex = buildSearchRegex(req.query.idCustomer);
     const kendaraanRegex = buildSearchRegex(req.query.kendaraan);
@@ -30,6 +31,10 @@ router.get("/", async (req, res) => {
 
     if (noPoRegex) {
       query.noPo = noPoRegex;
+    }
+
+    if (namaBarangRegex) {
+      query["barang.nama"] = namaBarangRegex;
     }
 
     if (kodeDepartemenRegex) {

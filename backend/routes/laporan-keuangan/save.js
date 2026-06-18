@@ -11,7 +11,7 @@ router.post("/", async (req, res) => {
   const normalized = normalizeRincianBiaya(req.body.rincianBiaya);
 
   if (!bulan) {
-    return res.status(400).json({ message: "bulan wajib format YYYY-MM" });
+    return res.status(400).json({ message: "Pilih bulan laporan terlebih dahulu." });
   }
 
   if (normalized.error) {
@@ -38,10 +38,10 @@ router.post("/", async (req, res) => {
     });
   } catch (error) {
     if (error?.code === 11000) {
-      return res.status(409).json({ message: "bulan already exists" });
+      return res.status(409).json({ message: "Laporan untuk bulan ini sudah ada." });
     }
 
-    return res.status(500).json({ message: "failed to save laporan keuangan" });
+    return res.status(500).json({ message: "Laporan keuangan belum bisa disimpan. Coba lagi." });
   }
 });
 

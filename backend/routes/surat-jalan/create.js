@@ -23,24 +23,24 @@ router.post("/", async (req, res) => {
   if (!noSuratJalan || !noPo || !tanggal || !idCustomer || !barang || !kendaraan || !tipe) {
     return res.status(400).json({
       message:
-        "noSuratJalan, noPo, tanggal, idCustomer, barang (nama, spesifikasi?, kodeDepartemen?, jumlah, unit), kendaraan, dan tipe wajib diisi",
+        "Lengkapi No. Surat Jalan, No. SO, tanggal, customer, barang, kendaraan, dan tipe sebelum menyimpan.",
     });
   }
 
   if (!["partial", "non partial"].includes(tipe)) {
     return res.status(400).json({
-      message: "tipe harus partial atau non partial",
+      message: "Pilih tipe surat jalan yang valid.",
     });
   }
 
   if (!isValidId(idCustomer)) {
-    return res.status(400).json({ message: "idCustomer tidak valid" });
+    return res.status(400).json({ message: "Customer yang dipilih tidak valid." });
   }
 
   try {
     const customer = await Customer.findById(idCustomer);
     if (!customer) {
-      return res.status(404).json({ message: "customer tidak ditemukan" });
+      return res.status(404).json({ message: "Customer yang dipilih tidak ditemukan." });
     }
 
     const existingNoPoSuratJalan = await SuratJalan.findOne({ noPo })
@@ -51,14 +51,14 @@ router.post("/", async (req, res) => {
 
       if (existingIdCustomer && existingIdCustomer !== idCustomer) {
         return res.status(409).json({
-          message: "noPo sudah terhubung ke customer lain",
+          message: "No. SO ini sudah terhubung ke customer lain.",
         });
       }
     }
 
     const existingSuratJalan = await SuratJalan.findOne({ noSuratJalan }).select("_id").lean();
     if (existingSuratJalan) {
-      return res.status(409).json({ message: "noSuratJalan sudah digunakan" });
+      return res.status(409).json({ message: "No. Surat Jalan ini sudah digunakan." });
     }
 
     const suratJalan = await SuratJalan.create({
@@ -87,10 +87,10 @@ router.post("/", async (req, res) => {
     });
   } catch (error) {
     if (error?.code === 11000 && error?.keyPattern?.noSuratJalan) {
-      return res.status(409).json({ message: "noSuratJalan sudah digunakan" });
+      return res.status(409).json({ message: "No. Surat Jalan ini sudah digunakan." });
     }
 
-    return res.status(500).json({ message: "failed to create surat jalan" });
+    return res.status(500).json({ message: "Data surat jalan belum bisa disimpan. Coba lagi." });
   }
 });
 

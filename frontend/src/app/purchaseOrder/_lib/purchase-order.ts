@@ -9,12 +9,30 @@ import {
 
 type Locale = "id" | "en";
 
+export type PurchaseOrderBarang = {
+  namaBarang: string;
+  spesifikasi: string;
+  kuantitas: number;
+  unit: string;
+  hargaSatuan: number;
+  jumlah: number;
+};
+
+export type PurchaseOrderBarangFormRow = {
+  namaBarang: string;
+  spesifikasi: string;
+  kuantitas: string;
+  unit: string;
+  hargaSatuan: string;
+};
+
 export type PurchaseOrderItem = {
   id: string;
   noPo: string;
   tanggalPo: string;
   namaCustomer: string;
   nominalPo: number;
+  barang: PurchaseOrderBarang[];
   tanggalInvoice: string | null;
   noInvoice: string;
   createdAt: string;
@@ -48,6 +66,7 @@ export type PurchaseOrderFormState = {
   tanggalPo: string;
   namaCustomer: string;
   nominalPo: string;
+  barangRows: PurchaseOrderBarangFormRow[];
   tanggalInvoice: string;
   noInvoice: string;
 };
@@ -122,8 +141,35 @@ function toText(value: unknown) {
   return String(value);
 }
 
+function normalizeNumericText(value: string) {
+  const text = value.replace(/rp\.?/gi, "").replace(/\s+/g, "").trim();
+
+  if (!text) {
+    return "";
+  }
+
+  const idThousandsPattern = /^-?\d{1,3}(\.\d{3})+(,\d+)?$/;
+  const enThousandsPattern = /^-?\d{1,3}(,\d{3})+(\.\d+)?$/;
+  const decimalCommaPattern = /^-?\d+,\d+$/;
+
+  if (idThousandsPattern.test(text)) {
+    return text.replace(/\./g, "").replace(",", ".");
+  }
+
+  if (enThousandsPattern.test(text)) {
+    return text.replace(/,/g, "");
+  }
+
+  if (decimalCommaPattern.test(text)) {
+    return text.replace(",", ".");
+  }
+
+  return text.replace(/[^\d.-]/g, "");
+}
+
 function parseNumberFromUnknown(value: unknown, fallback = 0) {
-  const parsed = Number(value);
+  const parsed =
+    typeof value === "string" ? Number(normalizeNumericText(value)) : Number(value);
 
   if (!Number.isFinite(parsed)) {
     return fallback;
@@ -167,6 +213,11 @@ function toPurchaseOrderItem(value: unknown): PurchaseOrderItem | null {
     tanggalPo: toText(row.tanggalPo).trim(),
     namaCustomer: parseReferenceId(row.namaCustomer),
     nominalPo: parseNumberFromUnknown(row.nominalPo),
+    barang: Array.isArray(row.barang)
+      ? row.barang
+          .map(toPurchaseOrderBarang)
+          .filter((item): item is PurchaseOrderBarang => Boolean(item))
+      : [],
     tanggalInvoice: toText(row.tanggalInvoice || row.tanggalKirim).trim() || null,
     noInvoice: parseReferenceId(row.noInvoice),
     createdAt: toText(row.createdAt).trim(),
@@ -210,15 +261,46 @@ function toPurchaseOrderInvoiceOption(value: unknown): PurchaseOrderInvoiceOptio
   };
 }
 
+function toPurchaseOrderBarang(value: unknown): PurchaseOrderBarang | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const row = value as Record<string, unknown>;
+  const namaBarang = toText(row.namaBarang).trim();
+  const spesifikasi = toText(row.spesifikasi).trim();
+  const kuantitas = parseNumberFromUnknown(row.kuantitas);
+  const unit = toText(row.unit).trim();
+  const hargaSatuan = parseNumberFromUnknown(row.hargaSatuan);
+  const jumlah = parseNumberFromUnknown(row.jumlah, kuantitas * hargaSatuan);
+
+  if (!namaBarang || kuantitas <= 0 || !unit || hargaSatuan < 0 || jumlah < 0) {
+    return null;
+  }
+
+  return {
+    namaBarang,
+    spesifikasi,
+    kuantitas,
+    unit,
+    hargaSatuan,
+    jumlah,
+  };
+}
+
 function toNormalizedPurchaseOrderPayload(form: PurchaseOrderFormState) {
   const tanggalInvoice = toText(form.tanggalInvoice).trim();
   const noInvoice = toText(form.noInvoice).trim();
+  const barang = purchaseOrderBarangRowsToList(form.barangRows);
+  const barangTotal = calculatePurchaseOrderBarangTotal(barang);
+  const nominalPo = parseNumberFromUnknown(form.nominalPo);
 
   return {
     noPo: toText(form.noPo).trim(),
     tanggalPo: toText(form.tanggalPo).trim(),
     namaCustomer: toText(form.namaCustomer).trim(),
-    nominalPo: parseNumberFromUnknown(form.nominalPo),
+    nominalPo: barang.length > 0 ? barangTotal : nominalPo,
+    barang,
     tanggalInvoice: tanggalInvoice || null,
     noInvoice: noInvoice || null,
   };
@@ -333,12 +415,99 @@ export function toInputDate(value: string | null) {
   return toInputDateValue(value);
 }
 
+export function createEmptyPurchaseOrderBarangRow(): PurchaseOrderBarangFormRow {
+  return {
+    namaBarang: "",
+    spesifikasi: "",
+    kuantitas: "",
+    unit: "",
+    hargaSatuan: "",
+  };
+}
+
+export function isPurchaseOrderBarangRowFilled(row: PurchaseOrderBarangFormRow) {
+  return Boolean(
+    row.namaBarang.trim() ||
+      row.spesifikasi.trim() ||
+      row.kuantitas.trim() ||
+      row.unit.trim() ||
+      row.hargaSatuan.trim()
+  );
+}
+
+export function ensureTrailingEmptyPurchaseOrderBarangRow(
+  rows: PurchaseOrderBarangFormRow[]
+) {
+  const normalizedRows = rows.map((row) => ({
+    namaBarang: String(row.namaBarang || ""),
+    spesifikasi: String(row.spesifikasi || ""),
+    kuantitas: String(row.kuantitas || ""),
+    unit: String(row.unit || ""),
+    hargaSatuan: String(row.hargaSatuan || ""),
+  }));
+
+  if (normalizedRows.length === 0) {
+    return [createEmptyPurchaseOrderBarangRow()];
+  }
+
+  while (
+    normalizedRows.length > 1 &&
+    !isPurchaseOrderBarangRowFilled(normalizedRows[normalizedRows.length - 1]) &&
+    !isPurchaseOrderBarangRowFilled(normalizedRows[normalizedRows.length - 2])
+  ) {
+    normalizedRows.pop();
+  }
+
+  const lastRow = normalizedRows[normalizedRows.length - 1];
+
+  if (isPurchaseOrderBarangRowFilled(lastRow)) {
+    return [...normalizedRows, createEmptyPurchaseOrderBarangRow()];
+  }
+
+  return normalizedRows;
+}
+
+export function purchaseOrderBarangRowsToList(rows: PurchaseOrderBarangFormRow[]) {
+  return rows
+    .map((row) => {
+      const namaBarang = row.namaBarang.trim();
+      const spesifikasi = row.spesifikasi.trim();
+      const kuantitas = parseNumberFromUnknown(row.kuantitas);
+      const unit = row.unit.trim();
+      const hargaSatuan = parseNumberFromUnknown(row.hargaSatuan);
+      const jumlah = Math.round(kuantitas * hargaSatuan);
+
+      return {
+        namaBarang,
+        spesifikasi,
+        kuantitas,
+        unit,
+        hargaSatuan,
+        jumlah,
+      };
+    })
+    .filter((item) => item.namaBarang && item.kuantitas > 0 && item.unit);
+}
+
+export function calculatePurchaseOrderBarangTotal(barang: PurchaseOrderBarang[]) {
+  return barang.reduce((total, item) => total + item.jumlah, 0);
+}
+
 export function toPurchaseOrderFormState(item: PurchaseOrderItem): PurchaseOrderFormState {
   return {
     noPo: item.noPo,
     tanggalPo: toInputDate(item.tanggalPo),
     namaCustomer: item.namaCustomer,
     nominalPo: String(item.nominalPo),
+    barangRows: ensureTrailingEmptyPurchaseOrderBarangRow(
+      item.barang.map((barang) => ({
+        namaBarang: barang.namaBarang,
+        spesifikasi: barang.spesifikasi,
+        kuantitas: String(barang.kuantitas),
+        unit: barang.unit,
+        hargaSatuan: String(barang.hargaSatuan),
+      }))
+    ),
     tanggalInvoice: toInputDate(item.tanggalInvoice),
     noInvoice: item.noInvoice,
   };

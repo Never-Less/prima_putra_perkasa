@@ -16,26 +16,26 @@ router.post("/", async (req, res) => {
 
     if (!username || !password) {
       return res.status(400).json({
-        message: "username dan password wajib diisi",
+        message: "Isi username dan password sebelum menyimpan user.",
       });
     }
 
     if (!ALLOWED_ROLES.includes(role)) {
       return res.status(400).json({
-        message: "role tidak valid",
+        message: "Role yang dipilih tidak valid.",
       });
     }
 
     if (password.length < 8) {
       return res.status(400).json({
-        message: "password minimal 8 karakter",
+        message: "Password minimal 8 karakter.",
       });
     }
 
     const existingUser = await User.findOne({ username: username });
 
     if (existingUser) {
-      return res.status(409).json({ message: "username already exists" });
+      return res.status(409).json({ message: "Username ini sudah digunakan." });
     }
 
     const user = await User.create({
@@ -50,10 +50,10 @@ router.post("/", async (req, res) => {
     });
   } catch (error) {
     if (error?.code === 11000) {
-      return res.status(409).json({ message: "username already exists" });
+      return res.status(409).json({ message: "Username ini sudah digunakan." });
     }
 
-    return res.status(500).json({ message: "failed to create user" });
+    return res.status(500).json({ message: "Data user belum bisa disimpan. Coba lagi." });
   }
 });
 

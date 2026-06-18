@@ -122,7 +122,7 @@ const invoiceSchema = new mongoose.Schema(
               ))
           );
         },
-        message: "noPoList minimal 1 item",
+        message: "Pilih minimal satu No. SO.",
       },
     },
     noSuratJalan: {
@@ -134,17 +134,17 @@ const invoiceSchema = new mongoose.Schema(
         },
       ],
       required: true,
+      default: [],
       validate: {
         validator(value) {
           return (
             Array.isArray(value) &&
-            value.length > 0 &&
             value.every(
               (item) => typeof item === "string" && item.trim().length > 0
             )
           );
         },
-        message: "noSuratJalan minimal 1 item",
+        message: "No. Surat Jalan yang dipilih tidak valid.",
       },
     },
     idCustomer: {
@@ -160,7 +160,7 @@ const invoiceSchema = new mongoose.Schema(
         validator(value) {
           return Array.isArray(value) && value.length > 0;
         },
-        message: "barang minimal 1 item",
+        message: "Isi minimal satu barang invoice.",
       },
     },
     isPpn: {

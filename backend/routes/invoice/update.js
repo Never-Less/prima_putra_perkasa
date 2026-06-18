@@ -22,7 +22,7 @@ router.put("/:id", async (req, res) => {
   const id = String(req.params.id || "");
 
   if (!isValidId(id)) {
-    return res.status(400).json({ message: "invalid invoice id" });
+    return res.status(400).json({ message: "Data invoice yang dipilih tidak dapat dibuka." });
   }
 
   const updates = {};
@@ -30,7 +30,7 @@ router.put("/:id", async (req, res) => {
   if (req.body.tanggal !== undefined) {
     const tanggal = parseDate(req.body.tanggal);
     if (!tanggal) {
-      return res.status(400).json({ message: "tanggal tidak valid" });
+      return res.status(400).json({ message: "Tanggal invoice tidak dapat dibaca." });
     }
     updates.tanggal = tanggal;
   }
@@ -50,7 +50,7 @@ router.put("/:id", async (req, res) => {
 
     if (!noPoList) {
       return res.status(400).json({
-        message: "noPo harus array minimal 1 item string",
+        message: "Pilih minimal satu No. SO yang valid.",
       });
     }
 
@@ -60,12 +60,13 @@ router.put("/:id", async (req, res) => {
 
   if (req.body.noSuratJalan !== undefined) {
     const noSuratJalan = normalizeStringList(req.body.noSuratJalan, {
+      allowEmpty: true,
       maxLength: 100,
     });
 
-    if (!noSuratJalan) {
+    if (noSuratJalan === null) {
       return res.status(400).json({
-        message: "noSuratJalan harus array minimal 1 item string",
+        message: "No. Surat Jalan yang dipilih tidak valid.",
       });
     }
 
@@ -76,7 +77,7 @@ router.put("/:id", async (req, res) => {
     const idCustomer = String(req.body.idCustomer || "").trim();
 
     if (!isValidId(idCustomer)) {
-      return res.status(400).json({ message: "idCustomer tidak valid" });
+      return res.status(400).json({ message: "Customer yang dipilih tidak valid." });
     }
 
     updates.idCustomer = idCustomer;
@@ -86,7 +87,7 @@ router.put("/:id", async (req, res) => {
     const isPpn = parseBoolean(req.body.isPpn);
 
     if (isPpn === null) {
-      return res.status(400).json({ message: "isPpn harus boolean" });
+      return res.status(400).json({ message: "Status PPN tidak valid." });
     }
 
     updates.isPpn = isPpn;
@@ -96,7 +97,7 @@ router.put("/:id", async (req, res) => {
     const isPaid = parseBoolean(req.body.isPaid);
 
     if (isPaid === null) {
-      return res.status(400).json({ message: "isPaid harus boolean" });
+      return res.status(400).json({ message: "Status pembayaran tidak valid." });
     }
 
     updates.isPaid = isPaid;
@@ -109,7 +110,9 @@ router.put("/:id", async (req, res) => {
       const tanggalBayar = parseDate(req.body.tanggalBayar);
 
       if (!tanggalBayar) {
-        return res.status(400).json({ message: "tanggalBayar tidak valid" });
+        return res.status(400).json({
+          message: "Tanggal bayar tidak dapat dibaca. Periksa kembali tanggal yang diisi.",
+        });
       }
 
       updates.tanggalBayar = tanggalBayar;
@@ -120,7 +123,9 @@ router.put("/:id", async (req, res) => {
     const ppnRate = parseNumber(req.body.ppnRate);
 
     if (ppnRate === null || ppnRate < 0 || ppnRate > 100) {
-      return res.status(400).json({ message: "ppnRate harus angka 0 - 100" });
+      return res.status(400).json({
+        message: "Tarif PPN harus berupa angka antara 0 sampai 100.",
+      });
     }
 
     updates.ppnRate = ppnRate;
@@ -131,7 +136,7 @@ router.put("/:id", async (req, res) => {
     if (!barang) {
       return res.status(400).json({
         message:
-          "barang harus array minimal 1 item (namaBarang, spesifikasi, kuantitas, unit, hargaSatuan, jumlah)",
+          "Isi minimal satu barang invoice dengan nama barang, qty, unit, dan harga satuan yang valid.",
       });
     }
     updates.barang = barang;
@@ -140,8 +145,7 @@ router.put("/:id", async (req, res) => {
 
   if (Object.keys(updates).length === 0) {
     return res.status(400).json({
-      message:
-        "minimal kirim salah satu field: tanggal, noInvoice, noPo, noSuratJalan, idCustomer, barang, isPpn, isPaid, tanggalBayar, ppnRate",
+      message: "Tidak ada perubahan yang bisa disimpan. Ubah minimal satu data terlebih dahulu.",
     });
   }
 
@@ -150,7 +154,7 @@ router.put("/:id", async (req, res) => {
     (updates.noPo !== undefined && !updates.noPo)
   ) {
     return res.status(400).json({
-      message: "noInvoice dan noPo tidak boleh kosong",
+      message: "Lengkapi nomor invoice dan No. SO sebelum menyimpan.",
     });
   }
 
@@ -158,13 +162,13 @@ router.put("/:id", async (req, res) => {
     const existingInvoice = await Invoice.findById(id);
 
     if (!existingInvoice) {
-      return res.status(404).json({ message: "invoice not found" });
+      return res.status(404).json({ message: "Data invoice tidak ditemukan." });
     }
 
     if (updates.idCustomer) {
       const customer = await Customer.findById(updates.idCustomer);
       if (!customer) {
-        return res.status(404).json({ message: "customer tidak ditemukan" });
+        return res.status(404).json({ message: "Customer yang dipilih tidak ditemukan." });
       }
     }
 
@@ -186,7 +190,7 @@ router.put("/:id", async (req, res) => {
 
     if (effectiveIsPaid && !effectiveTanggalBayar) {
       return res.status(400).json({
-        message: "tanggalBayar wajib diisi jika invoice sudah dibayar",
+        message: "Isi tanggal bayar sebelum menandai invoice sebagai lunas.",
       });
     }
 
@@ -207,7 +211,7 @@ router.put("/:id", async (req, res) => {
     });
 
     if (!invoice) {
-      return res.status(404).json({ message: "invoice not found" });
+      return res.status(404).json({ message: "Data invoice tidak ditemukan." });
     }
 
     const noPoSet = new Set([
@@ -228,7 +232,7 @@ router.put("/:id", async (req, res) => {
       invoice: sanitizeInvoice(invoice),
     });
   } catch (_error) {
-    return res.status(500).json({ message: "failed to update invoice" });
+    return res.status(500).json({ message: "Data invoice belum bisa disimpan. Coba lagi." });
   }
 });
 

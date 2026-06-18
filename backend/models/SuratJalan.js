@@ -70,7 +70,7 @@ const suratJalanSchema = new mongoose.Schema(
         validator(value) {
           return Array.isArray(value) && value.length > 0;
         },
-        message: "barang minimal 1 item",
+        message: "Isi minimal satu barang surat jalan.",
       },
     },
     kendaraan: {

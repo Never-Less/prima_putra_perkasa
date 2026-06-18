@@ -19,14 +19,14 @@ function parseJumlah(value) {
 function normalizeRincianBiaya(value) {
   if (!Array.isArray(value)) {
     return {
-      error: "rincianBiaya harus array",
+      error: "Rincian biaya tidak dapat dibaca. Coba muat ulang halaman lalu isi kembali.",
       rincianBiaya: [],
     };
   }
 
   if (value.length === 0) {
     return {
-      error: "minimal satu rincianBiaya wajib diisi",
+      error: "Isi minimal satu rincian biaya.",
       rincianBiaya: [],
     };
   }
@@ -40,14 +40,14 @@ function normalizeRincianBiaya(value) {
 
     if (!namaBiaya) {
       return {
-        error: "namaBiaya wajib diisi",
+        error: "Isi nama biaya terlebih dahulu.",
         rincianBiaya: [],
       };
     }
 
     if (jumlah === null) {
       return {
-        error: "jumlah harus angka >= 0",
+        error: "Isi jumlah dengan angka 0 atau lebih.",
         rincianBiaya: [],
       };
     }
