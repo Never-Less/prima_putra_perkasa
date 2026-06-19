@@ -57,25 +57,25 @@ type DefaultColumnWidths = {
 };
 
 const halfMeiloonColumnWidths: MeiloonColumnWidths = {
-  no: "4%",
+  no: "5%",
   namaBarang: "18%",
-  spesifikasi: "36%",
-  qty: "5%",
+  spesifikasi: "33%",
+  qty: "6%",
   unit: "9%",
-  kodeDepartemen: "10%",
+  kodeDepartemen: "9%",
   ttdPenerima: "14%",
-  note: "7%",
+  note: "6%",
 };
 
 const fullMeiloonColumnWidths: MeiloonColumnWidths = {
-  no: "4%",
+  no: "5%",
   namaBarang: "18%",
-  spesifikasi: "34%",
-  qty: "5%",
+  spesifikasi: "31%",
+  qty: "6%",
   unit: "9%",
-  kodeDepartemen: "10%",
+  kodeDepartemen: "9%",
   ttdPenerima: "16%",
-  note: "7%",
+  note: "6%",
 };
 
 const halfDefaultColumnWidths: DefaultColumnWidths = {
