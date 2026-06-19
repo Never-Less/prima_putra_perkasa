@@ -60,7 +60,7 @@ Health check endpoint:
 
 ## Auth API
 
-- `POST /api/auth/register`
+- `POST /api/auth/register` (admin only)
 - `POST /api/auth/login`
 - `POST /api/auth/refresh`
 - `POST /api/auth/logout`
@@ -75,8 +75,9 @@ Body register/login:
 }
 ```
 
-Catatan: role default user baru adalah `staff`.
-Response `register`, `login`, dan `refresh` mengembalikan `accessToken` dan `refreshToken`.
+Catatan: role default user baru adalah `staff`. Endpoint register hanya dapat dipakai oleh admin yang sudah login dan tidak mengembalikan token untuk user baru.
+Response `login` dan `refresh` mengembalikan `accessToken` dan `refreshToken`.
+Endpoint `register`, `login`, dan `refresh` memakai rate limit dasar untuk mengurangi brute force.
 
 Body refresh/logout:
 

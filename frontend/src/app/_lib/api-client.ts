@@ -80,8 +80,7 @@ function getErrorMessage(status: number, payload: unknown) {
 function shouldSkipRefresh(path: string) {
   return (
     path.includes("/api/auth/login") ||
-    path.includes("/api/auth/refresh") ||
-    path.includes("/api/auth/register")
+    path.includes("/api/auth/refresh")
   );
 }
 

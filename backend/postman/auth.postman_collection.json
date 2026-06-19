@@ -9,22 +9,7 @@
       "name": "Auth",
       "item": [
         {
-          "name": "Register",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
-                  "  const data = pm.response.json();",
-                  "  if (data.accessToken) pm.collectionVariables.set('access_token', data.accessToken);",
-                  "  if (data.refreshToken) pm.collectionVariables.set('refresh_token', data.refreshToken);",
-                  "}"
-                ]
-              }
-            }
-          ],
+          "name": "Register (Admin Only)",
           "request": {
             "method": "POST",
             "header": [
@@ -33,9 +18,19 @@
                 "value": "application/json"
               }
             ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}",
+              "raw": "{\n  \"username\": \"{{new_username}}\",\n  \"password\": \"{{new_password}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -188,6 +183,14 @@
     {
       "key": "password",
       "value": "passwordku123"
+    },
+    {
+      "key": "new_username",
+      "value": "staff"
+    },
+    {
+      "key": "new_password",
+      "value": "passwordstaff123"
     },
     {
       "key": "access_token",
