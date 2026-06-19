@@ -1,12 +1,12 @@
 const express = require("express");
 
-const { issueTokenPair } = require("../../services/auth-token");
-const { User, ROLE_STAFF } = require("../../models/User");
+const { requireAuth, requireRole } = require("../../middlewares/auth");
+const { User, ROLE_ADMIN, ROLE_STAFF } = require("../../models/User");
 const { sanitizeUser } = require("./sanitize-user");
 
 const router = express.Router();
 
-router.post("/register", async (req, res) => {
+router.post("/register", requireAuth, requireRole(ROLE_ADMIN), async (req, res) => {
   try {
     const username = String(req.body.username || "")
       .trim()
@@ -36,12 +36,8 @@ router.post("/register", async (req, res) => {
       role: ROLE_STAFF,
     });
 
-    const { accessToken, refreshToken } = await issueTokenPair(user);
-
     return res.status(201).json({
       message: "user registered",
-      accessToken: accessToken,
-      refreshToken: refreshToken,
       user: sanitizeUser(user),
     });
   } catch (error) {

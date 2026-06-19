@@ -183,11 +183,11 @@ body {
 
 .export-normal-weight,
 .export-normal-weight * {
-  font-weight: 400 !important;
+  font-weight: 300 !important;
 }
 
 .export-normal-weight :where(h1, h2, h3, h4, h5, h6, th) {
-  font-weight: 700 !important;
+  font-weight: 600 !important;
 }
 
 .app-date-picker-calendar {
