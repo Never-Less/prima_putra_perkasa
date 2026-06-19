@@ -63,8 +63,8 @@ const halfMeiloonColumnWidths: MeiloonColumnWidths = {
   qty: "6%",
   unit: "9%",
   kodeDepartemen: "9%",
-  ttdPenerima: "14%",
-  note: "6%",
+  ttdPenerima: "12%",
+  note: "8%",
 };
 
 const fullMeiloonColumnWidths: MeiloonColumnWidths = {
@@ -74,8 +74,8 @@ const fullMeiloonColumnWidths: MeiloonColumnWidths = {
   qty: "6%",
   unit: "9%",
   kodeDepartemen: "9%",
-  ttdPenerima: "16%",
-  note: "6%",
+  ttdPenerima: "14%",
+  note: "8%",
 };
 
 const halfDefaultColumnWidths: DefaultColumnWidths = {
@@ -863,7 +863,8 @@ export function SuratJalanExportDocument({
                     {t("suratJalan.export.meiloon.table.kodeDepartemen")}
                   </th>
                   <th className="border-r border-black px-1 text-center text-[16px] leading-tight">
-                    {t("suratJalan.export.meiloon.table.ttdPenerima")}
+                    <span className="block">TTD</span>
+                    <span className="block text-[14px]">PENERIMA</span>
                   </th>
                   <th className="px-1 text-center text-[16px] leading-tight">
                     {t("suratJalan.export.meiloon.table.note")}
