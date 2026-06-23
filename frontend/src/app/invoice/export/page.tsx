@@ -27,6 +27,7 @@ function toSearchFilter(searchParams: URLSearchParams): InvoiceFilter {
     noInvoice: String(searchParams.get("noInvoice") || "").trim(),
     noPo: String(searchParams.get("noPo") || "").trim(),
     noSuratJalan: String(searchParams.get("noSuratJalan") || "").trim(),
+    namaBarang: String(searchParams.get("namaBarang") || "").trim(),
     idCustomer: String(searchParams.get("idCustomer") || "").trim(),
     isPpn:
       searchParams.get("isPpn") === "true" || searchParams.get("isPpn") === "false"

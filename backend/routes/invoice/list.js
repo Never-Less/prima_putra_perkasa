@@ -17,6 +17,7 @@ router.get("/", async (req, res) => {
     const noInvoiceRegex = buildSearchRegex(req.query.noInvoice);
     const noPoRegex = buildSearchRegex(req.query.noPo);
     const noSuratJalanRegex = buildSearchRegex(req.query.noSuratJalan);
+    const namaBarangRegex = buildSearchRegex(req.query.namaBarang);
     const customerRegex = buildSearchRegex(req.query.idCustomer);
     const hasPagination =
       req.query.page !== undefined || req.query.limit !== undefined;
@@ -36,6 +37,10 @@ router.get("/", async (req, res) => {
 
     if (noSuratJalanRegex) {
       query.noSuratJalan = noSuratJalanRegex;
+    }
+
+    if (namaBarangRegex) {
+      query["barang.namaBarang"] = namaBarangRegex;
     }
 
     if (req.query.isPpn === "true") {

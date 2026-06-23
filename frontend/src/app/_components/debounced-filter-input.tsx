@@ -13,7 +13,7 @@ type DebouncedFilterInputProps = Omit<
 };
 
 export function DebouncedFilterInput({
-  delayMs = 350,
+  delayMs = 600,
   onValueChange,
   value,
   ...props
