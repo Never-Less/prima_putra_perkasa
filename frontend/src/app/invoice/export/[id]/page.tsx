@@ -11,6 +11,7 @@ import {
   sanitizeExcelFileName,
   type JspreadsheetExportWorksheet,
 } from "../../../_lib/jspreadsheet-xlsx-export";
+import { printDocumentWhenFontsReady } from "../../../_lib/print";
 import { useI18n } from "../../../_i18n/provider";
 import { fetchCustomerById, type CustomerItem } from "../../../customer/_lib/customer";
 import {
@@ -46,7 +47,7 @@ const meiloonInvoiceProfile = {
   attnFallback: "Mr. Pangzi Wang / Bu. Marchia",
 };
 
-const invoiceExportFontFamily = '"NLQ Sans Serif", Arial, "Helvetica Neue", sans-serif';
+const invoiceExportFontFamily = 'var(--font-geist-sans), "Segoe UI", sans-serif';
 const defaultInvoiceBaseRowHeight = 38;
 const meiloonInvoiceBaseRowHeight = 34;
 
@@ -1092,7 +1093,7 @@ export default function InvoiceExportPage() {
             </button>
             <button
               type="button"
-              onClick={() => window.print()}
+              onClick={printDocumentWhenFontsReady}
               className="rounded-lg border border-sky-300 bg-sky-700 px-4 py-2 text-sm text-white hover:bg-sky-600"
             >
               {t("common.print")}

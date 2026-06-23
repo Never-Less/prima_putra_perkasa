@@ -26,7 +26,7 @@ const halfPageWidth = "21.59cm";
 const halfPageHeight = "14cm";
 const fullPageWidth = "21.59cm";
 const fullPageHeight = "27.94cm";
-const suratJalanExportFontFamily = '"NLQ Sans Serif", Arial, "Helvetica Neue", sans-serif';
+const suratJalanExportFontFamily = 'var(--font-geist-sans), "Segoe UI", sans-serif';
 
 export type SuratJalanExportPaperSize = "half" | "full";
 

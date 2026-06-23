@@ -10,6 +10,7 @@ import {
   sanitizeExcelFileName,
   type JspreadsheetExportWorksheet,
 } from "../../_lib/jspreadsheet-xlsx-export";
+import { printDocumentWhenFontsReady } from "../../_lib/print";
 import { useI18n } from "../../_i18n/provider";
 import { fetchCustomerRows, type CustomerItem } from "../../customer/_lib/customer";
 import {
@@ -257,7 +258,7 @@ export default function InvoiceExportPage() {
               </button>
               <button
                 type="button"
-                onClick={() => window.print()}
+                onClick={printDocumentWhenFontsReady}
                 className="rounded-lg bg-sky-700 px-4 py-2 text-sm text-white hover:bg-sky-600"
               >
                 {t("common.print")}

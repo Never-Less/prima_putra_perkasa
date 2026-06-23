@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ApiLoadingState } from "../../../_components/api-loading-state";
 import { ApiRequestError } from "../../../_lib/api-client";
+import { printDocumentWhenFontsReady } from "../../../_lib/print";
 import { useI18n } from "../../../_i18n/provider";
 import { fetchCustomerById, type CustomerItem } from "../../../customer/_lib/customer";
 import { fetchSuratJalanById, type SuratJalanItem } from "../../_lib/surat-jalan";
@@ -190,7 +191,7 @@ export default function SuratJalanExportPage() {
             </div>
             <button
               type="button"
-              onClick={() => window.print()}
+              onClick={printDocumentWhenFontsReady}
               className="rounded-lg border border-sky-300 bg-sky-700 px-4 py-2 text-sm text-white hover:bg-sky-600"
             >
               {t("common.print")}
