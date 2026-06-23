@@ -10,6 +10,7 @@ import {
   sanitizeExcelFileName,
   type JspreadsheetExportWorksheet,
 } from "../../_lib/jspreadsheet-xlsx-export";
+import { printDocumentWhenFontsReady } from "../../_lib/print";
 import { useI18n } from "../../_i18n/provider";
 import { fetchCustomerRows, type CustomerItem } from "../../customer/_lib/customer";
 import {
@@ -26,6 +27,7 @@ function toSearchFilter(searchParams: URLSearchParams): InvoiceFilter {
     noInvoice: String(searchParams.get("noInvoice") || "").trim(),
     noPo: String(searchParams.get("noPo") || "").trim(),
     noSuratJalan: String(searchParams.get("noSuratJalan") || "").trim(),
+    namaBarang: String(searchParams.get("namaBarang") || "").trim(),
     idCustomer: String(searchParams.get("idCustomer") || "").trim(),
     isPpn:
       searchParams.get("isPpn") === "true" || searchParams.get("isPpn") === "false"
@@ -257,7 +259,7 @@ export default function InvoiceExportPage() {
               </button>
               <button
                 type="button"
-                onClick={() => window.print()}
+                onClick={printDocumentWhenFontsReady}
                 className="rounded-lg bg-sky-700 px-4 py-2 text-sm text-white hover:bg-sky-600"
               >
                 {t("common.print")}

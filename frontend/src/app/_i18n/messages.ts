@@ -456,7 +456,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "suratJalan.export.kepadaLabel": "Kepada:",
     "suratJalan.export.attnLabel": "ATTN",
     "suratJalan.export.noSuratJalanLabel": "NO. SURAT JALAN",
-    "suratJalan.export.noPoLabel": "NO. SO",
+    "suratJalan.export.noPoLabel": "NO. PO",
     "suratJalan.export.meiloon.noSjLabel": "NO. SJ",
     "suratJalan.export.deliverySentenceStart":
       "Kami kirimkan barang -barang tersebut dibawah ini dengan kendaraan ",
@@ -572,11 +572,12 @@ export const messages: Record<Locale, MessageDictionary> = {
 
     "rekapTagihanPembayaranPabrik.page.description":
       "Rekapitulasi total pembayaran dan outstanding tagihan invoice per pabrik untuk bulan terpilih.",
-    "rekapTagihanPembayaranPabrik.reportLetter": "C.",
     "rekapTagihanPembayaranPabrik.reportTitle": "REKAPITULASI TAGIHAN DAN PEMBAYARAN PABRIK",
     "rekapTagihanPembayaranPabrik.periodTitle": "MASA {{month}}",
     "rekapTagihanPembayaranPabrik.pabrikSearchLabel": "Cari Pabrik",
     "rekapTagihanPembayaranPabrik.pabrikSearchPlaceholder": "Ketik nama pabrik",
+    "rekapTagihanPembayaranPabrik.paymentColumn": "TOTAL PEMBAYARAN DI BULAN {{month}}",
+    "rekapTagihanPembayaranPabrik.outstandingColumn": "OUTSTANDING TAGIHAN S/D {{month}}",
     "rekapTagihanPembayaranPabrik.totalLabel": "TOTAL JUMLAH",
     "rekapTagihanPembayaranPabrik.filteredSummary": "{{rows}} pabrik dalam laporan.",
     "rekapTagihanPembayaranPabrik.empty": "Belum ada tagihan atau pembayaran untuk filter ini.",
@@ -1224,11 +1225,12 @@ export const messages: Record<Locale, MessageDictionary> = {
 
     "rekapTagihanPembayaranPabrik.page.description":
       "Recap of invoice payment totals and outstanding billing by factory for the selected month.",
-    "rekapTagihanPembayaranPabrik.reportLetter": "C.",
     "rekapTagihanPembayaranPabrik.reportTitle": "FACTORY BILLING AND PAYMENT RECAPITULATION",
     "rekapTagihanPembayaranPabrik.periodTitle": "PERIOD {{month}}",
     "rekapTagihanPembayaranPabrik.pabrikSearchLabel": "Search Factory",
     "rekapTagihanPembayaranPabrik.pabrikSearchPlaceholder": "Type factory name",
+    "rekapTagihanPembayaranPabrik.paymentColumn": "TOTAL PAYMENTS IN {{month}}",
+    "rekapTagihanPembayaranPabrik.outstandingColumn": "OUTSTANDING BILLING AS OF {{month}}",
     "rekapTagihanPembayaranPabrik.totalLabel": "TOTAL AMOUNT",
     "rekapTagihanPembayaranPabrik.filteredSummary": "{{rows}} factories in the report.",
     "rekapTagihanPembayaranPabrik.empty": "No billing or payments match this filter.",

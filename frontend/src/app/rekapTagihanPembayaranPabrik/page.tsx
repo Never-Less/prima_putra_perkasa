@@ -387,12 +387,9 @@ export default function RekapTagihanPembayaranPabrikPage() {
           <section className="mt-4 bg-white p-4 text-black shadow-sm print:mt-0 print:p-0 print:shadow-none">
             <div className="overflow-x-auto print:overflow-visible">
               <div className="min-w-[780px] print:min-w-0">
-                <div className="grid grid-cols-[44px_1fr] gap-2 text-[16px] font-bold uppercase tracking-wide print:text-[18px]">
-                  <span>{t("rekapTagihanPembayaranPabrik.reportLetter")}</span>
-                  <div>
-                    <h2>{t("rekapTagihanPembayaranPabrik.reportTitle")}</h2>
-                    <p className="mt-3">{t("rekapTagihanPembayaranPabrik.periodTitle", { month: reportMonth })}</p>
-                  </div>
+                <div className="text-left text-[16px] font-bold uppercase tracking-wide print:text-[18px]">
+                  <h2>{t("rekapTagihanPembayaranPabrik.reportTitle")}</h2>
+                  <p className="mt-3">{t("rekapTagihanPembayaranPabrik.periodTitle", { month: reportMonth })}</p>
                 </div>
 
                 <table className="mt-7 w-full table-fixed border-collapse text-[13px]">
@@ -407,10 +404,14 @@ export default function RekapTagihanPembayaranPabrikPage() {
                         {t("field.namaPabrik").toUpperCase()}
                       </th>
                       <th className="border border-black px-2 py-2 text-center text-[14px] font-medium">
-                        {t("field.totalPembayaran").toUpperCase()}
+                        {t("rekapTagihanPembayaranPabrik.paymentColumn", {
+                          month: reportMonthName,
+                        })}
                       </th>
                       <th className="border border-black px-2 py-2 text-center text-[14px] font-medium">
-                        {t("field.outstandingTagihan").toUpperCase()}
+                        {t("rekapTagihanPembayaranPabrik.outstandingColumn", {
+                          month: reportMonthName,
+                        })}
                       </th>
                     </tr>
                   </thead>
@@ -460,7 +461,7 @@ export default function RekapTagihanPembayaranPabrikPage() {
                   </tfoot>
                 </table>
 
-                <div className="mt-8 space-y-1 text-sm">
+                <div className="mt-8 space-y-1 text-sm print:hidden">
                   <p>
                     {t("rekapTagihanPembayaranPabrik.outstandingNote", {
                       month: reportMonthName,

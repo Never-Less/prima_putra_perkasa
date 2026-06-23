@@ -95,6 +95,7 @@ export type InvoiceFilter = {
   noInvoice: string;
   noPo: string;
   noSuratJalan: string;
+  namaBarang: string;
   idCustomer: string;
   isPpn: "" | "true" | "false";
   isPaid: "" | "true" | "false";
@@ -151,6 +152,7 @@ export const defaultInvoiceFilter: InvoiceFilter = {
   noInvoice: "",
   noPo: "",
   noSuratJalan: "",
+  namaBarang: "",
   idCustomer: "",
   isPpn: "",
   isPaid: "",
@@ -677,6 +679,7 @@ export async function fetchInvoiceList(query: InvoiceListQuery): Promise<ServerL
     noInvoice: query.noInvoice,
     noPo: query.noPo,
     noSuratJalan: query.noSuratJalan,
+    namaBarang: query.namaBarang,
     idCustomer: query.idCustomer,
     isPpn: query.isPpn,
     isPaid: query.isPaid,
@@ -709,6 +712,7 @@ export async function fetchInvoiceExportRows(query: InvoiceFilter) {
     noInvoice: query.noInvoice,
     noPo: query.noPo,
     noSuratJalan: query.noSuratJalan,
+    namaBarang: query.namaBarang,
     idCustomer: query.idCustomer,
     isPpn: query.isPpn,
     isPaid: query.isPaid,
@@ -1289,6 +1293,10 @@ export function filterInvoiceRows(
     const matchNoSuratJalan = normalize(invoiceNoSuratJalanListLabel(row.noSuratJalan)).includes(
       normalize(filter.noSuratJalan)
     );
+    const namaBarangFilter = normalize(filter.namaBarang);
+    const matchNamaBarang =
+      !namaBarangFilter ||
+      row.barang.some((barang) => normalize(barang.namaBarang).includes(namaBarangFilter));
     const customerLabel = resolveCustomerLabel ? resolveCustomerLabel(row.idCustomer) : row.idCustomer;
     const matchIdCustomer = normalize(customerLabel).includes(normalize(filter.idCustomer));
 
@@ -1312,6 +1320,7 @@ export function filterInvoiceRows(
       matchNoInvoice &&
       matchNoPO &&
       matchNoSuratJalan &&
+      matchNamaBarang &&
       matchIdCustomer &&
       matchPpn &&
       matchPaid &&
