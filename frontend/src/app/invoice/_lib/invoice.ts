@@ -1,5 +1,6 @@
 import { requestApi } from "../../_lib/api-client";
 import { formatAppDate, parseAppDate, parseAppDateRangeEnd, parseAppDateRangeStart, toInputDateValue } from "../../_lib/date";
+import { decodeHtmlEntities } from "../../_lib/html-entities";
 import {
   buildListQueryString,
   normalizeServerPaginationMeta,
@@ -727,7 +728,23 @@ export async function fetchInvoiceExportRows(query: InvoiceFilter) {
     return [];
   }
 
-  return response.invoices.map(toInvoiceItem).filter((item): item is InvoiceItem => Boolean(item));
+  return response.invoices
+    .map(toInvoiceItem)
+    .filter((item): item is InvoiceItem => Boolean(item))
+    .sort(compareInvoiceByNoInvoiceAscending);
+}
+
+function compareInvoiceByNoInvoiceAscending(left: InvoiceItem, right: InvoiceItem) {
+  const invoiceCompare = left.noInvoice.localeCompare(right.noInvoice, undefined, {
+    numeric: true,
+    sensitivity: "base",
+  });
+
+  if (invoiceCompare !== 0) {
+    return invoiceCompare;
+  }
+
+  return left.tanggal.localeCompare(right.tanggal);
 }
 
 export async function fetchInvoiceById(id: string) {
@@ -885,8 +902,8 @@ export function ensureTrailingEmptyInvoiceBarangRow(rows: InvoiceBarangFormRow[]
 }
 
 export function formatInvoiceBarangLabel(namaBarang: string, spesifikasi = "") {
-  const normalizedNamaBarang = toText(namaBarang).trim();
-  const normalizedSpesifikasi = toText(spesifikasi).trim();
+  const normalizedNamaBarang = decodeHtmlEntities(namaBarang).trim();
+  const normalizedSpesifikasi = decodeHtmlEntities(spesifikasi).trim();
 
   if (!normalizedNamaBarang) {
     return "";

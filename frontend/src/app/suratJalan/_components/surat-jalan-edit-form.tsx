@@ -14,6 +14,7 @@ import {
   barangRowsToList,
   createEmptyBarangRow,
   ensureTrailingEmptyBarangRow,
+  formatSuratJalanBarangPreviewText,
   formatTanggal,
   toFormState,
   type SuratJalanBarangFormRow,
@@ -626,13 +627,16 @@ export function SuratJalanEditForm({
               </p>
               {previewBarang.length > 0 ? (
                 <ul className="space-y-1 text-sm text-slate-700 dark:text-slate-200">
-                  {previewBarang.map((barang) => (
-                    <li key={`${barang.nama}-${barang.spesifikasi || "-"}-${barang.kodeDepartemen || "-"}-${barang.jumlah}-${barang.unit || "-"}`}>
-                      {barang.spesifikasi ? `${barang.nama} (${barang.spesifikasi})` : barang.nama}: {barang.jumlah}{" "}
-                      {barang.unit || "-"}
-                      {barang.kodeDepartemen ? ` - ${t("field.kodeDepartemen")}: ${barang.kodeDepartemen}` : ""}
-                    </li>
-                  ))}
+                  {previewBarang.map((barang) => {
+                    const previewText = formatSuratJalanBarangPreviewText(barang);
+
+                    return (
+                      <li key={`${barang.nama}-${barang.spesifikasi || "-"}-${barang.kodeDepartemen || "-"}-${barang.jumlah}-${barang.unit || "-"}`}>
+                        {previewText.text}
+                        {previewText.kodeDepartemen ? ` - ${t("field.kodeDepartemen")}: ${previewText.kodeDepartemen}` : ""}
+                      </li>
+                    );
+                  })}
                 </ul>
               ) : (
                 <p className="text-sm text-slate-500 dark:text-slate-400">{t("common.noItems")}</p>

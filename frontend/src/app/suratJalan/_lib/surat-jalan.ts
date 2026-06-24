@@ -1,5 +1,6 @@
 import { requestApi } from "../../_lib/api-client";
 import { formatAppDate, parseAppDate, parseAppDateRangeEnd, parseAppDateRangeStart, toInputDateValue } from "../../_lib/date";
+import { decodeHtmlEntities } from "../../_lib/html-entities";
 import {
   buildListQueryString,
   normalizeServerPaginationMeta,
@@ -491,11 +492,28 @@ export function barangLabel(items: SuratJalanBarang[]) {
 
   return items
     .map((item) => {
-      const namaWithSpec = item.spesifikasi ? `${item.nama} (${item.spesifikasi})` : item.nama;
-      const qtyWithUnit = item.unit ? `${item.jumlah} ${item.unit}` : String(item.jumlah);
+      const nama = decodeHtmlEntities(item.nama).trim();
+      const spesifikasi = decodeHtmlEntities(item.spesifikasi).trim();
+      const unit = decodeHtmlEntities(item.unit).trim();
+      const namaWithSpec = spesifikasi ? `${nama} (${spesifikasi})` : nama;
+      const qtyWithUnit = unit ? `${item.jumlah} ${unit}` : String(item.jumlah);
       return `${namaWithSpec}: ${qtyWithUnit}`;
     })
     .join(", ");
+}
+
+export function formatSuratJalanBarangPreviewText(item: SuratJalanBarang) {
+  const nama = decodeHtmlEntities(item.nama).trim();
+  const spesifikasi = decodeHtmlEntities(item.spesifikasi).trim();
+  const unit = decodeHtmlEntities(item.unit).trim();
+  const kodeDepartemen = decodeHtmlEntities(item.kodeDepartemen).trim();
+  const namaWithSpec = spesifikasi ? `${nama} (${spesifikasi})` : nama;
+  const qtyWithUnit = unit ? `${item.jumlah} ${unit}` : `${item.jumlah} -`;
+
+  return {
+    kodeDepartemen,
+    text: `${namaWithSpec}: ${qtyWithUnit}`,
+  };
 }
 
 export function filterSuratJalanRows(
