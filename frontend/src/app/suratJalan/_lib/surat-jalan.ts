@@ -506,7 +506,9 @@ export function barangLabel(items: SuratJalanBarang[]) {
     .join(", ");
 }
 
-export function formatSuratJalanBarangPreviewText(item: SuratJalanBarang) {
+export function formatSuratJalanBarangPreviewText(
+  item: Pick<SuratJalanBarang, "nama" | "spesifikasi" | "kodeDepartemen" | "jumlah" | "unit">
+) {
   const nama = decodeHtmlEntities(item.nama).trim();
   const spesifikasi = decodeHtmlEntities(item.spesifikasi).trim();
   const unit = decodeHtmlEntities(item.unit).trim();
