@@ -1,4 +1,5 @@
 import { requestApi } from "../../_lib/api-client";
+import { decodeHtmlEntities } from "../../_lib/html-entities";
 import {
   buildListQueryString,
   normalizeServerPaginationMeta,
@@ -65,6 +66,10 @@ function toText(value: unknown) {
   return String(value);
 }
 
+function toDecodedText(value: unknown) {
+  return decodeHtmlEntities(toText(value));
+}
+
 function toCustomerItem(value: unknown): CustomerItem | null {
   if (!value || typeof value !== "object") {
     return null;
@@ -79,10 +84,10 @@ function toCustomerItem(value: unknown): CustomerItem | null {
 
   return {
     id,
-    nama: toText(row.nama).trim(),
-    alamat: toText(row.alamat).trim(),
-    npwp: toText(row.npwp).trim(),
-    atasNama: toText(row.atasNama).trim(),
+    nama: toDecodedText(row.nama).trim(),
+    alamat: toDecodedText(row.alamat).trim(),
+    npwp: toDecodedText(row.npwp).trim(),
+    atasNama: toDecodedText(row.atasNama).trim(),
     createdAt: toText(row.createdAt).trim(),
     updatedAt: toText(row.updatedAt).trim(),
   };
@@ -90,10 +95,10 @@ function toCustomerItem(value: unknown): CustomerItem | null {
 
 function toNormalizedCustomerPayload(form: CustomerFormState) {
   return {
-    nama: toText(form.nama).trim(),
-    alamat: toText(form.alamat).trim(),
-    npwp: toText(form.npwp).trim(),
-    atasNama: toText(form.atasNama).trim(),
+    nama: toDecodedText(form.nama).trim(),
+    alamat: toDecodedText(form.alamat).trim(),
+    npwp: toDecodedText(form.npwp).trim(),
+    atasNama: toDecodedText(form.atasNama).trim(),
   };
 }
 

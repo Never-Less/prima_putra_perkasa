@@ -26,6 +26,6 @@ export function decodeHtmlEntities(value: unknown) {
       }
     }
 
-    return htmlEntityMap[entity] ?? match;
+    return htmlEntityMap[entity.toLowerCase()] ?? match;
   });
 }

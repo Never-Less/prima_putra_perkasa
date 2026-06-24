@@ -269,7 +269,7 @@ export const sampleInvoiceRows: InvoiceItem[] = [
 ];
 
 function normalize(value: string) {
-  return value.trim().toLowerCase();
+  return decodeHtmlEntities(value).trim().toLowerCase();
 }
 
 function toText(value: unknown) {
@@ -282,6 +282,10 @@ function toText(value: unknown) {
   }
 
   return String(value);
+}
+
+function toDecodedText(value: unknown) {
+  return decodeHtmlEntities(toText(value));
 }
 
 function normalizeNoSuratJalanList(value: unknown) {
@@ -360,8 +364,8 @@ function normalizeInvoiceBarangSources(value: unknown) {
 }
 
 export function buildSuratJalanInvoiceSpesifikasi(spesifikasiValue: unknown, kodeDepartemenValue: unknown) {
-  const spesifikasi = toText(spesifikasiValue).trim();
-  const kodeDepartemen = toText(kodeDepartemenValue).trim();
+  const spesifikasi = toDecodedText(spesifikasiValue).trim();
+  const kodeDepartemen = toDecodedText(kodeDepartemenValue).trim();
 
   return [spesifikasi, kodeDepartemen].filter(Boolean).join(" - ");
 }
@@ -373,11 +377,11 @@ function toInvoiceSuratJalanBarangOption(value: unknown): InvoiceSuratJalanBaran
 
   const item = value as Record<string, unknown>;
   const barangId = toText(item.barangId || item.id || item._id).trim();
-  const nama = toText(item.nama).trim();
-  const spesifikasi = toText(item.spesifikasi).trim();
-  const kodeDepartemen = toText(item.kodeDepartemen).trim();
+  const nama = toDecodedText(item.nama).trim();
+  const spesifikasi = toDecodedText(item.spesifikasi).trim();
+  const kodeDepartemen = toDecodedText(item.kodeDepartemen).trim();
   const jumlah = parseNumberFromUnknown(item.jumlah);
-  const unit = toText(item.unit).trim();
+  const unit = toDecodedText(item.unit).trim();
   const hargaSatuan = parseNumberFromUnknown(item.hargaSatuan);
 
   if (!nama || jumlah <= 0) {
@@ -514,10 +518,10 @@ function toInvoiceBarang(value: unknown): InvoiceBarang | null {
   }
 
   const item = value as Record<string, unknown>;
-  const namaBarang = toText(item.namaBarang).trim();
-  const spesifikasi = toText(item.spesifikasi).trim();
+  const namaBarang = toDecodedText(item.namaBarang).trim();
+  const spesifikasi = toDecodedText(item.spesifikasi).trim();
   const kuantitas = parseNumberFromUnknown(item.kuantitas);
-  const unit = toText(item.unit).trim();
+  const unit = toDecodedText(item.unit).trim();
   const hargaSatuan = parseNumberFromUnknown(item.hargaSatuan);
   const jumlah = parseNumberFromUnknown(item.jumlah, roundCurrency(kuantitas * hargaSatuan));
   const noPoManual = toText(item.noPoManual).trim();
@@ -585,10 +589,10 @@ function normalizePrefillBarang(value: unknown): InvoicePrefillBarang | null {
   }
 
   const item = value as Record<string, unknown>;
-  const namaBarang = toText(item.namaBarang).trim();
-  const spesifikasi = toText(item.spesifikasi).trim();
+  const namaBarang = toDecodedText(item.namaBarang).trim();
+  const spesifikasi = toDecodedText(item.spesifikasi).trim();
   const kuantitas = parseNumberFromUnknown(item.kuantitas);
-  const unit = toText(item.unit).trim();
+  const unit = toDecodedText(item.unit).trim();
   const hargaSatuan = parseNumberFromUnknown(item.hargaSatuan);
   const noPoManual = toText(item.noPoManual).trim();
   const sources = normalizeInvoiceBarangSources(item.sources);
@@ -1044,18 +1048,18 @@ export function buildInvoiceBarangRowsFromSuratJalanSelection(
     selectedNoPoOption.barang.forEach((barang) => {
       addSalesOrderHargaSatuan(
         selectedNoPoOption.noPo,
-        toText(barang.nama).trim(),
-        toText(barang.spesifikasi).trim(),
-        toText(barang.unit).trim(),
+        toDecodedText(barang.nama).trim(),
+        toDecodedText(barang.spesifikasi).trim(),
+        toDecodedText(barang.unit).trim(),
         barang.hargaSatuan
       );
     });
   });
 
   currentRows.forEach((row) => {
-    const namaBarang = toText(row.namaBarang).trim();
-    const spesifikasi = toText(row.spesifikasi).trim();
-    const unit = toText(row.unit).trim();
+    const namaBarang = toDecodedText(row.namaBarang).trim();
+    const spesifikasi = toDecodedText(row.spesifikasi).trim();
+    const unit = toDecodedText(row.unit).trim();
     const noPo = invoiceBarangRowNoPoLabel(row);
 
     if (!namaBarang || !unit) {
@@ -1083,9 +1087,9 @@ export function buildInvoiceBarangRowsFromSuratJalanSelection(
       hasSelectedSuratJalan = true;
 
       suratJalan.barang.forEach((barang) => {
-        const namaBarang = toText(barang.nama).trim();
+        const namaBarang = toDecodedText(barang.nama).trim();
         const spesifikasi = buildSuratJalanInvoiceSpesifikasi(barang.spesifikasi, barang.kodeDepartemen);
-        const unit = toText(barang.unit).trim();
+        const unit = toDecodedText(barang.unit).trim();
         const noPoValue = selectedNoPoOption.noPo;
         const source: InvoiceBarangSource = {
           suratJalanId: suratJalan.suratJalanId,
@@ -1101,7 +1105,7 @@ export function buildInvoiceBarangRowsFromSuratJalanSelection(
           namaBarang,
           spesifikasi,
           unit,
-          toText(barang.spesifikasi).trim()
+          toDecodedText(barang.spesifikasi).trim()
         );
 
         if (existingItem) {
@@ -1128,9 +1132,9 @@ export function buildInvoiceBarangRowsFromSuratJalanSelection(
     }
 
     selectedNoPoOption.barang.forEach((barang) => {
-      const namaBarang = toText(barang.nama).trim();
-      const spesifikasi = toText(barang.spesifikasi).trim();
-      const unit = toText(barang.unit).trim();
+      const namaBarang = toDecodedText(barang.nama).trim();
+      const spesifikasi = toDecodedText(barang.spesifikasi).trim();
+      const unit = toDecodedText(barang.unit).trim();
       const noPoValue = selectedNoPoOption.noPo;
       const identityKey = createInvoiceBarangIdentityKey(namaBarang, spesifikasi, unit, noPoValue);
 
@@ -1172,11 +1176,11 @@ export function buildInvoiceBarangRowsFromSuratJalanSelection(
 export function invoiceBarangRowsToList(rows: InvoiceBarangFormRow[]): InvoiceBarang[] {
   return rows
     .map((row) => {
-      const namaBarang = row.namaBarang.trim();
-      const spesifikasi = row.spesifikasi.trim();
+      const namaBarang = toDecodedText(row.namaBarang).trim();
+      const spesifikasi = toDecodedText(row.spesifikasi).trim();
       const kuantitas = parseNumber(row.kuantitas.trim());
       const hargaSatuan = parseNumber(row.hargaSatuan.trim());
-      const unit = row.unit.trim();
+      const unit = toDecodedText(row.unit).trim();
       const jumlah = roundCurrency(kuantitas * hargaSatuan);
       const sources = normalizeInvoiceBarangSources(row.sources);
       const noPoManual = sources.length > 0 ? invoiceBarangSourceNoPoList(sources).join(", ") : row.noPoManual.trim();

@@ -146,7 +146,11 @@ function toText(value: unknown) {
 }
 
 function normalize(value: unknown) {
-  return toText(value).trim().toLowerCase();
+  return decodeHtmlEntities(toText(value)).trim().toLowerCase();
+}
+
+function toDecodedText(value: unknown) {
+  return decodeHtmlEntities(toText(value));
 }
 
 function toNumber(value: unknown, fallback = 0) {
@@ -206,10 +210,10 @@ function toSuratJalanNoPoBarangOption(value: unknown): SuratJalanNoPoBarangOptio
   }
 
   const barang = value as Record<string, unknown>;
-  const namaBarang = toText(barang.namaBarang || barang.nama).trim();
-  const spesifikasi = toText(barang.spesifikasi).trim();
+  const namaBarang = toDecodedText(barang.namaBarang || barang.nama).trim();
+  const spesifikasi = toDecodedText(barang.spesifikasi).trim();
   const kuantitas = toNumber(barang.kuantitas ?? barang.jumlah, 0);
-  const unit = toText(barang.unit).trim();
+  const unit = toDecodedText(barang.unit).trim();
 
   if (!namaBarang || kuantitas <= 0 || !unit) {
     return null;
@@ -230,11 +234,11 @@ function toSuratJalanBarang(value: unknown): SuratJalanBarang | null {
 
   const barang = value as Record<string, unknown>;
   const id = toText(barang.id || barang._id).trim();
-  const nama = toText(barang.nama).trim();
-  const spesifikasi = toText(barang.spesifikasi).trim() || null;
-  const kodeDepartemen = toText(barang.kodeDepartemen).trim();
+  const nama = toDecodedText(barang.nama).trim();
+  const spesifikasi = toDecodedText(barang.spesifikasi).trim() || null;
+  const kodeDepartemen = toDecodedText(barang.kodeDepartemen).trim();
   const jumlah = toNumber(barang.jumlah, 0);
-  const unit = toText(barang.unit).trim();
+  const unit = toDecodedText(barang.unit).trim();
 
   if (!nama || jumlah <= 0) {
     return null;
@@ -256,11 +260,11 @@ function normalizeSuratJalanPrefillBarang(value: unknown) {
   }
 
   const barang = value as Record<string, unknown>;
-  const nama = toText(barang.nama || barang.namaBarang).trim();
-  const spesifikasi = toText(barang.spesifikasi).trim();
-  const kodeDepartemen = toText(barang.kodeDepartemen).trim();
+  const nama = toDecodedText(barang.nama || barang.namaBarang).trim();
+  const spesifikasi = toDecodedText(barang.spesifikasi).trim();
+  const kodeDepartemen = toDecodedText(barang.kodeDepartemen).trim();
   const jumlah = toNumber(barang.jumlah ?? barang.kuantitas, 0);
-  const unit = toText(barang.unit).trim();
+  const unit = toDecodedText(barang.unit).trim();
 
   if (!nama || jumlah <= 0 || !unit) {
     return null;
@@ -336,7 +340,7 @@ function toSuratJalanItem(value: unknown): SuratJalanItem | null {
     id,
     noSuratJalan: toText(row.noSuratJalan).trim(),
     noPo: toText(row.noPo).trim(),
-    kodeDepartemen: summarizeKodeDepartemen(barangList) || toText(row.kodeDepartemen).trim(),
+    kodeDepartemen: summarizeKodeDepartemen(barangList) || toDecodedText(row.kodeDepartemen).trim(),
     tanggal: toText(row.tanggal).trim(),
     idCustomer: parseCustomerId(row.idCustomer),
     barang: barangList,
@@ -679,11 +683,11 @@ export function ensureTrailingEmptyBarangRow(rows: SuratJalanBarangFormRow[]) {
 export function barangRowsToList(rows: SuratJalanBarangFormRow[]) {
   return rows
     .map((row) => {
-      const nama = row.nama.trim();
-      const spesifikasi = row.spesifikasi.trim() || null;
-      const kodeDepartemen = row.kodeDepartemen.trim();
+      const nama = toDecodedText(row.nama).trim();
+      const spesifikasi = toDecodedText(row.spesifikasi).trim() || null;
+      const kodeDepartemen = toDecodedText(row.kodeDepartemen).trim();
       const jumlahParsed = Number(row.jumlah.trim());
-      const unit = row.unit.trim();
+      const unit = toDecodedText(row.unit).trim();
 
       return {
         nama,
