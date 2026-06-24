@@ -3,6 +3,7 @@
 import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useI18n } from "../../../_i18n/provider";
 import { formatAppUppercaseDate } from "../../../_lib/date";
+import { decodeHtmlEntities } from "../../../_lib/html-entities";
 import { type SuratJalanItem } from "../../_lib/surat-jalan";
 
 type ExportCustomer = {
@@ -311,8 +312,12 @@ function paginateRowsByCapacity<T>(
   return pages;
 }
 
-function toUpperText(value: string) {
-  return String(value || "").trim().toUpperCase();
+function toExportText(value: unknown) {
+  return decodeHtmlEntities(value).trim();
+}
+
+function toUpperText(value: unknown) {
+  return toExportText(value).toUpperCase();
 }
 
 function getSingleLineCustomerNameFontSize(value: string) {
@@ -338,7 +343,7 @@ function getSingleLineCustomerNameFontSize(value: string) {
 }
 
 function normalizeCustomerName(value: string) {
-  return String(value || "").trim().toUpperCase();
+  return toUpperText(value);
 }
 
 function formatTemplateDate(value: string, locale: "id" | "en") {
@@ -378,9 +383,9 @@ function buildTemplateRows(
   minimumRows = halfPageRowsPerPage
 ): TemplateRow[] {
   const filledRows = (suratJalan.barang || []).map((barang, index) => {
-    const namaBarang = String(barang.nama || "").trim();
-    const spesifikasi = String(barang.spesifikasi || "").trim();
-    const kodeDepartemen = String(barang.kodeDepartemen || suratJalan.kodeDepartemen || "").trim();
+    const namaBarang = toExportText(barang.nama);
+    const spesifikasi = toExportText(barang.spesifikasi);
+    const kodeDepartemen = toExportText(barang.kodeDepartemen || suratJalan.kodeDepartemen);
     const namaBarangDisplay =
       namaBarang && spesifikasi ? `${namaBarang} (${spesifikasi})` : namaBarang;
 
@@ -388,7 +393,7 @@ function buildTemplateRows(
       no: String(index + 1),
       namaBarang: namaBarangDisplay,
       kodeDepartemen,
-      jumlah: `${barang.jumlah} ${String(barang.unit || "").trim().toUpperCase()}`.trim(),
+      jumlah: `${barang.jumlah} ${toUpperText(barang.unit)}`.trim(),
     };
   });
 
@@ -413,11 +418,11 @@ function buildMeiloonTemplateRows(
 ): MeiloonTemplateRow[] {
   const filledRows = (suratJalan.barang || []).map((barang, index) => ({
     no: String(index + 1),
-    namaBarang: String(barang.nama || "").trim(),
-    spesifikasi: String(barang.spesifikasi || "").trim(),
+    namaBarang: toExportText(barang.nama),
+    spesifikasi: toExportText(barang.spesifikasi),
     qty: String(barang.jumlah || "").trim(),
-    unit: String(barang.unit || "").trim().toUpperCase(),
-    kodeDepartemen: String(barang.kodeDepartemen || suratJalan.kodeDepartemen || "").trim(),
+    unit: toUpperText(barang.unit),
+    kodeDepartemen: toExportText(barang.kodeDepartemen || suratJalan.kodeDepartemen),
     ttdPenerima: "",
     note: "",
   }));
@@ -733,13 +738,13 @@ export function SuratJalanExportDocument({
     () => formatTemplateDate(suratJalan.tanggal || "", locale),
     [locale, suratJalan.tanggal]
   );
-  const rawCustomerName = useMemo(() => String(customer?.nama || "").trim(), [customer?.nama]);
+  const rawCustomerName = useMemo(() => toExportText(customer?.nama), [customer?.nama]);
   const rawCustomerAddress = useMemo(
-    () => String(customer?.alamat || "").trim(),
+    () => toExportText(customer?.alamat),
     [customer?.alamat]
   );
   const rawCustomerAttn = useMemo(
-    () => String(customer?.atasNama || "").trim(),
+    () => toExportText(customer?.atasNama),
     [customer?.atasNama]
   );
   const customerName = useMemo(() => toUpperText(customer?.nama || ""), [customer?.nama]);

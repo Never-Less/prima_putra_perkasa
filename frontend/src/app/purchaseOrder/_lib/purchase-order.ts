@@ -1,5 +1,6 @@
 import { requestApi } from "../../_lib/api-client";
 import { formatAppDate, toInputDateValue } from "../../_lib/date";
+import { decodeHtmlEntities } from "../../_lib/html-entities";
 import {
   buildListQueryString,
   normalizeServerPaginationMeta,
@@ -141,6 +142,10 @@ function toText(value: unknown) {
   return String(value);
 }
 
+function toDecodedText(value: unknown) {
+  return decodeHtmlEntities(toText(value));
+}
+
 function normalizeNumericText(value: string) {
   const text = value.replace(/rp\.?/gi, "").replace(/\s+/g, "").trim();
 
@@ -239,7 +244,7 @@ function toPurchaseOrderCustomerOption(value: unknown): PurchaseOrderCustomerOpt
 
   return {
     id,
-    nama: toText(row.nama).trim() || id,
+    nama: toDecodedText(row.nama).trim() || id,
   };
 }
 
@@ -267,10 +272,10 @@ function toPurchaseOrderBarang(value: unknown): PurchaseOrderBarang | null {
   }
 
   const row = value as Record<string, unknown>;
-  const namaBarang = toText(row.namaBarang).trim();
-  const spesifikasi = toText(row.spesifikasi).trim();
+  const namaBarang = toDecodedText(row.namaBarang).trim();
+  const spesifikasi = toDecodedText(row.spesifikasi).trim();
   const kuantitas = parseNumberFromUnknown(row.kuantitas);
-  const unit = toText(row.unit).trim();
+  const unit = toDecodedText(row.unit).trim();
   const hargaSatuan = parseNumberFromUnknown(row.hargaSatuan);
   const jumlah = parseNumberFromUnknown(row.jumlah, kuantitas * hargaSatuan);
 
@@ -470,10 +475,10 @@ export function ensureTrailingEmptyPurchaseOrderBarangRow(
 export function purchaseOrderBarangRowsToList(rows: PurchaseOrderBarangFormRow[]) {
   return rows
     .map((row) => {
-      const namaBarang = row.namaBarang.trim();
-      const spesifikasi = row.spesifikasi.trim();
+      const namaBarang = toDecodedText(row.namaBarang).trim();
+      const spesifikasi = toDecodedText(row.spesifikasi).trim();
       const kuantitas = parseNumberFromUnknown(row.kuantitas);
-      const unit = row.unit.trim();
+      const unit = toDecodedText(row.unit).trim();
       const hargaSatuan = parseNumberFromUnknown(row.hargaSatuan);
       const jumlah = Math.round(kuantitas * hargaSatuan);
 

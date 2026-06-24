@@ -6,6 +6,7 @@ import { ApiLoadingState } from "../../../_components/api-loading-state";
 import { ExportCurrencyValue } from "../../../_components/export-currency-value";
 import { formatAppUppercaseDate } from "../../../_lib/date";
 import { ApiRequestError } from "../../../_lib/api-client";
+import { decodeHtmlEntities } from "../../../_lib/html-entities";
 import {
   downloadJspreadsheetXlsxFile,
   sanitizeExcelFileName,
@@ -93,11 +94,15 @@ type InvoiceRowMeasurements = {
 };
 
 function normalizeCustomerName(value: string) {
-  return String(value || "").trim().toUpperCase();
+  return toUpperText(value);
 }
 
-function toUpperText(value: string) {
-  return String(value || "").trim().toUpperCase();
+function toExportText(value: unknown) {
+  return decodeHtmlEntities(value).trim();
+}
+
+function toUpperText(value: unknown) {
+  return toExportText(value).toUpperCase();
 }
 
 function roundCurrency(value: number) {
@@ -129,7 +134,7 @@ function formatTemplateDate(value: string, locale: "id" | "en") {
 }
 
 function splitInvoiceBarangColumns(value: string) {
-  const text = String(value || "").trim();
+  const text = toExportText(value);
   const match = text.match(/^(.*)\s+\(([^()]*)\)$/);
 
   if (!match) {
@@ -146,8 +151,8 @@ function splitInvoiceBarangColumns(value: string) {
 }
 
 function formatInvoiceBarangLabel(namaBarang: string, spesifikasi = "") {
-  const normalizedNamaBarang = String(namaBarang || "").trim();
-  const normalizedSpesifikasi = String(spesifikasi || "").trim();
+  const normalizedNamaBarang = toExportText(namaBarang);
+  const normalizedSpesifikasi = toExportText(spesifikasi);
 
   if (!normalizedNamaBarang) {
     return "";
@@ -164,8 +169,8 @@ function resolveInvoiceBarangColumns(
   namaBarangValue: string,
   spesifikasiValue = ""
 ) {
-  const namaBarang = String(namaBarangValue || "").trim();
-  const spesifikasi = String(spesifikasiValue || "").trim();
+  const namaBarang = toExportText(namaBarangValue);
+  const spesifikasi = toExportText(spesifikasiValue);
 
   if (spesifikasi) {
     return {
