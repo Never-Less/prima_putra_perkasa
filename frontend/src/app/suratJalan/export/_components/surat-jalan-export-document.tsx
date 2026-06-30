@@ -543,7 +543,7 @@ function SuratJalanPaginationMeasure({
         className="px-[5mm] py-[4mm] text-[16px] leading-[1.18]"
         style={{ width: pageWidth }}
       >
-        <div className="border-2 border-black [&_td]:py-[2px] [&_th]:py-[2px]">
+        <div className="border-2 border-black [&_td]:py-[5px] [&_th]:py-[2px]">
           <table className="w-full border-collapse table-fixed">
             <colgroup>
               <col style={{ width: defaultColumnWidths.no }} />
@@ -579,7 +579,7 @@ function SuratJalanPaginationMeasure({
         className="px-[5mm] py-[4mm] text-[16px] leading-[1.18]"
         style={{ width: pageWidth }}
       >
-        <div className="border-2 border-black [&_td]:py-[2px] [&_th]:py-[2px]">
+        <div className="border-2 border-black [&_td]:py-[5px] [&_th]:py-[2px]">
           <table className="w-full border-collapse table-fixed">
             <colgroup>
               <col style={{ width: meiloonColumnWidths.no }} />
@@ -835,7 +835,7 @@ export function SuratJalanExportDocument({
             <span className="">{kendaraan || "-"}</span>
           </p>
 
-          <div className="mt-1 border-2 border-black [&_td]:py-[2px] [&_th]:py-[2px]">
+          <div className="mt-1 border-2 border-black [&_td]:py-[5px] [&_th]:py-[2px]">
             <table className="w-full border-collapse table-fixed">
               <colgroup>
                 <col style={{ width: meiloonColumnWidths.no }} />
@@ -989,7 +989,7 @@ export function SuratJalanExportDocument({
           <span className="">{kendaraan || "-"}</span>
         </p>
 
-        <div className="mt-1 border-2 border-black [&_td]:py-[2px] [&_th]:py-[2px]">
+        <div className="mt-1 border-2 border-black [&_td]:py-[5px] [&_th]:py-[2px]">
           <table className="w-full border-collapse table-fixed">
             <colgroup>
               <col style={{ width: defaultColumnWidths.no }} />

@@ -105,6 +105,7 @@ function createEmptyPembelianFormState(invoiceOptions: PembelianInvoiceOption[])
     namaSupplier: "",
     idSupplier: "",
     noNota: "",
+    note: "",
     idInvoice: ensureValidIdInvoice("", invoiceOptions),
     hutang: false,
     ppn: false,
@@ -500,6 +501,17 @@ export function PembelianEditForm({
               />
             </label>
 
+            <label className="text-sm text-slate-700 dark:text-slate-200 sm:col-span-2">
+              {t("field.note")}
+              <textarea
+                value={form.note}
+                onChange={(event) => setForm((prev) => ({ ...prev, note: event.target.value }))}
+                placeholder={inputPlaceholder("field.note")}
+                rows={2}
+                className="mt-1 w-full resize-y rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+              />
+            </label>
+
             <label className="text-sm text-slate-700 dark:text-slate-200">
               {t("pembelian.form.noInvoiceLabel")}
               <select
@@ -669,6 +681,9 @@ export function PembelianEditForm({
             </p>
             <p>
               <span className="text-slate-500 dark:text-slate-400">{t("field.noNota")}:</span> {form.noNota || "-"}
+            </p>
+            <p>
+              <span className="text-slate-500 dark:text-slate-400">{t("field.note")}:</span> {form.note || "-"}
             </p>
             <p>
               <span className="text-slate-500 dark:text-slate-400">{t("field.noInvoice")}:</span> {previewInvoiceLabel}

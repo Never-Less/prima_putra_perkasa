@@ -7,6 +7,7 @@ function sanitizePembelian(pembelian) {
     namaSupplier: pembelian.namaSupplier,
     idSupplier: supplierId && supplierId._id ? supplierId._id : supplierId,
     noNota: pembelian.noNota,
+    note: pembelian.note,
     idInvoice: pembelian.idInvoice,
     hutang: pembelian.hutang,
     ppn: pembelian.ppn,

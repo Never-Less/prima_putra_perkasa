@@ -56,6 +56,10 @@ router.put("/:id", async (req, res) => {
       updates.noNota = String(req.body.noNota || "").trim();
     }
 
+    if (req.body.note !== undefined) {
+      updates.note = String(req.body.note || "").trim();
+    }
+
     if (req.body.idInvoice !== undefined) {
       if (req.body.idInvoice === null) {
         updates.idInvoice = null;
