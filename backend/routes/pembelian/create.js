@@ -13,6 +13,7 @@ router.post("/", async (req, res) => {
   const namaSupplier = String(req.body.namaSupplier || "").trim();
   let idSupplier = null;
   const noNota = String(req.body.noNota || "").trim();
+  const note = String(req.body.note || "").trim();
   let idInvoice = null;
   const hutang = req.body.hutang !== undefined ? parseBoolean(req.body.hutang) : false;
   const ppn = req.body.ppn !== undefined ? parseBoolean(req.body.ppn) : false;
@@ -113,6 +114,7 @@ router.post("/", async (req, res) => {
       namaSupplier: namaSupplier,
       idSupplier: idSupplier,
       noNota: noNota,
+      note: note,
       idInvoice: idInvoice,
       hutang: hutang,
       ppn: ppn,

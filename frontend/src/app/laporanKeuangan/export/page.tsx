@@ -72,6 +72,8 @@ type FinancialReportRow = {
 
 type PurchaseReportRow = {
   hutang: boolean;
+  noNota: string;
+  note: string;
   ppn: boolean;
   supplierName: string;
   total: number;
@@ -484,6 +486,15 @@ function calculatePembelianTotal(row: PembelianItem) {
   return Number(row.nilaiNota || 0);
 }
 
+function formatPurchaseDescription(supplierName: string, noNota: string) {
+  const normalizedSupplierName = String(supplierName || "").trim() || "-";
+  const normalizedNoNota = String(noNota || "").trim();
+
+  return normalizedNoNota
+    ? `${normalizedSupplierName} (${normalizedNoNota})`
+    : normalizedSupplierName;
+}
+
 function getFinancialReportExcelStyles(row: FinancialReportRow) {
   if (row.kind === "grossProfit") {
     return {
@@ -595,6 +606,8 @@ export default function LaporanKeuanganExportPage() {
         ...currentRows,
         {
           hutang: Boolean(row.hutang),
+          noNota: String(row.noNota || "").trim(),
+          note: String(row.note || "").trim(),
           ppn: Boolean(row.ppn),
           supplierName,
           total: rowTotal,
@@ -703,11 +716,12 @@ export default function LaporanKeuanganExportPage() {
       invoicePurchases.forEach((purchase) => {
         rows.push({
           kind: "invoiceDetail",
-          description: `${t("nav.pembelian")} - ${purchase.supplierName}`,
+          description: formatPurchaseDescription(purchase.supplierName, purchase.noNota),
           kreditPpn: purchase.ppn ? purchase.total : undefined,
           kreditNonPpn: purchase.ppn ? undefined : purchase.total,
           bayar: purchase.hutang ? t("field.hutang").toUpperCase() : t("field.lunas").toUpperCase(),
           isHutang: purchase.hutang,
+          note: purchase.note || undefined,
         });
       });
 
@@ -749,12 +763,12 @@ export default function LaporanKeuanganExportPage() {
       rows.push({
         kind: "stock",
         date: formatSpreadsheetDate(row.tanggalNota),
-        description: `${t("field.stockBarang")} - ${row.namaSupplier || "-"}`,
+        description: formatPurchaseDescription(row.namaSupplier || "-", row.noNota || ""),
         kreditPpn: row.ppn ? rowTotal : undefined,
         kreditNonPpn: row.ppn ? undefined : rowTotal,
         bayar: row.hutang ? t("field.hutang").toUpperCase() : t("field.lunas").toUpperCase(),
         isHutang: row.hutang,
-        note: row.noNota || undefined,
+        note: row.note || undefined,
       });
     });
 
@@ -1005,7 +1019,7 @@ export default function LaporanKeuanganExportPage() {
       {
         name: "Laporan Keuangan",
         rows: reportRows,
-        columnWidths: [9, 60, 16, 12, 12, 10, 18],
+        columnWidths: [8, 55, 18, 15, 15, 11, 19],
         merges: ["A1:A2", "B1:B2", "C1:C2", "D1:E1", "F1:F2", "G1:G2"],
       },
     ]);
@@ -1208,15 +1222,15 @@ export default function LaporanKeuanganExportPage() {
                 </div>
               ) : (
                 <div className="overflow-x-auto border border-slate-300 print:overflow-visible">
-                  <table className="w-full min-w-[900px] table-fixed border-collapse text-sm text-slate-900 print:text-[11px]">
+                  <table className="w-full min-w-[980px] table-fixed border-collapse text-sm text-slate-900 print:text-[11px]">
                     <colgroup>
-                      <col style={{ width: "8%" }} />
-                      <col style={{ width: "35%" }} />
+                      <col style={{ width: "6%" }} />
+                      <col style={{ width: "32%" }} />
+                      <col style={{ width: "16%" }} />
                       <col style={{ width: "14%" }} />
-                      <col style={{ width: "11%" }} />
-                      <col style={{ width: "11%" }} />
-                      <col style={{ width: "9%" }} />
-                      <col style={{ width: "12%" }} />
+                      <col style={{ width: "14%" }} />
+                      <col style={{ width: "8%" }} />
+                      <col style={{ width: "10%" }} />
                     </colgroup>
                     <thead className="bg-amber-50 text-center uppercase">
                       <tr>
@@ -1248,23 +1262,23 @@ export default function LaporanKeuanganExportPage() {
 
                         return (
                           <tr key={`${row.kind}-${index}`} className={`${rowClassName} ${isSpacer ? "h-6" : ""}`}>
-                            <td className="truncate border border-slate-300 px-2 py-1 align-top">{row.date || ""}</td>
+                            <td className="whitespace-nowrap border border-slate-300 px-2 py-1 text-center align-top">{row.date || ""}</td>
                             <td className={`truncate border border-slate-300 px-2 py-1 align-top ${
                               row.kind === "invoiceDetail" || row.kind === "stock" ? "pl-8" : ""
                             }`} title={row.description || ""}>
                               {row.description || ""}
                             </td>
-                            <td className="truncate border border-slate-300 px-2 py-1 align-top">
+                            <td className="whitespace-nowrap border border-slate-300 px-2 py-1 align-top">
                               <ExportCurrencyValue value={row.debet} locale={locale} />
                             </td>
-                            <td className="truncate border border-slate-300 px-2 py-1 align-top">
+                            <td className="whitespace-nowrap border border-slate-300 px-2 py-1 align-top">
                               <ExportCurrencyValue value={row.kreditPpn} locale={locale} />
                             </td>
-                            <td className="truncate border border-slate-300 px-2 py-1 align-top">
+                            <td className="whitespace-nowrap border border-slate-300 px-2 py-1 align-top">
                               <ExportCurrencyValue value={row.kreditNonPpn} locale={locale} />
                             </td>
                             <td
-                              className={`truncate border border-slate-300 px-2 py-1 align-top ${
+                              className={`whitespace-nowrap border border-slate-300 px-2 py-1 text-center align-top ${
                                 row.isHutang
                                   ? " text-red-700"
                                   : row.bayar

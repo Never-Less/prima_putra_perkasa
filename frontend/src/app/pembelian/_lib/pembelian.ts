@@ -21,6 +21,7 @@ export type PembelianItem = {
   namaSupplier: string;
   idSupplier: string;
   noNota: string;
+  note: string;
   idInvoice: string;
   hutang: boolean;
   ppn: boolean;
@@ -56,6 +57,7 @@ export type PembelianFormState = {
   namaSupplier: string;
   idSupplier: string;
   noNota: string;
+  note: string;
   idInvoice: string;
   hutang: boolean;
   ppn: boolean;
@@ -212,6 +214,7 @@ function toPembelianItem(value: unknown): PembelianItem | null {
     namaSupplier: toText(row.namaSupplier).trim(),
     idSupplier: parseReferenceId(row.idSupplier),
     noNota: toText(row.noNota).trim(),
+    note: toText(row.note).trim(),
     idInvoice: parseInvoiceId(row.idInvoice),
     hutang: Boolean(row.hutang),
     ppn: Boolean(row.ppn),
@@ -279,6 +282,7 @@ function toNormalizedPembelianPayload(form: PembelianFormState) {
     namaSupplier: toText(form.namaSupplier).trim(),
     idSupplier: toText(form.idSupplier).trim() || null,
     noNota: toText(form.noNota).trim(),
+    note: toText(form.note).trim(),
     idInvoice: idInvoice && idInvoice !== pembelianStockInvoiceId ? idInvoice : null,
     hutang: form.hutang,
     ppn: form.ppn,
@@ -424,6 +428,7 @@ export function toPembelianFormState(item: PembelianItem): PembelianFormState {
     namaSupplier: item.namaSupplier,
     idSupplier: item.idSupplier,
     noNota: item.noNota,
+    note: item.note,
     idInvoice: item.idInvoice || pembelianStockInvoiceId,
     hutang: item.hutang,
     ppn: item.ppn,
@@ -448,6 +453,7 @@ export function toPembelianFormStateFromPrefill(
     namaSupplier: "",
     idSupplier: "",
     noNota: "",
+    note: "",
     idInvoice: fallbackInvoiceId,
     hutang: false,
     ppn: Boolean(prefill.ppn),

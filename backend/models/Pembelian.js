@@ -24,6 +24,12 @@ const pembelianSchema = new mongoose.Schema(
       maxlength: 50,
       default: "",
     },
+    note: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+      default: "",
+    },
     idInvoice: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Invoice",

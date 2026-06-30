@@ -545,16 +545,16 @@ function DefaultInvoiceTable({ rows, t, className = "" }: DefaultInvoiceTablePro
               className="h-[38px]"
               data-invoice-export-row="default"
             >
-              <td className="border-r border-black px-1 pt-1 text-center align-top text-[16px]">{row.no}</td>
-              <td className="whitespace-normal break-words border-r border-black px-1.5 pt-1 align-top text-[16px] leading-[1.15]">
+              <td className="border-r border-black px-1 py-[5px] text-center align-top text-[16px]">{row.no}</td>
+              <td className="whitespace-normal break-words border-r border-black px-1.5 py-[5px] align-top text-[16px] leading-[1.15]">
                 {row.namaBarang}
               </td>
-              <td className="border-r border-black px-1 pt-1 text-center align-top text-[16px]">{row.qty}</td>
-              <td className="border-r border-black px-1 pt-1 text-center align-top text-[16px]">{row.unit}</td>
-              <td className="border-r border-black px-1 py-1 text-right align-top text-[16px]">
+              <td className="border-r border-black px-1 py-[5px] text-center align-top text-[16px]">{row.qty}</td>
+              <td className="border-r border-black px-1 py-[5px] text-center align-top text-[16px]">{row.unit}</td>
+              <td className="border-r border-black px-1 py-[5px] text-right align-top text-[16px]">
                 <CurrencyTableValue value={row.hargaSatuan} className="text-[16px] leading-[1.05]" />
               </td>
-              <td className="px-1 py-1 text-right align-top text-[16px]">
+              <td className="px-1 py-[5px] text-right align-top text-[16px]">
                 <CurrencyTableValue value={row.jumlah} className="text-[16px] leading-[1.05]" />
               </td>
             </tr>
@@ -632,20 +632,20 @@ function MeiloonInvoiceTable({ rows, t, className = "" }: MeiloonInvoiceTablePro
               className="h-[34px]"
               data-invoice-export-row="meiloon"
             >
-              <td className="border-r border-black px-1 pt-1 text-center align-top text-[16px]">{row.no}</td>
-              <td className="whitespace-normal break-words border-r border-black px-1.5 pt-1 align-top text-[16px] leading-[1.15]">
+              <td className="border-r border-black px-1 py-[5px] text-center align-top text-[16px]">{row.no}</td>
+              <td className="whitespace-normal break-words border-r border-black px-1.5 py-[5px] align-top text-[16px] leading-[1.15]">
                 {row.namaBarang}
               </td>
-              <td className="border-r border-black px-1.5 pt-1 align-top text-[16px] leading-[1.15] whitespace-pre-line">{row.spesifikasi}</td>
-              <td className="border-r border-black px-1 pt-1 text-center align-top text-[16px]">{row.unit}</td>
-              <td className="border-r border-black px-1 pt-1 text-center align-top text-[16px]">{row.qty}</td>
-              <td className="border-r border-black px-1 py-1 text-right align-top text-[16px]">
+              <td className="border-r border-black px-1.5 py-[5px] align-top text-[16px] leading-[1.15] whitespace-pre-line">{row.spesifikasi}</td>
+              <td className="border-r border-black px-1 py-[5px] text-center align-top text-[16px]">{row.unit}</td>
+              <td className="border-r border-black px-1 py-[5px] text-center align-top text-[16px]">{row.qty}</td>
+              <td className="border-r border-black px-1 py-[5px] text-right align-top text-[16px]">
                 <CurrencyTableValue value={row.hargaSatuan} className="text-[16px] leading-[1.05]" />
               </td>
-              <td className="border-r border-black px-1 py-1 text-right align-top text-[16px]">
+              <td className="border-r border-black px-1 py-[5px] text-right align-top text-[16px]">
                 <CurrencyTableValue value={row.jumlah} className="text-[16px] leading-[1.05]" />
               </td>
-              <td className="px-1 pt-1 text-center align-top text-[16px]">{row.noPo}</td>
+              <td className="px-1 py-[5px] text-center align-top text-[16px]">{row.noPo}</td>
             </tr>
           ))}
           {hasFillerRow ? (
