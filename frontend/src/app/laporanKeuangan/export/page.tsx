@@ -680,6 +680,8 @@ export default function LaporanKeuanganExportPage() {
           netProfit,
         };
   const reportPeriodLabel = reportMode === "yearly" ? tahun : monthLabel;
+  const summaryCurrencyValueClassName =
+    "mt-1 whitespace-nowrap text-[13px] leading-tight tabular-nums print:text-[10px]";
   const purchasePpnTotal = useMemo(() => {
     return invoiceRows.reduce((total, row) => {
       const invoicePurchases = purchaseRowsByInvoiceId.get(row.id) || [];
@@ -1019,7 +1021,7 @@ export default function LaporanKeuanganExportPage() {
       {
         name: "Laporan Keuangan",
         rows: reportRows,
-        columnWidths: [8, 55, 18, 15, 15, 11, 19],
+        columnWidths: [8, 52, 17, 14, 14, 11, 40],
         merges: ["A1:A2", "B1:B2", "C1:C2", "D1:E1", "F1:F2", "G1:G2"],
       },
     ]);
@@ -1043,7 +1045,7 @@ export default function LaporanKeuanganExportPage() {
       `}</style>
 
       <main className="export-normal-weight laporan-keuangan-export min-h-screen bg-slate-100 px-4 py-4 print:bg-white print:px-0 print:py-0">
-        <div className="mx-auto max-w-[900px] space-y-4 print:max-w-none">
+        <div className="mx-auto max-w-[1280px] space-y-4 print:max-w-none">
           <header className="flex flex-wrap items-start justify-between gap-3 rounded-2xl bg-white p-4 shadow-sm print:hidden">
             <div>
               <h1 className="text-xl text-slate-900">{t("laporanKeuangan.exportPage.title")}</h1>
@@ -1105,7 +1107,7 @@ export default function LaporanKeuanganExportPage() {
                   <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
                     {t("field.netProfit")}
                   </p>
-                  <p className={`mt-1 text-lg ${exportSummary.netProfit >= 0 ? "text-slate-900" : "text-red-700"}`}>
+                  <p className={`${summaryCurrencyValueClassName} ${exportSummary.netProfit >= 0 ? "text-slate-900" : "text-red-700"}`}>
                     <ExportCurrencyValue value={exportSummary.netProfit} locale={locale} />
                   </p>
                 </div>
@@ -1114,37 +1116,37 @@ export default function LaporanKeuanganExportPage() {
               <div className="grid gap-3 sm:grid-cols-6">
                 <div className="rounded-lg border border-slate-300 px-3 py-2">
                   <p className="text-xs uppercase tracking-[0.14em] text-slate-500">{t("field.totalInvoice")}</p>
-                  <p className="mt-1 text-slate-900">
+                  <p className={`${summaryCurrencyValueClassName} text-slate-900`}>
                     <ExportCurrencyValue value={exportSummary.totalInvoice} locale={locale} />
                   </p>
                 </div>
                 <div className="rounded-lg border border-slate-300 px-3 py-2">
                   <p className="text-xs uppercase tracking-[0.14em] text-slate-500">{t("field.totalPembelian")}</p>
-                  <p className="mt-1 text-slate-900">
+                  <p className={`${summaryCurrencyValueClassName} text-slate-900`}>
                     <ExportCurrencyValue value={exportSummary.totalPembelian} locale={locale} />
                   </p>
                 </div>
                 <div className="rounded-lg border border-slate-300 px-3 py-2">
                   <p className="text-xs uppercase tracking-[0.14em] text-slate-500">{t("field.stockBarang")}</p>
-                  <p className="mt-1 text-slate-900">
+                  <p className={`${summaryCurrencyValueClassName} text-slate-900`}>
                     <ExportCurrencyValue value={exportSummary.totalStockBarang} locale={locale} />
                   </p>
                 </div>
                 <div className="rounded-lg border border-slate-300 px-3 py-2">
                   <p className="text-xs uppercase tracking-[0.14em] text-slate-500">{t("field.grossProfit")}</p>
-                  <p className="mt-1 text-slate-900">
+                  <p className={`${summaryCurrencyValueClassName} text-slate-900`}>
                     <ExportCurrencyValue value={exportSummary.grossProfit} locale={locale} />
                   </p>
                 </div>
                 <div className="rounded-lg border border-slate-300 px-3 py-2">
                   <p className="text-xs uppercase tracking-[0.14em] text-slate-500">{t("field.totalBiayaOperasional")}</p>
-                  <p className="mt-1 text-slate-900">
+                  <p className={`${summaryCurrencyValueClassName} text-slate-900`}>
                     <ExportCurrencyValue value={exportSummary.totalBiayaOperasional} locale={locale} />
                   </p>
                 </div>
                 <div className="rounded-lg border border-slate-300 px-3 py-2">
                   <p className="text-xs uppercase tracking-[0.14em] text-slate-500">{t("field.netProfit")}</p>
-                  <p className={`mt-1 ${exportSummary.netProfit >= 0 ? "text-slate-900" : "text-red-700"}`}>
+                  <p className={`${summaryCurrencyValueClassName} ${exportSummary.netProfit >= 0 ? "text-slate-900" : "text-red-700"}`}>
                     <ExportCurrencyValue value={exportSummary.netProfit} locale={locale} />
                   </p>
                 </div>
@@ -1222,15 +1224,15 @@ export default function LaporanKeuanganExportPage() {
                 </div>
               ) : (
                 <div className="overflow-x-auto border border-slate-300 print:overflow-visible">
-                  <table className="w-full min-w-[980px] table-fixed border-collapse text-sm text-slate-900 print:text-[11px]">
+                  <table className="w-full min-w-[1280px] table-fixed border-collapse text-sm text-slate-900 print:min-w-0 print:text-[11px]">
                     <colgroup>
-                      <col style={{ width: "6%" }} />
-                      <col style={{ width: "32%" }} />
-                      <col style={{ width: "16%" }} />
-                      <col style={{ width: "14%" }} />
-                      <col style={{ width: "14%" }} />
+                      <col style={{ width: "7%" }} />
+                      <col style={{ width: "25%" }} />
+                      <col style={{ width: "13%" }} />
+                      <col style={{ width: "11%" }} />
+                      <col style={{ width: "11%" }} />
                       <col style={{ width: "8%" }} />
-                      <col style={{ width: "10%" }} />
+                      <col style={{ width: "15%" }} />
                     </colgroup>
                     <thead className="bg-amber-50 text-center uppercase">
                       <tr>
@@ -1263,7 +1265,7 @@ export default function LaporanKeuanganExportPage() {
                         return (
                           <tr key={`${row.kind}-${index}`} className={`${rowClassName} ${isSpacer ? "h-6" : ""}`}>
                             <td className="whitespace-nowrap border border-slate-300 px-2 py-1 text-center align-top">{row.date || ""}</td>
-                            <td className={`truncate border border-slate-300 px-2 py-1 align-top ${
+                            <td className={`break-words border border-slate-300 px-2 py-1 align-top ${
                               row.kind === "invoiceDetail" || row.kind === "stock" ? "pl-8" : ""
                             }`} title={row.description || ""}>
                               {row.description || ""}
@@ -1288,7 +1290,7 @@ export default function LaporanKeuanganExportPage() {
                             >
                               {row.bayar || ""}
                             </td>
-                            <td className="truncate border border-slate-300 px-2 py-1 align-top" title={row.note || ""}>{row.note || ""}</td>
+                            <td className="break-words border border-slate-300 px-2 py-1 align-top" title={row.note || ""}>{row.note || ""}</td>
                           </tr>
                         );
                       })}
@@ -1303,4 +1305,3 @@ export default function LaporanKeuanganExportPage() {
     </>
   );
 }
-
