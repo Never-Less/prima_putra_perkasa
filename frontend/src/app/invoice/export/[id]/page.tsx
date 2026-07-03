@@ -30,6 +30,7 @@ const companyProfile = {
 };
 
 const meiloonCustomerName = "PT. MEILOON TECHNOLOGY INDONESIA";
+const maxxisCustomerName = "PT. MAXXIS INTERNATIONAL INDONESIA";
 
 const paymentProfile = {
   nama: "CV. PRIMA PUTRA PERKASA",
@@ -884,6 +885,10 @@ export default function InvoiceExportPage() {
     () => normalizeCustomerName(customer?.nama || "") === meiloonCustomerName,
     [customer?.nama]
   );
+  const isMaxxisCustomer = useMemo(
+    () => normalizeCustomerName(customer?.nama || "") === maxxisCustomerName,
+    [customer?.nama]
+  );
   const templateDate = useMemo(() => formatTemplateDate(invoice?.tanggal || "", locale), [invoice?.tanggal, locale]);
   const customerName = useMemo(() => toUpperText(customer?.nama || ""), [customer?.nama]);
   const customerAddress = useMemo(() => toUpperText(customer?.alamat || ""), [customer?.alamat]);
@@ -896,6 +901,12 @@ export default function InvoiceExportPage() {
     [invoice?.noSuratJalan]
   );
   const customerNpwp = useMemo(() => String(customer?.npwp || "").trim() || "-", [customer?.npwp]);
+  const defaultBeforeTaxTotalLabel = isMaxxisCustomer
+    ? t("invoice.export.summary.dpp")
+    : t("invoice.export.default.summary.beforeTaxTotal");
+  const defaultPpnLabel = isMaxxisCustomer
+    ? t("invoice.export.summary.ppnNoRate")
+    : t("invoice.export.summary.ppn", { rate: invoice?.ppnRate || 0 });
 
   const meiloonCustomerNameValue = useMemo(
     () => String(customer?.nama || meiloonInvoiceProfile.name).trim(),
@@ -1445,14 +1456,14 @@ export default function InvoiceExportPage() {
                   <div className="space-y-2">
                     <div className="border border-black">
                       <div className="grid grid-cols-[1fr_150px] border-b border-black text-[15px] last:border-b-0">
-                        <div className="border-r border-black px-2 py-0.5">{t("invoice.export.default.summary.beforeTaxTotal")}</div>
+                        <div className="border-r border-black px-2 py-0.5">{defaultBeforeTaxTotalLabel}</div>
                         <div className="px-2 py-0.5">
                           <CurrencyTableValue value={formatPlainNumber(Number(invoice.subtotal || 0))} />
                         </div>
                       </div>
                       <div className="grid grid-cols-[1fr_150px] border-b border-black text-[15px] last:border-b-0">
                         <div className="border-r border-black px-2 py-0.5">
-                          {t("invoice.export.summary.ppn", { rate: invoice.ppnRate })}
+                          {defaultPpnLabel}
                         </div>
                         <div className="px-2 py-0.5">
                           <CurrencyTableValue value={formatPlainNumber(Number(invoice.ppnAmount || 0))} />
@@ -1517,14 +1528,14 @@ export default function InvoiceExportPage() {
                     <div className="space-y-2">
                       <div className="border border-black">
                         <div className="grid grid-cols-[1fr_150px] border-b border-black text-[15px] last:border-b-0">
-                          <div className="border-r border-black px-2 py-0.5">{t("invoice.export.default.summary.beforeTaxTotal")}</div>
+                          <div className="border-r border-black px-2 py-0.5">{defaultBeforeTaxTotalLabel}</div>
                           <div className="px-2 py-0.5">
                             <CurrencyTableValue value={formatPlainNumber(Number(invoice.subtotal || 0))} />
                           </div>
                         </div>
                         <div className="grid grid-cols-[1fr_150px] border-b border-black text-[15px] last:border-b-0">
                           <div className="border-r border-black px-2 py-0.5">
-                            {t("invoice.export.summary.ppn", { rate: invoice.ppnRate })}
+                            {defaultPpnLabel}
                           </div>
                           <div className="px-2 py-0.5">
                             <CurrencyTableValue value={formatPlainNumber(Number(invoice.ppnAmount || 0))} />
