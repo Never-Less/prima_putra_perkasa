@@ -442,7 +442,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "suratJalan.export.previewDescription": "Halaman ini disiapkan untuk print atau simpan ke PDF.",
     "suratJalan.export.paperSizeLabel": "Ukuran export",
     "suratJalan.export.paperSize.half": "Setengah halaman (maks 8 item)",
-    "suratJalan.export.paperSize.full": "1 halaman (maks 15 item)",
+    "suratJalan.export.paperSize.full": "1 halaman (maks 34 baris)",
     "suratJalan.export.noPoPreviewTitle": "Preview Export Surat Jalan No. SO",
     "suratJalan.export.noPoPreviewDescription":
       "Halaman ini menampilkan {{count}} surat jalan untuk No. SO {{noPo}} dan siap dicetak.",
@@ -1098,7 +1098,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "suratJalan.export.previewDescription": "This page is prepared for print or save to PDF.",
     "suratJalan.export.paperSizeLabel": "Export size",
     "suratJalan.export.paperSize.half": "Half page (max 8 items)",
-    "suratJalan.export.paperSize.full": "Full page (max 15 items)",
+    "suratJalan.export.paperSize.full": "Full page (max 34 rows)",
     "suratJalan.export.noPoPreviewTitle": "SO Delivery Note Export Preview",
     "suratJalan.export.noPoPreviewDescription":
       "This page shows {{count}} delivery notes for SO No. {{noPo}} and is ready to print.",

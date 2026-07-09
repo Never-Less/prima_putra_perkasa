@@ -50,8 +50,15 @@ const meiloonInvoiceProfile = {
 };
 
 const invoiceExportFontFamily = 'var(--font-geist-sans), "Segoe UI", sans-serif';
-const defaultInvoiceBaseRowHeight = 38;
-const meiloonInvoiceBaseRowHeight = 34;
+const invoiceBaseRowHeight = 21;
+const defaultInvoiceSinglePageCapacity = 23;
+const meiloonInvoiceSinglePageCapacity = 21;
+const defaultInvoiceFirstPageCapacity = 36;
+const meiloonInvoiceFirstPageCapacity = 32;
+const defaultInvoiceMiddlePageCapacity = 45;
+const meiloonInvoiceMiddlePageCapacity = 43;
+const defaultInvoiceLastPageCapacity = 23;
+const meiloonInvoiceLastPageCapacity = 21;
 
 type DefaultInvoiceTemplateRow = {
   no: string;
@@ -230,13 +237,13 @@ function lineCountToRowUnits(lineCount: number) {
 }
 
 function estimateDefaultInvoiceRowUnits(row: DefaultInvoiceTemplateRow) {
-  return lineCountToRowUnits(Math.max(2, estimateWrappedLineCount(row.namaBarang, 44)));
+  return lineCountToRowUnits(Math.max(1, estimateWrappedLineCount(row.namaBarang, 44)));
 }
 
 function estimateMeiloonInvoiceRowUnits(row: MeiloonInvoiceTemplateRow) {
   return lineCountToRowUnits(
     Math.max(
-      2,
+      1,
       estimateWrappedLineCount(row.namaBarang, 20),
       estimateWrappedLineCount(row.spesifikasi, 31)
     )
@@ -322,8 +329,7 @@ function paginateRows<T>(
     rows,
     0,
     firstPageCapacity,
-    estimateRowUnits,
-    1
+    estimateRowUnits
   );
   const middlePages: T[][] = [];
   let nextIndex = firstPage.nextIndex;
@@ -335,9 +341,23 @@ function paginateRows<T>(
   ) {
     const remainingRows = rows.slice(nextIndex);
     const remainingUnits = estimateRowsUnits(remainingRows, estimateRowUnits);
+    const remainingMiddlePageCount = Math.max(
+      1,
+      Math.ceil(
+        Math.max(0, remainingUnits - lastPageCapacity) / middlePageCapacity
+      )
+    );
+    const remainingPageCount = remainingMiddlePageCount + 1;
+    const minimumCurrentPageUnits = Math.max(
+      1,
+      remainingUnits -
+        (remainingPageCount - 2) * middlePageCapacity -
+        lastPageCapacity
+    );
+    const balancedCurrentPageUnits = remainingUnits / remainingPageCount;
     const middleTargetCapacity = Math.min(
       middlePageCapacity,
-      Math.max(1, remainingUnits - lastPageCapacity)
+      Math.max(minimumCurrentPageUnits, balancedCurrentPageUnits)
     );
     const middlePage = takeRowsForCapacity(
       rows,
@@ -369,12 +389,15 @@ function paginateRows<T>(
       createEmptyRow
     ),
     middlePages,
-    lastPageRows: addFillerRowIfNeeded(
-      lastPageRows,
-      lastPageCapacity,
-      estimateRowUnits,
-      createEmptyRow
-    ),
+    lastPageRows:
+      lastPageRows.length > 0
+        ? addFillerRowIfNeeded(
+            lastPageRows,
+            lastPageCapacity,
+            estimateRowUnits,
+            createEmptyRow
+          )
+        : [],
   };
 }
 
@@ -475,6 +498,7 @@ type CommonTemplateProps = {
 type DefaultInvoiceTableProps = CommonTemplateProps & {
   rows: DefaultInvoiceTemplateRow[];
   className?: string;
+  fillRemainingHeight?: boolean;
 };
 
 function isDefaultInvoiceRowEmpty(row: DefaultInvoiceTemplateRow) {
@@ -502,13 +526,20 @@ function CurrencyTableValue({ value, className = "text-[15px] leading-none" }: C
   );
 }
 
-function DefaultInvoiceTable({ rows, t, className = "" }: DefaultInvoiceTableProps) {
+function DefaultInvoiceTable({
+  rows,
+  t,
+  className = "",
+  fillRemainingHeight = false,
+}: DefaultInvoiceTableProps) {
   const filledRows = rows.filter((row) => !isDefaultInvoiceRowEmpty(row));
   const hasFillerRow = filledRows.length < rows.length;
 
   return (
     <div className={`flex flex-col overflow-hidden border border-black ${className}`.trim()}>
-      <table className={`${hasFillerRow ? "h-full" : ""} w-full table-fixed border-collapse`.trim()}>
+      <table
+        className={`${fillRemainingHeight ? "h-full" : ""} w-full table-fixed border-collapse`.trim()}
+      >
         <colgroup>
           <col style={{ width: "5%" }} />
           <col style={{ width: "49%" }} />
@@ -518,7 +549,7 @@ function DefaultInvoiceTable({ rows, t, className = "" }: DefaultInvoiceTablePro
           <col style={{ width: "16%" }} />
         </colgroup>
         <thead>
-          <tr className="h-[24px] border-b border-black">
+          <tr className="border-b border-black">
             <th className="border-r border-black px-1 py-[1px] text-center align-middle text-[15px] leading-none">
               {t("invoice.export.table.no")}
             </th>
@@ -543,7 +574,6 @@ function DefaultInvoiceTable({ rows, t, className = "" }: DefaultInvoiceTablePro
           {filledRows.map((row, index) => (
             <tr
               key={`default-invoice-row-${index}`}
-              className="h-[38px]"
               data-invoice-export-row="default"
             >
               <td className="border-r border-black px-1 py-[3px] text-center align-top text-[15px] leading-none">{row.no}</td>
@@ -561,13 +591,13 @@ function DefaultInvoiceTable({ rows, t, className = "" }: DefaultInvoiceTablePro
             </tr>
           ))}
           {hasFillerRow ? (
-            <tr className="h-full">
-              <td className="border-r border-black" />
-              <td className="border-r border-black" />
-              <td className="border-r border-black" />
-              <td className="border-r border-black" />
-              <td className="border-r border-black" />
-              <td />
+            <tr className={fillRemainingHeight ? "h-full" : "h-[21px]"}>
+              <td className="border-r border-black py-[3px]" />
+              <td className="border-r border-black py-[3px]" />
+              <td className="border-r border-black py-[3px]" />
+              <td className="border-r border-black py-[3px]" />
+              <td className="border-r border-black py-[3px]" />
+              <td className="py-[3px]" />
             </tr>
           ) : null}
         </tbody>
@@ -579,15 +609,23 @@ function DefaultInvoiceTable({ rows, t, className = "" }: DefaultInvoiceTablePro
 type MeiloonInvoiceTableProps = CommonTemplateProps & {
   rows: MeiloonInvoiceTemplateRow[];
   className?: string;
+  fillRemainingHeight?: boolean;
 };
 
-function MeiloonInvoiceTable({ rows, t, className = "" }: MeiloonInvoiceTableProps) {
+function MeiloonInvoiceTable({
+  rows,
+  t,
+  className = "",
+  fillRemainingHeight = false,
+}: MeiloonInvoiceTableProps) {
   const filledRows = rows.filter((row) => !isMeiloonInvoiceRowEmpty(row));
   const hasFillerRow = filledRows.length < rows.length;
 
   return (
     <div className={`flex flex-col overflow-hidden border-2 border-black ${className}`.trim()}>
-      <table className={`${hasFillerRow ? "h-full" : ""} w-full table-fixed border-collapse`.trim()}>
+      <table
+        className={`${fillRemainingHeight ? "h-full" : ""} w-full table-fixed border-collapse`.trim()}
+      >
         <colgroup>
           <col style={{ width: "4.5%" }} />
           <col style={{ width: "19%" }} />
@@ -599,7 +637,7 @@ function MeiloonInvoiceTable({ rows, t, className = "" }: MeiloonInvoiceTablePro
           <col style={{ width: "10.5%" }} />
         </colgroup>
         <thead>
-          <tr className="h-[24px] border-b-2 border-black">
+          <tr className="border-b-2 border-black">
             <th className="border-r border-black px-1 py-[1px] text-center align-middle text-[15px] leading-none">
               {t("invoice.export.table.no")}
             </th>
@@ -630,7 +668,6 @@ function MeiloonInvoiceTable({ rows, t, className = "" }: MeiloonInvoiceTablePro
           {filledRows.map((row, index) => (
             <tr
               key={`meiloon-invoice-row-${index}`}
-              className="h-[34px]"
               data-invoice-export-row="meiloon"
             >
               <td className="border-r border-black px-1 py-[3px] text-center align-top text-[15px] leading-none">{row.no}</td>
@@ -650,15 +687,15 @@ function MeiloonInvoiceTable({ rows, t, className = "" }: MeiloonInvoiceTablePro
             </tr>
           ))}
           {hasFillerRow ? (
-            <tr className="h-full">
-              <td className="border-r border-black" />
-              <td className="border-r border-black" />
-              <td className="border-r border-black" />
-              <td className="border-r border-black" />
-              <td className="border-r border-black" />
-              <td className="border-r border-black" />
-              <td className="border-r border-black" />
-              <td />
+            <tr className={fillRemainingHeight ? "h-full" : "h-[21px]"}>
+              <td className="border-r border-black py-[3px]" />
+              <td className="border-r border-black py-[3px]" />
+              <td className="border-r border-black py-[3px]" />
+              <td className="border-r border-black py-[3px]" />
+              <td className="border-r border-black py-[3px]" />
+              <td className="border-r border-black py-[3px]" />
+              <td className="border-r border-black py-[3px]" />
+              <td className="py-[3px]" />
             </tr>
           ) : null}
         </tbody>
@@ -928,19 +965,18 @@ export default function InvoiceExportPage() {
 
   const defaultRows = useMemo(() => buildDefaultTemplateRows(invoice), [invoice]);
   const defaultPaginatedRows = useMemo(() => {
-    const hasMeasuredRows = rowMeasurements.defaultRowHeights.length === defaultRows.length;
     const estimateRowUnits = createMeasuredRowUnitEstimator(
       defaultRows,
       rowMeasurements.defaultRowHeights,
-      defaultInvoiceBaseRowHeight,
+      invoiceBaseRowHeight,
       estimateDefaultInvoiceRowUnits
     );
 
     return paginateRows(defaultRows, {
-        singlePageCapacity: 15,
-        firstPageCapacity: hasMeasuredRows ? 19 : 31,
-        middlePageCapacity: hasMeasuredRows ? 24 : 28,
-        lastPageCapacity: 10,
+        singlePageCapacity: defaultInvoiceSinglePageCapacity,
+        firstPageCapacity: defaultInvoiceFirstPageCapacity,
+        middlePageCapacity: defaultInvoiceMiddlePageCapacity,
+        lastPageCapacity: defaultInvoiceLastPageCapacity,
         createEmptyRow: createEmptyDefaultInvoiceRow,
         estimateRowUnits,
       });
@@ -948,19 +984,18 @@ export default function InvoiceExportPage() {
 
   const meiloonRows = useMemo(() => buildMeiloonTemplateRows(invoice), [invoice]);
   const meiloonPaginatedRows = useMemo(() => {
-    const hasMeasuredRows = rowMeasurements.meiloonRowHeights.length === meiloonRows.length;
     const estimateRowUnits = createMeasuredRowUnitEstimator(
       meiloonRows,
       rowMeasurements.meiloonRowHeights,
-      meiloonInvoiceBaseRowHeight,
+      invoiceBaseRowHeight,
       estimateMeiloonInvoiceRowUnits
     );
 
     return paginateRows(meiloonRows, {
-        singlePageCapacity: hasMeasuredRows ? 16 : 23,
-        firstPageCapacity: hasMeasuredRows ? 18 : 32,
-        middlePageCapacity: hasMeasuredRows ? 24 : 33,
-        lastPageCapacity: hasMeasuredRows ? 8 : 10,
+        singlePageCapacity: meiloonInvoiceSinglePageCapacity,
+        firstPageCapacity: meiloonInvoiceFirstPageCapacity,
+        middlePageCapacity: meiloonInvoiceMiddlePageCapacity,
+        lastPageCapacity: meiloonInvoiceLastPageCapacity,
         createEmptyRow: createEmptyMeiloonInvoiceRow,
         estimateRowUnits,
       });
@@ -1148,7 +1183,7 @@ export default function InvoiceExportPage() {
               className={`invoice-print-page px-[5mm] py-[7mm] text-[15px] leading-[1.18] ${
                 meiloonPaginatedRows.isSinglePage
                   ? "flex min-h-0 flex-1 flex-col"
-                  : "min-h-[11in] break-after-page bg-white shadow-xl print:break-after-page print:shadow-none"
+                  : "flex min-h-[11in] flex-col break-after-page bg-white shadow-xl print:break-after-page print:shadow-none"
               }`}
             >
               <div className="flex items-start justify-between gap-8 pt-4">
@@ -1189,11 +1224,12 @@ export default function InvoiceExportPage() {
                 </div>
               </div>
 
-              <div className={`mt-1 ${meiloonPaginatedRows.isSinglePage ? "min-h-0 flex-1" : ""}`.trim()}>
+              <div className="mt-1 min-h-0 flex-1">
                 <MeiloonInvoiceTable
                   rows={meiloonPaginatedRows.firstPageRows}
                   t={t}
-                  className={meiloonPaginatedRows.isSinglePage ? "h-full" : ""}
+                  className="h-full"
+                  fillRemainingHeight
                 />
               </div>
             </div>
@@ -1271,14 +1307,21 @@ export default function InvoiceExportPage() {
                 {meiloonPaginatedRows.middlePages.map((pageRows, pageIndex) => (
                   <div
                     key={`meiloon-middle-page-${pageIndex}`}
-                    className="invoice-print-page min-h-[11in] break-after-page bg-white px-[5mm] py-[7mm] text-[15px] leading-[1.18] shadow-xl print:break-after-page print:shadow-none"
+                    className="invoice-print-page flex min-h-[11in] flex-col break-after-page bg-white px-[5mm] py-[7mm] text-[15px] leading-[1.18] shadow-xl print:break-after-page print:shadow-none"
                   >
-                    <MeiloonInvoiceTable rows={pageRows} t={t} />
+                    <MeiloonInvoiceTable
+                      rows={pageRows}
+                      t={t}
+                      className="h-full"
+                      fillRemainingHeight
+                    />
                   </div>
                 ))}
 
                 <div className="invoice-print-page min-h-[11in] bg-white px-[5mm] py-[7mm] text-[15px] leading-[1.18] shadow-xl print:shadow-none">
-                  <MeiloonInvoiceTable rows={meiloonPaginatedRows.lastPageRows} t={t} />
+                  {meiloonPaginatedRows.lastPageRows.length > 0 ? (
+                    <MeiloonInvoiceTable rows={meiloonPaginatedRows.lastPageRows} t={t} />
+                  ) : null}
 
                   <div className="mt-2 grid grid-cols-[0.9fr_0.8fr] gap-3">
                     <div className="space-y-2">
@@ -1362,7 +1405,7 @@ export default function InvoiceExportPage() {
               className={`invoice-print-page px-[4mm] py-[6mm] text-[15px] leading-[1.18] ${
                 defaultPaginatedRows.isSinglePage
                   ? "flex min-h-0 flex-1 flex-col"
-                  : "min-h-[11in] break-after-page bg-white shadow-xl print:break-after-page print:shadow-none"
+                  : "flex min-h-[11in] flex-col break-after-page bg-white shadow-xl print:break-after-page print:shadow-none"
               }`}
             >
               <div className="flex items-start justify-between gap-8 pt-3">
@@ -1415,11 +1458,12 @@ export default function InvoiceExportPage() {
                 </div>
               </div>
 
-              <div className={`mt-1 ${defaultPaginatedRows.isSinglePage ? "min-h-0 flex-1" : ""}`.trim()}>
+              <div className="mt-1 min-h-0 flex-1">
                 <DefaultInvoiceTable
                   rows={defaultPaginatedRows.firstPageRows}
                   t={t}
-                  className={defaultPaginatedRows.isSinglePage ? "h-full" : ""}
+                  className="h-full"
+                  fillRemainingHeight
                 />
               </div>
             </div>
@@ -1489,14 +1533,21 @@ export default function InvoiceExportPage() {
                 {defaultPaginatedRows.middlePages.map((pageRows, pageIndex) => (
                   <div
                     key={`default-middle-page-${pageIndex}`}
-                    className="invoice-print-page min-h-[11in] break-after-page bg-white px-[4mm] py-[6mm] text-[15px] leading-[1.18] shadow-xl print:break-after-page print:shadow-none"
+                    className="invoice-print-page flex min-h-[11in] flex-col break-after-page bg-white px-[4mm] py-[6mm] text-[15px] leading-[1.18] shadow-xl print:break-after-page print:shadow-none"
                   >
-                    <DefaultInvoiceTable rows={pageRows} t={t} />
+                    <DefaultInvoiceTable
+                      rows={pageRows}
+                      t={t}
+                      className="h-full"
+                      fillRemainingHeight
+                    />
                   </div>
                 ))}
 
                 <div className="invoice-print-page min-h-[11in] bg-white px-[4mm] py-[6mm] text-[15px] leading-[1.18] shadow-xl print:shadow-none">
-                  <DefaultInvoiceTable rows={defaultPaginatedRows.lastPageRows} t={t} />
+                  {defaultPaginatedRows.lastPageRows.length > 0 ? (
+                    <DefaultInvoiceTable rows={defaultPaginatedRows.lastPageRows} t={t} />
+                  ) : null}
 
                   <div className="mt-2 grid grid-cols-[0.86fr_0.68fr] gap-3">
                     <div className="space-y-2">
