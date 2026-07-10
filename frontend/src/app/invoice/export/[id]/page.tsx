@@ -51,14 +51,15 @@ const meiloonInvoiceProfile = {
 
 const invoiceExportFontFamily = 'var(--font-geist-sans), "Segoe UI", sans-serif';
 const invoiceBaseRowHeight = 21;
-const defaultInvoiceSinglePageCapacity = 23;
-const meiloonInvoiceSinglePageCapacity = 21;
+const invoiceFooterPageCapacityBuffer = 2;
+const defaultInvoiceSinglePageCapacity = 23 - invoiceFooterPageCapacityBuffer;
+const meiloonInvoiceSinglePageCapacity = 21 - invoiceFooterPageCapacityBuffer;
 const defaultInvoiceFirstPageCapacity = 36;
 const meiloonInvoiceFirstPageCapacity = 32;
 const defaultInvoiceMiddlePageCapacity = 45;
 const meiloonInvoiceMiddlePageCapacity = 43;
-const defaultInvoiceLastPageCapacity = 23;
-const meiloonInvoiceLastPageCapacity = 21;
+const defaultInvoiceLastPageCapacity = 23 - invoiceFooterPageCapacityBuffer;
+const meiloonInvoiceLastPageCapacity = 21 - invoiceFooterPageCapacityBuffer;
 
 type DefaultInvoiceTemplateRow = {
   no: string;
