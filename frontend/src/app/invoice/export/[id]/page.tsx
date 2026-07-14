@@ -52,14 +52,14 @@ const meiloonInvoiceProfile = {
 const invoiceExportFontFamily = 'var(--font-geist-sans), "Segoe UI", sans-serif';
 const invoiceBaseRowHeight = 21;
 const invoiceFooterPageCapacityBuffer = 2;
-const defaultInvoiceSinglePageCapacity = 23 - invoiceFooterPageCapacityBuffer;
-const meiloonInvoiceSinglePageCapacity = 21 - invoiceFooterPageCapacityBuffer;
+const defaultInvoiceSinglePageCapacity = 28;
+const meiloonInvoiceSinglePageCapacity = 26;
 const defaultInvoiceFirstPageCapacity = 36;
 const meiloonInvoiceFirstPageCapacity = 32;
 const defaultInvoiceMiddlePageCapacity = 45;
 const meiloonInvoiceMiddlePageCapacity = 43;
-const defaultInvoiceLastPageCapacity = 23 - invoiceFooterPageCapacityBuffer;
-const meiloonInvoiceLastPageCapacity = 21 - invoiceFooterPageCapacityBuffer;
+const defaultInvoiceLastPageCapacity = 39 - invoiceFooterPageCapacityBuffer;
+const meiloonInvoiceLastPageCapacity = 39 - invoiceFooterPageCapacityBuffer;
 
 type DefaultInvoiceTemplateRow = {
   no: string;
@@ -97,9 +97,32 @@ type PaginateRowsConfig<T> = {
   estimateRowUnits: (row: T) => number;
 };
 
+type InvoicePageCapacities = {
+  singlePageCapacity: number;
+  firstPageCapacity: number;
+  middlePageCapacity: number;
+  lastPageCapacity: number;
+};
+
 type InvoiceRowMeasurements = {
   defaultRowHeights: number[];
   meiloonRowHeights: number[];
+  defaultPageCapacities?: InvoicePageCapacities;
+  meiloonPageCapacities?: InvoicePageCapacities;
+};
+
+const defaultInvoiceFallbackCapacities: InvoicePageCapacities = {
+  singlePageCapacity: defaultInvoiceSinglePageCapacity,
+  firstPageCapacity: defaultInvoiceFirstPageCapacity,
+  middlePageCapacity: defaultInvoiceMiddlePageCapacity,
+  lastPageCapacity: defaultInvoiceLastPageCapacity,
+};
+
+const meiloonInvoiceFallbackCapacities: InvoicePageCapacities = {
+  singlePageCapacity: meiloonInvoiceSinglePageCapacity,
+  firstPageCapacity: meiloonInvoiceFirstPageCapacity,
+  middlePageCapacity: meiloonInvoiceMiddlePageCapacity,
+  lastPageCapacity: meiloonInvoiceLastPageCapacity,
 };
 
 function normalizeCustomerName(value: string) {
@@ -259,9 +282,14 @@ function addFillerRowIfNeeded<T>(
   rows: T[],
   capacity: number,
   estimateRowUnits: (row: T) => number,
-  createEmptyRow: () => T
+  createEmptyRow: () => T,
+  forceFillerRow = false
 ) {
-  if (rows.length === 0 || estimateRowsUnits(rows, estimateRowUnits) < capacity) {
+  if (
+    forceFillerRow ||
+    rows.length === 0 ||
+    estimateRowsUnits(rows, estimateRowUnits) < capacity
+  ) {
     return [...rows, createEmptyRow()];
   }
 
@@ -319,7 +347,8 @@ function paginateRows<T>(
         rows,
         singlePageCapacity,
         estimateRowUnits,
-        createEmptyRow
+        createEmptyRow,
+        true
       ),
       middlePages: [],
       lastPageRows: [],
@@ -340,32 +369,11 @@ function paginateRows<T>(
     rows.length - nextIndex > 1 &&
     estimateRowsUnits(rows.slice(nextIndex), estimateRowUnits) > lastPageCapacity
   ) {
-    const remainingRows = rows.slice(nextIndex);
-    const remainingUnits = estimateRowsUnits(remainingRows, estimateRowUnits);
-    const remainingMiddlePageCount = Math.max(
-      1,
-      Math.ceil(
-        Math.max(0, remainingUnits - lastPageCapacity) / middlePageCapacity
-      )
-    );
-    const remainingPageCount = remainingMiddlePageCount + 1;
-    const minimumCurrentPageUnits = Math.max(
-      1,
-      remainingUnits -
-        (remainingPageCount - 2) * middlePageCapacity -
-        lastPageCapacity
-    );
-    const balancedCurrentPageUnits = remainingUnits / remainingPageCount;
-    const middleTargetCapacity = Math.min(
-      middlePageCapacity,
-      Math.max(minimumCurrentPageUnits, balancedCurrentPageUnits)
-    );
     const middlePage = takeRowsForCapacity(
       rows,
       nextIndex,
-      middleTargetCapacity,
-      estimateRowUnits,
-      1
+      middlePageCapacity,
+      estimateRowUnits
     );
 
     middlePages.push(
@@ -373,7 +381,8 @@ function paginateRows<T>(
         middlePage.pageRows,
         middlePageCapacity,
         estimateRowUnits,
-        createEmptyRow
+        createEmptyRow,
+        true
       )
     );
     nextIndex = middlePage.nextIndex;
@@ -387,18 +396,11 @@ function paginateRows<T>(
       firstPage.pageRows,
       firstPageCapacity,
       estimateRowUnits,
-      createEmptyRow
+      createEmptyRow,
+      true
     ),
     middlePages,
-    lastPageRows:
-      lastPageRows.length > 0
-        ? addFillerRowIfNeeded(
-            lastPageRows,
-            lastPageCapacity,
-            estimateRowUnits,
-            createEmptyRow
-          )
-        : [],
+    lastPageRows,
   };
 }
 
@@ -435,6 +437,59 @@ function areMeasurementsEqual(current: number[] | undefined, next: number[]) {
   }
 
   return current.every((value, index) => Math.abs(value - next[index]) < 0.5);
+}
+
+function isValidCapacity(value: number | undefined) {
+  return typeof value === "number" && Number.isFinite(value) && value > 0;
+}
+
+function arePageCapacitiesEqual(
+  current: InvoicePageCapacities | undefined,
+  next: InvoicePageCapacities | undefined
+) {
+  if (!current || !next) {
+    return current === next;
+  }
+
+  return (
+    Math.abs(current.singlePageCapacity - next.singlePageCapacity) < 0.25 &&
+    Math.abs(current.firstPageCapacity - next.firstPageCapacity) < 0.25 &&
+    Math.abs(current.middlePageCapacity - next.middlePageCapacity) < 0.25 &&
+    Math.abs(current.lastPageCapacity - next.lastPageCapacity) < 0.25
+  );
+}
+
+function resolvePageCapacities(
+  measuredCapacities: InvoicePageCapacities | undefined,
+  fallbackCapacities: InvoicePageCapacities
+) {
+  if (
+    measuredCapacities &&
+    isValidCapacity(measuredCapacities.singlePageCapacity) &&
+    isValidCapacity(measuredCapacities.firstPageCapacity) &&
+    isValidCapacity(measuredCapacities.middlePageCapacity) &&
+    isValidCapacity(measuredCapacities.lastPageCapacity)
+  ) {
+    return measuredCapacities;
+  }
+
+  return fallbackCapacities;
+}
+
+function getMeasuredCapacityUnits(
+  root: HTMLElement,
+  selector: string,
+  tableHeaderHeight: number
+) {
+  const slot = root.querySelector<HTMLElement>(selector);
+  const slotHeight = Number(slot?.getBoundingClientRect().height || 0);
+  const availableBodyHeight = slotHeight - tableHeaderHeight - 2;
+
+  if (!Number.isFinite(availableBodyHeight) || availableBodyHeight <= 0) {
+    return 0;
+  }
+
+  return availableBodyHeight / invoiceBaseRowHeight;
 }
 
 function createEmptyDefaultInvoiceRow(): DefaultInvoiceTemplateRow {
@@ -515,7 +570,7 @@ type CurrencyTableValueProps = {
   className?: string;
 };
 
-function CurrencyTableValue({ value, className = "text-[15px] leading-none" }: CurrencyTableValueProps) {
+function CurrencyTableValue({ value, className = "text-[13px] leading-none" }: CurrencyTableValueProps) {
   const normalizedValue = String(value || "").trim();
 
   if (!normalizedValue) {
@@ -551,22 +606,22 @@ function DefaultInvoiceTable({
         </colgroup>
         <thead>
           <tr className="border-b border-black">
-            <th className="border-r border-black px-1 py-[1px] text-center align-middle text-[15px] leading-none">
+            <th className="border-r border-black px-1 py-[1px] text-center align-middle text-[13px] leading-none">
               {t("invoice.export.table.no")}
             </th>
-            <th className="border-r border-black px-1 py-[1px] text-center align-middle text-[15px] leading-none">
+            <th className="border-r border-black px-1 py-[1px] text-center align-middle text-[13px] leading-none">
               {t("invoice.export.table.namaBarang")}
             </th>
-            <th className="border-r border-black px-1 py-[1px] text-center align-middle text-[15px] leading-none">
+            <th className="border-r border-black px-1 py-[1px] text-center align-middle text-[13px] leading-none">
               {t("invoice.export.table.qty")}
             </th>
-            <th className="border-r border-black px-1 py-[1px] text-center align-middle text-[15px] leading-none">
+            <th className="border-r border-black px-1 py-[1px] text-center align-middle text-[13px] leading-none">
               {t("invoice.export.table.unit")}
             </th>
-            <th className="border-r border-black px-1 py-[1px] text-center align-middle text-[15px] leading-none">
+            <th className="border-r border-black px-1 py-[1px] text-center align-middle text-[13px] leading-none">
               {t("invoice.export.table.hargaSatuan")}
             </th>
-            <th className="px-1 py-[1px] text-center align-middle text-[15px] leading-none">
+            <th className="px-1 py-[1px] text-center align-middle text-[13px] leading-none">
               {t("invoice.export.table.jumlah")}
             </th>
           </tr>
@@ -577,17 +632,17 @@ function DefaultInvoiceTable({
               key={`default-invoice-row-${index}`}
               data-invoice-export-row="default"
             >
-              <td className="border-r border-black px-1 py-[3px] text-center align-top text-[15px] leading-none">{row.no}</td>
-              <td className="whitespace-normal break-words border-r border-black px-1.5 py-[3px] align-top text-[15px] leading-none">
+              <td className="border-r border-black px-1 py-[3px] text-center align-top text-[13px] leading-none">{row.no}</td>
+              <td className="whitespace-normal break-words border-r border-black px-1.5 py-[3px] align-top text-[13px] leading-none">
                 {row.namaBarang}
               </td>
-              <td className="border-r border-black px-1 py-[3px] text-center align-top text-[15px] leading-none">{row.qty}</td>
-              <td className="border-r border-black px-1 py-[3px] text-center align-top text-[15px] leading-none">{row.unit}</td>
-              <td className="border-r border-black px-1 py-[3px] text-right align-top text-[15px] leading-none">
-                <CurrencyTableValue value={row.hargaSatuan} className="text-[15px] leading-none" />
+              <td className="border-r border-black px-1 py-[3px] text-center align-top text-[13px] leading-none">{row.qty}</td>
+              <td className="border-r border-black px-1 py-[3px] text-center align-top text-[13px] leading-none">{row.unit}</td>
+              <td className="border-r border-black px-1 py-[3px] text-right align-top text-[13px] leading-none">
+                <CurrencyTableValue value={row.hargaSatuan} className="text-[13px] leading-none" />
               </td>
-              <td className="px-1 py-[3px] text-right align-top text-[15px] leading-none">
-                <CurrencyTableValue value={row.jumlah} className="text-[15px] leading-none" />
+              <td className="px-1 py-[3px] text-right align-top text-[13px] leading-none">
+                <CurrencyTableValue value={row.jumlah} className="text-[13px] leading-none" />
               </td>
             </tr>
           ))}
@@ -630,37 +685,37 @@ function MeiloonInvoiceTable({
         <colgroup>
           <col style={{ width: "4.5%" }} />
           <col style={{ width: "19%" }} />
-          <col style={{ width: "25%" }} />
+          <col style={{ width: "22%" }} />
           <col style={{ width: "7%" }} />
           <col style={{ width: "5%" }} />
           <col style={{ width: "14%" }} />
           <col style={{ width: "15%" }} />
-          <col style={{ width: "10.5%" }} />
+          <col style={{ width: "13.5%" }} />
         </colgroup>
         <thead>
           <tr className="border-b-2 border-black">
-            <th className="border-r border-black px-1 py-[1px] text-center align-middle text-[15px] leading-none">
+            <th className="border-r border-black px-1 py-[1px] text-center align-middle text-[13px] leading-none">
               {t("invoice.export.table.no")}
             </th>
-            <th className="border-r border-black px-1 py-[1px] text-center align-middle text-[15px] leading-none">
+            <th className="border-r border-black px-1 py-[1px] text-center align-middle text-[13px] leading-none">
               {t("invoice.export.table.namaBarang")}
             </th>
-            <th className="border-r border-black px-1 py-[1px] text-center align-middle text-[15px] leading-none">
+            <th className="border-r border-black px-1 py-[1px] text-center align-middle text-[13px] leading-none">
               {t("invoice.export.table.spesifikasi")}
             </th>
-            <th className="border-r border-black px-1 py-[1px] text-center align-middle text-[15px] leading-none">
+            <th className="border-r border-black px-1 py-[1px] text-center align-middle text-[13px] leading-none">
               {t("invoice.export.table.unit")}
             </th>
-            <th className="border-r border-black px-1 py-[1px] text-center align-middle text-[15px] leading-none">
+            <th className="border-r border-black px-1 py-[1px] text-center align-middle text-[13px] leading-none">
               {t("invoice.export.table.qty")}
             </th>
-            <th className="border-r border-black px-1 py-[1px] text-center align-middle text-[15px] leading-none">
+            <th className="border-r border-black px-1 py-[1px] text-center align-middle text-[13px] leading-none">
               {t("invoice.export.table.hargaSatuan")}
             </th>
-            <th className="border-r border-black px-1 py-[1px] text-center align-middle text-[15px] leading-none">
+            <th className="border-r border-black px-1 py-[1px] text-center align-middle text-[13px] leading-none">
               {t("invoice.export.table.jumlah")}
             </th>
-            <th className="px-1 py-[1px] text-center align-middle text-[15px] leading-none">
+            <th className="px-1 py-[1px] text-center align-middle text-[13px] leading-none">
               {t("invoice.export.table.noPo")}
             </th>
           </tr>
@@ -671,20 +726,20 @@ function MeiloonInvoiceTable({
               key={`meiloon-invoice-row-${index}`}
               data-invoice-export-row="meiloon"
             >
-              <td className="border-r border-black px-1 py-[3px] text-center align-top text-[15px] leading-none">{row.no}</td>
-              <td className="whitespace-normal break-words border-r border-black px-1.5 py-[3px] align-top text-[15px] leading-none">
+              <td className="border-r border-black px-1 py-[3px] text-center align-top text-[13px] leading-none">{row.no}</td>
+              <td className="whitespace-normal break-words border-r border-black px-1.5 py-[3px] align-top text-[13px] leading-none">
                 {row.namaBarang}
               </td>
-              <td className="border-r border-black px-1.5 py-[3px] align-top text-[15px] leading-none whitespace-pre-line">{row.spesifikasi}</td>
-              <td className="border-r border-black px-1 py-[3px] text-center align-top text-[15px] leading-none">{row.unit}</td>
-              <td className="border-r border-black px-1 py-[3px] text-center align-top text-[15px] leading-none">{row.qty}</td>
-              <td className="border-r border-black px-1 py-[3px] text-right align-top text-[15px] leading-none">
-                <CurrencyTableValue value={row.hargaSatuan} className="text-[15px] leading-none" />
+              <td className="border-r border-black px-1.5 py-[3px] align-top text-[13px] leading-none whitespace-pre-line">{row.spesifikasi}</td>
+              <td className="border-r border-black px-1 py-[3px] text-center align-top text-[13px] leading-none">{row.unit}</td>
+              <td className="border-r border-black px-1 py-[3px] text-center align-top text-[13px] leading-none">{row.qty}</td>
+              <td className="border-r border-black px-1 py-[3px] text-right align-top text-[13px] leading-none">
+                <CurrencyTableValue value={row.hargaSatuan} className="text-[13px] leading-none" />
               </td>
-              <td className="border-r border-black px-1 py-[3px] text-right align-top text-[15px] leading-none">
-                <CurrencyTableValue value={row.jumlah} className="text-[15px] leading-none" />
+              <td className="border-r border-black px-1 py-[3px] text-right align-top text-[13px] leading-none">
+                <CurrencyTableValue value={row.jumlah} className="text-[13px] leading-none" />
               </td>
-              <td className="px-1 py-[3px] text-center align-top text-[15px] leading-none">{row.noPo}</td>
+              <td className="px-1 py-[3px] text-center align-top text-[13px] leading-none">{row.noPo}</td>
             </tr>
           ))}
           {hasFillerRow ? (
@@ -701,6 +756,272 @@ function MeiloonInvoiceTable({
           ) : null}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+type InvoiceMeasureTemplateVariant = "default" | "meiloon";
+type InvoiceMeasurePageKind = "single" | "first" | "middle" | "last";
+
+type InvoiceMeasureHeaderProps = CommonTemplateProps & {
+  variant: InvoiceMeasureTemplateVariant;
+};
+
+function InvoiceMeasureHeader({ variant, t }: InvoiceMeasureHeaderProps) {
+  const isMeiloon = variant === "meiloon";
+
+  if (isMeiloon) {
+    return (
+      <>
+        <div className="flex items-start justify-between gap-8 pt-4">
+          <div className="max-w-[58%]">
+            <p className="text-[17px]">{companyProfile.name}</p>
+            {companyProfile.addressLines.map((line) => (
+              <p key={line} className="text-[13px] leading-[1.18]">
+                {line}
+              </p>
+            ))}
+          </div>
+
+          <div className="shrink-0 pt-3 text-[13px]">
+            <div className="grid grid-cols-[86px_12px_1fr] gap-x-1">
+              <span>{t("invoice.export.tanggalLabel")}</span>
+              <span>:</span>
+              <span>09 JULI 2026</span>
+              <span>{t("invoice.export.noInvoiceLabel")}</span>
+              <span>:</span>
+              <span>B0726/2563</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-1 border-t-2 border-black pt-1">
+          <div className="flex items-center justify-between">
+            <p className="text-[13px] italic">{t("invoice.export.customerLabel")}</p>
+            <p className="text-[17px] italic">{t("invoice.export.title")}</p>
+          </div>
+
+          <div className="mt-0.5 w-[50%] border-2 border-black px-1.5 py-0.5">
+            <p className="text-[13px] leading-[1.1]">{meiloonInvoiceProfile.name}</p>
+            <p className="text-[13px] leading-[1.12]">
+              {t("invoice.export.customerNpwpLabel")} : {meiloonInvoiceProfile.npwp}
+            </p>
+            <p className="whitespace-pre-line text-[13px] leading-[1.12]">
+              {meiloonInvoiceProfile.addressLines.join("\n")}
+            </p>
+            <p className="text-[13px] leading-[1.12]">
+              ATTN : {meiloonInvoiceProfile.attnFallback}
+            </p>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <div className="flex items-start justify-between gap-8 pt-3">
+        <div className="max-w-[58%]">
+          <p className="text-[17px]">{companyProfile.name}</p>
+          {companyProfile.addressLines.map((line) => (
+            <p key={line} className="text-[13px] leading-[1.18]">
+              {line}
+            </p>
+          ))}
+        </div>
+
+        <div className="shrink-0 pt-2 text-[13px]">
+          <div className="grid grid-cols-[86px_12px_1fr] gap-x-1">
+            <span>{t("invoice.export.tanggalLabel")}</span>
+            <span>:</span>
+            <span>09 JULI 2026</span>
+            <span>{t("invoice.export.noInvoiceLabel")}</span>
+            <span>:</span>
+            <span>B0726/2563</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-1 border-t-2 border-black pt-1">
+        <div className="flex items-center justify-between">
+          <p className="text-[13px] italic">{t("invoice.export.customerLabel")}</p>
+          <p className="text-[17px] italic">{t("invoice.export.title")}</p>
+        </div>
+
+        <div className="mt-0.5 grid grid-cols-[50%_1fr] gap-3">
+          <div className="border border-black px-1.5 py-0.5">
+            <p className="text-[13px] leading-[1.1]">PT. DAIJO INDUSTRIAL</p>
+            <p className="text-[13px] leading-[1.12]">
+              {t("invoice.export.customerNpwpLabel")} : 02.026.689.6-052.000
+            </p>
+            <p className="whitespace-pre-line text-[13px] leading-[1.12]">
+              JL IRIAN RAYA BLOK E-12 KBN UNIT USAHA CAKUNG, SUKAPURA,
+              CILINCING, KOTA ADM. JAKARTA UTARA, DKI JAKARTA, 14140
+            </p>
+          </div>
+
+          <div className="pl-[26%] pt-0.5 text-[13px]">
+            <div className="grid grid-cols-[88px_8px_1fr] gap-x-0">
+              <span>{t("invoice.export.noPoLabel")}</span>
+              <span>:</span>
+              <span>26003446</span>
+              <span>{t("invoice.export.noSuratJalanLabel")}</span>
+              <span>:</span>
+              <span>PP/0726/3078</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+type InvoiceMeasureFooterProps = CommonTemplateProps & {
+  variant: InvoiceMeasureTemplateVariant;
+};
+
+function InvoiceMeasureFooter({ variant, t }: InvoiceMeasureFooterProps) {
+  const isMeiloon = variant === "meiloon";
+  const borderClass = isMeiloon ? "border-2" : "border";
+  const paymentGridClass = isMeiloon
+    ? "grid grid-cols-[0.9fr_0.8fr] gap-3"
+    : "grid grid-cols-[0.86fr_0.68fr] gap-3";
+  const summaryLabel = isMeiloon
+    ? t("invoice.export.summary.subtotal")
+    : t("invoice.export.default.summary.beforeTaxTotal");
+
+  return (
+    <div className={`mt-2 ${paymentGridClass}`}>
+      <div className="space-y-2">
+        <div className={`${borderClass} border-black px-2 py-1`}>
+          <p className="text-[13px]">{t("invoice.export.payment.title")}</p>
+          <div className="mt-0.5 grid grid-cols-[52px_10px_1fr] gap-x-1 text-[13px]">
+            <span>{t("invoice.export.payment.nameLabel")}</span>
+            <span>:</span>
+            <span>{paymentProfile.nama}</span>
+            <span>{t("invoice.export.payment.accountLabel")}</span>
+            <span>:</span>
+            <span>{paymentProfile.rekening}</span>
+            <span>{t("invoice.export.payment.bankLabel")}</span>
+            <span>:</span>
+            <span>{paymentProfile.bank}</span>
+          </div>
+        </div>
+
+        <div>
+          <p className="text-[13px]">{t("invoice.export.noteTitle")}</p>
+          <ol className="mt-0.5 list-decimal pl-5 text-[13px] leading-[1.2]">
+            <li>{t("invoice.export.note.1")}</li>
+            <li>{t("invoice.export.note.2")}</li>
+            <li>{t("invoice.export.note.3")}</li>
+          </ol>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <div className={`${borderClass} border-black`}>
+          <div className="grid grid-cols-[1fr_150px] border-b border-black text-[13px] last:border-b-0">
+            <div className="border-r border-black px-2 py-0.5">{summaryLabel}</div>
+            <div className="px-2 py-0.5">
+              <CurrencyTableValue value="160.341.000" />
+            </div>
+          </div>
+          <div className="grid grid-cols-[1fr_150px] border-b border-black text-[13px] last:border-b-0">
+            <div className="border-r border-black px-2 py-0.5">
+              {isMeiloon
+                ? t("invoice.export.summary.dppNilaiLain", { ratio: "12/13" })
+                : t("invoice.export.summary.ppn", { rate: 11 })}
+            </div>
+            <div className="px-2 py-0.5">
+              <CurrencyTableValue value="17.637.510" />
+            </div>
+          </div>
+          {isMeiloon ? (
+            <div className="grid grid-cols-[1fr_150px] border-b border-black text-[13px] last:border-b-0">
+              <div className="border-r border-black px-2 py-0.5">
+                {t("invoice.export.summary.ppn", { rate: 12 })}
+              </div>
+              <div className="px-2 py-0.5">
+                <CurrencyTableValue value="17.637.510" />
+              </div>
+            </div>
+          ) : null}
+          <div className="grid grid-cols-[1fr_150px] text-[13px]">
+            <div className="border-r border-black px-2 py-0.5">
+              {t("invoice.export.summary.total")}
+            </div>
+            <div className="px-2 py-0.5">
+              <CurrencyTableValue value="177.978.510" />
+            </div>
+          </div>
+        </div>
+
+        <div className={`ml-auto w-[200px] ${isMeiloon ? "pt-5" : "pt-4"} text-center`}>
+          <p className="text-[13px]">{t("invoice.export.signature.regards")}</p>
+          <div className="h-[96px]" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+type InvoiceMeasurePageProps = CommonTemplateProps & {
+  variant: InvoiceMeasureTemplateVariant;
+  kind: InvoiceMeasurePageKind;
+};
+
+function InvoiceMeasurePage({ variant, kind, t }: InvoiceMeasurePageProps) {
+  const isMeiloon = variant === "meiloon";
+  const pagePadding = isMeiloon ? "px-[5mm] py-[7mm]" : "px-[4mm] py-[6mm]";
+  const slotKey = `${variant}-${kind}`;
+
+  if (kind === "single") {
+    return (
+      <div className="flex h-[11in] min-h-[11in] flex-col bg-white text-[13px] leading-[1.18]">
+        <div className={`${pagePadding} flex min-h-0 flex-1 flex-col`}>
+          <InvoiceMeasureHeader variant={variant} t={t} />
+          <div
+            data-invoice-capacity-slot={slotKey}
+            className="mt-1 min-h-0 flex-1"
+          />
+        </div>
+        <div className={`shrink-0 ${isMeiloon ? "px-[5mm]" : "px-[4mm]"} pb-[12mm] text-[13px] leading-[1.18]`}>
+          <InvoiceMeasureFooter variant={variant} t={t} />
+        </div>
+      </div>
+    );
+  }
+
+  if (kind === "first") {
+    return (
+      <div className={`flex h-[11in] min-h-[11in] flex-col bg-white ${pagePadding} text-[13px] leading-[1.18]`}>
+        <InvoiceMeasureHeader variant={variant} t={t} />
+        <div
+          data-invoice-capacity-slot={slotKey}
+          className="mt-1 min-h-0 flex-1"
+        />
+      </div>
+    );
+  }
+
+  if (kind === "last") {
+    return (
+      <div className={`flex h-[11in] min-h-[11in] flex-col bg-white ${pagePadding} text-[13px] leading-[1.18]`}>
+        <div
+          data-invoice-capacity-slot={slotKey}
+          className="min-h-0 flex-1"
+        />
+        <InvoiceMeasureFooter variant={variant} t={t} />
+      </div>
+    );
+  }
+
+  return (
+    <div className={`flex h-[11in] min-h-[11in] flex-col bg-white ${pagePadding} text-[13px] leading-[1.18]`}>
+      <div
+        data-invoice-capacity-slot={slotKey}
+        className="min-h-0 flex-1"
+      />
     </div>
   );
 }
@@ -747,6 +1068,14 @@ function InvoicePaginationMeasure({
             '[data-invoice-measure-table="meiloon"] [data-invoice-export-row="meiloon"]'
           )
         );
+        const defaultTableHeaderHeight =
+          rootRef.current
+            .querySelector<HTMLElement>('[data-invoice-measure-table="default"] thead')
+            ?.getBoundingClientRect().height || 0;
+        const meiloonTableHeaderHeight =
+          rootRef.current
+            .querySelector<HTMLElement>('[data-invoice-measure-table="meiloon"] thead')
+            ?.getBoundingClientRect().height || 0;
 
         if (
           defaultRowElements.length !== defaultRows.length ||
@@ -762,6 +1091,50 @@ function InvoicePaginationMeasure({
           meiloonRowHeights: meiloonRowElements.map((element) =>
             element.getBoundingClientRect().height
           ),
+          defaultPageCapacities: {
+            singlePageCapacity: getMeasuredCapacityUnits(
+              rootRef.current,
+              '[data-invoice-capacity-slot="default-single"]',
+              defaultTableHeaderHeight
+            ),
+            firstPageCapacity: getMeasuredCapacityUnits(
+              rootRef.current,
+              '[data-invoice-capacity-slot="default-first"]',
+              defaultTableHeaderHeight
+            ),
+            middlePageCapacity: getMeasuredCapacityUnits(
+              rootRef.current,
+              '[data-invoice-capacity-slot="default-middle"]',
+              defaultTableHeaderHeight
+            ),
+            lastPageCapacity: getMeasuredCapacityUnits(
+              rootRef.current,
+              '[data-invoice-capacity-slot="default-last"]',
+              defaultTableHeaderHeight
+            ),
+          },
+          meiloonPageCapacities: {
+            singlePageCapacity: getMeasuredCapacityUnits(
+              rootRef.current,
+              '[data-invoice-capacity-slot="meiloon-single"]',
+              meiloonTableHeaderHeight
+            ),
+            firstPageCapacity: getMeasuredCapacityUnits(
+              rootRef.current,
+              '[data-invoice-capacity-slot="meiloon-first"]',
+              meiloonTableHeaderHeight
+            ),
+            middlePageCapacity: getMeasuredCapacityUnits(
+              rootRef.current,
+              '[data-invoice-capacity-slot="meiloon-middle"]',
+              meiloonTableHeaderHeight
+            ),
+            lastPageCapacity: getMeasuredCapacityUnits(
+              rootRef.current,
+              '[data-invoice-capacity-slot="meiloon-last"]',
+              meiloonTableHeaderHeight
+            ),
+          },
         });
       });
     }
@@ -775,7 +1148,7 @@ function InvoicePaginationMeasure({
         window.cancelAnimationFrame(frameId);
       }
     };
-  }, [defaultRows, meiloonRows, onMeasure]);
+  }, [defaultRows, meiloonRows, onMeasure, t]);
 
   return (
     <div
@@ -789,16 +1162,23 @@ function InvoicePaginationMeasure({
     >
       <div
         data-invoice-measure-table="default"
-        className="w-[8.5in] px-[4mm] py-[6mm] text-[15px] leading-[1.18]"
+        className="w-[8.5in] px-[4mm] py-[6mm] text-[13px] leading-[1.18]"
       >
         <DefaultInvoiceTable rows={defaultRows} t={t} />
       </div>
       <div
         data-invoice-measure-table="meiloon"
-        className="w-[8.5in] px-[5mm] py-[7mm] text-[15px] leading-[1.18]"
+        className="w-[8.5in] px-[5mm] py-[7mm] text-[13px] leading-[1.18]"
       >
         <MeiloonInvoiceTable rows={meiloonRows} t={t} />
       </div>
+
+      {(["single", "first", "middle", "last"] as InvoiceMeasurePageKind[]).map((kind) => (
+        <InvoiceMeasurePage key={`default-measure-${kind}`} variant="default" kind={kind} t={t} />
+      ))}
+      {(["single", "first", "middle", "last"] as InvoiceMeasurePageKind[]).map((kind) => (
+        <InvoiceMeasurePage key={`meiloon-measure-${kind}`} variant="meiloon" kind={kind} t={t} />
+      ))}
     </div>
   );
 }
@@ -827,6 +1207,14 @@ export default function InvoiceExportPage() {
         areMeasurementsEqual(
           currentMeasurements.meiloonRowHeights,
           nextMeasurements.meiloonRowHeights
+        ) &&
+        arePageCapacitiesEqual(
+          currentMeasurements.defaultPageCapacities,
+          nextMeasurements.defaultPageCapacities
+        ) &&
+        arePageCapacitiesEqual(
+          currentMeasurements.meiloonPageCapacities,
+          nextMeasurements.meiloonPageCapacities
         )
       ) {
         return currentMeasurements;
@@ -972,16 +1360,20 @@ export default function InvoiceExportPage() {
       invoiceBaseRowHeight,
       estimateDefaultInvoiceRowUnits
     );
+    const pageCapacities = resolvePageCapacities(
+      rowMeasurements.defaultPageCapacities,
+      defaultInvoiceFallbackCapacities
+    );
 
     return paginateRows(defaultRows, {
-        singlePageCapacity: defaultInvoiceSinglePageCapacity,
-        firstPageCapacity: defaultInvoiceFirstPageCapacity,
-        middlePageCapacity: defaultInvoiceMiddlePageCapacity,
-        lastPageCapacity: defaultInvoiceLastPageCapacity,
+        singlePageCapacity: pageCapacities.singlePageCapacity,
+        firstPageCapacity: pageCapacities.firstPageCapacity,
+        middlePageCapacity: pageCapacities.middlePageCapacity,
+        lastPageCapacity: pageCapacities.lastPageCapacity,
         createEmptyRow: createEmptyDefaultInvoiceRow,
         estimateRowUnits,
       });
-  }, [defaultRows, rowMeasurements.defaultRowHeights]);
+  }, [defaultRows, rowMeasurements.defaultPageCapacities, rowMeasurements.defaultRowHeights]);
 
   const meiloonRows = useMemo(() => buildMeiloonTemplateRows(invoice), [invoice]);
   const meiloonPaginatedRows = useMemo(() => {
@@ -991,16 +1383,20 @@ export default function InvoiceExportPage() {
       invoiceBaseRowHeight,
       estimateMeiloonInvoiceRowUnits
     );
+    const pageCapacities = resolvePageCapacities(
+      rowMeasurements.meiloonPageCapacities,
+      meiloonInvoiceFallbackCapacities
+    );
 
     return paginateRows(meiloonRows, {
-        singlePageCapacity: meiloonInvoiceSinglePageCapacity,
-        firstPageCapacity: meiloonInvoiceFirstPageCapacity,
-        middlePageCapacity: meiloonInvoiceMiddlePageCapacity,
-        lastPageCapacity: meiloonInvoiceLastPageCapacity,
+        singlePageCapacity: pageCapacities.singlePageCapacity,
+        firstPageCapacity: pageCapacities.firstPageCapacity,
+        middlePageCapacity: pageCapacities.middlePageCapacity,
+        lastPageCapacity: pageCapacities.lastPageCapacity,
         createEmptyRow: createEmptyMeiloonInvoiceRow,
         estimateRowUnits,
       });
-  }, [meiloonRows, rowMeasurements.meiloonRowHeights]);
+  }, [meiloonRows, rowMeasurements.meiloonPageCapacities, rowMeasurements.meiloonRowHeights]);
 
   const dppValue = useMemo(() => {
     if (!invoice?.isPpn) {
@@ -1181,23 +1577,23 @@ export default function InvoiceExportPage() {
             style={{ fontFamily: invoiceExportFontFamily }}
           >
             <div
-              className={`invoice-print-page px-[5mm] py-[7mm] text-[15px] leading-[1.18] ${
+              className={`invoice-print-page px-[5mm] py-[7mm] text-[13px] leading-[1.18] ${
                 meiloonPaginatedRows.isSinglePage
                   ? "flex min-h-0 flex-1 flex-col"
-                  : "flex min-h-[11in] flex-col break-after-page bg-white shadow-xl print:break-after-page print:shadow-none"
+                  : "flex h-[11in] min-h-[11in] flex-col break-after-page bg-white shadow-xl print:break-after-page print:shadow-none"
               }`}
             >
               <div className="flex items-start justify-between gap-8 pt-4">
                 <div className="max-w-[58%]">
-                  <p className="text-[19px]">{companyProfile.name}</p>
+                  <p className="text-[17px]">{companyProfile.name}</p>
                   {companyProfile.addressLines.map((line) => (
-                    <p key={line} className="text-[15px] leading-[1.18]">
+                    <p key={line} className="text-[13px] leading-[1.18]">
                       {line}
                     </p>
                   ))}
                 </div>
 
-                <div className="shrink-0 pt-3 text-[15px]">
+                <div className="shrink-0 pt-3 text-[13px]">
                   <div className="grid grid-cols-[86px_12px_1fr] gap-x-1">
                     <span>{t("invoice.export.tanggalLabel")}</span>
                     <span>:</span>
@@ -1211,17 +1607,17 @@ export default function InvoiceExportPage() {
 
               <div className="mt-1 border-t-2 border-black pt-1">
                 <div className="flex items-center justify-between">
-                  <p className="text-[15px] italic">{t("invoice.export.customerLabel")}</p>
-                  <p className="text-[19px] italic">{t("invoice.export.title")}</p>
+                  <p className="text-[13px] italic">{t("invoice.export.customerLabel")}</p>
+                  <p className="text-[17px] italic">{t("invoice.export.title")}</p>
                 </div>
 
                 <div className="mt-0.5 w-[50%] border-2 border-black px-1.5 py-0.5">
-                  <p className="text-[15px] leading-[1.1]">{meiloonCustomerNameValue || meiloonInvoiceProfile.name}</p>
-                  <p className="text-[15px] leading-[1.12]">
+                  <p className="text-[13px] leading-[1.1]">{meiloonCustomerNameValue || meiloonInvoiceProfile.name}</p>
+                  <p className="text-[13px] leading-[1.12]">
                     {t("invoice.export.customerNpwpLabel")} : {String(customer?.npwp || "").trim() || meiloonInvoiceProfile.npwp}
                   </p>
-                  <p className="whitespace-pre-line text-[15px] leading-[1.12]">{meiloonCustomerAddress}</p>
-                  <p className="text-[15px] leading-[1.12]">ATTN : {meiloonCustomerAttn || meiloonInvoiceProfile.attnFallback}</p>
+                  <p className="whitespace-pre-line text-[13px] leading-[1.12]">{meiloonCustomerAddress}</p>
+                  <p className="text-[13px] leading-[1.12]">ATTN : {meiloonCustomerAttn || meiloonInvoiceProfile.attnFallback}</p>
                 </div>
               </div>
 
@@ -1236,12 +1632,12 @@ export default function InvoiceExportPage() {
             </div>
 
             {meiloonPaginatedRows.isSinglePage ? (
-              <div className="shrink-0 px-[5mm] pb-[12mm] text-[15px] leading-[1.18]">
+              <div className="shrink-0 px-[5mm] pb-[12mm] text-[13px] leading-[1.18]">
                 <div className="mt-2 grid grid-cols-[0.9fr_0.8fr] gap-3">
                   <div className="space-y-2">
                     <div className="border-2 border-black px-2 py-1">
-                      <p className="text-[15px]">{t("invoice.export.payment.title")}</p>
-                      <div className="mt-0.5 grid grid-cols-[52px_10px_1fr] gap-x-1 text-[15px]">
+                      <p className="text-[13px]">{t("invoice.export.payment.title")}</p>
+                      <div className="mt-0.5 grid grid-cols-[52px_10px_1fr] gap-x-1 text-[13px]">
                         <span>{t("invoice.export.payment.nameLabel")}</span>
                         <span>:</span>
                         <span>{paymentProfile.nama}</span>
@@ -1255,8 +1651,8 @@ export default function InvoiceExportPage() {
                     </div>
 
                     <div>
-                      <p className="text-[15px]">{t("invoice.export.noteTitle")}</p>
-                      <ol className="mt-0.5 list-decimal pl-5 text-[15px] leading-[1.2]">
+                      <p className="text-[13px]">{t("invoice.export.noteTitle")}</p>
+                      <ol className="mt-0.5 list-decimal pl-5 text-[13px] leading-[1.2]">
                         <li>{t("invoice.export.note.1")}</li>
                         <li>{t("invoice.export.note.2")}</li>
                         <li>{t("invoice.export.note.3")}</li>
@@ -1266,13 +1662,13 @@ export default function InvoiceExportPage() {
 
                   <div className="space-y-2">
                     <div className="border-2 border-black">
-                      <div className="grid grid-cols-[1fr_150px] border-b border-black text-[15px] last:border-b-0">
+                      <div className="grid grid-cols-[1fr_150px] border-b border-black text-[13px] last:border-b-0">
                         <div className="border-r border-black px-2 py-1">{t("invoice.export.summary.subtotal")}</div>
                         <div className="px-2 py-1">
                           <CurrencyTableValue value={formatPlainNumber(Number(invoice.subtotal || 0))} />
                         </div>
                       </div>
-                      <div className="grid grid-cols-[1fr_150px] border-b border-black text-[15px] last:border-b-0">
+                      <div className="grid grid-cols-[1fr_150px] border-b border-black text-[13px] last:border-b-0">
                         <div className="border-r border-black px-2 py-1">
                           {t("invoice.export.summary.dppNilaiLain", { ratio: dppRatio })}
                         </div>
@@ -1280,7 +1676,7 @@ export default function InvoiceExportPage() {
                           <CurrencyTableValue value={formatPlainNumber(dppValue)} />
                         </div>
                       </div>
-                      <div className="grid grid-cols-[1fr_150px] border-b border-black text-[15px] last:border-b-0">
+                      <div className="grid grid-cols-[1fr_150px] border-b border-black text-[13px] last:border-b-0">
                         <div className="border-r border-black px-2 py-1">
                           {t("invoice.export.summary.ppn", { rate: meiloonPpnRate })}
                         </div>
@@ -1288,7 +1684,7 @@ export default function InvoiceExportPage() {
                           <CurrencyTableValue value={formatPlainNumber(meiloonPpnAmount)} />
                         </div>
                       </div>
-                      <div className="grid grid-cols-[1fr_150px] text-[15px]">
+                      <div className="grid grid-cols-[1fr_150px] text-[13px]">
                         <div className="border-r border-black px-2 py-1">{t("invoice.export.summary.total")}</div>
                         <div className="px-2 py-1">
                           <CurrencyTableValue value={formatPlainNumber(Number(invoice.grandTotal || 0))} />
@@ -1297,7 +1693,7 @@ export default function InvoiceExportPage() {
                     </div>
 
                     <div className="ml-auto w-[200px] pt-5 text-center">
-                      <p className="text-[15px]">{t("invoice.export.signature.regards")}</p>
+                      <p className="text-[13px]">{t("invoice.export.signature.regards")}</p>
                       <div className="h-[96px]" />
                     </div>
                   </div>
@@ -1308,27 +1704,32 @@ export default function InvoiceExportPage() {
                 {meiloonPaginatedRows.middlePages.map((pageRows, pageIndex) => (
                   <div
                     key={`meiloon-middle-page-${pageIndex}`}
-                    className="invoice-print-page flex min-h-[11in] flex-col break-after-page bg-white px-[5mm] py-[7mm] text-[15px] leading-[1.18] shadow-xl print:break-after-page print:shadow-none"
+                    className="invoice-print-page flex h-[11in] min-h-[11in] flex-col break-after-page bg-white px-[5mm] py-[7mm] text-[13px] leading-[1.18] shadow-xl print:break-after-page print:shadow-none"
                   >
-                    <MeiloonInvoiceTable
-                      rows={pageRows}
-                      t={t}
-                      className="h-full"
-                      fillRemainingHeight
-                    />
+                    <div className="min-h-0 flex-1">
+                      <MeiloonInvoiceTable
+                        rows={pageRows}
+                        t={t}
+                        className="h-full"
+                        fillRemainingHeight
+                      />
+                    </div>
                   </div>
                 ))}
 
-                <div className="invoice-print-page min-h-[11in] bg-white px-[5mm] py-[7mm] text-[15px] leading-[1.18] shadow-xl print:shadow-none">
+                <div className="invoice-print-page flex h-[11in] min-h-[11in] flex-col bg-white px-[5mm] py-[7mm] text-[13px] leading-[1.18] shadow-xl print:shadow-none">
                   {meiloonPaginatedRows.lastPageRows.length > 0 ? (
-                    <MeiloonInvoiceTable rows={meiloonPaginatedRows.lastPageRows} t={t} />
+                    <MeiloonInvoiceTable
+                      rows={meiloonPaginatedRows.lastPageRows}
+                      t={t}
+                    />
                   ) : null}
 
                   <div className="mt-2 grid grid-cols-[0.9fr_0.8fr] gap-3">
                     <div className="space-y-2">
                       <div className="border-2 border-black px-2 py-1">
-                        <p className="text-[15px]">{t("invoice.export.payment.title")}</p>
-                        <div className="mt-0.5 grid grid-cols-[52px_10px_1fr] gap-x-1 text-[15px]">
+                        <p className="text-[13px]">{t("invoice.export.payment.title")}</p>
+                        <div className="mt-0.5 grid grid-cols-[52px_10px_1fr] gap-x-1 text-[13px]">
                           <span>{t("invoice.export.payment.nameLabel")}</span>
                           <span>:</span>
                           <span>{paymentProfile.nama}</span>
@@ -1342,8 +1743,8 @@ export default function InvoiceExportPage() {
                       </div>
 
                       <div>
-                        <p className="text-[15px]">{t("invoice.export.noteTitle")}</p>
-                        <ol className="mt-0.5 list-decimal pl-5 text-[15px] leading-[1.2]">
+                        <p className="text-[13px]">{t("invoice.export.noteTitle")}</p>
+                        <ol className="mt-0.5 list-decimal pl-5 text-[13px] leading-[1.2]">
                           <li>{t("invoice.export.note.1")}</li>
                           <li>{t("invoice.export.note.2")}</li>
                           <li>{t("invoice.export.note.3")}</li>
@@ -1353,13 +1754,13 @@ export default function InvoiceExportPage() {
 
                     <div className="space-y-2">
                       <div className="border-2 border-black">
-                        <div className="grid grid-cols-[1fr_150px] border-b border-black text-[15px] last:border-b-0">
+                        <div className="grid grid-cols-[1fr_150px] border-b border-black text-[13px] last:border-b-0">
                           <div className="border-r border-black px-2 py-1">{t("invoice.export.summary.subtotal")}</div>
                           <div className="px-2 py-1">
                             <CurrencyTableValue value={formatPlainNumber(Number(invoice.subtotal || 0))} />
                           </div>
                         </div>
-                        <div className="grid grid-cols-[1fr_150px] border-b border-black text-[15px] last:border-b-0">
+                        <div className="grid grid-cols-[1fr_150px] border-b border-black text-[13px] last:border-b-0">
                           <div className="border-r border-black px-2 py-1">
                             {t("invoice.export.summary.dppNilaiLain", { ratio: dppRatio })}
                           </div>
@@ -1367,7 +1768,7 @@ export default function InvoiceExportPage() {
                             <CurrencyTableValue value={formatPlainNumber(dppValue)} />
                           </div>
                         </div>
-                        <div className="grid grid-cols-[1fr_150px] border-b border-black text-[15px] last:border-b-0">
+                        <div className="grid grid-cols-[1fr_150px] border-b border-black text-[13px] last:border-b-0">
                           <div className="border-r border-black px-2 py-1">
                             {t("invoice.export.summary.ppn", { rate: meiloonPpnRate })}
                           </div>
@@ -1375,7 +1776,7 @@ export default function InvoiceExportPage() {
                             <CurrencyTableValue value={formatPlainNumber(meiloonPpnAmount)} />
                           </div>
                         </div>
-                        <div className="grid grid-cols-[1fr_150px] text-[15px]">
+                        <div className="grid grid-cols-[1fr_150px] text-[13px]">
                           <div className="border-r border-black px-2 py-1">{t("invoice.export.summary.total")}</div>
                           <div className="px-2 py-1">
                             <CurrencyTableValue value={formatPlainNumber(Number(invoice.grandTotal || 0))} />
@@ -1384,7 +1785,7 @@ export default function InvoiceExportPage() {
                       </div>
 
                       <div className="ml-auto w-[200px] pt-5 text-center">
-                        <p className="text-[15px]">{t("invoice.export.signature.regards")}</p>
+                        <p className="text-[13px]">{t("invoice.export.signature.regards")}</p>
                         <div className="h-[96px]" />
                       </div>
                     </div>
@@ -1403,23 +1804,23 @@ export default function InvoiceExportPage() {
             style={{ fontFamily: invoiceExportFontFamily }}
           >
             <div
-              className={`invoice-print-page px-[4mm] py-[6mm] text-[15px] leading-[1.18] ${
+              className={`invoice-print-page px-[4mm] py-[6mm] text-[13px] leading-[1.18] ${
                 defaultPaginatedRows.isSinglePage
                   ? "flex min-h-0 flex-1 flex-col"
-                  : "flex min-h-[11in] flex-col break-after-page bg-white shadow-xl print:break-after-page print:shadow-none"
+                  : "flex h-[11in] min-h-[11in] flex-col break-after-page bg-white shadow-xl print:break-after-page print:shadow-none"
               }`}
             >
               <div className="flex items-start justify-between gap-8 pt-3">
                 <div className="max-w-[58%]">
-                  <p className="text-[19px]">{companyProfile.name}</p>
+                  <p className="text-[17px]">{companyProfile.name}</p>
                   {companyProfile.addressLines.map((line) => (
-                    <p key={line} className="text-[15px] leading-[1.18]">
+                    <p key={line} className="text-[13px] leading-[1.18]">
                       {line}
                     </p>
                   ))}
                 </div>
 
-                <div className="shrink-0 pt-2 text-[15px]">
+                <div className="shrink-0 pt-2 text-[13px]">
                   <div className="grid grid-cols-[86px_12px_1fr] gap-x-1">
                     <span>{t("invoice.export.tanggalLabel")}</span>
                     <span>:</span>
@@ -1433,20 +1834,20 @@ export default function InvoiceExportPage() {
 
               <div className="mt-1 border-t-2 border-black pt-1">
                 <div className="flex items-center justify-between">
-                  <p className="text-[15px] italic">{t("invoice.export.customerLabel")}</p>
-                  <p className="text-[19px] italic">{t("invoice.export.title")}</p>
+                  <p className="text-[13px] italic">{t("invoice.export.customerLabel")}</p>
+                  <p className="text-[17px] italic">{t("invoice.export.title")}</p>
                 </div>
 
               <div className="mt-0.5 grid grid-cols-[50%_1fr] gap-3">
                   <div className="border border-black px-1.5 py-0.5">
-                    <p className="text-[15px] leading-[1.1]">{customerName || "-"}</p>
-                    <p className="text-[15px] leading-[1.12]">
+                    <p className="text-[13px] leading-[1.1]">{customerName || "-"}</p>
+                    <p className="text-[13px] leading-[1.12]">
                       {t("invoice.export.customerNpwpLabel")} : {customerNpwp}
                     </p>
-                    <p className="whitespace-pre-line text-[15px] leading-[1.12]">{customerAddress || "-"}</p>
+                    <p className="whitespace-pre-line text-[13px] leading-[1.12]">{customerAddress || "-"}</p>
                   </div>
 
-                  <div className="pl-[26%] pt-0.5 text-[15px]">
+                  <div className="pl-[26%] pt-0.5 text-[13px]">
                     <div className="grid grid-cols-[88px_8px_1fr] gap-x-0">
                       <span>{t("invoice.export.noPoLabel")}</span>
                       <span>:</span>
@@ -1470,12 +1871,12 @@ export default function InvoiceExportPage() {
             </div>
 
             {defaultPaginatedRows.isSinglePage ? (
-              <div className="shrink-0 px-[4mm] pb-[12mm] text-[15px] leading-[1.18]">
+              <div className="shrink-0 px-[4mm] pb-[12mm] text-[13px] leading-[1.18]">
                 <div className="mt-2 grid grid-cols-[0.86fr_0.68fr] gap-3">
                   <div className="space-y-2">
                     <div className="border border-black px-2 py-1">
-                      <p className="text-[15px]">{t("invoice.export.payment.title")}</p>
-                      <div className="mt-0.5 grid grid-cols-[52px_10px_1fr] gap-x-1 text-[15px]">
+                      <p className="text-[13px]">{t("invoice.export.payment.title")}</p>
+                      <div className="mt-0.5 grid grid-cols-[52px_10px_1fr] gap-x-1 text-[13px]">
                         <span>{t("invoice.export.payment.nameLabel")}</span>
                         <span>:</span>
                         <span>{paymentProfile.nama}</span>
@@ -1489,8 +1890,8 @@ export default function InvoiceExportPage() {
                     </div>
 
                     <div>
-                      <p className="text-[15px]">{t("invoice.export.noteTitle")}</p>
-                      <ol className="mt-0.5 list-decimal pl-5 text-[15px] leading-[1.2]">
+                      <p className="text-[13px]">{t("invoice.export.noteTitle")}</p>
+                      <ol className="mt-0.5 list-decimal pl-5 text-[13px] leading-[1.2]">
                         <li>{t("invoice.export.note.1")}</li>
                         <li>{t("invoice.export.note.2")}</li>
                         <li>{t("invoice.export.note.3")}</li>
@@ -1500,13 +1901,13 @@ export default function InvoiceExportPage() {
 
                   <div className="space-y-2">
                     <div className="border border-black">
-                      <div className="grid grid-cols-[1fr_150px] border-b border-black text-[15px] last:border-b-0">
+                      <div className="grid grid-cols-[1fr_150px] border-b border-black text-[13px] last:border-b-0">
                         <div className="border-r border-black px-2 py-0.5">{defaultBeforeTaxTotalLabel}</div>
                         <div className="px-2 py-0.5">
                           <CurrencyTableValue value={formatPlainNumber(Number(invoice.subtotal || 0))} />
                         </div>
                       </div>
-                      <div className="grid grid-cols-[1fr_150px] border-b border-black text-[15px] last:border-b-0">
+                      <div className="grid grid-cols-[1fr_150px] border-b border-black text-[13px] last:border-b-0">
                         <div className="border-r border-black px-2 py-0.5">
                           {defaultPpnLabel}
                         </div>
@@ -1514,7 +1915,7 @@ export default function InvoiceExportPage() {
                           <CurrencyTableValue value={formatPlainNumber(Number(invoice.ppnAmount || 0))} />
                         </div>
                       </div>
-                      <div className="grid grid-cols-[1fr_150px] text-[15px]">
+                      <div className="grid grid-cols-[1fr_150px] text-[13px]">
                         <div className="border-r border-black px-2 py-0.5">{t("invoice.export.summary.total")}</div>
                         <div className="px-2 py-0.5">
                           <CurrencyTableValue value={formatPlainNumber(Number(invoice.grandTotal || 0))} />
@@ -1523,7 +1924,7 @@ export default function InvoiceExportPage() {
                     </div>
 
                     <div className="ml-auto w-[200px] pt-4 text-center">
-                      <p className="text-[15px]">{t("invoice.export.signature.regards")}</p>
+                      <p className="text-[13px]">{t("invoice.export.signature.regards")}</p>
                       <div className="h-[96px]" />
                     </div>
                   </div>
@@ -1534,27 +1935,32 @@ export default function InvoiceExportPage() {
                 {defaultPaginatedRows.middlePages.map((pageRows, pageIndex) => (
                   <div
                     key={`default-middle-page-${pageIndex}`}
-                    className="invoice-print-page flex min-h-[11in] flex-col break-after-page bg-white px-[4mm] py-[6mm] text-[15px] leading-[1.18] shadow-xl print:break-after-page print:shadow-none"
+                    className="invoice-print-page flex h-[11in] min-h-[11in] flex-col break-after-page bg-white px-[4mm] py-[6mm] text-[13px] leading-[1.18] shadow-xl print:break-after-page print:shadow-none"
                   >
-                    <DefaultInvoiceTable
-                      rows={pageRows}
-                      t={t}
-                      className="h-full"
-                      fillRemainingHeight
-                    />
+                    <div className="min-h-0 flex-1">
+                      <DefaultInvoiceTable
+                        rows={pageRows}
+                        t={t}
+                        className="h-full"
+                        fillRemainingHeight
+                      />
+                    </div>
                   </div>
                 ))}
 
-                <div className="invoice-print-page min-h-[11in] bg-white px-[4mm] py-[6mm] text-[15px] leading-[1.18] shadow-xl print:shadow-none">
+                <div className="invoice-print-page flex h-[11in] min-h-[11in] flex-col bg-white px-[4mm] py-[6mm] text-[13px] leading-[1.18] shadow-xl print:shadow-none">
                   {defaultPaginatedRows.lastPageRows.length > 0 ? (
-                    <DefaultInvoiceTable rows={defaultPaginatedRows.lastPageRows} t={t} />
+                    <DefaultInvoiceTable
+                      rows={defaultPaginatedRows.lastPageRows}
+                      t={t}
+                    />
                   ) : null}
 
                   <div className="mt-2 grid grid-cols-[0.86fr_0.68fr] gap-3">
                     <div className="space-y-2">
                       <div className="border border-black px-2 py-1">
-                        <p className="text-[15px]">{t("invoice.export.payment.title")}</p>
-                        <div className="mt-0.5 grid grid-cols-[52px_10px_1fr] gap-x-1 text-[15px]">
+                        <p className="text-[13px]">{t("invoice.export.payment.title")}</p>
+                        <div className="mt-0.5 grid grid-cols-[52px_10px_1fr] gap-x-1 text-[13px]">
                           <span>{t("invoice.export.payment.nameLabel")}</span>
                           <span>:</span>
                           <span>{paymentProfile.nama}</span>
@@ -1568,8 +1974,8 @@ export default function InvoiceExportPage() {
                       </div>
 
                       <div>
-                        <p className="text-[15px]">{t("invoice.export.noteTitle")}</p>
-                        <ol className="mt-0.5 list-decimal pl-5 text-[15px] leading-[1.2]">
+                        <p className="text-[13px]">{t("invoice.export.noteTitle")}</p>
+                        <ol className="mt-0.5 list-decimal pl-5 text-[13px] leading-[1.2]">
                           <li>{t("invoice.export.note.1")}</li>
                           <li>{t("invoice.export.note.2")}</li>
                           <li>{t("invoice.export.note.3")}</li>
@@ -1579,13 +1985,13 @@ export default function InvoiceExportPage() {
 
                     <div className="space-y-2">
                       <div className="border border-black">
-                        <div className="grid grid-cols-[1fr_150px] border-b border-black text-[15px] last:border-b-0">
+                        <div className="grid grid-cols-[1fr_150px] border-b border-black text-[13px] last:border-b-0">
                           <div className="border-r border-black px-2 py-0.5">{defaultBeforeTaxTotalLabel}</div>
                           <div className="px-2 py-0.5">
                             <CurrencyTableValue value={formatPlainNumber(Number(invoice.subtotal || 0))} />
                           </div>
                         </div>
-                        <div className="grid grid-cols-[1fr_150px] border-b border-black text-[15px] last:border-b-0">
+                        <div className="grid grid-cols-[1fr_150px] border-b border-black text-[13px] last:border-b-0">
                           <div className="border-r border-black px-2 py-0.5">
                             {defaultPpnLabel}
                           </div>
@@ -1593,7 +1999,7 @@ export default function InvoiceExportPage() {
                             <CurrencyTableValue value={formatPlainNumber(Number(invoice.ppnAmount || 0))} />
                           </div>
                         </div>
-                        <div className="grid grid-cols-[1fr_150px] text-[15px]">
+                        <div className="grid grid-cols-[1fr_150px] text-[13px]">
                           <div className="border-r border-black px-2 py-0.5">{t("invoice.export.summary.total")}</div>
                           <div className="px-2 py-0.5">
                             <CurrencyTableValue value={formatPlainNumber(Number(invoice.grandTotal || 0))} />
@@ -1602,7 +2008,7 @@ export default function InvoiceExportPage() {
                       </div>
 
                       <div className="ml-auto w-[200px] pt-4 text-center">
-                        <p className="text-[15px]">{t("invoice.export.signature.regards")}</p>
+                        <p className="text-[13px]">{t("invoice.export.signature.regards")}</p>
                         <div className="h-[96px]" />
                       </div>
                     </div>

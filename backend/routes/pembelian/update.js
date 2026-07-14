@@ -140,15 +140,12 @@ router.put("/:id", async (req, res) => {
       return res.status(400).json({ message: "Isi nama supplier sebelum menyimpan." });
     }
 
-    const effectiveTanggalNota = updates.tanggalNota ?? existingPembelian.tanggalNota;
     const effectiveHutang = updates.hutang ?? existingPembelian.hutang;
     const effectiveLamaHutang = updates.lamaHutang ?? existingPembelian.lamaHutang;
     const effectiveTanggalJatuhTempo =
       updates.tanggalJatuhTempo !== undefined
         ? updates.tanggalJatuhTempo
         : existingPembelian.tanggalJatuhTempo;
-    const effectiveTanggalBayar =
-      updates.tanggalBayar !== undefined ? updates.tanggalBayar : existingPembelian.tanggalBayar;
 
     if (updates.idInvoice) {
       const invoice = await Invoice.findById(updates.idInvoice);
@@ -179,12 +176,6 @@ router.put("/:id", async (req, res) => {
     } else {
       updates.lamaHutang = 0;
       updates.tanggalJatuhTempo = null;
-    }
-
-    if (effectiveTanggalBayar && effectiveTanggalBayar < effectiveTanggalNota) {
-      return res.status(400).json({
-        message: "Tanggal bayar tidak boleh lebih awal dari tanggal nota.",
-      });
     }
 
     const pembelian = await Pembelian.findByIdAndUpdate(id, updates, {

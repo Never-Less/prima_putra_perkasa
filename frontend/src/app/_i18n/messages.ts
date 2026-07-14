@@ -501,6 +501,10 @@ export const messages: Record<Locale, MessageDictionary> = {
     "pembelian.confirmDeleteTitle": "Konfirmasi Hapus Pembelian",
     "pembelian.confirmDeleteDescription":
       "Data pembelian supplier \"{{namaSupplier}}\" akan dihapus dan tidak bisa dikembalikan. Tetap lanjut?",
+    "pembelian.confirmDuplicateTitle": "Data Pembelian Sudah Ada",
+    "pembelian.confirmDuplicateDescription":
+      "Sudah ada pembelian untuk supplier \"{{namaSupplier}}\" dengan no nota \"{{noNota}}\". Jika memang ini transaksi berbeda, Anda tetap bisa melanjutkan.",
+    "pembelian.confirmDuplicateContinue": "Tetap Simpan",
     "pembelian.toast.createSuccess": "Data pembelian berhasil ditambahkan.",
     "pembelian.toast.updateSuccess":
       "Data pembelian supplier \"{{namaSupplier}}\" berhasil diperbarui.",
@@ -1157,6 +1161,10 @@ export const messages: Record<Locale, MessageDictionary> = {
     "pembelian.confirmDeleteTitle": "Confirm Purchase Deletion",
     "pembelian.confirmDeleteDescription":
       "Purchase data for supplier \"{{namaSupplier}}\" will be deleted and cannot be restored. Continue?",
+    "pembelian.confirmDuplicateTitle": "Purchase Data Already Exists",
+    "pembelian.confirmDuplicateDescription":
+      "There is already a purchase for supplier \"{{namaSupplier}}\" with note number \"{{noNota}}\". If this is a different transaction, you can still continue.",
+    "pembelian.confirmDuplicateContinue": "Save Anyway",
     "pembelian.toast.createSuccess": "Purchase data has been added successfully.",
     "pembelian.toast.updateSuccess":
       "Purchase data for supplier \"{{namaSupplier}}\" has been updated successfully.",

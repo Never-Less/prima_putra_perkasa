@@ -88,12 +88,6 @@ router.post("/", async (req, res) => {
     tanggalJatuhTempo = null;
   }
 
-  if (tanggalBayar && tanggalBayar < tanggalNota) {
-    return res.status(400).json({
-      message: "Tanggal bayar tidak boleh lebih awal dari tanggal nota.",
-    });
-  }
-
   try {
     if (idInvoice) {
       const invoice = await Invoice.findById(idInvoice);

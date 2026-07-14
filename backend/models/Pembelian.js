@@ -86,10 +86,6 @@ pembelianSchema.pre("validate", function validatePembelian() {
   } else {
     this.lamaHutang = 0;
   }
-
-  if (this.tanggalBayar && this.tanggalBayar < this.tanggalNota) {
-    this.invalidate("tanggalBayar", "Tanggal bayar tidak boleh lebih awal dari tanggal nota.");
-  }
 });
 
 const Pembelian = mongoose.model("Pembelian", pembelianSchema);
