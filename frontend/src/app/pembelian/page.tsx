@@ -50,8 +50,12 @@ type PembelianPageContentProps = {
 
 const defaultPembelianPaginationQuery = {
   page: 1,
-  limit: 5,
+  limit: 10,
 };
+
+function normalizeDuplicateKey(value: string) {
+  return String(value || "").trim().toLowerCase();
+}
 
 export function PembelianPageContent({ mode = "list", itemId = "" }: PembelianPageContentProps) {
   const { t } = useI18n();
@@ -119,6 +123,12 @@ export function PembelianPageContent({ mode = "list", itemId = "" }: PembelianPa
     | {
         type: "delete";
         selectedItem: PembelianItem;
+      }
+    | {
+        type: "duplicate";
+        form: PembelianFormState;
+        selectedItem?: PembelianItem;
+        duplicateItem: PembelianItem;
       }
     | null
   >(null);
@@ -353,6 +363,41 @@ export function PembelianPageContent({ mode = "list", itemId = "" }: PembelianPa
     [invoiceLabelMap, t]
   );
 
+  const findDuplicatePembelian = useCallback(
+    async (form: PembelianFormState, selectedItem?: PembelianItem) => {
+      const namaSupplier = String(form.namaSupplier || "").trim();
+      const noNota = String(form.noNota || "").trim();
+
+      if (!namaSupplier || !noNota) {
+        return null;
+      }
+
+      const pembelianResult = await fetchPembelianList({
+        ...defaultPembelianFilter,
+        namaSupplier,
+        noNota,
+        page: 1,
+        limit: 100,
+      });
+      const normalizedSupplier = normalizeDuplicateKey(namaSupplier);
+      const normalizedNoNota = normalizeDuplicateKey(noNota);
+
+      return (
+        pembelianResult.items.find((item) => {
+          if (selectedItem?.id && item.id === selectedItem.id) {
+            return false;
+          }
+
+          return (
+            normalizeDuplicateKey(item.namaSupplier) === normalizedSupplier &&
+            normalizeDuplicateKey(item.noNota) === normalizedNoNota
+          );
+        }) || null
+      );
+    },
+    []
+  );
+
   const executeSavePembelian = useCallback(
     async (form: PembelianFormState, selectedItem?: PembelianItem) => {
       setActionErrorMessage("");
@@ -452,6 +497,32 @@ export function PembelianPageContent({ mode = "list", itemId = "" }: PembelianPa
 
   const handleSavePembelian = useCallback(
     async (form: PembelianFormState, selectedItem?: PembelianItem) => {
+      try {
+        const duplicateItem = await findDuplicatePembelian(form, selectedItem);
+
+        if (duplicateItem) {
+          setPendingConfirmation({
+            type: "duplicate",
+            form,
+            selectedItem,
+            duplicateItem,
+          });
+          return;
+        }
+      } catch (error) {
+        if (error instanceof ApiRequestError) {
+          const message = error.message || t("pembelian.apiLoadError");
+          setActionErrorMessage(message);
+          showToast(message, "error");
+          return;
+        }
+
+        const message = t("pembelian.apiLoadError");
+        setActionErrorMessage(message);
+        showToast(message, "error");
+        return;
+      }
+
       if (selectedItem?.id) {
         setPendingConfirmation({
           type: "update",
@@ -463,7 +534,7 @@ export function PembelianPageContent({ mode = "list", itemId = "" }: PembelianPa
 
       await executeSavePembelian(form, selectedItem);
     },
-    [executeSavePembelian]
+    [executeSavePembelian, findDuplicatePembelian, showToast, t]
   );
 
   const handleDeletePembelian = useCallback((selectedItem: PembelianItem) => {
@@ -486,6 +557,11 @@ export function PembelianPageContent({ mode = "list", itemId = "" }: PembelianPa
       return;
     }
 
+    if (currentConfirmation.type === "duplicate") {
+      await executeSavePembelian(currentConfirmation.form, currentConfirmation.selectedItem);
+      return;
+    }
+
     await executeDeletePembelian(currentConfirmation.selectedItem);
   }, [executeDeletePembelian, executeSavePembelian, pendingConfirmation]);
 
@@ -501,6 +577,18 @@ export function PembelianPageContent({ mode = "list", itemId = "" }: PembelianPa
           namaSupplier: pendingConfirmation.selectedItem.namaSupplier || "-",
         }),
         confirmLabel: t("common.saveChanges"),
+        variant: "default" as const,
+      };
+    }
+
+    if (pendingConfirmation.type === "duplicate") {
+      return {
+        title: t("pembelian.confirmDuplicateTitle"),
+        description: t("pembelian.confirmDuplicateDescription", {
+          namaSupplier: pendingConfirmation.form.namaSupplier || "-",
+          noNota: pendingConfirmation.form.noNota || "-",
+        }),
+        confirmLabel: t("pembelian.confirmDuplicateContinue"),
         variant: "default" as const,
       };
     }

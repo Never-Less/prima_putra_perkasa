@@ -275,7 +275,7 @@ function toNormalizedPembelianPayload(form: PembelianFormState) {
   const nilaiNota = parseNumberFromUnknown(form.nilaiNota);
   const idInvoice = toText(form.idInvoice).trim();
   const tanggalJatuhTempo = toText(form.tanggalJatuhTempo).trim();
-  const tanggalBayar = form.hutang ? "" : toText(form.tanggalBayar).trim();
+  const tanggalBayar = toText(form.tanggalBayar).trim();
 
   return {
     tanggalNota: toText(form.tanggalNota).trim(),

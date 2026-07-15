@@ -131,7 +131,6 @@ function createInitialPembelianFormState({
     return withCalculatedTanggalJatuhTempo({
       ...mappedForm,
       idInvoice: ensureValidIdInvoice(mappedForm.idInvoice, invoiceOptions),
-      tanggalBayar: mappedForm.hutang ? "" : mappedForm.tanggalBayar,
     });
   }
 
@@ -139,7 +138,6 @@ function createInitialPembelianFormState({
     return withCalculatedTanggalJatuhTempo({
       ...initialForm,
       idInvoice: ensureValidIdInvoice(initialForm.idInvoice, invoiceOptions),
-      tanggalBayar: initialForm.hutang ? "" : initialForm.tanggalBayar,
     });
   }
 
@@ -389,7 +387,6 @@ export function PembelianEditForm({
       hutang: nextHutang,
       lamaHutang: nextLamaHutang,
       tanggalJatuhTempo: calculateTanggalJatuhTempo(prev.tanggalNota, nextLamaHutang, nextHutang),
-      tanggalBayar: nextHutang ? "" : prev.tanggalBayar,
     }));
   }
 
@@ -544,7 +541,6 @@ export function PembelianEditForm({
                     hutang: isHutang,
                     lamaHutang: isHutang ? prev.lamaHutang : "0",
                     tanggalJatuhTempo: calculateTanggalJatuhTempo(prev.tanggalNota, prev.lamaHutang, isHutang),
-                    tanggalBayar: isHutang ? "" : prev.tanggalBayar,
                   }));
                 }}
                 className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
@@ -610,10 +606,9 @@ export function PembelianEditForm({
             <label className="text-sm text-slate-700 dark:text-slate-200">
               {t("field.tanggalBayar")}
               <AppDateInput
-                value={form.hutang ? "" : form.tanggalBayar}
-                disabled={form.hutang}
+                value={form.tanggalBayar}
                 onValueChange={(value) => setForm((prev) => ({ ...prev, tanggalBayar: value }))}
-                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm disabled:cursor-not-allowed disabled:bg-sky-100/70 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
+                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               />
             </label>
           </div>
@@ -710,7 +705,7 @@ export function PembelianEditForm({
             </p>
             <p>
               <span className="text-slate-500 dark:text-slate-400">{t("field.tanggalBayar")}:</span>{" "}
-              {formatTanggal(form.hutang ? null : form.tanggalBayar || null, locale)}
+              {formatTanggal(form.tanggalBayar || null, locale)}
             </p>
           </div>
         </div>

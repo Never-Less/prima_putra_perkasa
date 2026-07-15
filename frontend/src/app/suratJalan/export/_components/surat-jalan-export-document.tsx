@@ -40,6 +40,22 @@ type SuratJalanPrintPageStyle = CSSProperties & {
 type SuratJalanRowMeasurements = {
   templateRowHeights: number[];
   meiloonRowHeights: number[];
+  templateFullPageCapacities?: SuratJalanPageCapacities;
+  meiloonFullPageCapacities?: SuratJalanPageCapacities;
+};
+
+type SuratJalanPageCapacities = {
+  singlePageCapacity: number;
+  firstPageCapacity: number;
+  middlePageCapacity: number;
+  lastPageCapacity: number;
+};
+
+const fullPageFallbackCapacities: SuratJalanPageCapacities = {
+  singlePageCapacity: fullPageRowsPerPage,
+  firstPageCapacity: fullPageRowsPerPage,
+  middlePageCapacity: fullPageRowsPerPage,
+  lastPageCapacity: fullPageRowsPerPage,
 };
 
 type MeiloonColumnWidths = {
@@ -243,6 +259,59 @@ function areMeasurementsEqual(current: number[] | undefined, next: number[]) {
   return current.every((value, index) => Math.abs(value - next[index]) < 0.5);
 }
 
+function isValidCapacity(value: number | undefined) {
+  return typeof value === "number" && Number.isFinite(value) && value > 0;
+}
+
+function arePageCapacitiesEqual(
+  current: SuratJalanPageCapacities | undefined,
+  next: SuratJalanPageCapacities | undefined
+) {
+  if (!current || !next) {
+    return current === next;
+  }
+
+  return (
+    Math.abs(current.singlePageCapacity - next.singlePageCapacity) < 0.25 &&
+    Math.abs(current.firstPageCapacity - next.firstPageCapacity) < 0.25 &&
+    Math.abs(current.middlePageCapacity - next.middlePageCapacity) < 0.25 &&
+    Math.abs(current.lastPageCapacity - next.lastPageCapacity) < 0.25
+  );
+}
+
+function resolvePageCapacities(
+  measuredCapacities: SuratJalanPageCapacities | undefined,
+  fallbackCapacities: SuratJalanPageCapacities
+) {
+  if (
+    measuredCapacities &&
+    isValidCapacity(measuredCapacities.singlePageCapacity) &&
+    isValidCapacity(measuredCapacities.firstPageCapacity) &&
+    isValidCapacity(measuredCapacities.middlePageCapacity) &&
+    isValidCapacity(measuredCapacities.lastPageCapacity)
+  ) {
+    return measuredCapacities;
+  }
+
+  return fallbackCapacities;
+}
+
+function getMeasuredCapacityUnits(
+  root: HTMLElement,
+  selector: string,
+  tableHeaderHeight: number
+) {
+  const slot = root.querySelector<HTMLElement>(selector);
+  const slotHeight = Number(slot?.getBoundingClientRect().height || 0);
+  const availableBodyHeight = slotHeight - tableHeaderHeight - 2;
+
+  if (!Number.isFinite(availableBodyHeight) || availableBodyHeight <= 0) {
+    return 0;
+  }
+
+  return availableBodyHeight / suratJalanBaseRowHeight;
+}
+
 function addFillerRowsByCapacity<T>(
   rows: T[],
   minimumRows: number,
@@ -309,6 +378,118 @@ function paginateRowsByCapacity<T>(
       )
     );
   }
+
+  return pages;
+}
+
+function takeRowsForCapacity<T>(
+  rows: T[],
+  startIndex: number,
+  capacity: number,
+  estimateRowUnits: (row: T) => number,
+  minimumRemainingRows = 0
+) {
+  const pageRows: T[] = [];
+  const lastAllowedIndex = Math.max(startIndex, rows.length - minimumRemainingRows);
+  let nextIndex = startIndex;
+  let usedUnits = 0;
+
+  while (nextIndex < lastAllowedIndex) {
+    const rowUnits = Math.max(1, estimateRowUnits(rows[nextIndex]));
+
+    if (pageRows.length > 0 && usedUnits + rowUnits > capacity) {
+      break;
+    }
+
+    pageRows.push(rows[nextIndex]);
+    usedUnits += rowUnits;
+    nextIndex += 1;
+  }
+
+  return {
+    pageRows,
+    nextIndex,
+  };
+}
+
+function paginateRowsByPageCapacities<T>(
+  rows: T[],
+  capacities: SuratJalanPageCapacities,
+  estimateRowUnits: (row: T) => number,
+  createEmptyRow: () => T
+) {
+  const {
+    singlePageCapacity,
+    firstPageCapacity,
+    middlePageCapacity,
+    lastPageCapacity,
+  } = capacities;
+  const totalUnits = estimateRowsUnits(rows, estimateRowUnits);
+
+  if (rows.length === 0 || totalUnits <= singlePageCapacity) {
+    return [
+      addFillerRowsByCapacity(
+        rows,
+        Math.max(1, Math.floor(singlePageCapacity)),
+        singlePageCapacity,
+        estimateRowUnits,
+        createEmptyRow
+      ),
+    ];
+  }
+
+  const pages: T[][] = [];
+  const firstPage = takeRowsForCapacity(
+    rows,
+    0,
+    firstPageCapacity,
+    estimateRowUnits
+  );
+  let nextIndex = firstPage.nextIndex;
+
+  pages.push(
+    addFillerRowsByCapacity(
+      firstPage.pageRows,
+      Math.max(1, Math.floor(firstPageCapacity)),
+      firstPageCapacity,
+      estimateRowUnits,
+      createEmptyRow
+    )
+  );
+
+  while (
+    nextIndex < rows.length &&
+    rows.length - nextIndex > 1 &&
+    estimateRowsUnits(rows.slice(nextIndex), estimateRowUnits) > lastPageCapacity
+  ) {
+    const middlePage = takeRowsForCapacity(
+      rows,
+      nextIndex,
+      middlePageCapacity,
+      estimateRowUnits
+    );
+
+    pages.push(
+      addFillerRowsByCapacity(
+        middlePage.pageRows,
+        Math.max(1, Math.floor(middlePageCapacity)),
+        middlePageCapacity,
+        estimateRowUnits,
+        createEmptyRow
+      )
+    );
+    nextIndex = middlePage.nextIndex;
+  }
+
+  pages.push(
+    addFillerRowsByCapacity(
+      rows.slice(nextIndex),
+      Math.max(1, Math.floor(lastPageCapacity)),
+      lastPageCapacity,
+      estimateRowUnits,
+      createEmptyRow
+    )
+  );
 
   return pages;
 }
@@ -447,12 +628,190 @@ function buildMeiloonTemplateRows(
   return rows;
 }
 
+type SuratJalanMeasureTemplateVariant = "default" | "meiloon";
+type SuratJalanMeasurePageKind = "single" | "first" | "middle" | "last";
+
+type SuratJalanMeasureHeaderProps = {
+  variant: SuratJalanMeasureTemplateVariant;
+  t: (key: string, params?: Record<string, string | number>) => string;
+};
+
+function SuratJalanMeasureHeader({ variant, t }: SuratJalanMeasureHeaderProps) {
+  if (variant === "meiloon") {
+    return (
+      <>
+        <div className="grid grid-cols-[1fr_1.05fr] gap-4 pt-1">
+          <div className="px-1 py-0.5">
+            <p className="text-[19px] leading-tight">{companyProfile.name}</p>
+            {companyProfile.addressLines.map((line) => (
+              <p key={line} className="text-[15px] leading-[1.18]">
+                {line}
+              </p>
+            ))}
+          </div>
+
+          <div className="border-2 border-black px-2 py-1">
+            <p className="text-[15px] italic leading-tight">{t("suratJalan.export.kepadaLabel")}</p>
+            <p className="whitespace-nowrap text-[10px] leading-tight">
+              {meiloonCustomerName}
+            </p>
+            <p className="whitespace-pre-line text-[15px] leading-[1.12]">
+              Jl. Raya Subang Pagaden, Kawasan Industri Taifa, Gunung Sembung,
+              Pagaden, Kab. Subang, Jawa Barat 41252 - Indonesia
+            </p>
+            <p className="mt-0.5 text-[15px] leading-tight">
+              {t("suratJalan.export.attnLabel")} : Mr. Pangzi Wang / Bu Tini
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-1 flex items-end justify-between gap-4 text-[15px] leading-tight">
+          <div className="grid grid-cols-[82px_8px_1fr] gap-x-1">
+            <span>{t("suratJalan.export.meiloon.noSjLabel")}</span>
+            <span>:</span>
+            <span>PP/0726/3078</span>
+          </div>
+          <div className="grid grid-cols-[72px_8px_1fr] gap-x-1">
+            <span>{t("suratJalan.export.noPoLabel")}</span>
+            <span>:</span>
+            <span>26003446</span>
+          </div>
+          <div className="grid grid-cols-[84px_8px_1fr] gap-x-1">
+            <span>{t("suratJalan.export.tanggalLabel")}</span>
+            <span>:</span>
+            <span>09 JULI 2026</span>
+          </div>
+        </div>
+
+        <p className="mt-1 text-[15px] leading-tight">
+          {t("suratJalan.export.deliverySentenceStart")} <span>B 9021 BVA</span>
+        </p>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <div className="grid grid-cols-[0.98fr_1.02fr] gap-5">
+        <div className="pt-1">
+          <p className="text-[19px] leading-tight">{companyProfile.name}</p>
+          {companyProfile.addressLines.map((line) => (
+            <p key={line} className="text-[15px] leading-[1.18]">
+              {line}
+            </p>
+          ))}
+
+          <div className="mt-3 grid w-full grid-cols-[150px_8px_1fr] gap-x-1 text-[15px] leading-tight">
+            <span className="whitespace-nowrap">{t("suratJalan.export.noSuratJalanLabel")}</span>
+            <span>:</span>
+            <span className="whitespace-nowrap">PP/0726/3078</span>
+            <span className="whitespace-nowrap">{t("suratJalan.export.noPoLabel")}</span>
+            <span>:</span>
+            <span className="whitespace-nowrap">26003446</span>
+          </div>
+        </div>
+
+        <div className="pt-1">
+          <div className="grid grid-cols-[84px_8px_1fr] text-[15px] leading-tight">
+            <span>{t("suratJalan.export.tanggalLabel")}</span>
+            <span>:</span>
+            <span>09 JULI 2026</span>
+          </div>
+
+          <div className="mt-1 min-h-[82px] border-2 border-black px-2.5 py-1.5">
+            <p className="text-[15px] italic leading-tight">{t("suratJalan.export.kepadaLabel")}</p>
+            <p className="whitespace-nowrap text-[13px] leading-tight">
+              PT. DAIJO INDUSTRIAL
+            </p>
+            <p className="whitespace-pre-line text-[15px] leading-[1.12]">
+              JL IRIAN RAYA BLOK E-12 KBN UNIT USAHA CAKUNG, SUKAPURA,
+              CILINCING, KOTA ADM. JAKARTA UTARA, DKI JAKARTA, 14140
+            </p>
+            <p className="mt-0.5 text-[15px] leading-tight">
+              {t("suratJalan.export.attnLabel")}: BU. NUR/BU. DIAN
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <p className="mt-3 text-[15px] leading-tight">
+        {t("suratJalan.export.deliverySentenceStart")} <span>B 9021 BVA</span>
+      </p>
+    </>
+  );
+}
+
+type SuratJalanMeasureFooterProps = {
+  t: (key: string, params?: Record<string, string | number>) => string;
+};
+
+function SuratJalanMeasureFooter({ t }: SuratJalanMeasureFooterProps) {
+  return (
+    <footer className="shrink-0 pt-1">
+      <p className="text-[15px] leading-tight">{t("suratJalan.export.returnPolicy")}</p>
+
+      <div className="mt-0.5 grid grid-cols-3 gap-8 text-center">
+        <div>
+          <p className="text-[15px]">{t("suratJalan.export.signature.receiver")}</p>
+          <div className="mt-[58px] mx-auto w-[105px] border-t-[1.5px] border-black" />
+        </div>
+        <div>
+          <p className="text-[15px]">{t("suratJalan.export.signature.sender")}</p>
+          <div className="mt-[58px] mx-auto w-[105px] border-t-[1.5px] border-black" />
+        </div>
+        <div>
+          <p className="text-[15px]">{t("suratJalan.export.signature.regards")}</p>
+          <div className="mt-[58px] mx-auto w-[115px] border-t-[1.5px] border-black" />
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+type SuratJalanMeasurePageProps = {
+  variant: SuratJalanMeasureTemplateVariant;
+  kind: SuratJalanMeasurePageKind;
+  pageHeight: string;
+  pageWidth: string;
+  t: (key: string, params?: Record<string, string | number>) => string;
+};
+
+function SuratJalanMeasurePage({
+  variant,
+  kind,
+  pageHeight,
+  pageWidth,
+  t,
+}: SuratJalanMeasurePageProps) {
+  return (
+    <div
+      className="flex flex-col px-[5mm] py-[4mm] text-[15px] leading-[1.18] tracking-[0.05em]"
+      style={{ height: pageHeight, width: pageWidth }}
+    >
+      {kind === "single" || kind === "first" ? (
+        <SuratJalanMeasureHeader variant={variant} t={t} />
+      ) : null}
+
+      <div
+        data-surat-jalan-capacity-slot={`${variant}-${kind}`}
+        className="mt-1 min-h-0 flex-1"
+      />
+
+      {kind === "single" || kind === "last" ? (
+        <SuratJalanMeasureFooter t={t} />
+      ) : null}
+    </div>
+  );
+}
+
 type SuratJalanPaginationMeasureProps = {
   templateRows: TemplateRow[];
   meiloonRows: MeiloonTemplateRow[];
   pageWidth: string;
+  pageHeight: string;
   meiloonColumnWidths: MeiloonColumnWidths;
   defaultColumnWidths: DefaultColumnWidths;
+  t: (key: string, params?: Record<string, string | number>) => string;
   onMeasure: (measurements: SuratJalanRowMeasurements) => void;
 };
 
@@ -460,8 +819,10 @@ function SuratJalanPaginationMeasure({
   templateRows,
   meiloonRows,
   pageWidth,
+  pageHeight,
   meiloonColumnWidths,
   defaultColumnWidths,
+  t,
   onMeasure,
 }: SuratJalanPaginationMeasureProps) {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -494,6 +855,14 @@ function SuratJalanPaginationMeasure({
             '[data-surat-jalan-measure-table="meiloon"] [data-surat-jalan-export-row="meiloon"]'
           )
         );
+        const templateTableHeaderHeight =
+          rootRef.current
+            .querySelector<HTMLElement>('[data-surat-jalan-measure-table="default"] thead')
+            ?.getBoundingClientRect().height || 0;
+        const meiloonTableHeaderHeight =
+          rootRef.current
+            .querySelector<HTMLElement>('[data-surat-jalan-measure-table="meiloon"] thead')
+            ?.getBoundingClientRect().height || 0;
 
         if (
           templateRowElements.length !== templateRows.length ||
@@ -509,6 +878,50 @@ function SuratJalanPaginationMeasure({
           meiloonRowHeights: meiloonRowElements.map((element) =>
             element.getBoundingClientRect().height
           ),
+          templateFullPageCapacities: {
+            singlePageCapacity: getMeasuredCapacityUnits(
+              rootRef.current,
+              '[data-surat-jalan-capacity-slot="default-single"]',
+              templateTableHeaderHeight
+            ),
+            firstPageCapacity: getMeasuredCapacityUnits(
+              rootRef.current,
+              '[data-surat-jalan-capacity-slot="default-first"]',
+              templateTableHeaderHeight
+            ),
+            middlePageCapacity: getMeasuredCapacityUnits(
+              rootRef.current,
+              '[data-surat-jalan-capacity-slot="default-middle"]',
+              templateTableHeaderHeight
+            ),
+            lastPageCapacity: getMeasuredCapacityUnits(
+              rootRef.current,
+              '[data-surat-jalan-capacity-slot="default-last"]',
+              templateTableHeaderHeight
+            ),
+          },
+          meiloonFullPageCapacities: {
+            singlePageCapacity: getMeasuredCapacityUnits(
+              rootRef.current,
+              '[data-surat-jalan-capacity-slot="meiloon-single"]',
+              meiloonTableHeaderHeight
+            ),
+            firstPageCapacity: getMeasuredCapacityUnits(
+              rootRef.current,
+              '[data-surat-jalan-capacity-slot="meiloon-first"]',
+              meiloonTableHeaderHeight
+            ),
+            middlePageCapacity: getMeasuredCapacityUnits(
+              rootRef.current,
+              '[data-surat-jalan-capacity-slot="meiloon-middle"]',
+              meiloonTableHeaderHeight
+            ),
+            lastPageCapacity: getMeasuredCapacityUnits(
+              rootRef.current,
+              '[data-surat-jalan-capacity-slot="meiloon-last"]',
+              meiloonTableHeaderHeight
+            ),
+          },
         });
       });
     }
@@ -522,7 +935,24 @@ function SuratJalanPaginationMeasure({
         window.cancelAnimationFrame(frameId);
       }
     };
-  }, [meiloonRows, onMeasure, templateRows]);
+  }, [
+    defaultColumnWidths.jumlah,
+    defaultColumnWidths.no,
+    meiloonColumnWidths.kodeDepartemen,
+    meiloonColumnWidths.namaBarang,
+    meiloonColumnWidths.no,
+    meiloonColumnWidths.note,
+    meiloonColumnWidths.qty,
+    meiloonColumnWidths.spesifikasi,
+    meiloonColumnWidths.ttdPenerima,
+    meiloonColumnWidths.unit,
+    meiloonRows,
+    onMeasure,
+    pageHeight,
+    pageWidth,
+    t,
+    templateRows,
+  ]);
 
   return (
     <div
@@ -547,6 +977,19 @@ function SuratJalanPaginationMeasure({
               <col />
               <col style={{ width: defaultColumnWidths.jumlah }} />
             </colgroup>
+            <thead>
+              <tr className="border-b border-black">
+                <th className="border-r border-black px-1 text-center text-[15px]">
+                  {t("suratJalan.export.table.no")}
+                </th>
+                <th className="border-r border-black px-1 text-center text-[15px]">
+                  {t("suratJalan.export.table.namaBarang")}
+                </th>
+                <th className="px-1 text-center text-[15px]">
+                  {t("suratJalan.export.table.jumlah")}
+                </th>
+              </tr>
+            </thead>
             <tbody>
               {templateRows.map((row, index) => (
                 <tr
@@ -590,6 +1033,35 @@ function SuratJalanPaginationMeasure({
               <col style={{ width: meiloonColumnWidths.ttdPenerima }} />
               <col style={{ width: meiloonColumnWidths.note }} />
             </colgroup>
+            <thead>
+              <tr className="border-b border-black">
+                <th className="border-r border-black px-1 text-center text-[15px]">
+                  {t("suratJalan.export.table.no")}
+                </th>
+                <th className="border-r border-black px-1 text-center text-[15px]">
+                  {t("suratJalan.export.table.namaBarang")}
+                </th>
+                <th className="border-r border-black px-1 text-center text-[15px]">
+                  {t("suratJalan.export.meiloon.table.spesifikasi")}
+                </th>
+                <th className="border-r border-black px-1 text-center text-[15px] leading-tight">
+                  {t("suratJalan.export.meiloon.table.qty")}
+                </th>
+                <th className="border-r border-black px-1 text-center text-[15px]">
+                  {t("suratJalan.export.meiloon.table.unit")}
+                </th>
+                <th className="border-r border-black px-1 text-center text-[15px] leading-tight">
+                  {t("suratJalan.export.meiloon.table.kodeDepartemen")}
+                </th>
+                <th className="border-r border-black px-1 text-center text-[15px] leading-tight">
+                  <span className="block">TTD</span>
+                  <span className="block text-[13px]">PENERIMA</span>
+                </th>
+                <th className="px-1 text-center text-[15px] leading-tight">
+                  {t("suratJalan.export.meiloon.table.note")}
+                </th>
+              </tr>
+            </thead>
             <tbody>
               {meiloonRows.map((row, index) => (
                 <tr
@@ -617,6 +1089,27 @@ function SuratJalanPaginationMeasure({
           </table>
         </div>
       </div>
+
+      {(["single", "first", "middle", "last"] as SuratJalanMeasurePageKind[]).map((kind) => (
+        <SuratJalanMeasurePage
+          key={`default-full-measure-${kind}`}
+          variant="default"
+          kind={kind}
+          pageHeight={pageHeight}
+          pageWidth={pageWidth}
+          t={t}
+        />
+      ))}
+      {(["single", "first", "middle", "last"] as SuratJalanMeasurePageKind[]).map((kind) => (
+        <SuratJalanMeasurePage
+          key={`meiloon-full-measure-${kind}`}
+          variant="meiloon"
+          kind={kind}
+          pageHeight={pageHeight}
+          pageWidth={pageWidth}
+          t={t}
+        />
+      ))}
     </div>
   );
 }
@@ -680,26 +1173,64 @@ export function SuratJalanExportDocument({
     [meiloonTemplateRows, rowMeasurements.meiloonRowHeights]
   );
   const templatePages = useMemo(
-    () =>
-      paginateRowsByCapacity(
+    () => {
+      if (paperSize === "full") {
+        return paginateRowsByPageCapacities(
+          templateRows,
+          resolvePageCapacities(
+            rowMeasurements.templateFullPageCapacities,
+            fullPageFallbackCapacities
+          ),
+          templateRowUnitEstimator,
+          createEmptyTemplateRow
+        );
+      }
+
+      return paginateRowsByCapacity(
         templateRows,
         rowsPerPage,
         rowsPerPage,
         templateRowUnitEstimator,
         createEmptyTemplateRow
-      ),
-    [rowsPerPage, templateRowUnitEstimator, templateRows]
+      );
+    },
+    [
+      paperSize,
+      rowMeasurements.templateFullPageCapacities,
+      rowsPerPage,
+      templateRowUnitEstimator,
+      templateRows,
+    ]
   );
   const meiloonTemplatePages = useMemo(
-    () =>
-      paginateRowsByCapacity(
+    () => {
+      if (paperSize === "full") {
+        return paginateRowsByPageCapacities(
+          meiloonTemplateRows,
+          resolvePageCapacities(
+            rowMeasurements.meiloonFullPageCapacities,
+            fullPageFallbackCapacities
+          ),
+          meiloonRowUnitEstimator,
+          createEmptyMeiloonTemplateRow
+        );
+      }
+
+      return paginateRowsByCapacity(
         meiloonTemplateRows,
         rowsPerPage,
         rowsPerPage,
         meiloonRowUnitEstimator,
         createEmptyMeiloonTemplateRow
-      ),
-    [meiloonRowUnitEstimator, meiloonTemplateRows, rowsPerPage]
+      );
+    },
+    [
+      meiloonRowUnitEstimator,
+      meiloonTemplateRows,
+      paperSize,
+      rowMeasurements.meiloonFullPageCapacities,
+      rowsPerPage,
+    ]
   );
   const handleMeasureRows = useCallback((nextMeasurements: SuratJalanRowMeasurements) => {
     setRowMeasurements((currentMeasurements) => {
@@ -711,8 +1242,21 @@ export function SuratJalanExportDocument({
         currentMeasurements.meiloonRowHeights,
         nextMeasurements.meiloonRowHeights
       );
+      const isSameTemplateCapacities = arePageCapacitiesEqual(
+        currentMeasurements.templateFullPageCapacities,
+        nextMeasurements.templateFullPageCapacities
+      );
+      const isSameMeiloonCapacities = arePageCapacitiesEqual(
+        currentMeasurements.meiloonFullPageCapacities,
+        nextMeasurements.meiloonFullPageCapacities
+      );
 
-      if (isSameTemplateMeasurements && isSameMeiloonMeasurements) {
+      if (
+        isSameTemplateMeasurements &&
+        isSameMeiloonMeasurements &&
+        isSameTemplateCapacities &&
+        isSameMeiloonCapacities
+      ) {
         return currentMeasurements;
       }
 
@@ -724,8 +1268,10 @@ export function SuratJalanExportDocument({
       templateRows={templateRows}
       meiloonRows={meiloonTemplateRows}
       pageWidth={pageWidth}
+      pageHeight={pageHeight}
       meiloonColumnWidths={meiloonColumnWidths}
       defaultColumnWidths={defaultColumnWidths}
+      t={t}
       onMeasure={handleMeasureRows}
     />
   );
@@ -834,8 +1380,14 @@ export function SuratJalanExportDocument({
             </>
           ) : null}
 
-          <div className="mt-1 border border-black [&_td]:py-[3px] [&_td]:leading-none [&_th]:py-[1px] [&_th]:leading-none">
-            <table className="w-full border-collapse table-fixed">
+          <div
+            className={`mt-1 border border-black [&_td]:py-[3px] [&_td]:leading-none [&_th]:py-[1px] [&_th]:leading-none ${
+              paperSize === "full" ? "min-h-0 flex-1" : ""
+            }`.trim()}
+          >
+            <table
+              className={`${paperSize === "full" ? "h-full" : ""} w-full border-collapse table-fixed`.trim()}
+            >
               <colgroup>
                 <col style={{ width: meiloonColumnWidths.no }} />
                 <col style={{ width: meiloonColumnWidths.namaBarang }} />
@@ -996,8 +1548,14 @@ export function SuratJalanExportDocument({
           </>
         ) : null}
 
-        <div className="mt-1 border border-black [&_td]:py-[3px] [&_td]:leading-none [&_th]:py-[1px] [&_th]:leading-none">
-          <table className="w-full border-collapse table-fixed">
+        <div
+          className={`mt-1 border border-black [&_td]:py-[3px] [&_td]:leading-none [&_th]:py-[1px] [&_th]:leading-none ${
+            paperSize === "full" ? "min-h-0 flex-1" : ""
+          }`.trim()}
+        >
+          <table
+            className={`${paperSize === "full" ? "h-full" : ""} w-full border-collapse table-fixed`.trim()}
+          >
             <colgroup>
               <col style={{ width: defaultColumnWidths.no }} />
               <col />
