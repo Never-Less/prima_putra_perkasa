@@ -4,7 +4,7 @@ import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState }
 import { useI18n } from "../../../_i18n/provider";
 import { formatAppUppercaseDate } from "../../../_lib/date";
 import { decodeHtmlEntities } from "../../../_lib/html-entities";
-import { type SuratJalanItem } from "../../_lib/surat-jalan";
+import { type SuratJalanBarang, type SuratJalanItem } from "../../_lib/surat-jalan";
 
 type ExportCustomer = {
   nama?: string;
@@ -29,6 +29,7 @@ const fullPageWidth = "21.59cm";
 const fullPageHeight = "27.94cm";
 const suratJalanExportFontFamily = 'var(--font-geist-sans), "Segoe UI", sans-serif';
 const suratJalanBaseRowHeight = 21;
+const suratJalanFooterClassName = "shrink-0 mt-3 pb-[5mm]";
 
 export type SuratJalanExportPaperSize = "half" | "full";
 
@@ -415,8 +416,7 @@ function takeRowsForCapacity<T>(
 function paginateRowsByPageCapacities<T>(
   rows: T[],
   capacities: SuratJalanPageCapacities,
-  estimateRowUnits: (row: T) => number,
-  createEmptyRow: () => T
+  estimateRowUnits: (row: T) => number
 ) {
   const {
     singlePageCapacity,
@@ -426,16 +426,13 @@ function paginateRowsByPageCapacities<T>(
   } = capacities;
   const totalUnits = estimateRowsUnits(rows, estimateRowUnits);
 
-  if (rows.length === 0 || totalUnits <= singlePageCapacity) {
-    return [
-      addFillerRowsByCapacity(
-        rows,
-        Math.max(1, Math.floor(singlePageCapacity)),
-        singlePageCapacity,
-        estimateRowUnits,
-        createEmptyRow
-      ),
-    ];
+  if (rows.length === 0) {
+    return [rows];
+  }
+
+  const safeSinglePageCapacity = Math.max(1, singlePageCapacity - 2);
+  if (totalUnits <= safeSinglePageCapacity) {
+    return [rows];
   }
 
   const pages: T[][] = [];
@@ -447,15 +444,13 @@ function paginateRowsByPageCapacities<T>(
   );
   let nextIndex = firstPage.nextIndex;
 
-  pages.push(
-    addFillerRowsByCapacity(
-      firstPage.pageRows,
-      Math.max(1, Math.floor(firstPageCapacity)),
-      firstPageCapacity,
-      estimateRowUnits,
-      createEmptyRow
-    )
-  );
+  if (firstPage.pageRows.length > 0) {
+    pages.push(firstPage.pageRows);
+  }
+
+  if (nextIndex >= rows.length) {
+    return [...pages, []];
+  }
 
   while (
     nextIndex < rows.length &&
@@ -469,29 +464,29 @@ function paginateRowsByPageCapacities<T>(
       estimateRowUnits
     );
 
-    pages.push(
-      addFillerRowsByCapacity(
-        middlePage.pageRows,
-        Math.max(1, Math.floor(middlePageCapacity)),
-        middlePageCapacity,
-        estimateRowUnits,
-        createEmptyRow
-      )
-    );
+    if (middlePage.pageRows.length === 0) {
+      break;
+    }
+
+    pages.push(middlePage.pageRows);
     nextIndex = middlePage.nextIndex;
   }
 
-  pages.push(
-    addFillerRowsByCapacity(
-      rows.slice(nextIndex),
-      Math.max(1, Math.floor(lastPageCapacity)),
-      lastPageCapacity,
-      estimateRowUnits,
-      createEmptyRow
-    )
-  );
+  if (nextIndex >= rows.length) {
+    return [...pages, []];
+  }
 
-  return pages;
+  const lastPageRows = rows.slice(nextIndex);
+  if (lastPageRows.length > 0) {
+    if (estimateRowsUnits(lastPageRows, estimateRowUnits) > lastPageCapacity) {
+      pages.push(lastPageRows);
+      return [...pages, []];
+    }
+
+    pages.push(lastPageRows);
+  }
+
+  return pages.length > 0 ? pages : [rows];
 }
 
 function toExportText(value: unknown) {
@@ -528,6 +523,20 @@ function normalizeCustomerName(value: string) {
   return toUpperText(value);
 }
 
+function isExportBarangFilled(barang: SuratJalanBarang) {
+  return Boolean(
+    toExportText(barang.nama) ||
+      toExportText(barang.spesifikasi) ||
+      toExportText(barang.kodeDepartemen) ||
+      Number(barang.jumlah || 0) > 0 ||
+      toExportText(barang.unit)
+  );
+}
+
+function getExportBarangList(suratJalan: SuratJalanItem) {
+  return (suratJalan.barang || []).filter(isExportBarangFilled);
+}
+
 function formatTemplateDate(value: string, locale: "id" | "en") {
   return formatAppUppercaseDate(value, locale);
 }
@@ -562,9 +571,9 @@ function resolveDefaultColumnWidths(paperSize: SuratJalanExportPaperSize) {
 
 function buildTemplateRows(
   suratJalan: SuratJalanItem,
-  minimumRows = halfPageRowsPerPage
+  minimumRows = 0
 ): TemplateRow[] {
-  const filledRows = (suratJalan.barang || []).map((barang, index) => {
+  const filledRows = getExportBarangList(suratJalan).map((barang, index) => {
     const namaBarang = toExportText(barang.nama);
     const spesifikasi = toExportText(barang.spesifikasi);
     const kodeDepartemen = toExportText(barang.kodeDepartemen || suratJalan.kodeDepartemen);
@@ -579,16 +588,10 @@ function buildTemplateRows(
     };
   });
 
-  const totalRows = Math.max(minimumRows, filledRows.length);
   const rows = [...filledRows];
 
-  while (rows.length < totalRows) {
-    rows.push({
-      no: "",
-      namaBarang: "",
-      kodeDepartemen: "",
-      jumlah: "",
-    });
+  while (rows.length < minimumRows) {
+    rows.push(createEmptyTemplateRow());
   }
 
   return rows;
@@ -596,9 +599,9 @@ function buildTemplateRows(
 
 function buildMeiloonTemplateRows(
   suratJalan: SuratJalanItem,
-  minimumRows = halfPageRowsPerPage
+  minimumRows = 0
 ): MeiloonTemplateRow[] {
-  const filledRows = (suratJalan.barang || []).map((barang, index) => ({
+  const filledRows = getExportBarangList(suratJalan).map((barang, index) => ({
     no: String(index + 1),
     namaBarang: toExportText(barang.nama),
     spesifikasi: toExportText(barang.spesifikasi),
@@ -609,20 +612,10 @@ function buildMeiloonTemplateRows(
     note: "",
   }));
 
-  const totalRows = Math.max(minimumRows, filledRows.length);
   const rows = [...filledRows];
 
-  while (rows.length < totalRows) {
-    rows.push({
-      no: "",
-      namaBarang: "",
-      spesifikasi: "",
-      qty: "",
-      unit: "",
-      kodeDepartemen: "",
-      ttdPenerima: "",
-      note: "",
-    });
+  while (rows.length < minimumRows) {
+    rows.push(createEmptyMeiloonTemplateRow());
   }
 
   return rows;
@@ -747,7 +740,7 @@ type SuratJalanMeasureFooterProps = {
 
 function SuratJalanMeasureFooter({ t }: SuratJalanMeasureFooterProps) {
   return (
-    <footer className="shrink-0 pt-1">
+    <footer className={suratJalanFooterClassName}>
       <p className="text-[15px] leading-tight">{t("suratJalan.export.returnPolicy")}</p>
 
       <div className="mt-0.5 grid grid-cols-3 gap-8 text-center">
@@ -1145,11 +1138,11 @@ export function SuratJalanExportDocument({
     width: pageWidth,
   };
   const templateRows = useMemo(
-    () => buildTemplateRows(suratJalan, 0),
+    () => buildTemplateRows(suratJalan),
     [suratJalan]
   );
   const meiloonTemplateRows = useMemo(
-    () => buildMeiloonTemplateRows(suratJalan, 0),
+    () => buildMeiloonTemplateRows(suratJalan),
     [suratJalan]
   );
   const templateRowUnitEstimator = useMemo(
@@ -1181,8 +1174,7 @@ export function SuratJalanExportDocument({
             rowMeasurements.templateFullPageCapacities,
             fullPageFallbackCapacities
           ),
-          templateRowUnitEstimator,
-          createEmptyTemplateRow
+          templateRowUnitEstimator
         );
       }
 
@@ -1211,8 +1203,7 @@ export function SuratJalanExportDocument({
             rowMeasurements.meiloonFullPageCapacities,
             fullPageFallbackCapacities
           ),
-          meiloonRowUnitEstimator,
-          createEmptyMeiloonTemplateRow
+          meiloonRowUnitEstimator
         );
       }
 
@@ -1380,81 +1371,79 @@ export function SuratJalanExportDocument({
             </>
           ) : null}
 
-          <div
-            className={`mt-1 border border-black [&_td]:py-[3px] [&_td]:leading-none [&_th]:py-[1px] [&_th]:leading-none ${
-              paperSize === "full" ? "min-h-0 flex-1" : ""
-            }`.trim()}
-          >
-            <table
-              className={`${paperSize === "full" ? "h-full" : ""} w-full border-collapse table-fixed`.trim()}
-            >
-              <colgroup>
-                <col style={{ width: meiloonColumnWidths.no }} />
-                <col style={{ width: meiloonColumnWidths.namaBarang }} />
-                <col style={{ width: meiloonColumnWidths.spesifikasi }} />
-                <col style={{ width: meiloonColumnWidths.qty }} />
-                <col style={{ width: meiloonColumnWidths.unit }} />
-                <col style={{ width: meiloonColumnWidths.kodeDepartemen }} />
-                <col style={{ width: meiloonColumnWidths.ttdPenerima }} />
-                <col style={{ width: meiloonColumnWidths.note }} />
-              </colgroup>
-              <thead>
-                <tr className="border-b border-black">
-                  <th className="border-r border-black px-1 text-center text-[15px]">
-                    {t("suratJalan.export.table.no")}
-                  </th>
-                  <th className="border-r border-black px-1 text-center text-[15px]">
-                    {t("suratJalan.export.table.namaBarang")}
-                  </th>
-                  <th className="border-r border-black px-1 text-center text-[15px]">
-                    {t("suratJalan.export.meiloon.table.spesifikasi")}
-                  </th>
-                  <th className="border-r border-black px-1 text-center text-[15px] leading-tight">
-                    {t("suratJalan.export.meiloon.table.qty")}
-                  </th>
-                  <th className="border-r border-black px-1 text-center text-[15px]">
-                    {t("suratJalan.export.meiloon.table.unit")}
-                  </th>
-                  <th className="border-r border-black px-1 text-center text-[15px] leading-tight">
-                    {t("suratJalan.export.meiloon.table.kodeDepartemen")}
-                  </th>
-                  <th className="border-r border-black px-1 text-center text-[15px] leading-tight">
-                    <span className="block">TTD</span>
-                    <span className="block text-[13px]">PENERIMA</span>
-                  </th>
-                  <th className="px-1 text-center text-[15px] leading-tight">
-                    {t("suratJalan.export.meiloon.table.note")}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {pageRows.map((row, index) => (
-                  <tr
-                    key={`meiloon-template-row-${index}`}
-                    className={`border-b border-black last:border-b-0 ${
-                      isRowEmpty(row) ? "h-[21px]" : ""
-                    }`.trim()}
-                  >
-                    <td className="border-r border-black px-1 text-center align-middle text-[15px]">{row.no}</td>
-                    <td className="whitespace-normal break-words border-r border-black px-1.5 align-middle text-[15px]">
-                      {row.namaBarang}
-                    </td>
-                    <td className="border-r border-black px-1.5 align-middle whitespace-pre-line text-[15px]">
-                      {row.spesifikasi}
-                    </td>
-                    <td className="border-r border-black px-1 text-center align-middle text-[15px]">{row.qty}</td>
-                    <td className="border-r border-black px-1 text-center align-middle text-[15px]">{row.unit}</td>
-                    <td className="border-r border-black px-1 text-center align-middle text-[15px]">{row.kodeDepartemen}</td>
-                    <td className="border-r border-black px-1 text-center align-middle text-[15px]">{row.ttdPenerima}</td>
-                    <td className="px-1 text-center align-middle text-[15px]">{row.note}</td>
+          {paperSize !== "full" || pageRows.length > 0 ? (
+            <div className="mt-1 border border-black [&_td]:py-[3px] [&_td]:leading-none [&_th]:py-[1px] [&_th]:leading-none">
+              <table
+                className="w-full border-collapse table-fixed"
+              >
+                <colgroup>
+                  <col style={{ width: meiloonColumnWidths.no }} />
+                  <col style={{ width: meiloonColumnWidths.namaBarang }} />
+                  <col style={{ width: meiloonColumnWidths.spesifikasi }} />
+                  <col style={{ width: meiloonColumnWidths.qty }} />
+                  <col style={{ width: meiloonColumnWidths.unit }} />
+                  <col style={{ width: meiloonColumnWidths.kodeDepartemen }} />
+                  <col style={{ width: meiloonColumnWidths.ttdPenerima }} />
+                  <col style={{ width: meiloonColumnWidths.note }} />
+                </colgroup>
+                <thead>
+                  <tr className="border-b border-black">
+                    <th className="border-r border-black px-1 text-center text-[15px]">
+                      {t("suratJalan.export.table.no")}
+                    </th>
+                    <th className="border-r border-black px-1 text-center text-[15px]">
+                      {t("suratJalan.export.table.namaBarang")}
+                    </th>
+                    <th className="border-r border-black px-1 text-center text-[15px]">
+                      {t("suratJalan.export.meiloon.table.spesifikasi")}
+                    </th>
+                    <th className="border-r border-black px-1 text-center text-[15px] leading-tight">
+                      {t("suratJalan.export.meiloon.table.qty")}
+                    </th>
+                    <th className="border-r border-black px-1 text-center text-[15px]">
+                      {t("suratJalan.export.meiloon.table.unit")}
+                    </th>
+                    <th className="border-r border-black px-1 text-center text-[15px] leading-tight">
+                      {t("suratJalan.export.meiloon.table.kodeDepartemen")}
+                    </th>
+                    <th className="border-r border-black px-1 text-center text-[15px] leading-tight">
+                      <span className="block">TTD</span>
+                      <span className="block text-[13px]">PENERIMA</span>
+                    </th>
+                    <th className="px-1 text-center text-[15px] leading-tight">
+                      {t("suratJalan.export.meiloon.table.note")}
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {pageRows.map((row, index) => (
+                    <tr
+                      key={`meiloon-template-row-${index}`}
+                      className={`border-b border-black last:border-b-0 ${
+                        isRowEmpty(row) ? "h-[21px]" : ""
+                      }`.trim()}
+                    >
+                      <td className="border-r border-black px-1 text-center align-middle text-[15px]">{row.no}</td>
+                      <td className="whitespace-normal break-words border-r border-black px-1.5 align-middle text-[15px]">
+                        {row.namaBarang}
+                      </td>
+                      <td className="border-r border-black px-1.5 align-middle whitespace-pre-line text-[15px]">
+                        {row.spesifikasi}
+                      </td>
+                      <td className="border-r border-black px-1 text-center align-middle text-[15px]">{row.qty}</td>
+                      <td className="border-r border-black px-1 text-center align-middle text-[15px]">{row.unit}</td>
+                      <td className="border-r border-black px-1 text-center align-middle text-[15px]">{row.kodeDepartemen}</td>
+                      <td className="border-r border-black px-1 text-center align-middle text-[15px]">{row.ttdPenerima}</td>
+                      <td className="px-1 text-center align-middle text-[15px]">{row.note}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : null}
 
           {paperSize !== "full" || pageIndex === meiloonTemplatePages.length - 1 ? (
-            <footer className="shrink-0 pt-1">
+            <footer className={suratJalanFooterClassName}>
               <p className="text-[15px] leading-tight">{t("suratJalan.export.returnPolicy")}</p>
 
               <div className="mt-0.5 grid grid-cols-3 gap-8 text-center">
@@ -1548,58 +1537,56 @@ export function SuratJalanExportDocument({
           </>
         ) : null}
 
-        <div
-          className={`mt-1 border border-black [&_td]:py-[3px] [&_td]:leading-none [&_th]:py-[1px] [&_th]:leading-none ${
-            paperSize === "full" ? "min-h-0 flex-1" : ""
-          }`.trim()}
-        >
-          <table
-            className={`${paperSize === "full" ? "h-full" : ""} w-full border-collapse table-fixed`.trim()}
-          >
-            <colgroup>
-              <col style={{ width: defaultColumnWidths.no }} />
-              <col />
-              <col style={{ width: defaultColumnWidths.jumlah }} />
-            </colgroup>
-            <thead>
-              <tr className="border-b border-black">
-                <th className="border-r border-black px-1 text-center text-[15px]">
-                  {t("suratJalan.export.table.no")}
-                </th>
-                <th className="border-r border-black px-1 text-center text-[15px]">
-                  {t("suratJalan.export.table.namaBarang")}
-                </th>
-                <th className="px-1 text-center text-[15px]">
-                  {t("suratJalan.export.table.jumlah")}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {pageRows.map((row, index) => (
-                <tr
-                  key={`template-row-${index}`}
-                  className={`border-b border-black last:border-b-0 ${
-                    isRowEmpty(row) ? "h-[21px]" : ""
-                  }`.trim()}
-                >
-                  <td className="border-r border-black px-1 text-center align-middle text-[15px]">{row.no}</td>
-                  <td className="border-r border-black px-2 align-middle text-[15px]">
-                    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
-                      <span className="whitespace-normal break-words">
-                        {row.namaBarang}
-                      </span>
-                      <span className="shrink-0">{row.kodeDepartemen}</span>
-                    </div>
-                  </td>
-                  <td className="px-2 text-center align-middle text-[15px]">{row.jumlah}</td>
+        {paperSize !== "full" || pageRows.length > 0 ? (
+          <div className="mt-1 border border-black [&_td]:py-[3px] [&_td]:leading-none [&_th]:py-[1px] [&_th]:leading-none">
+            <table
+              className="w-full border-collapse table-fixed"
+            >
+              <colgroup>
+                <col style={{ width: defaultColumnWidths.no }} />
+                <col />
+                <col style={{ width: defaultColumnWidths.jumlah }} />
+              </colgroup>
+              <thead>
+                <tr className="border-b border-black">
+                  <th className="border-r border-black px-1 text-center text-[15px]">
+                    {t("suratJalan.export.table.no")}
+                  </th>
+                  <th className="border-r border-black px-1 text-center text-[15px]">
+                    {t("suratJalan.export.table.namaBarang")}
+                  </th>
+                  <th className="px-1 text-center text-[15px]">
+                    {t("suratJalan.export.table.jumlah")}
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {pageRows.map((row, index) => (
+                  <tr
+                    key={`template-row-${index}`}
+                    className={`border-b border-black last:border-b-0 ${
+                      isRowEmpty(row) ? "h-[21px]" : ""
+                    }`.trim()}
+                  >
+                    <td className="border-r border-black px-1 text-center align-middle text-[15px]">{row.no}</td>
+                    <td className="border-r border-black px-2 align-middle text-[15px]">
+                      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+                        <span className="whitespace-normal break-words">
+                          {row.namaBarang}
+                        </span>
+                        <span className="shrink-0">{row.kodeDepartemen}</span>
+                      </div>
+                    </td>
+                    <td className="px-2 text-center align-middle text-[15px]">{row.jumlah}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
 
         {paperSize !== "full" || pageIndex === templatePages.length - 1 ? (
-          <footer className="shrink-0 pt-1">
+          <footer className={suratJalanFooterClassName}>
             <p className="text-[15px] leading-tight">{t("suratJalan.export.returnPolicy")}</p>
 
             <div className="mt-0.5 grid grid-cols-3 gap-8 text-center">
