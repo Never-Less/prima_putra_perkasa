@@ -569,6 +569,10 @@ function resolveDefaultColumnWidths(paperSize: SuratJalanExportPaperSize) {
   return paperSize === "full" ? fullDefaultColumnWidths : halfDefaultColumnWidths;
 }
 
+function resolvePagePaddingClassName(paperSize: SuratJalanExportPaperSize) {
+  return paperSize === "full" ? "p-[1cm]" : "px-[5mm] py-[4mm]";
+}
+
 function buildTemplateRows(
   suratJalan: SuratJalanItem,
   minimumRows = 0
@@ -766,6 +770,7 @@ type SuratJalanMeasurePageProps = {
   kind: SuratJalanMeasurePageKind;
   pageHeight: string;
   pageWidth: string;
+  pagePaddingClassName: string;
   t: (key: string, params?: Record<string, string | number>) => string;
 };
 
@@ -774,11 +779,12 @@ function SuratJalanMeasurePage({
   kind,
   pageHeight,
   pageWidth,
+  pagePaddingClassName,
   t,
 }: SuratJalanMeasurePageProps) {
   return (
     <div
-      className="flex flex-col px-[5mm] py-[4mm] text-[15px] leading-[1.18] tracking-[0.05em]"
+      className={`flex flex-col ${pagePaddingClassName} text-[15px] leading-[1.18] tracking-[0.05em]`}
       style={{ height: pageHeight, width: pageWidth }}
     >
       {kind === "single" || kind === "first" ? (
@@ -802,6 +808,7 @@ type SuratJalanPaginationMeasureProps = {
   meiloonRows: MeiloonTemplateRow[];
   pageWidth: string;
   pageHeight: string;
+  pagePaddingClassName: string;
   meiloonColumnWidths: MeiloonColumnWidths;
   defaultColumnWidths: DefaultColumnWidths;
   t: (key: string, params?: Record<string, string | number>) => string;
@@ -813,6 +820,7 @@ function SuratJalanPaginationMeasure({
   meiloonRows,
   pageWidth,
   pageHeight,
+  pagePaddingClassName,
   meiloonColumnWidths,
   defaultColumnWidths,
   t,
@@ -960,7 +968,7 @@ function SuratJalanPaginationMeasure({
     >
       <div
         data-surat-jalan-measure-table="default"
-        className="px-[5mm] py-[4mm] text-[15px] leading-[1.18]"
+        className={`${pagePaddingClassName} text-[15px] leading-[1.18]`}
         style={{ width: pageWidth }}
       >
         <div className="border border-black [&_td]:py-[3px] [&_td]:leading-none [&_th]:py-[1px] [&_th]:leading-none">
@@ -1011,7 +1019,7 @@ function SuratJalanPaginationMeasure({
 
       <div
         data-surat-jalan-measure-table="meiloon"
-        className="px-[5mm] py-[4mm] text-[15px] leading-[1.18]"
+        className={`${pagePaddingClassName} text-[15px] leading-[1.18]`}
         style={{ width: pageWidth }}
       >
         <div className="border border-black [&_td]:py-[3px] [&_td]:leading-none [&_th]:py-[1px] [&_th]:leading-none">
@@ -1090,6 +1098,7 @@ function SuratJalanPaginationMeasure({
           kind={kind}
           pageHeight={pageHeight}
           pageWidth={pageWidth}
+          pagePaddingClassName={pagePaddingClassName}
           t={t}
         />
       ))}
@@ -1100,6 +1109,7 @@ function SuratJalanPaginationMeasure({
           kind={kind}
           pageHeight={pageHeight}
           pageWidth={pageWidth}
+          pagePaddingClassName={pagePaddingClassName}
           t={t}
         />
       ))}
@@ -1128,6 +1138,7 @@ export function SuratJalanExportDocument({
   const rowsPerPage = resolveRowsPerPage(paperSize);
   const pageHeight = resolvePageHeight(paperSize);
   const pageWidth = resolvePageWidth(paperSize);
+  const pagePaddingClassName = resolvePagePaddingClassName(paperSize);
   const meiloonColumnWidths = resolveMeiloonColumnWidths(paperSize);
   const defaultColumnWidths = resolveDefaultColumnWidths(paperSize);
   const printPageStyle: SuratJalanPrintPageStyle = {
@@ -1260,6 +1271,7 @@ export function SuratJalanExportDocument({
       meiloonRows={meiloonTemplateRows}
       pageWidth={pageWidth}
       pageHeight={pageHeight}
+      pagePaddingClassName={pagePaddingClassName}
       meiloonColumnWidths={meiloonColumnWidths}
       defaultColumnWidths={defaultColumnWidths}
       t={t}
@@ -1314,7 +1326,7 @@ export function SuratJalanExportDocument({
         style={printPageStyle}
       >
         <div
-          className="flex flex-col px-[5mm] py-[4mm] text-[15px] leading-[1.18] tracking-[0.05em]"
+          className={`flex flex-col ${pagePaddingClassName} text-[15px] leading-[1.18] tracking-[0.05em]`}
           style={{ height: pageHeight }}
         >
           {paperSize !== "full" || pageIndex === 0 ? (
@@ -1483,7 +1495,7 @@ export function SuratJalanExportDocument({
       style={printPageStyle}
     >
       <div
-        className="flex flex-col px-[5mm] py-[4mm] text-[15px] leading-[1.18] tracking-[0.05em]"
+        className={`flex flex-col ${pagePaddingClassName} text-[15px] leading-[1.18] tracking-[0.05em]`}
         style={{ height: pageHeight }}
       >
         {paperSize !== "full" || pageIndex === 0 ? (

@@ -684,13 +684,13 @@ function MeiloonInvoiceTable({
       >
         <colgroup>
           <col style={{ width: "4.5%" }} />
-          <col style={{ width: "19%" }} />
+          <col style={{ width: "18%" }} />
           <col style={{ width: "22%" }} />
           <col style={{ width: "7%" }} />
           <col style={{ width: "5%" }} />
           <col style={{ width: "14%" }} />
           <col style={{ width: "15%" }} />
-          <col style={{ width: "13.5%" }} />
+          <col style={{ width: "14.5%" }} />
         </colgroup>
         <thead>
           <tr className="border-b-2 border-black">
@@ -972,7 +972,8 @@ type InvoiceMeasurePageProps = CommonTemplateProps & {
 
 function InvoiceMeasurePage({ variant, kind, t }: InvoiceMeasurePageProps) {
   const isMeiloon = variant === "meiloon";
-  const pagePadding = isMeiloon ? "px-[5mm] py-[7mm]" : "px-[4mm] py-[6mm]";
+  const pagePadding = isMeiloon ? "px-[5mm] py-[1cm]" : "px-[4mm] py-[1cm]";
+  const footerPadding = isMeiloon ? "px-[5mm] pb-[1cm]" : "px-[4mm] pb-[1cm]";
   const slotKey = `${variant}-${kind}`;
 
   if (kind === "single") {
@@ -985,7 +986,7 @@ function InvoiceMeasurePage({ variant, kind, t }: InvoiceMeasurePageProps) {
             className="mt-1 min-h-0 flex-1"
           />
         </div>
-        <div className={`shrink-0 ${isMeiloon ? "px-[5mm]" : "px-[4mm]"} pb-[12mm] text-[13px] leading-[1.18]`}>
+        <div className={`shrink-0 ${footerPadding} text-[13px] leading-[1.18]`}>
           <InvoiceMeasureFooter variant={variant} t={t} />
         </div>
       </div>
@@ -1162,13 +1163,13 @@ function InvoicePaginationMeasure({
     >
       <div
         data-invoice-measure-table="default"
-        className="w-[8.5in] px-[4mm] py-[6mm] text-[13px] leading-[1.18]"
+        className="w-[8.5in] px-[4mm] py-[1cm] text-[13px] leading-[1.18]"
       >
         <DefaultInvoiceTable rows={defaultRows} t={t} />
       </div>
       <div
         data-invoice-measure-table="meiloon"
-        className="w-[8.5in] px-[5mm] py-[7mm] text-[13px] leading-[1.18]"
+        className="w-[8.5in] px-[5mm] py-[1cm] text-[13px] leading-[1.18]"
       >
         <MeiloonInvoiceTable rows={meiloonRows} t={t} />
       </div>
@@ -1577,7 +1578,7 @@ export default function InvoiceExportPage() {
             style={{ fontFamily: invoiceExportFontFamily }}
           >
             <div
-              className={`invoice-print-page px-[5mm] py-[7mm] text-[13px] leading-[1.18] ${
+              className={`invoice-print-page px-[5mm] py-[1cm] text-[13px] leading-[1.18] ${
                 meiloonPaginatedRows.isSinglePage
                   ? "flex min-h-0 flex-1 flex-col"
                   : "flex h-[11in] min-h-[11in] flex-col break-after-page bg-white shadow-xl print:break-after-page print:shadow-none"
@@ -1632,7 +1633,7 @@ export default function InvoiceExportPage() {
             </div>
 
             {meiloonPaginatedRows.isSinglePage ? (
-              <div className="shrink-0 px-[5mm] pb-[12mm] text-[13px] leading-[1.18]">
+              <div className="shrink-0 px-[5mm] pb-[1cm] text-[13px] leading-[1.18]">
                 <div className="mt-2 grid grid-cols-[0.9fr_0.8fr] gap-3">
                   <div className="space-y-2">
                     <div className="border-2 border-black px-2 py-1">
@@ -1704,7 +1705,7 @@ export default function InvoiceExportPage() {
                 {meiloonPaginatedRows.middlePages.map((pageRows, pageIndex) => (
                   <div
                     key={`meiloon-middle-page-${pageIndex}`}
-                    className="invoice-print-page flex h-[11in] min-h-[11in] flex-col break-after-page bg-white px-[5mm] py-[7mm] text-[13px] leading-[1.18] shadow-xl print:break-after-page print:shadow-none"
+                    className="invoice-print-page flex h-[11in] min-h-[11in] flex-col break-after-page bg-white px-[5mm] py-[1cm] text-[13px] leading-[1.18] shadow-xl print:break-after-page print:shadow-none"
                   >
                     <div className="min-h-0 flex-1">
                       <MeiloonInvoiceTable
@@ -1717,7 +1718,7 @@ export default function InvoiceExportPage() {
                   </div>
                 ))}
 
-                <div className="invoice-print-page flex h-[11in] min-h-[11in] flex-col bg-white px-[5mm] py-[7mm] text-[13px] leading-[1.18] shadow-xl print:shadow-none">
+                <div className="invoice-print-page flex h-[11in] min-h-[11in] flex-col bg-white px-[5mm] py-[1cm] text-[13px] leading-[1.18] shadow-xl print:shadow-none">
                   {meiloonPaginatedRows.lastPageRows.length > 0 ? (
                     <MeiloonInvoiceTable
                       rows={meiloonPaginatedRows.lastPageRows}
@@ -1804,7 +1805,7 @@ export default function InvoiceExportPage() {
             style={{ fontFamily: invoiceExportFontFamily }}
           >
             <div
-              className={`invoice-print-page px-[4mm] py-[6mm] text-[13px] leading-[1.18] ${
+              className={`invoice-print-page px-[4mm] py-[1cm] text-[13px] leading-[1.18] ${
                 defaultPaginatedRows.isSinglePage
                   ? "flex min-h-0 flex-1 flex-col"
                   : "flex h-[11in] min-h-[11in] flex-col break-after-page bg-white shadow-xl print:break-after-page print:shadow-none"
@@ -1871,7 +1872,7 @@ export default function InvoiceExportPage() {
             </div>
 
             {defaultPaginatedRows.isSinglePage ? (
-              <div className="shrink-0 px-[4mm] pb-[12mm] text-[13px] leading-[1.18]">
+              <div className="shrink-0 px-[4mm] pb-[1cm] text-[13px] leading-[1.18]">
                 <div className="mt-2 grid grid-cols-[0.86fr_0.68fr] gap-3">
                   <div className="space-y-2">
                     <div className="border border-black px-2 py-1">
@@ -1935,7 +1936,7 @@ export default function InvoiceExportPage() {
                 {defaultPaginatedRows.middlePages.map((pageRows, pageIndex) => (
                   <div
                     key={`default-middle-page-${pageIndex}`}
-                    className="invoice-print-page flex h-[11in] min-h-[11in] flex-col break-after-page bg-white px-[4mm] py-[6mm] text-[13px] leading-[1.18] shadow-xl print:break-after-page print:shadow-none"
+                    className="invoice-print-page flex h-[11in] min-h-[11in] flex-col break-after-page bg-white px-[4mm] py-[1cm] text-[13px] leading-[1.18] shadow-xl print:break-after-page print:shadow-none"
                   >
                     <div className="min-h-0 flex-1">
                       <DefaultInvoiceTable
@@ -1948,7 +1949,7 @@ export default function InvoiceExportPage() {
                   </div>
                 ))}
 
-                <div className="invoice-print-page flex h-[11in] min-h-[11in] flex-col bg-white px-[4mm] py-[6mm] text-[13px] leading-[1.18] shadow-xl print:shadow-none">
+                <div className="invoice-print-page flex h-[11in] min-h-[11in] flex-col bg-white px-[4mm] py-[1cm] text-[13px] leading-[1.18] shadow-xl print:shadow-none">
                   {defaultPaginatedRows.lastPageRows.length > 0 ? (
                     <DefaultInvoiceTable
                       rows={defaultPaginatedRows.lastPageRows}
@@ -2022,4 +2023,3 @@ export default function InvoiceExportPage() {
     </>
   );
 }
-
