@@ -13,7 +13,9 @@ import {
 export default function HomePage() {
   const { t } = useI18n();
   const isAdminAccess = useIsAdminAccess();
-  const [readyInvoicePoGroups, setReadyInvoicePoGroups] = useState<ReadyInvoicePoGroup[]>([]);
+  const [readyInvoicePoGroups, setReadyInvoicePoGroups] = useState<
+    ReadyInvoicePoGroup[]
+  >([]);
 
   useEffect(() => {
     let isCancelled = false;
@@ -49,7 +51,7 @@ export default function HomePage() {
   const readyInvoiceSuratJalanCount = useMemo(() => {
     return readyInvoicePoGroups.reduce(
       (total, group) => total + group.suratJalanRows.length,
-      0
+      0,
     );
   }, [readyInvoicePoGroups]);
 
@@ -128,7 +130,9 @@ export default function HomePage() {
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
               {t("brand.name")}
             </p>
-            <h1 className="mt-2 text-2xl font-semibold text-slate-900 dark:text-slate-100 sm:text-3xl">{t("home.title")}</h1>
+            <h1 className="mt-2 text-2xl font-semibold text-slate-900 dark:text-slate-100 sm:text-3xl">
+              {t("home.title")}
+            </h1>
             <p className="mt-2 text-sm text-slate-600 dark:text-slate-300 sm:text-base">
               {t("home.description")}
             </p>
@@ -144,9 +148,15 @@ export default function HomePage() {
             href={route.href}
             className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-slate-800 dark:bg-slate-950 sm:p-5"
           >
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 sm:text-xl">{route.title}</h2>
-            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{route.description}</p>
-            <p className="mt-4 text-sm font-medium text-slate-800 dark:text-sky-300">{route.cta}</p>
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 sm:text-xl">
+              {route.title}
+            </h2>
+            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+              {route.description}
+            </p>
+            <p className="mt-4 text-sm font-medium text-slate-800 dark:text-sky-300">
+              {route.cta}
+            </p>
           </Link>
         ))}
       </section>
@@ -156,7 +166,9 @@ export default function HomePage() {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-sm font-semibold text-amber-900 dark:text-amber-100">
-                {t("home.invoiceReminder.title", { count: readyInvoicePoGroups.length })}
+                {t("home.invoiceReminder.title", {
+                  count: readyInvoicePoGroups.length,
+                })}
               </p>
               <p className="mt-1 text-sm text-amber-800 dark:text-amber-200">
                 {t("home.invoiceReminder.description", {
