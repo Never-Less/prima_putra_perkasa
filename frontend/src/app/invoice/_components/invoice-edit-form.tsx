@@ -29,7 +29,9 @@ import {
 } from "../_lib/invoice";
 import { useI18n } from "../../_i18n/provider";
 import { useTheme } from "../../_theme/provider";
+import { defaultPaymentTerm, normalizePaymentTerm, type PaymentTerm, type PaymentTermType } from "../../_lib/payment-term";
 import { InvoiceBarangSpreadsheet } from "./invoice-barang-spreadsheet";
+import { DocumentAuditLog } from "../../_components/document-audit-log";
 
 type SelectOption = {
   value: string;
@@ -67,7 +69,7 @@ function filterSelectOptionsByCustomer(options: SelectOption[], idCustomer: stri
 type InvoiceEditFormProps = {
   item?: InvoiceItem;
   initialForm?: InvoiceFormState;
-  customerOptions?: Array<{ id: string; nama: string }>;
+  customerOptions?: Array<{ id: string; nama: string; defaultPaymentTerm: PaymentTerm }>;
   suratJalanOptions?: InvoiceSuratJalanOption[];
   isSaving?: boolean;
   isDeleting?: boolean;
@@ -88,6 +90,7 @@ function createEmptyInvoiceFormState(): InvoiceFormState {
     isPpn: true,
     isPaid: false,
     tanggalBayar: "",
+    paymentTerm: { ...defaultPaymentTerm },
     ppnRate: "11",
     barangRows: ensureTrailingEmptyInvoiceBarangRow([createEmptyInvoiceBarangRow()]),
   };
@@ -376,6 +379,10 @@ export function InvoiceEditForm({
   }, [selectedNoPoCustomerIds, selectedNoSuratJalanCustomerIds]);
   const autoSelectedIdCustomer = selectedCustomerIds.length === 1 ? selectedCustomerIds[0] : "";
   const effectiveIdCustomer = autoSelectedIdCustomer || form.idCustomer;
+  const resolveCustomerPaymentTerm = (idCustomer: string) =>
+    normalizePaymentTerm(
+      customerOptions.find((customer) => customer.id === idCustomer)?.defaultPaymentTerm
+    );
   const normalizedCustomerOptions = useMemo(() => {
     const customerMap = new Map<string, string>();
 
@@ -497,6 +504,7 @@ export function InvoiceEditForm({
         noPoList: nextNoPoList,
         noSuratJalanText: invoiceNoSuratJalanListToText(nextNoSuratJalan),
         idCustomer: nextNoPoList.length > 0 ? nextIdCustomer : "",
+        paymentTerm: nextIdCustomer ? resolveCustomerPaymentTerm(nextIdCustomer) : prev.paymentTerm,
         barangRows: buildInvoiceBarangRowsFromSuratJalanSelection(
           normalizedSuratJalanOptions,
           nextNoPoList,
@@ -564,6 +572,7 @@ export function InvoiceEditForm({
         noPoList: nextNoPoList,
         noSuratJalanText: invoiceNoSuratJalanListToText(nextValues),
         idCustomer: nextNoPoList.length > 0 ? nextIdCustomer : "",
+        paymentTerm: nextIdCustomer ? resolveCustomerPaymentTerm(nextIdCustomer) : prev.paymentTerm,
         barangRows: buildInvoiceBarangRowsFromSuratJalanSelection(
           normalizedSuratJalanOptions,
           nextNoPoList,
@@ -575,7 +584,7 @@ export function InvoiceEditForm({
   }
 
   return (
-    <section className="rounded-2xl border border-sky-200 bg-sky-50/40 p-5 shadow-sm dark:border-sky-900/70 dark:bg-slate-950/85">
+    <section className="ppp-form-view rounded-2xl border border-sky-200 bg-sky-50/40 p-5 shadow-sm dark:border-sky-900/70 dark:bg-slate-950/85">
       <div className="mb-3">
         <h2 className="text-lg font-semibold text-sky-900 dark:text-sky-100">{t("invoice.form.title")}</h2>
         <p className="text-sm text-sky-800 dark:text-sky-200">
@@ -657,7 +666,14 @@ export function InvoiceEditForm({
               ) : null}
               <select
                 value={effectiveIdCustomer}
-                onChange={(event) => setForm((prev) => ({ ...prev, idCustomer: event.target.value }))}
+                onChange={(event) => {
+                  const idCustomer = event.target.value;
+                  setForm((prev) => ({
+                    ...prev,
+                    idCustomer,
+                    paymentTerm: idCustomer ? resolveCustomerPaymentTerm(idCustomer) : prev.paymentTerm,
+                  }));
+                }}
                 disabled={isSaving || isDeleting || isCustomerAutoSelected}
                 className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-900"
               >
@@ -669,6 +685,40 @@ export function InvoiceEditForm({
                 ))}
               </select>
             </label>
+
+            <div className="rounded-lg border border-sky-100 p-3 dark:border-slate-700 sm:col-span-2">
+              <p className="text-sm font-medium text-slate-800 dark:text-slate-100">{t("field.paymentTerm")}</p>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("invoice.form.paymentTermHint")}</p>
+              <div className="mt-2 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <label className="text-sm text-slate-700 dark:text-slate-200">
+                  {t("field.paymentTermType")}
+                  <select value={form.paymentTerm.type} onChange={(event) => {
+                    const type = event.target.value as PaymentTermType;
+                    setForm((prev) => ({ ...prev, paymentTerm: type === "dpNet" ? { type, netDays: 30, downPaymentPercent: 30, remainingPaymentPercent: 70 } : type === "net" ? { type, netDays: 30, downPaymentPercent: 0, remainingPaymentPercent: 100 } : { type, netDays: 0, downPaymentPercent: 0, remainingPaymentPercent: 100 } }));
+                  }} className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800">
+                    <option value="net">Net</option>
+                    <option value="cashBeforeDelivery">{t("paymentTerm.cashBeforeDelivery")}</option>
+                    <option value="cashOnDelivery">{t("paymentTerm.cashOnDelivery")}</option>
+                    <option value="dpNet">{t("paymentTerm.dpNet")}</option>
+                  </select>
+                </label>
+                {(form.paymentTerm.type === "net" || form.paymentTerm.type === "dpNet") ? (
+                  <label className="text-sm text-slate-700 dark:text-slate-200">{t("field.netDays")}
+                    <input type="number" min={0} max={3650} value={form.paymentTerm.netDays} onChange={(event) => setForm((prev) => ({ ...prev, paymentTerm: { ...prev.paymentTerm, netDays: Number(event.target.value) } }))} className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800" />
+                  </label>
+                ) : null}
+                {form.paymentTerm.type === "dpNet" ? (
+                  <>
+                    <label className="text-sm text-slate-700 dark:text-slate-200">{t("field.downPaymentPercent")}
+                      <input type="number" min={1} max={99} value={form.paymentTerm.downPaymentPercent} onChange={(event) => { const dp = Number(event.target.value); setForm((prev) => ({ ...prev, paymentTerm: { ...prev.paymentTerm, downPaymentPercent: dp, remainingPaymentPercent: 100 - dp } })); }} className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800" />
+                    </label>
+                    <label className="text-sm text-slate-700 dark:text-slate-200">{t("field.remainingPaymentPercent")}
+                      <input readOnly value={form.paymentTerm.remainingPaymentPercent} className="mt-1 w-full rounded-lg border border-sky-100 bg-slate-100 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900" />
+                    </label>
+                  </>
+                ) : null}
+              </div>
+            </div>
 
             <label className="text-sm text-slate-700 dark:text-slate-200">
               {t("field.isPpn")}
@@ -831,6 +881,10 @@ export function InvoiceEditForm({
               {form.isPaid ? paidLabel : unpaidLabel}
             </p>
             <p>
+              <span className="text-slate-500 dark:text-slate-400">{t("field.paymentTerm")}:</span>{" "}
+              {form.paymentTerm.type === "net" ? `Net ${form.paymentTerm.netDays}` : form.paymentTerm.type === "dpNet" ? `DP ${form.paymentTerm.downPaymentPercent}%, Net ${form.paymentTerm.remainingPaymentPercent}% / ${form.paymentTerm.netDays} ${t("common.days")}` : t(`paymentTerm.${form.paymentTerm.type}`)}
+            </p>
+            <p>
               <span className="text-slate-500 dark:text-slate-400">{t("field.tanggalBayar")}:</span>{" "}
               {formatTanggal(form.isPaid ? form.tanggalBayar || null : null, locale)}
             </p>
@@ -870,6 +924,7 @@ export function InvoiceEditForm({
           </div>
         </div>
       </div>
+      {item ? <DocumentAuditLog entityType="invoice" entityId={item.id} /> : null}
     </section>
   );
 }

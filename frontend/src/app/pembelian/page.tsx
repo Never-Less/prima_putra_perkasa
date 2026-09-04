@@ -5,13 +5,16 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ApiLoadingState } from "../_components/api-loading-state";
 import { AppToast } from "../_components/app-toast";
 import { ConfirmationModal } from "../_components/confirmation-modal";
+import { ListViewHeader } from "../_components/list-view-header";
 import { requestUnsavedChangesConfirmation } from "../_hooks/use-unsaved-changes-warning";
+import { usePersistentListUrl } from "../_hooks/use-persistent-list-url";
 import { ApiRequestError } from "../_lib/api-client";
 import {
   buildFormRouteWithReturnPagination,
   buildListRouteWithPagination,
   normalizePaginationQueryState,
   normalizeReturnPaginationQueryState,
+  normalizeStringFilterQueryState,
   type ServerPaginationMeta,
 } from "../_lib/pagination";
 import { PembelianEditForm } from "./_components/pembelian-edit-form";
@@ -52,6 +55,7 @@ const defaultPembelianPaginationQuery = {
   page: 1,
   limit: 10,
 };
+const defaultPembelianSort = "updatedDesc";
 
 function normalizeDuplicateKey(value: string) {
   return String(value || "").trim().toLowerCase();
@@ -84,12 +88,15 @@ export function PembelianPageContent({ mode = "list", itemId = "" }: PembelianPa
       ),
     [searchParams]
   );
+  const initialFilterQuery = useMemo(() => normalizeStringFilterQueryState(searchParams, defaultPembelianFilter), [searchParams]);
+  const initialSortValue = String(searchParams.get("sort") || defaultPembelianSort);
+  const returnListState = useMemo(() => ({ ...initialFilterQuery, sort: initialSortValue }), [initialFilterQuery, initialSortValue]);
   const returnListPath = useMemo(
-    () => buildListRouteWithPagination("/pembelian", returnPaginationQuery),
-    [returnPaginationQuery]
+    () => buildListRouteWithPagination("/pembelian", returnPaginationQuery, returnListState),
+    [returnListState, returnPaginationQuery]
   );
   const [rows, setRows] = useState<PembelianItem[]>([]);
-  const [filter, setFilter] = useState<PembelianFilter>(defaultPembelianFilter);
+  const [filter, setFilter] = useState<PembelianFilter>(initialFilterQuery);
   const [paginationQuery, setPaginationQuery] = useState(() =>
     isFormMode ? defaultPembelianPaginationQuery : initialPaginationQuery
   );
@@ -102,6 +109,7 @@ export function PembelianPageContent({ mode = "list", itemId = "" }: PembelianPa
   const [filteredCount, setFilteredCount] = useState(0);
   const [invoiceOptions, setInvoiceOptions] = useState<PembelianInvoiceOption[]>([]);
   const [supplierOptions, setSupplierOptions] = useState<SupplierItem[]>([]);
+  const [sortValue, setSortValue] = useState(initialSortValue);
   const [prefillOnLoad] = useState(() => consumePembelianPrefill());
   const [selectedId, setSelectedId] = useState(itemId);
   const [isLoading, setIsLoading] = useState(true);
@@ -132,6 +140,8 @@ export function PembelianPageContent({ mode = "list", itemId = "" }: PembelianPa
       }
     | null
   >(null);
+
+  usePersistentListUrl({ enabled: !isFormMode, basePath: "/pembelian", defaultFilter: defaultPembelianFilter, defaultPagination: defaultPembelianPaginationQuery, defaultSort: defaultPembelianSort, filter, pagination: paginationQuery, sort: sortValue, setFilter, setPagination: setPaginationQuery, setSort: setSortValue });
 
   const showToast = useCallback((message: string, variant: ToastState["variant"]) => {
     setToast({
@@ -328,10 +338,10 @@ export function PembelianPageContent({ mode = "list", itemId = "" }: PembelianPa
     (id?: string) => {
       const normalizedId = String(id || "").trim();
       router.push(
-        buildFormRouteWithReturnPagination("/pembelian/form", normalizedId, paginationQuery)
+        buildFormRouteWithReturnPagination("/pembelian/form", normalizedId, paginationQuery, { ...filter, sort: sortValue })
       );
     },
-    [paginationQuery, router]
+    [filter, paginationQuery, router, sortValue]
   );
 
   const invoiceLabelMap = useMemo(() => {
@@ -413,7 +423,8 @@ export function PembelianPageContent({ mode = "list", itemId = "" }: PembelianPa
               buildFormRouteWithReturnPagination(
                 "/pembelian/form",
                 updatedPembelian?.id || selectedItem.id,
-                returnPaginationQuery
+                returnPaginationQuery,
+                returnListState
               )
             );
           }
@@ -434,7 +445,8 @@ export function PembelianPageContent({ mode = "list", itemId = "" }: PembelianPa
             buildFormRouteWithReturnPagination(
               "/pembelian/form",
               createdPembelian.id,
-              returnPaginationQuery
+              returnPaginationQuery,
+              returnListState
             )
           );
         }
@@ -456,7 +468,7 @@ export function PembelianPageContent({ mode = "list", itemId = "" }: PembelianPa
         setIsSaving(false);
       }
     },
-    [isFormMode, loadPembelianRows, returnPaginationQuery, router, showToast, t]
+    [isFormMode, loadPembelianRows, returnListState, returnPaginationQuery, router, showToast, t]
   );
 
   const executeDeletePembelian = useCallback(
@@ -607,19 +619,54 @@ export function PembelianPageContent({ mode = "list", itemId = "" }: PembelianPa
     ? !isLoading && !errorMessage
     : !isLoading && (rows.length > 0 || !errorMessage);
 
+  const sortedRows = useMemo(() => {
+    return [...rows].sort((left, right) => {
+      if (sortValue === "updatedAsc") {
+        return left.updatedAt.localeCompare(right.updatedAt);
+      }
+
+      if (sortValue === "dateDesc") {
+        return right.tanggalNota.localeCompare(left.tanggalNota);
+      }
+
+      if (sortValue === "dateAsc") {
+        return left.tanggalNota.localeCompare(right.tanggalNota);
+      }
+
+      if (sortValue === "nameAsc") {
+        return left.namaSupplier.localeCompare(right.namaSupplier);
+      }
+
+      if (sortValue === "nameDesc") {
+        return right.namaSupplier.localeCompare(left.namaSupplier);
+      }
+
+      if (sortValue === "amountDesc") {
+        return right.nilaiNota - left.nilaiNota;
+      }
+
+      if (sortValue === "amountAsc") {
+        return left.nilaiNota - right.nilaiNota;
+      }
+
+      return right.updatedAt.localeCompare(left.updatedAt);
+    });
+  }, [rows, sortValue]);
+
   return (
     <>
-      <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-        <section className="rounded-2xl border border-sky-100 bg-gradient-to-r from-sky-50 to-white p-4 shadow-sm dark:border-slate-800 dark:from-slate-900 dark:to-slate-950 sm:p-5">
-          <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100 sm:text-2xl">{t("nav.pembelian")}</h1>
-          <p className="mt-1 max-w-3xl text-sm text-slate-600 dark:text-slate-300">{t("pembelian.page.description")}</p>
-        </section>
+      <main className="erp-page">
+        <ListViewHeader
+          title={t("nav.pembelian")}
+          addLabel={t("common.addPageData", { page: t("nav.pembelian") })}
+          onAdd={isFormMode ? undefined : () => navigateToForm()}
+        />
 
-        <div className="mt-5 space-y-5">
+        <div className="mt-3 space-y-3">
           {isLoading ? <ApiLoadingState /> : null}
 
           {!isLoading && errorMessage ? (
-            <section className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/50 dark:text-red-200">
+            <section className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/50 dark:text-red-200">
               <p>{errorMessage}</p>
               <button
                 type="button"
@@ -669,7 +716,8 @@ export function PembelianPageContent({ mode = "list", itemId = "" }: PembelianPa
                         buildFormRouteWithReturnPagination(
                           "/pembelian/form",
                           "",
-                          returnPaginationQuery
+                          returnPaginationQuery,
+                          returnListState
                         )
                       );
                     }}
@@ -678,21 +726,24 @@ export function PembelianPageContent({ mode = "list", itemId = "" }: PembelianPa
                 </>
               ) : (
                 <>
-                  <div className="flex justify-end">
-                    <button
-                      type="button"
-                      onClick={() => navigateToForm()}
-                      className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600 dark:bg-sky-500 dark:text-slate-950 dark:hover:bg-sky-400"
-                    >
-                      {t("common.newData")}
-                    </button>
-                  </div>
                   <PembelianTableFilter
-                    rows={rows}
+                    rows={sortedRows}
                     filter={filter}
                     filteredCount={filteredCount}
                     pagination={pagination}
                     selectedId=""
+                    sortValue={sortValue}
+                    onSortChange={setSortValue}
+                    sortOptions={[
+                      { value: "updatedDesc", label: t("common.sort.updatedDesc") },
+                      { value: "updatedAsc", label: t("common.sort.updatedAsc") },
+                      { value: "dateDesc", label: t("common.sort.dateDesc") },
+                      { value: "dateAsc", label: t("common.sort.dateAsc") },
+                      { value: "nameAsc", label: t("common.sort.nameAsc") },
+                      { value: "nameDesc", label: t("common.sort.nameDesc") },
+                      { value: "amountDesc", label: t("common.sort.amountDesc") },
+                      { value: "amountAsc", label: t("common.sort.amountAsc") },
+                    ]}
                     resolveInvoiceLabel={resolveInvoiceLabel}
                     onFilterChange={handleFilterChange}
                     onResetFilter={handleResetFilter}

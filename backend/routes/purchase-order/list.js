@@ -3,7 +3,12 @@ const express = require("express");
 const { Customer } = require("../../models/Customer");
 const { Invoice } = require("../../models/Invoice");
 const { PurchaseOrder } = require("../../models/PurchaseOrder");
+const { SuratJalan } = require("../../models/SuratJalan");
 const { sanitizePurchaseOrder } = require("./sanitize-purchase-order");
+const {
+  buildSalesOrderWorkflow,
+  indexSalesOrderRelations,
+} = require("../../utils/sales-order-workflow");
 const {
   buildPaginationMeta,
   buildSearchRegex,
@@ -17,7 +22,9 @@ router.get("/", async (req, res) => {
     const query = {};
     const noPoRegex = buildSearchRegex(req.query.noPo);
     const namaCustomerRegex = buildSearchRegex(req.query.namaCustomer);
+    const namaBarangRegex = buildSearchRegex(req.query.namaBarang);
     const noInvoiceRegex = buildSearchRegex(req.query.noInvoice);
+    const workflowStatus = String(req.query.workflowStatus || "").trim();
     const hasPagination =
       req.query.page !== undefined || req.query.limit !== undefined;
     const requestedPage = parsePositiveInt(req.query.page, 1);
@@ -25,6 +32,66 @@ router.get("/", async (req, res) => {
 
     if (noPoRegex) {
       query.noPo = noPoRegex;
+    }
+
+    if (workflowStatus === "withoutSuratJalan") {
+      const noPoWithSuratJalan = await SuratJalan.distinct("noPo", {
+        noPo: { $exists: true, $ne: "" },
+      });
+      const noPoCondition = { $nin: noPoWithSuratJalan };
+
+      if (query.noPo) {
+        query.$and = [{ noPo: query.noPo }, { noPo: noPoCondition }];
+        delete query.noPo;
+      } else {
+        query.noPo = noPoCondition;
+      }
+    } else if (workflowStatus === "readyForInvoice") {
+      const [invoicedSuratJalanNumbers, nonPartialSuratJalan] = await Promise.all([
+        Invoice.distinct("noSuratJalan"),
+        SuratJalan.find(
+          { tipe: "non partial" },
+          "noPo noSuratJalan"
+        ).lean(),
+      ]);
+      const invoicedNumberSet = new Set(
+        invoicedSuratJalanNumbers
+          .map((value) => String(value || "").trim().toLowerCase())
+          .filter(Boolean)
+      );
+      const readyNoPo = Array.from(
+        new Set(
+          nonPartialSuratJalan
+            .filter(
+              (item) =>
+                !invoicedNumberSet.has(
+                  String(item?.noSuratJalan || "").trim().toLowerCase()
+                )
+            )
+            .map((item) => String(item?.noPo || "").trim())
+            .filter(Boolean)
+        )
+      );
+      const noPoCondition = { $in: readyNoPo };
+
+      if (query.noPo) {
+        query.$and = [{ noPo: query.noPo }, { noPo: noPoCondition }];
+        delete query.noPo;
+      } else {
+        query.noPo = noPoCondition;
+      }
+    }
+
+    if (namaBarangRegex) {
+      query.$and = [
+        ...(query.$and || []),
+        {
+          $or: [
+            { "barang.namaBarang": namaBarangRegex },
+            { "barang.spesifikasi": namaBarangRegex },
+          ],
+        },
+      ];
     }
 
     if (req.query.tanggalPoDari || req.query.tanggalPoSampai) {
@@ -163,10 +230,31 @@ router.get("/", async (req, res) => {
         .limit(pagination.limit);
     }
 
-    const purchaseOrders = await purchaseOrderQuery;
+    const purchaseOrders = await purchaseOrderQuery.lean();
+    const noPoList = purchaseOrders.map((row) => row.noPo).filter(Boolean);
+    const [suratJalanList, invoiceList] = noPoList.length > 0
+      ? await Promise.all([
+          SuratJalan.find({ noPo: { $in: noPoList } }).lean(),
+          Invoice.find({
+            $or: [
+              { noPoList: { $in: noPoList } },
+              { noPo: { $in: noPoList } },
+            ],
+          }).lean(),
+        ])
+      : [[], []];
+    const relations = indexSalesOrderRelations(suratJalanList, invoiceList);
 
     return res.json({
-      purchaseOrders: purchaseOrders.map(sanitizePurchaseOrder),
+      purchaseOrders: purchaseOrders.map((purchaseOrder) => {
+        const key = String(purchaseOrder.noPo || "").trim().toLowerCase();
+        const workflow = buildSalesOrderWorkflow(
+          purchaseOrder,
+          relations.suratJalanByNoPo.get(key) || [],
+          relations.invoiceByNoPo.get(key) || []
+        );
+        return sanitizePurchaseOrder(purchaseOrder, workflow);
+      }),
       pagination,
       summary: {
         totalRows,

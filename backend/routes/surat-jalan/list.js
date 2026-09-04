@@ -1,8 +1,10 @@
 const express = require("express");
 
 const { Customer } = require("../../models/Customer");
+const { PurchaseOrder } = require("../../models/PurchaseOrder");
 const { SuratJalan } = require("../../models/SuratJalan");
 const { sanitizeSuratJalan } = require("./sanitize-surat-jalan");
+const { buildSalesOrderWorkflow } = require("../../utils/sales-order-workflow");
 const {
   buildPaginationMeta,
   buildSearchRegex,
@@ -14,6 +16,7 @@ const router = express.Router();
 router.get("/", async (req, res) => {
   try {
     const query = {};
+    const andConditions = [];
     const noSuratJalanRegex = buildSearchRegex(req.query.noSuratJalan);
     const noPoRegex = buildSearchRegex(req.query.noPo);
     const namaBarangRegex = buildSearchRegex(req.query.namaBarang);
@@ -34,14 +37,25 @@ router.get("/", async (req, res) => {
     }
 
     if (namaBarangRegex) {
-      query["barang.nama"] = namaBarangRegex;
+      andConditions.push({
+        $or: [
+          { "barang.nama": namaBarangRegex },
+          { "barang.spesifikasi": namaBarangRegex },
+        ],
+      });
     }
 
     if (kodeDepartemenRegex) {
-      query.$or = [
-        { "barang.kodeDepartemen": kodeDepartemenRegex },
-        { kodeDepartemen: kodeDepartemenRegex },
-      ];
+      andConditions.push({
+        $or: [
+          { "barang.kodeDepartemen": kodeDepartemenRegex },
+          { kodeDepartemen: kodeDepartemenRegex },
+        ],
+      });
+    }
+
+    if (andConditions.length > 0) {
+      query.$and = andConditions;
     }
 
     if (kendaraanRegex) {
@@ -101,8 +115,10 @@ router.get("/", async (req, res) => {
       };
     }
 
-    const totalRows = await SuratJalan.countDocuments(query);
-    const noPoGroups = await SuratJalan.distinct("noPo", query);
+    const [totalRows, noPoGroups] = await Promise.all([
+      SuratJalan.countDocuments(query),
+      SuratJalan.distinct("noPo", query),
+    ]);
     const totalGroups = noPoGroups.length;
     const pagination = buildPaginationMeta(
       totalRows,
@@ -121,10 +137,36 @@ router.get("/", async (req, res) => {
         .limit(pagination.limit);
     }
 
-    const suratJalanList = totalRows > 0 ? await suratJalanQuery : [];
+    const suratJalanList = totalRows > 0 ? await suratJalanQuery.lean() : [];
+    const noPoList = Array.from(new Set(suratJalanList.map((row) => row.noPo).filter(Boolean)));
+    const [purchaseOrderList, allLinkedSuratJalan] = noPoList.length > 0
+      ? await Promise.all([
+          PurchaseOrder.find({ noPo: { $in: noPoList } }).lean(),
+          SuratJalan.find({ noPo: { $in: noPoList } }).lean(),
+        ])
+      : [[], []];
+    const purchaseOrderByNoPo = new Map(
+      purchaseOrderList.map((row) => [String(row.noPo || "").trim().toLowerCase(), row])
+    );
+    const suratJalanByNoPo = new Map();
+    allLinkedSuratJalan.forEach((row) => {
+      const key = String(row.noPo || "").trim().toLowerCase();
+      suratJalanByNoPo.set(key, [...(suratJalanByNoPo.get(key) || []), row]);
+    });
 
     return res.json({
-      suratJalan: suratJalanList.map(sanitizeSuratJalan),
+      suratJalan: suratJalanList.map((suratJalan) => {
+        const key = String(suratJalan.noPo || "").trim().toLowerCase();
+        const purchaseOrder = purchaseOrderByNoPo.get(key);
+        const workflow = purchaseOrder
+          ? buildSalesOrderWorkflow(
+              purchaseOrder,
+              suratJalanByNoPo.get(key) || [],
+              []
+            )
+          : null;
+        return sanitizeSuratJalan(suratJalan, workflow?.deliveryStatus || null);
+      }),
       pagination,
       summary: {
         totalRows,

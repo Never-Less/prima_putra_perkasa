@@ -20,6 +20,7 @@ import {
 } from "../_lib/pembelian";
 import { type SupplierItem } from "../../supplier/_lib/supplier";
 import { useI18n } from "../../_i18n/provider";
+import { DocumentAuditLog } from "../../_components/document-audit-log";
 import { useTheme } from "../../_theme/provider";
 
 type SupplierSelectOption = {
@@ -240,6 +241,8 @@ export function PembelianEditForm({
         namaSupplier: form.namaSupplier,
         hutang: form.hutang,
         lamaHutang: form.hutang ? Number(form.lamaHutang || 0) : null,
+        alamat: "", npwp: "", picName: "", phone: "", email: "",
+        productCategories: [], notes: "", documentLinks: [], isActive: true,
         createdAt: "",
         updatedAt: "",
       });
@@ -421,7 +424,7 @@ export function PembelianEditForm({
   }
 
   return (
-    <section className="rounded-2xl border border-sky-200 bg-sky-50/40 p-5 shadow-sm dark:border-sky-900/70 dark:bg-slate-950/85">
+    <section className="ppp-form-view rounded-2xl border border-sky-200 bg-sky-50/40 p-5 shadow-sm dark:border-sky-900/70 dark:bg-slate-950/85">
       <div className="mb-3">
         <h2 className="text-lg font-semibold text-sky-900 dark:text-sky-100">{t("pembelian.form.title")}</h2>
         <p className="text-sm text-sky-800 dark:text-sky-200">{t("pembelian.form.description")}</p>
@@ -710,6 +713,7 @@ export function PembelianEditForm({
           </div>
         </div>
       </div>
+      {item ? <DocumentAuditLog entityType="pembelian" entityId={item.id} /> : null}
     </section>
   );
 }

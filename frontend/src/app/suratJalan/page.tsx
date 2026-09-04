@@ -1,22 +1,34 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { ListViewHeader } from "../_components/list-view-header";
 import { FormPreviewStylePage } from "./_components/form-preview-style-page";
 import { useI18n } from "../_i18n/provider";
+import { buildFormRouteWithReturnPagination, normalizePaginationQueryState } from "../_lib/pagination";
 
 export default function SuratJalanPage() {
   const { t } = useI18n();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [sortValue, setSortValue] = useState(() => String(searchParams.get("sort") || "updatedDesc"));
+  const pagination = normalizePaginationQueryState({ page: searchParams.get("page"), limit: searchParams.get("limit") }, { page: 1, limit: 10 });
+  const listState = Object.fromEntries(Array.from(searchParams.entries()).filter(([key]) => !["page", "limit", "returnPage", "returnLimit", "id"].includes(key)));
 
   return (
-    <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-      <section className="rounded-2xl border border-sky-100 bg-gradient-to-r from-sky-50 to-white p-4 shadow-sm dark:border-slate-800 dark:from-slate-900 dark:to-slate-950 sm:p-5">
-        <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100 sm:text-2xl">{t("nav.suratJalan")}</h1>
-        <p className="mt-1 max-w-3xl text-sm text-slate-600 dark:text-slate-300">
-          {t("suratJalan.page.description")}
-        </p>
-      </section>
+    <main className="erp-page">
+      <ListViewHeader
+        title={t("nav.suratJalan")}
+        addLabel={t("common.addPageData", { page: t("nav.suratJalan") })}
+        onAdd={() => router.push(buildFormRouteWithReturnPagination("/suratJalan/form", "", pagination, listState))}
+      />
 
-      <div className="mt-5">
-        <FormPreviewStylePage />
+      <div className="mt-3 space-y-3">
+        <FormPreviewStylePage
+          showListAddButton={false}
+          sortValue={sortValue}
+          onSortChange={setSortValue}
+        />
       </div>
     </main>
   );

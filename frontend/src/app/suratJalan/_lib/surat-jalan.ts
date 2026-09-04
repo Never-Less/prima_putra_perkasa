@@ -39,6 +39,7 @@ export type SuratJalanItem = {
   barang: SuratJalanBarang[];
   kendaraan: string;
   tipe: SuratJalanTipe;
+  deliveryStatus: "notDelivered" | "partial" | "complete" | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -320,7 +321,7 @@ function summarizeKodeDepartemen(items: SuratJalanBarang[]) {
   return Array.from(new Set(codes)).join(", ");
 }
 
-function toSuratJalanItem(value: unknown): SuratJalanItem | null {
+export function toSuratJalanItem(value: unknown): SuratJalanItem | null {
   if (!value || typeof value !== "object") {
     return null;
   }
@@ -346,6 +347,12 @@ function toSuratJalanItem(value: unknown): SuratJalanItem | null {
     barang: barangList,
     kendaraan: toText(row.kendaraan).trim(),
     tipe: normalize(row.tipe) === "non partial" ? "non partial" : "partial",
+    deliveryStatus:
+      row.deliveryStatus === "complete" ||
+      row.deliveryStatus === "partial" ||
+      row.deliveryStatus === "notDelivered"
+        ? row.deliveryStatus
+        : null,
     createdAt: toText(row.createdAt).trim(),
     updatedAt: toText(row.updatedAt).trim(),
   };
@@ -536,7 +543,9 @@ export function filterSuratJalanRows(
     const namaBarangFilter = normalize(filters.namaBarang);
     const namaBarangMatch =
       !namaBarangFilter ||
-      row.barang.some((barang) => normalize(barang.nama).includes(namaBarangFilter));
+      row.barang.some((barang) =>
+        normalize(`${barang.nama} ${barang.spesifikasi || ""}`).includes(namaBarangFilter)
+      );
     const kodeDepartemenMatch = normalize(row.kodeDepartemen).includes(
       normalize(filters.kodeDepartemen)
     );

@@ -23,7 +23,7 @@ function summarizeKodeDepartemen(barangInput, fallbackKodeDepartemen = "") {
   return Array.from(new Set(codes)).join(", ");
 }
 
-function sanitizeSuratJalan(suratJalan) {
+function sanitizeSuratJalan(suratJalan, deliveryStatus = null) {
   const barang = normalizeBarangList(suratJalan.barang, suratJalan.kodeDepartemen);
 
   return {
@@ -38,6 +38,7 @@ function sanitizeSuratJalan(suratJalan) {
     tipe: suratJalan.tipe,
     createdAt: suratJalan.createdAt,
     updatedAt: suratJalan.updatedAt,
+    deliveryStatus,
   };
 }
 

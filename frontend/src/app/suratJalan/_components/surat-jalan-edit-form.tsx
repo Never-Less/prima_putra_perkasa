@@ -23,6 +23,7 @@ import {
   type SuratJalanNoPoOption,
 } from "../_lib/surat-jalan";
 import { useI18n } from "../../_i18n/provider";
+import { DocumentAuditLog } from "../../_components/document-audit-log";
 import { useTheme } from "../../_theme/provider";
 import { SuratJalanBarangSpreadsheet } from "./surat-jalan-barang-spreadsheet";
 
@@ -443,7 +444,7 @@ export function SuratJalanEditForm({
   }
 
   return (
-    <section className={`rounded-2xl border p-5 shadow-sm ${tone.section}`}>
+    <section className={`ppp-form-view rounded-2xl border p-5 shadow-sm ${tone.section}`}>
       <div className="mb-3">
         <h2 className={`text-lg font-semibold ${tone.title}`}>{title}</h2>
         <p className={`text-sm ${tone.subtitle}`}>{description}</p>
@@ -645,6 +646,7 @@ export function SuratJalanEditForm({
           </div>
         ) : null}
       </div>
+      {item ? <DocumentAuditLog entityType="suratJalan" entityId={item.id} /> : null}
     </section>
   );
 }

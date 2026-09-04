@@ -2,6 +2,7 @@ const express = require("express");
 
 const { Customer } = require("../../models/Customer");
 const { Invoice } = require("../../models/Invoice");
+const { SuratJalan } = require("../../models/SuratJalan");
 const { PurchaseOrder } = require("../../models/PurchaseOrder");
 const { sanitizePurchaseOrder } = require("./sanitize-purchase-order");
 const {
@@ -11,6 +12,7 @@ const {
   parseDate,
   parseNumber,
 } = require("./validators");
+const { normalizePaymentTerm } = require("../../utils/payment-term");
 
 const router = express.Router();
 
@@ -75,10 +77,15 @@ router.put("/:id", async (req, res) => {
       }
 
       updates.barang = barang;
+      updates.nominalPo = calculateBarangSubtotal(barang);
+    }
 
-      if (req.body.nominalPo === undefined) {
-        updates.nominalPo = calculateBarangSubtotal(barang);
+    if (req.body.paymentTerm !== undefined) {
+      const paymentTerm = normalizePaymentTerm(req.body.paymentTerm);
+      if (!paymentTerm) {
+        return res.status(400).json({ message: "Term of payment sales order tidak valid." });
       }
+      updates.paymentTerm = paymentTerm;
     }
 
     if (req.body.tanggalInvoice !== undefined) {
@@ -119,6 +126,20 @@ router.put("/:id", async (req, res) => {
       return res.status(400).json({ message: "Isi No. SO sebelum menyimpan." });
     }
 
+    if (updates.noPo !== undefined) {
+      const duplicateNoPo = await PurchaseOrder.findOne({
+        _id: { $ne: id },
+        noPo: updates.noPo,
+      })
+        .collation({ locale: "en", strength: 2 })
+        .select("_id")
+        .lean();
+
+      if (duplicateNoPo) {
+        return res.status(409).json({ message: `No. SO "${updates.noPo}" sudah digunakan.` });
+      }
+    }
+
     if (updates.namaCustomer) {
       const customer = await Customer.findById(updates.namaCustomer);
 
@@ -135,10 +156,43 @@ router.put("/:id", async (req, res) => {
       }
     }
 
-    const purchaseOrder = await PurchaseOrder.findByIdAndUpdate(id, updates, {
-      new: true,
-      runValidators: true,
-    });
+    const operationalFields = ["noPo", "tanggalPo", "namaCustomer", "nominalPo", "barang", "paymentTerm"];
+    const comparable = (value) => JSON.stringify(value?.toObject ? value.toObject() : value);
+    const hasOperationalChanges = operationalFields.some(
+      (field) => updates[field] !== undefined && comparable(existingPurchaseOrder[field]) !== comparable(updates[field])
+    );
+    let revisionImpact = null;
+
+    if (hasOperationalChanges) {
+      const existingNoPo = String(existingPurchaseOrder.noPo || "").trim();
+      const [affectedSuratJalan, affectedInvoices] = await Promise.all([
+        SuratJalan.countDocuments({ noPo: existingNoPo }),
+        Invoice.countDocuments({ $or: [{ noPoList: existingNoPo }, { noPo: existingNoPo }, { "barang.sources.noPo": existingNoPo }] }),
+      ]);
+      if (affectedSuratJalan > 0 || affectedInvoices > 0) {
+        existingPurchaseOrder.revisionHistory.push({
+          revision: Number(existingPurchaseOrder.revision || 0),
+          reason: String(req.body.revisionReason || "Perubahan data Sales Order").trim(),
+          revisedAt: new Date(),
+          revisedBy: req.user?._id || null,
+          affectedSuratJalan,
+          affectedInvoices,
+          snapshot: {
+            noPo: existingPurchaseOrder.noPo,
+            tanggalPo: existingPurchaseOrder.tanggalPo,
+            namaCustomer: existingPurchaseOrder.namaCustomer,
+            nominalPo: existingPurchaseOrder.nominalPo,
+            barang: existingPurchaseOrder.barang,
+            paymentTerm: existingPurchaseOrder.paymentTerm,
+          },
+        });
+        existingPurchaseOrder.revision = Number(existingPurchaseOrder.revision || 0) + 1;
+        revisionImpact = { affectedSuratJalan, affectedInvoices, needsReview: true };
+      }
+    }
+
+    Object.assign(existingPurchaseOrder, updates);
+    const purchaseOrder = await existingPurchaseOrder.save();
 
     if (!purchaseOrder) {
       return res.status(404).json({ message: "Data sales order tidak ditemukan." });
@@ -147,8 +201,13 @@ router.put("/:id", async (req, res) => {
     return res.json({
       message: "purchase order updated",
       purchaseOrder: sanitizePurchaseOrder(purchaseOrder),
+      revisionImpact,
     });
-  } catch (_error) {
+  } catch (error) {
+    if (error?.code === 11000) {
+      return res.status(409).json({ message: "No. SO tersebut sudah digunakan." });
+    }
+
     return res.status(500).json({ message: "Data sales order belum bisa disimpan. Coba lagi." });
   }
 });

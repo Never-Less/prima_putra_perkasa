@@ -34,6 +34,8 @@ function parseNumber(value) {
   return Number.isFinite(number) ? number : null;
 }
 
+const textProfileFields = ["alamat", "npwp", "picName", "phone", "email", "notes"];
+
 router.put("/:id", requireRole(ROLE_ADMIN, ROLE_STAFF), async (req, res) => {
   const id = String(req.params.id || "");
 
@@ -49,6 +51,26 @@ router.put("/:id", requireRole(ROLE_ADMIN, ROLE_STAFF), async (req, res) => {
     }
 
     const updates = {};
+
+    textProfileFields.forEach((field) => {
+      if (req.body[field] !== undefined) updates[field] = String(req.body[field] || "").trim();
+    });
+
+    if (req.body.productCategories !== undefined) {
+      const source = Array.isArray(req.body.productCategories) ? req.body.productCategories : String(req.body.productCategories || "").split(",");
+      updates.productCategories = [...new Set(source.map((value) => String(value || "").trim()).filter(Boolean))];
+    }
+
+    if (req.body.documentLinks !== undefined) {
+      if (!Array.isArray(req.body.documentLinks)) return res.status(400).json({ message: "Daftar dokumen supplier tidak valid." });
+      updates.documentLinks = req.body.documentLinks.map((row) => ({ label: String(row?.label || "").trim(), url: String(row?.url || "").trim() })).filter((row) => row.label && /^https?:\/\//i.test(row.url));
+    }
+
+    if (req.body.isActive !== undefined) {
+      const isActive = parseBoolean(req.body.isActive);
+      if (isActive === null) return res.status(400).json({ message: "Status supplier tidak valid." });
+      updates.isActive = isActive;
+    }
 
     if (req.body.namaSupplier !== undefined) {
       updates.namaSupplier = String(req.body.namaSupplier || "").trim();

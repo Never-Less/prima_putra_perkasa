@@ -1,6 +1,8 @@
 const express = require("express");
 
 const { PurchaseOrder } = require("../../models/PurchaseOrder");
+const { Invoice } = require("../../models/Invoice");
+const { SuratJalan } = require("../../models/SuratJalan");
 const { isValidId } = require("./validators");
 
 const router = express.Router();
@@ -13,6 +15,21 @@ router.delete("/:id", async (req, res) => {
   }
 
   try {
+    const existing = await PurchaseOrder.findById(id).lean();
+
+    if (!existing) {
+      return res.status(404).json({ message: "purchase order not found" });
+    }
+
+    const noPo = String(existing.noPo || "").trim();
+    const [suratJalanCount, invoiceCount] = await Promise.all([
+      SuratJalan.countDocuments({ noPo }),
+      Invoice.countDocuments({ $or: [{ noPoList: noPo }, { noPo }, { "barang.sources.noPo": noPo }] }),
+    ]);
+    if (suratJalanCount || invoiceCount) {
+      return res.status(409).json({ message: `Sales Order tidak dapat dihapus karena terhubung ke ${suratJalanCount} Surat Jalan dan ${invoiceCount} Invoice.` });
+    }
+
     const purchaseOrder = await PurchaseOrder.findByIdAndDelete(id);
 
     if (!purchaseOrder) {

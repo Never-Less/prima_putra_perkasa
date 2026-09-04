@@ -5,13 +5,16 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ApiLoadingState } from "../_components/api-loading-state";
 import { AppToast } from "../_components/app-toast";
 import { ConfirmationModal } from "../_components/confirmation-modal";
+import { ListViewHeader } from "../_components/list-view-header";
 import { requestUnsavedChangesConfirmation } from "../_hooks/use-unsaved-changes-warning";
+import { usePersistentListUrl } from "../_hooks/use-persistent-list-url";
 import { ApiRequestError } from "../_lib/api-client";
 import {
   buildFormRouteWithReturnPagination,
   buildListRouteWithPagination,
   normalizePaginationQueryState,
   normalizeReturnPaginationQueryState,
+  normalizeStringFilterQueryState,
   type ServerPaginationMeta,
 } from "../_lib/pagination";
 import { SupplierEditForm } from "./_components/supplier-edit-form";
@@ -46,6 +49,7 @@ const defaultSupplierPaginationQuery = {
   page: 1,
   limit: 10,
 };
+const defaultSupplierSort = "updatedDesc";
 
 export function SupplierPageContent({ mode = "list", itemId = "" }: SupplierPageContentProps) {
   const { t } = useI18n();
@@ -74,12 +78,15 @@ export function SupplierPageContent({ mode = "list", itemId = "" }: SupplierPage
       ),
     [searchParams]
   );
+  const initialFilterQuery = useMemo(() => normalizeStringFilterQueryState(searchParams, defaultSupplierFilter), [searchParams]);
+  const initialSortValue = String(searchParams.get("sort") || defaultSupplierSort);
+  const returnListState = useMemo(() => ({ ...initialFilterQuery, sort: initialSortValue }), [initialFilterQuery, initialSortValue]);
   const returnListPath = useMemo(
-    () => buildListRouteWithPagination("/supplier", returnPaginationQuery),
-    [returnPaginationQuery]
+    () => buildListRouteWithPagination("/supplier", returnPaginationQuery, returnListState),
+    [returnListState, returnPaginationQuery]
   );
   const [rows, setRows] = useState<SupplierItem[]>([]);
-  const [filter, setFilter] = useState<SupplierFilter>(defaultSupplierFilter);
+  const [filter, setFilter] = useState<SupplierFilter>(initialFilterQuery);
   const [paginationQuery, setPaginationQuery] = useState(() =>
     isFormMode ? defaultSupplierPaginationQuery : initialPaginationQuery
   );
@@ -90,6 +97,7 @@ export function SupplierPageContent({ mode = "list", itemId = "" }: SupplierPage
     totalPages: 1,
   });
   const [filteredCount, setFilteredCount] = useState(0);
+  const [sortValue, setSortValue] = useState(initialSortValue);
   const [selectedId, setSelectedId] = useState(itemId);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -111,6 +119,8 @@ export function SupplierPageContent({ mode = "list", itemId = "" }: SupplierPage
   >(null);
 
   const canManageSupplier = true;
+
+  usePersistentListUrl({ enabled: !isFormMode, basePath: "/supplier", defaultFilter: defaultSupplierFilter, defaultPagination: defaultSupplierPaginationQuery, defaultSort: defaultSupplierSort, filter, pagination: paginationQuery, sort: sortValue, setFilter, setPagination: setPaginationQuery, setSort: setSortValue });
 
   const showToast = useCallback((message: string, variant: ToastState["variant"]) => {
     setToast({
@@ -241,6 +251,24 @@ export function SupplierPageContent({ mode = "list", itemId = "" }: SupplierPage
     return rows.find((row) => row.id === selectedId);
   }, [rows, selectedId]);
 
+  const sortedRows = useMemo(() => {
+    return [...rows].sort((left, right) => {
+      if (sortValue === "updatedAsc") {
+        return left.updatedAt.localeCompare(right.updatedAt);
+      }
+
+      if (sortValue === "nameAsc") {
+        return left.namaSupplier.localeCompare(right.namaSupplier);
+      }
+
+      if (sortValue === "nameDesc") {
+        return right.namaSupplier.localeCompare(left.namaSupplier);
+      }
+
+      return right.updatedAt.localeCompare(left.updatedAt);
+    });
+  }, [rows, sortValue]);
+
   const showDataSection = isFormMode
     ? !isLoading && !errorMessage
     : !isLoading && (rows.length > 0 || !errorMessage);
@@ -249,10 +277,10 @@ export function SupplierPageContent({ mode = "list", itemId = "" }: SupplierPage
     (id?: string) => {
       const normalizedId = String(id || "").trim();
       router.push(
-        buildFormRouteWithReturnPagination("/supplier/form", normalizedId, paginationQuery)
+        buildFormRouteWithReturnPagination("/supplier/form", normalizedId, paginationQuery, { ...filter, sort: sortValue })
       );
     },
-    [paginationQuery, router]
+    [filter, paginationQuery, router, sortValue]
   );
 
   const executeSaveSupplier = useCallback(
@@ -277,7 +305,8 @@ export function SupplierPageContent({ mode = "list", itemId = "" }: SupplierPage
               buildFormRouteWithReturnPagination(
                 "/supplier/form",
                 updatedSupplier?.id || selectedItem.id,
-                returnPaginationQuery
+                returnPaginationQuery,
+                returnListState
               )
             );
           }
@@ -298,7 +327,8 @@ export function SupplierPageContent({ mode = "list", itemId = "" }: SupplierPage
             buildFormRouteWithReturnPagination(
               "/supplier/form",
               createdSupplier.id,
-              returnPaginationQuery
+              returnPaginationQuery,
+              returnListState
             )
           );
         }
@@ -318,7 +348,7 @@ export function SupplierPageContent({ mode = "list", itemId = "" }: SupplierPage
         setIsSaving(false);
       }
     },
-    [canManageSupplier, isFormMode, loadSuppliers, returnPaginationQuery, router, showToast, t]
+    [canManageSupplier, isFormMode, loadSuppliers, returnListState, returnPaginationQuery, router, showToast, t]
   );
 
   const executeDeleteSupplier = useCallback(
@@ -431,19 +461,18 @@ export function SupplierPageContent({ mode = "list", itemId = "" }: SupplierPage
 
   return (
     <>
-      <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-        <section className="rounded-2xl border border-sky-100 bg-gradient-to-r from-sky-50 to-white p-4 shadow-sm dark:border-slate-800 dark:from-slate-900 dark:to-slate-950 sm:p-5">
-          <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100 sm:text-2xl">{t("nav.supplier")}</h1>
-          <p className="mt-1 max-w-3xl text-sm text-slate-600 dark:text-slate-300">
-            {t("supplier.page.description")}
-          </p>
-        </section>
+      <main className="erp-page">
+        <ListViewHeader
+          title={t("nav.supplier")}
+          addLabel={t("common.addPageData", { page: t("nav.supplier") })}
+          onAdd={isFormMode ? undefined : () => navigateToForm()}
+        />
 
-        <div className="mt-5 space-y-5">
+        <div className="mt-3 space-y-3">
           {isLoading ? <ApiLoadingState /> : null}
 
           {!isLoading && errorMessage ? (
-            <section className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/50 dark:text-red-200">
+            <section className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/50 dark:text-red-200">
               <p>{errorMessage}</p>
               <button
                 type="button"
@@ -489,7 +518,8 @@ export function SupplierPageContent({ mode = "list", itemId = "" }: SupplierPage
                         buildFormRouteWithReturnPagination(
                           "/supplier/form",
                           "",
-                          returnPaginationQuery
+                          returnPaginationQuery,
+                          returnListState
                         )
                       );
                     }}
@@ -498,21 +528,20 @@ export function SupplierPageContent({ mode = "list", itemId = "" }: SupplierPage
                 </>
               ) : (
                 <>
-                  <div className="flex justify-end">
-                    <button
-                      type="button"
-                      onClick={() => navigateToForm()}
-                      className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600 dark:bg-sky-500 dark:text-slate-950 dark:hover:bg-sky-400"
-                    >
-                      {t("common.newData")}
-                    </button>
-                  </div>
                   <SupplierTableFilter
-                    rows={rows}
+                    rows={sortedRows}
                     filter={filter}
                     filteredCount={filteredCount}
                     pagination={pagination}
                     selectedId=""
+                    sortValue={sortValue}
+                    onSortChange={setSortValue}
+                    sortOptions={[
+                      { value: "updatedDesc", label: t("common.sort.updatedDesc") },
+                      { value: "updatedAsc", label: t("common.sort.updatedAsc") },
+                      { value: "nameAsc", label: t("common.sort.nameAsc") },
+                      { value: "nameDesc", label: t("common.sort.nameDesc") },
+                    ]}
                     onFilterChange={handleFilterChange}
                     onResetFilter={handleResetFilter}
                     onPageChange={handlePageChange}

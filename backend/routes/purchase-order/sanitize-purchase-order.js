@@ -27,7 +27,14 @@ function sanitizePurchaseOrderBarang(barang) {
     .filter((item) => Boolean(item));
 }
 
-function sanitizePurchaseOrder(purchaseOrder) {
+function sanitizePurchaseOrder(purchaseOrder, workflow = null) {
+  const paymentTerm = purchaseOrder.paymentTerm || {
+    type: "net",
+    netDays: 30,
+    downPaymentPercent: 0,
+    remainingPaymentPercent: 100,
+  };
+
   return {
     id: purchaseOrder._id,
     noPo: purchaseOrder.noPo,
@@ -35,10 +42,25 @@ function sanitizePurchaseOrder(purchaseOrder) {
     namaCustomer: purchaseOrder.namaCustomer,
     nominalPo: purchaseOrder.nominalPo,
     barang: sanitizePurchaseOrderBarang(purchaseOrder.barang),
+    paymentTerm: {
+      type: paymentTerm.type,
+      netDays: paymentTerm.netDays,
+      downPaymentPercent: paymentTerm.downPaymentPercent,
+      remainingPaymentPercent: paymentTerm.remainingPaymentPercent,
+    },
     tanggalInvoice: purchaseOrder.tanggalInvoice,
     noInvoice: purchaseOrder.noInvoice,
+    revision: Number(purchaseOrder.revision || 0),
+    revisionHistory: Array.isArray(purchaseOrder.revisionHistory)
+      ? purchaseOrder.revisionHistory.map((row) => ({
+          revision: Number(row.revision || 0), reason: String(row.reason || ""),
+          revisedAt: row.revisedAt, affectedSuratJalan: Number(row.affectedSuratJalan || 0),
+          affectedInvoices: Number(row.affectedInvoices || 0),
+        })).reverse()
+      : [],
     createdAt: purchaseOrder.createdAt,
     updatedAt: purchaseOrder.updatedAt,
+    workflow,
   };
 }
 

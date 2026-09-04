@@ -14,6 +14,7 @@ const router = express.Router();
 router.get("/", async (req, res) => {
   try {
     const query = {};
+    const andConditions = [];
     const noInvoiceRegex = buildSearchRegex(req.query.noInvoice);
     const noPoRegex = buildSearchRegex(req.query.noPo);
     const noSuratJalanRegex = buildSearchRegex(req.query.noSuratJalan);
@@ -29,10 +30,9 @@ router.get("/", async (req, res) => {
     }
 
     if (noPoRegex) {
-      query.$or = [
-        { noPo: noPoRegex },
-        { noPoList: noPoRegex },
-      ];
+      andConditions.push({
+        $or: [{ noPo: noPoRegex }, { noPoList: noPoRegex }],
+      });
     }
 
     if (noSuratJalanRegex) {
@@ -40,7 +40,16 @@ router.get("/", async (req, res) => {
     }
 
     if (namaBarangRegex) {
-      query["barang.namaBarang"] = namaBarangRegex;
+      andConditions.push({
+        $or: [
+          { "barang.namaBarang": namaBarangRegex },
+          { "barang.spesifikasi": namaBarangRegex },
+        ],
+      });
+    }
+
+    if (andConditions.length > 0) {
+      query.$and = andConditions;
     }
 
     if (req.query.isPpn === "true") {
@@ -141,7 +150,7 @@ router.get("/", async (req, res) => {
         .limit(pagination.limit);
     }
 
-    const invoices = await invoiceQuery;
+    const invoices = await invoiceQuery.lean();
 
     return res.json({
       invoices: invoices.map(sanitizeInvoice),

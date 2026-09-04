@@ -8,7 +8,7 @@ const router = express.Router();
 router.get("/options", async (_req, res) => {
   try {
     const [customers, invoices] = await Promise.all([
-      Customer.find({}, "_id nama").sort({ nama: 1 }).lean(),
+      Customer.find({}, "_id nama defaultPaymentTerm").sort({ nama: 1 }).lean(),
       Invoice.find({}, "_id noInvoice").sort({ createdAt: -1 }).lean(),
     ]);
 
@@ -16,6 +16,12 @@ router.get("/options", async (_req, res) => {
       customerOptions: customers.map((customer) => ({
         id: customer._id,
         nama: String(customer.nama || "").trim(),
+        defaultPaymentTerm: customer.defaultPaymentTerm || {
+          type: "net",
+          netDays: 30,
+          downPaymentPercent: 0,
+          remainingPaymentPercent: 100,
+        },
       })),
       invoiceOptions: invoices.map((invoice) => ({
         id: invoice._id,

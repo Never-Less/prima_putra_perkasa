@@ -4,6 +4,7 @@ const { Customer } = require("../../models/Customer");
 const { SuratJalan } = require("../../models/SuratJalan");
 const { sanitizeSuratJalan } = require("./sanitize-surat-jalan");
 const { isValidId, normalizeBarangList, parseDate } = require("./validators");
+const { validateDeliveryAgainstSalesOrder } = require("../../utils/delivery-validation");
 
 const router = express.Router();
 
@@ -42,6 +43,9 @@ router.post("/", async (req, res) => {
     if (!customer) {
       return res.status(404).json({ message: "Customer yang dipilih tidak ditemukan." });
     }
+
+    const deliveryError = await validateDeliveryAgainstSalesOrder({ noPo, customerId: idCustomer, barang });
+    if (deliveryError) return res.status(409).json({ message: deliveryError });
 
     const existingNoPoSuratJalan = await SuratJalan.findOne({ noPo })
       .select("idCustomer")

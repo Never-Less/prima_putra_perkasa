@@ -88,6 +88,9 @@ pembelianSchema.pre("validate", function validatePembelian() {
   }
 });
 
+pembelianSchema.index({ hutang: 1, tanggalBayar: 1 });
+pembelianSchema.index({ tanggalNota: -1 });
+
 const Pembelian = mongoose.model("Pembelian", pembelianSchema);
 
 module.exports = {

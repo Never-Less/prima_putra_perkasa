@@ -7,6 +7,7 @@ import {
   type PaginationQueryState,
   type ServerListResult,
 } from "../../_lib/pagination";
+import { defaultPaymentTerm, normalizePaymentTerm, type PaymentTerm } from "../../_lib/payment-term";
 
 type Locale = "id" | "en";
 
@@ -27,6 +28,45 @@ export type PurchaseOrderBarangFormRow = {
   hargaSatuan: string;
 };
 
+export type SalesOrderWorkflowStatus =
+  | "toDeliver"
+  | "partlyDelivered"
+  | "deliveredToBilled"
+  | "partlyBilled"
+  | "billed"
+  | "paid";
+
+export type SalesOrderDocumentReference = {
+  id: string;
+  number: string;
+  date: string;
+};
+
+export type SalesOrderItemProgress = {
+  namaBarang: string;
+  spesifikasi: string;
+  unit: string;
+  orderedQty: number;
+  deliveredQty: number;
+  billedQty: number;
+  remainingDeliveryQty: number;
+  remainingBillingQty: number;
+};
+
+export type SalesOrderWorkflow = {
+  status: SalesOrderWorkflowStatus;
+  deliveryStatus: "notDelivered" | "partial" | "complete";
+  suratJalan: SalesOrderDocumentReference[];
+  invoices: Array<SalesOrderDocumentReference & { isPaid: boolean }>;
+  items: SalesOrderItemProgress[];
+  billing: {
+    orderAmount: number;
+    invoicedAmount: number;
+    remainingAmount: number;
+    isComplete: boolean;
+  };
+};
+
 export type PurchaseOrderItem = {
   id: string;
   noPo: string;
@@ -34,15 +74,20 @@ export type PurchaseOrderItem = {
   namaCustomer: string;
   nominalPo: number;
   barang: PurchaseOrderBarang[];
+  paymentTerm: PaymentTerm;
   tanggalInvoice: string | null;
   noInvoice: string;
   createdAt: string;
   updatedAt: string;
+  workflow: SalesOrderWorkflow | null;
+  revision: number;
+  revisionHistory: Array<{ revision: number; reason: string; revisedAt: string; affectedSuratJalan: number; affectedInvoices: number }>;
 };
 
 export type PurchaseOrderCustomerOption = {
   id: string;
   nama: string;
+  defaultPaymentTerm: PaymentTerm;
 };
 
 export type PurchaseOrderInvoiceOption = {
@@ -52,7 +97,9 @@ export type PurchaseOrderInvoiceOption = {
 
 export type PurchaseOrderFilter = {
   noPo: string;
+  workflowStatus: "" | "withoutSuratJalan" | "readyForInvoice";
   namaCustomer: string;
+  namaBarang: string;
   noInvoice: string;
   tanggalPoDari: string;
   tanggalPoSampai: string;
@@ -68,6 +115,7 @@ export type PurchaseOrderFormState = {
   namaCustomer: string;
   nominalPo: string;
   barangRows: PurchaseOrderBarangFormRow[];
+  paymentTerm: PaymentTerm;
   tanggalInvoice: string;
   noInvoice: string;
 };
@@ -105,7 +153,9 @@ function buildPurchaseOrderListQueryString(
 
   return buildListQueryString({
     noPo: query.noPo,
+    workflowStatus: query.workflowStatus,
     namaCustomer: query.namaCustomer,
+    namaBarang: query.namaBarang,
     noInvoice: query.noInvoice,
     tanggalPoDari: query.tanggalPoDari,
     tanggalPoSampai: query.tanggalPoSampai,
@@ -120,7 +170,9 @@ function buildPurchaseOrderListQueryString(
 
 export const defaultPurchaseOrderFilter: PurchaseOrderFilter = {
   noPo: "",
+  workflowStatus: "",
   namaCustomer: "",
+  namaBarang: "",
   noInvoice: "",
   tanggalPoDari: "",
   tanggalPoSampai: "",
@@ -200,7 +252,79 @@ function parseReferenceId(value: unknown) {
   return toText(value).trim();
 }
 
-function toPurchaseOrderItem(value: unknown): PurchaseOrderItem | null {
+function normalizeWorkflow(value: unknown): SalesOrderWorkflow | null {
+  if (!value || typeof value !== "object") return null;
+  const row = value as Record<string, unknown>;
+  const validStatuses: SalesOrderWorkflowStatus[] = [
+    "toDeliver",
+    "partlyDelivered",
+    "deliveredToBilled",
+    "partlyBilled",
+    "billed",
+    "paid",
+  ];
+  const status = String(row.status || "") as SalesOrderWorkflowStatus;
+  if (!validStatuses.includes(status)) return null;
+
+  const normalizeDocuments = (items: unknown, numberKey: string) =>
+    (Array.isArray(items) ? items : [])
+      .map((item) => {
+        const document = item && typeof item === "object"
+          ? item as Record<string, unknown>
+          : {};
+        return {
+          id: toText(document.id || document._id).trim(),
+          number: toText(document[numberKey]).trim(),
+          date: toText(document.tanggal).trim(),
+          isPaid: Boolean(document.isPaid),
+        };
+      })
+      .filter((item) => item.number);
+  const items = (Array.isArray(row.items) ? row.items : [])
+    .map((item) => {
+      const progress = item && typeof item === "object"
+        ? item as Record<string, unknown>
+        : {};
+      const namaBarang = toText(progress.namaBarang).trim();
+      const unit = toText(progress.unit).trim();
+
+      if (!namaBarang || !unit) return null;
+
+      return {
+        namaBarang,
+        spesifikasi: toText(progress.spesifikasi).trim(),
+        unit,
+        orderedQty: parseNumberFromUnknown(progress.orderedQty),
+        deliveredQty: parseNumberFromUnknown(progress.deliveredQty),
+        billedQty: parseNumberFromUnknown(progress.billedQty),
+        remainingDeliveryQty: parseNumberFromUnknown(progress.remainingDeliveryQty),
+        remainingBillingQty: parseNumberFromUnknown(progress.remainingBillingQty),
+      };
+    })
+    .filter((item): item is SalesOrderItemProgress => Boolean(item));
+  const billingRow = row.billing && typeof row.billing === "object"
+    ? row.billing as Record<string, unknown>
+    : {};
+
+  return {
+    status,
+    deliveryStatus:
+      row.deliveryStatus === "complete" || row.deliveryStatus === "partial"
+        ? row.deliveryStatus
+        : "notDelivered",
+    suratJalan: normalizeDocuments(row.suratJalan, "noSuratJalan"),
+    invoices: normalizeDocuments(row.invoices, "noInvoice"),
+    items,
+    billing: {
+      orderAmount: parseNumberFromUnknown(billingRow.orderAmount),
+      invoicedAmount: parseNumberFromUnknown(billingRow.invoicedAmount),
+      remainingAmount: parseNumberFromUnknown(billingRow.remainingAmount),
+      isComplete: Boolean(billingRow.isComplete),
+    },
+  };
+}
+
+export function toPurchaseOrderItem(value: unknown): PurchaseOrderItem | null {
   if (!value || typeof value !== "object") {
     return null;
   }
@@ -223,14 +347,21 @@ function toPurchaseOrderItem(value: unknown): PurchaseOrderItem | null {
           .map(toPurchaseOrderBarang)
           .filter((item): item is PurchaseOrderBarang => Boolean(item))
       : [],
+    paymentTerm: normalizePaymentTerm(row.paymentTerm),
     tanggalInvoice: toText(row.tanggalInvoice || row.tanggalKirim).trim() || null,
     noInvoice: parseReferenceId(row.noInvoice),
     createdAt: toText(row.createdAt).trim(),
     updatedAt: toText(row.updatedAt).trim(),
+    workflow: normalizeWorkflow(row.workflow),
+    revision: parseNumberFromUnknown(row.revision),
+    revisionHistory: Array.isArray(row.revisionHistory) ? row.revisionHistory.map((entry) => {
+      const history = entry as Record<string, unknown>;
+      return { revision: parseNumberFromUnknown(history.revision), reason: toText(history.reason), revisedAt: toText(history.revisedAt), affectedSuratJalan: parseNumberFromUnknown(history.affectedSuratJalan), affectedInvoices: parseNumberFromUnknown(history.affectedInvoices) };
+    }) : [],
   };
 }
 
-function toPurchaseOrderCustomerOption(value: unknown): PurchaseOrderCustomerOption | null {
+export function toPurchaseOrderCustomerOption(value: unknown): PurchaseOrderCustomerOption | null {
   if (!value || typeof value !== "object") {
     return null;
   }
@@ -245,6 +376,7 @@ function toPurchaseOrderCustomerOption(value: unknown): PurchaseOrderCustomerOpt
   return {
     id,
     nama: toDecodedText(row.nama).trim() || id,
+    defaultPaymentTerm: normalizePaymentTerm(row.defaultPaymentTerm),
   };
 }
 
@@ -306,6 +438,7 @@ function toNormalizedPurchaseOrderPayload(form: PurchaseOrderFormState) {
     namaCustomer: toText(form.namaCustomer).trim(),
     nominalPo: barang.length > 0 ? barangTotal : nominalPo,
     barang,
+    paymentTerm: normalizePaymentTerm(form.paymentTerm || defaultPaymentTerm),
     tanggalInvoice: tanggalInvoice || null,
     noInvoice: noInvoice || null,
   };
@@ -513,6 +646,7 @@ export function toPurchaseOrderFormState(item: PurchaseOrderItem): PurchaseOrder
         hargaSatuan: String(barang.hargaSatuan),
       }))
     ),
+    paymentTerm: normalizePaymentTerm(item.paymentTerm),
     tanggalInvoice: toInputDate(item.tanggalInvoice),
     noInvoice: item.noInvoice,
   };

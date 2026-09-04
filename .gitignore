@@ -20,8 +20,15 @@ pnpm-debug.log*
 frontend/.next/
 frontend/out/
 frontend/build/
+*.tsbuildinfo
 backend/dist/
+backend/uploads/*
+!backend/uploads/.gitkeep
+!backend/uploads/price-list/
+backend/uploads/price-list/*
+!backend/uploads/price-list/.gitkeep
 coverage/
+_outputs/
 
 # misc
 .DS_Store
