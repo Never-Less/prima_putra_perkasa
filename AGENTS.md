@@ -52,6 +52,10 @@ Panduan untuk agent yang bekerja di repository `prima_putra_perkasa`.
   - `Style Table`
   - `Style Form`
 - Hindari membuat style alternatif baru yang tidak dipakai. Jika ada style lama tidak terpakai, hapus agar codebase tetap bersih.
+- Persistensi state halaman daftar wajib konsisten:
+  - Simpan seluruh filter, pencarian, grouping, sort, nomor halaman, dan page size di URL query parameter.
+  - Saat membuka detail/form/export, bawa state daftar tersebut sebagai parameter return; tombol tutup, selesai simpan, browser Back/Forward, dan reload harus memulihkan state yang sama.
+  - Gunakan helper/hook shared untuk membangun dan memulihkan URL. Jika menambah tipe filter baru pada prompt berikutnya, sertakan otomatis dalam kontrak URL state halaman terkait.
 - Untuk input field, gunakan pola/library yang sudah dipakai di project:
   - Gunakan input lokal yang distyling dengan Tailwind sesuai komponen/form existing.
   - Gunakan `AppDateInput` untuk field tanggal.
@@ -76,6 +80,13 @@ Panduan untuk agent yang bekerja di repository `prima_putra_perkasa`.
   - `node --check routes/auth/logout.js` (jika file ada/diubah)
   - `node --check models/User.js` (jika file ada/diubah)
 - Jika menambah dependency backend, pastikan `package.json` dan `package-lock.json` ikut ter-update.
+
+## Release Notes Aplikasi
+
+- Setiap kali Codex membuat commit yang berisi perubahan aplikasi untuk dikirim ke GitHub, update `frontend/src/app/_data/release-notes.ts` dalam commit yang sama.
+- Tambahkan satu entry release note yang merangkum perubahan pada commit tersebut dengan bahasa yang mudah dipahami user.
+- Letakkan entry terbaru paling atas dan kelompokkan daftar perubahan berdasarkan area fitur.
+- Commit yang hanya mengubah changelog atau merge tanpa perubahan aplikasi tidak wajib membuat entry baru.
 
 ## Referensi Cepat
 

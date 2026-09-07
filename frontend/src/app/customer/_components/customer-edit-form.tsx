@@ -8,6 +8,7 @@ import {
 } from "../../_hooks/use-unsaved-changes-warning";
 import { toCustomerFormState, type CustomerFormState, type CustomerItem } from "../_lib/customer";
 import { useI18n } from "../../_i18n/provider";
+import { defaultPaymentTerm, type PaymentTermType } from "../../_lib/payment-term";
 
 type CustomerEditFormProps = {
   item?: CustomerItem;
@@ -26,6 +27,7 @@ function createEmptyCustomerFormState(): CustomerFormState {
     alamat: "",
     npwp: "",
     atasNama: "",
+    defaultPaymentTerm: { ...defaultPaymentTerm },
   };
 }
 
@@ -67,7 +69,7 @@ export function CustomerEditForm({
   };
 
   return (
-    <section className="rounded-2xl border border-sky-200 bg-sky-50/40 p-5 shadow-sm dark:border-sky-900/70 dark:bg-slate-950/85">
+    <section className="ppp-form-view rounded-2xl border border-sky-200 bg-sky-50/40 p-5 shadow-sm dark:border-sky-900/70 dark:bg-slate-950/85">
       <div className="mb-3">
         <h2 className="text-lg font-semibold text-sky-900 dark:text-sky-100">{t("customer.form.title")}</h2>
         <p className="text-sm text-sky-800 dark:text-sky-200">
@@ -118,6 +120,56 @@ export function CustomerEditForm({
                 className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               />
             </label>
+
+            <div className="rounded-lg border border-sky-100 p-3 dark:border-slate-700">
+              <p className="text-sm font-medium text-slate-800 dark:text-slate-100">{t("field.defaultPaymentTerm")}</p>
+              <div className="mt-2 grid gap-3 sm:grid-cols-2">
+                <label className="text-sm text-slate-700 dark:text-slate-200">
+                  {t("field.paymentTermType")}
+                  <select
+                    value={form.defaultPaymentTerm.type}
+                    onChange={(event) => {
+                      const type = event.target.value as PaymentTermType;
+                      setForm((prev) => ({
+                        ...prev,
+                        defaultPaymentTerm:
+                          type === "dpNet"
+                            ? { type, netDays: 30, downPaymentPercent: 30, remainingPaymentPercent: 70 }
+                            : type === "net"
+                              ? { type, netDays: 30, downPaymentPercent: 0, remainingPaymentPercent: 100 }
+                              : { type, netDays: 0, downPaymentPercent: 0, remainingPaymentPercent: 100 },
+                      }));
+                    }}
+                    className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800"
+                  >
+                    <option value="net">Net</option>
+                    <option value="cashBeforeDelivery">{t("paymentTerm.cashBeforeDelivery")}</option>
+                    <option value="cashOnDelivery">{t("paymentTerm.cashOnDelivery")}</option>
+                    <option value="dpNet">{t("paymentTerm.dpNet")}</option>
+                  </select>
+                </label>
+                {(form.defaultPaymentTerm.type === "net" || form.defaultPaymentTerm.type === "dpNet") ? (
+                  <label className="text-sm text-slate-700 dark:text-slate-200">
+                    {t("field.netDays")}
+                    <input type="number" min={0} max={3650} value={form.defaultPaymentTerm.netDays}
+                      onChange={(event) => setForm((prev) => ({ ...prev, defaultPaymentTerm: { ...prev.defaultPaymentTerm, netDays: Number(event.target.value) } }))}
+                      className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800" />
+                  </label>
+                ) : null}
+                {form.defaultPaymentTerm.type === "dpNet" ? (
+                  <>
+                    <label className="text-sm text-slate-700 dark:text-slate-200">{t("field.downPaymentPercent")}
+                      <input type="number" min={1} max={99} value={form.defaultPaymentTerm.downPaymentPercent}
+                        onChange={(event) => { const dp = Number(event.target.value); setForm((prev) => ({ ...prev, defaultPaymentTerm: { ...prev.defaultPaymentTerm, downPaymentPercent: dp, remainingPaymentPercent: 100 - dp } })); }}
+                        className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800" />
+                    </label>
+                    <label className="text-sm text-slate-700 dark:text-slate-200">{t("field.remainingPaymentPercent")}
+                      <input readOnly value={form.defaultPaymentTerm.remainingPaymentPercent} className="mt-1 w-full rounded-lg border border-sky-100 bg-slate-100 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900" />
+                    </label>
+                  </>
+                ) : null}
+              </div>
+            </div>
           </div>
 
           <div className="mt-3 grid gap-2 sm:flex sm:flex-wrap">
@@ -180,6 +232,10 @@ export function CustomerEditForm({
             </p>
             <p>
               <span className="text-slate-500 dark:text-slate-400">{t("field.atasNama")}:</span> {form.atasNama || "-"}
+            </p>
+            <p>
+              <span className="text-slate-500 dark:text-slate-400">{t("field.defaultPaymentTerm")}:</span>{" "}
+              {form.defaultPaymentTerm.type === "net" ? `Net ${form.defaultPaymentTerm.netDays}` : form.defaultPaymentTerm.type === "dpNet" ? `DP ${form.defaultPaymentTerm.downPaymentPercent}%, Net ${form.defaultPaymentTerm.remainingPaymentPercent}% / ${form.defaultPaymentTerm.netDays} ${t("common.days")}` : t(`paymentTerm.${form.defaultPaymentTerm.type}`)}
             </p>
           </div>
         </div>

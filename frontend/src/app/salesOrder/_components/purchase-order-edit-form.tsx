@@ -23,6 +23,8 @@ import {
   type PurchaseOrderItem,
 } from "../_lib/purchase-order";
 import { PurchaseOrderBarangSpreadsheet } from "./purchase-order-barang-spreadsheet";
+import { DocumentAuditLog } from "../../_components/document-audit-log";
+import { defaultPaymentTerm, formatPaymentTermLabel, normalizePaymentTerm, type PaymentTermType } from "../../_lib/payment-term";
 
 type PurchaseOrderEditFormProps = {
   item?: PurchaseOrderItem;
@@ -37,6 +39,7 @@ type PurchaseOrderEditFormProps = {
   onDelete?: (selectedItem: PurchaseOrderItem) => Promise<void> | void;
   onCreateSuratJalan?: (selectedItem: PurchaseOrderItem) => Promise<void> | void;
   onCreateInvoice?: (selectedItem: PurchaseOrderItem) => Promise<void> | void;
+  onPrint?: (selectedItem: PurchaseOrderItem) => void;
 };
 
 function createEmptyPurchaseOrderFormState(): PurchaseOrderFormState {
@@ -48,6 +51,7 @@ function createEmptyPurchaseOrderFormState(): PurchaseOrderFormState {
     barangRows: ensureTrailingEmptyPurchaseOrderBarangRow([
       createEmptyPurchaseOrderBarangRow(),
     ]),
+    paymentTerm: { ...defaultPaymentTerm },
     tanggalInvoice: "",
     noInvoice: "",
   };
@@ -75,6 +79,7 @@ export function PurchaseOrderEditForm({
   onDelete,
   onCreateSuratJalan,
   onCreateInvoice,
+  onPrint,
 }: PurchaseOrderEditFormProps) {
   const { locale, t } = useI18n();
   const inputPlaceholder = (fieldKey: string) =>
@@ -115,7 +120,11 @@ export function PurchaseOrderEditForm({
   const previewCustomer = customerLabelMap.get(form.namaCustomer) || form.namaCustomer || "-";
   const previewInvoice = invoiceLabelMap.get(form.noInvoice) || form.noInvoice || "-";
   const barangList = useMemo(() => purchaseOrderBarangRowsToList(form.barangRows), [form.barangRows]);
-  const barangTotal = useMemo(() => calculatePurchaseOrderBarangTotal(barangList), [barangList]);
+  const paymentTermLabel = formatPaymentTermLabel(form.paymentTerm, {
+    cashBeforeDelivery: t("paymentTerm.cashBeforeDelivery"),
+    cashOnDelivery: t("paymentTerm.cashOnDelivery"),
+    days: t("common.days"),
+  });
 
   function updateBarangRows(rows: PurchaseOrderBarangFormRow[]) {
     const nextRows = ensureTrailingEmptyPurchaseOrderBarangRow(rows);
@@ -130,7 +139,7 @@ export function PurchaseOrderEditForm({
   }
 
   return (
-    <section className="rounded-2xl border border-sky-200 bg-sky-50/40 p-5 shadow-sm dark:border-sky-900/70 dark:bg-slate-950/85">
+    <section className="ppp-form-view rounded-2xl border border-sky-200 bg-sky-50/40 p-5 shadow-sm dark:border-sky-900/70 dark:bg-slate-950/85">
       <div className="mb-3">
         <h2 className="text-lg font-semibold text-sky-900 dark:text-sky-100">{t("purchaseOrder.form.title")}</h2>
         <p className="text-sm text-sky-800 dark:text-sky-200">{t("purchaseOrder.form.description")}</p>
@@ -162,7 +171,17 @@ export function PurchaseOrderEditForm({
               {t("field.namaCustomer")}
               <select
                 value={form.namaCustomer}
-                onChange={(event) => setForm((prev) => ({ ...prev, namaCustomer: event.target.value }))}
+                onChange={(event) => {
+                  const namaCustomer = event.target.value;
+                  const customer = customerOptions.find((option) => option.id === namaCustomer);
+                  setForm((prev) => ({
+                    ...prev,
+                    namaCustomer,
+                    paymentTerm: customer
+                      ? normalizePaymentTerm(customer.defaultPaymentTerm)
+                      : prev.paymentTerm,
+                  }));
+                }}
                 className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               >
                 <option value="">{t("purchaseOrder.form.customerPlaceholder")}</option>
@@ -174,18 +193,32 @@ export function PurchaseOrderEditForm({
               </select>
             </label>
 
+            <div className="rounded-lg border border-sky-100 p-3 dark:border-slate-700 sm:col-span-2">
+              <p className="text-sm font-medium text-slate-800 dark:text-slate-100">{t("field.paymentTerm")}</p>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("purchaseOrder.form.paymentTermHint")}</p>
+              <div className="mt-2 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <label className="text-sm text-slate-700 dark:text-slate-200">{t("field.paymentTermType")}
+                  <select value={form.paymentTerm.type} onChange={(event) => { const type = event.target.value as PaymentTermType; setForm((prev) => ({ ...prev, paymentTerm: type === "dpNet" ? { type, netDays: 30, downPaymentPercent: 30, remainingPaymentPercent: 70 } : type === "net" ? { type, netDays: 30, downPaymentPercent: 0, remainingPaymentPercent: 100 } : { type, netDays: 0, downPaymentPercent: 0, remainingPaymentPercent: 100 } })); }} className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800">
+                    <option value="net">Net</option><option value="cashBeforeDelivery">{t("paymentTerm.cashBeforeDelivery")}</option><option value="cashOnDelivery">{t("paymentTerm.cashOnDelivery")}</option><option value="dpNet">{t("paymentTerm.dpNet")}</option>
+                  </select>
+                </label>
+                {(form.paymentTerm.type === "net" || form.paymentTerm.type === "dpNet") ? <label className="text-sm text-slate-700 dark:text-slate-200">{t("field.netDays")}<input type="number" min={0} max={3650} value={form.paymentTerm.netDays} onChange={(event) => setForm((prev) => ({ ...prev, paymentTerm: { ...prev.paymentTerm, netDays: Number(event.target.value) } }))} className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800" /></label> : null}
+                {form.paymentTerm.type === "dpNet" ? <><label className="text-sm text-slate-700 dark:text-slate-200">{t("field.downPaymentPercent")}<input type="number" min={1} max={99} value={form.paymentTerm.downPaymentPercent} onChange={(event) => { const dp = Number(event.target.value); setForm((prev) => ({ ...prev, paymentTerm: { ...prev.paymentTerm, downPaymentPercent: dp, remainingPaymentPercent: 100 - dp } })); }} className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800" /></label><label className="text-sm text-slate-700 dark:text-slate-200">{t("field.remainingPaymentPercent")}<input readOnly value={form.paymentTerm.remainingPaymentPercent} className="mt-1 w-full rounded-lg border border-sky-100 bg-slate-100 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900" /></label></> : null}
+              </div>
+            </div>
+
             <label className="text-sm text-slate-700 dark:text-slate-200">
               {t("field.nominalPo")}
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                {t("purchaseOrder.form.nominalReplacedFromInvoice")}
+                {t("purchaseOrder.form.nominalFromItems")}
               </p>
               <input
                 type="number"
                 min={0}
                 value={form.nominalPo}
-                onChange={(event) => setForm((prev) => ({ ...prev, nominalPo: event.target.value }))}
+                readOnly
                 placeholder={inputPlaceholder("field.nominalPo")}
-                className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                className="mt-1 w-full cursor-not-allowed rounded-lg border border-sky-100 bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
               />
             </label>
 
@@ -264,6 +297,12 @@ export function PurchaseOrderEditForm({
               <>
                 <button
                   type="button"
+                  onClick={() => onPrint?.(item)}
+                  disabled={isSaving || isDeleting || isShortcutLoading}
+                  className="w-full rounded-lg border border-sky-300 bg-white px-4 py-2 text-sm font-medium text-sky-700 hover:bg-sky-50 disabled:opacity-60 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 sm:w-auto"
+                >{t("common.print")}</button>
+                <button
+                  type="button"
                   onClick={() => void onCreateSuratJalan?.(item)}
                   disabled={isSaving || isDeleting || isShortcutLoading}
                   className="w-full rounded-lg border border-emerald-300 bg-white px-4 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-900 dark:bg-slate-900 dark:text-emerald-300 dark:hover:bg-emerald-950/40 sm:w-auto"
@@ -311,9 +350,7 @@ export function PurchaseOrderEditForm({
             <p>
               <span className="text-slate-500 dark:text-slate-400">{t("field.nominalPo")}:</span> {formatRupiah(Number(form.nominalPo || "0"), locale)}
             </p>
-            <p>
-              <span className="text-slate-500 dark:text-slate-400">{t("field.subtotal")}:</span> {formatRupiah(barangTotal, locale)}
-            </p>
+            <p><span className="text-slate-500 dark:text-slate-400">{t("field.paymentTerm")}:</span> {paymentTermLabel}</p>
             <p>
               <span className="text-slate-500 dark:text-slate-400">{t("field.tanggalInvoice")}:</span> {formatTanggal(form.tanggalInvoice || null, locale)}
             </p>
@@ -347,6 +384,14 @@ export function PurchaseOrderEditForm({
           </div>
         </div>
       </div>
+      {item && item.revision > 0 ? (
+        <div className="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
+          <p className="font-semibold">{t("purchaseOrder.revision.title", { revision: item.revision })}</p>
+          <p className="mt-1">{t("purchaseOrder.revision.impact", { suratJalan: item.revisionHistory[0]?.affectedSuratJalan || 0, invoices: item.revisionHistory[0]?.affectedInvoices || 0 })}</p>
+          <p className="mt-1 text-xs">{t("purchaseOrder.revision.hint")}</p>
+        </div>
+      ) : null}
+      {item ? <DocumentAuditLog entityType="purchaseOrder" entityId={item.id} /> : null}
     </section>
   );
 }

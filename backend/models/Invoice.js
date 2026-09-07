@@ -1,5 +1,20 @@
 const mongoose = require("mongoose");
 
+const paymentTermSchema = new mongoose.Schema(
+  {
+    type: {
+      type: String,
+      enum: ["net", "cashBeforeDelivery", "cashOnDelivery", "dpNet"],
+      required: true,
+      default: "net",
+    },
+    netDays: { type: Number, min: 0, max: 3650, required: true, default: 30 },
+    downPaymentPercent: { type: Number, min: 0, max: 100, required: true, default: 0 },
+    remainingPaymentPercent: { type: Number, min: 0, max: 100, required: true, default: 100 },
+  },
+  { _id: false }
+);
+
 const barangInvoiceSourceSchema = new mongoose.Schema(
   {
     suratJalanId: {
@@ -135,6 +150,7 @@ const invoiceSchema = new mongoose.Schema(
       ],
       required: true,
       default: [],
+      index: true,
       validate: {
         validator(value) {
           return (
@@ -177,6 +193,20 @@ const invoiceSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    paymentTerm: {
+      type: paymentTermSchema,
+      default: () => ({
+        type: "net",
+        netDays: 30,
+        downPaymentPercent: 0,
+        remainingPaymentPercent: 100,
+      }),
+    },
+    dueDate: {
+      type: Date,
+      required: true,
+      index: true,
+    },
     ppnRate: {
       type: Number,
       required: true,
@@ -202,6 +232,10 @@ const invoiceSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+invoiceSchema.index({ tanggal: -1 });
+invoiceSchema.index({ isPaid: 1, dueDate: 1 });
+invoiceSchema.index({ isPaid: 1, tanggalBayar: -1 });
 
 const Invoice = mongoose.model("Invoice", invoiceSchema);
 

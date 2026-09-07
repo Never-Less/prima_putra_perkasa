@@ -5,8 +5,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ApiLoadingState } from "../_components/api-loading-state";
 import { AppToast } from "../_components/app-toast";
 import { ConfirmationModal } from "../_components/confirmation-modal";
+import { ListViewHeader } from "../_components/list-view-header";
 import { useExportAccess } from "../_hooks/use-export-access";
 import { requestUnsavedChangesConfirmation } from "../_hooks/use-unsaved-changes-warning";
+import { usePersistentListUrl } from "../_hooks/use-persistent-list-url";
 import { useI18n } from "../_i18n/provider";
 import { ApiRequestError } from "../_lib/api-client";
 import {
@@ -14,6 +16,7 @@ import {
   buildListRouteWithPagination,
   normalizePaginationQueryState,
   normalizeReturnPaginationQueryState,
+  normalizeStringFilterQueryState,
   type ServerPaginationMeta,
 } from "../_lib/pagination";
 import {
@@ -28,6 +31,7 @@ import {
   type SuratJalanPrefillPayload,
 } from "../suratJalan/_lib/surat-jalan";
 import { PurchaseOrderEditForm } from "./_components/purchase-order-edit-form";
+import { SalesOrderFulfillmentSummary } from "./_components/sales-order-fulfillment-summary";
 import { PurchaseOrderTableFilter } from "./_components/purchase-order-table-filter";
 import {
   createPurchaseOrder,
@@ -72,6 +76,7 @@ const defaultPurchaseOrderPaginationQuery = {
   page: 1,
   limit: 10,
 };
+const defaultPurchaseOrderSort = "updatedDesc";
 
 function buildSuratJalanPrefillFromPurchaseOrder(
   item: PurchaseOrderItem
@@ -139,12 +144,15 @@ export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: Purchas
       ),
     [searchParams]
   );
+  const initialFilterQuery = useMemo(() => normalizeStringFilterQueryState(searchParams, defaultPurchaseOrderFilter), [searchParams]);
+  const initialSortValue = String(searchParams.get("sort") || defaultPurchaseOrderSort);
+  const returnListState = useMemo(() => ({ ...initialFilterQuery, sort: initialSortValue }), [initialFilterQuery, initialSortValue]);
   const returnListPath = useMemo(
-    () => buildListRouteWithPagination("/purchaseOrder", returnPaginationQuery),
-    [returnPaginationQuery]
+    () => buildListRouteWithPagination("/salesOrder", returnPaginationQuery, returnListState),
+    [returnListState, returnPaginationQuery]
   );
   const [rows, setRows] = useState<PurchaseOrderItem[]>([]);
-  const [filter, setFilter] = useState<PurchaseOrderFilter>(defaultPurchaseOrderFilter);
+  const [filter, setFilter] = useState<PurchaseOrderFilter>(initialFilterQuery);
   const [paginationQuery, setPaginationQuery] = useState(() =>
     isFormMode ? defaultPurchaseOrderPaginationQuery : initialPaginationQuery
   );
@@ -155,6 +163,7 @@ export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: Purchas
     totalPages: 1,
   });
   const [filteredCount, setFilteredCount] = useState(0);
+  const [sortValue, setSortValue] = useState(initialSortValue);
   const [customerOptions, setCustomerOptions] = useState<PurchaseOrderCustomerOption[]>([]);
   const [invoiceOptions, setInvoiceOptions] = useState<PurchaseOrderInvoiceOption[]>([]);
   const [selectedId, setSelectedId] = useState(itemId);
@@ -177,6 +186,8 @@ export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: Purchas
       }
     | null
   >(null);
+
+  usePersistentListUrl({ enabled: !isFormMode, basePath: "/salesOrder", defaultFilter: defaultPurchaseOrderFilter, defaultPagination: defaultPurchaseOrderPaginationQuery, defaultSort: defaultPurchaseOrderSort, filter, pagination: paginationQuery, sort: sortValue, setFilter, setPagination: setPaginationQuery, setSort: setSortValue });
   const [pendingShortcutConfirmation, setPendingShortcutConfirmation] =
     useState<PurchaseOrderShortcutConfirmation | null>(null);
 
@@ -347,8 +358,8 @@ export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: Purchas
     });
 
     const targetPath = searchParams.toString()
-      ? `/purchaseOrder/export?${searchParams.toString()}`
-      : "/purchaseOrder/export";
+      ? `/salesOrder/export?${searchParams.toString()}`
+      : "/salesOrder/export";
 
     window.open(targetPath, "_blank", "noopener,noreferrer");
   }, [canExport, filter]);
@@ -358,13 +369,14 @@ export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: Purchas
       const normalizedId = String(id || "").trim();
       router.push(
         buildFormRouteWithReturnPagination(
-          "/purchaseOrder/form",
+          "/salesOrder/form",
           normalizedId,
-          paginationQuery
+          paginationQuery,
+          { ...filter, sort: sortValue }
         )
       );
     },
-    [paginationQuery, router]
+    [filter, paginationQuery, router, sortValue]
   );
 
   const selectedRow = useMemo(() => {
@@ -405,6 +417,40 @@ export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: Purchas
     [invoiceLabelMap]
   );
 
+  const sortedRows = useMemo(() => {
+    return [...rows].sort((left, right) => {
+      if (sortValue === "updatedAsc") {
+        return left.updatedAt.localeCompare(right.updatedAt);
+      }
+
+      if (sortValue === "dateDesc") {
+        return right.tanggalPo.localeCompare(left.tanggalPo);
+      }
+
+      if (sortValue === "dateAsc") {
+        return left.tanggalPo.localeCompare(right.tanggalPo);
+      }
+
+      if (sortValue === "nameAsc") {
+        return resolveCustomerLabel(left.namaCustomer).localeCompare(resolveCustomerLabel(right.namaCustomer));
+      }
+
+      if (sortValue === "nameDesc") {
+        return resolveCustomerLabel(right.namaCustomer).localeCompare(resolveCustomerLabel(left.namaCustomer));
+      }
+
+      if (sortValue === "amountDesc") {
+        return right.nominalPo - left.nominalPo;
+      }
+
+      if (sortValue === "amountAsc") {
+        return left.nominalPo - right.nominalPo;
+      }
+
+      return right.updatedAt.localeCompare(left.updatedAt);
+    });
+  }, [resolveCustomerLabel, rows, sortValue]);
+
   const executeSavePurchaseOrder = useCallback(
     async (form: PurchaseOrderFormState, selectedItem?: PurchaseOrderItem) => {
       setActionErrorMessage("");
@@ -418,9 +464,10 @@ export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: Purchas
           if (isFormMode) {
             router.replace(
               buildFormRouteWithReturnPagination(
-                "/purchaseOrder/form",
+                "/salesOrder/form",
                 updatedPurchaseOrder?.id || selectedItem.id,
-                returnPaginationQuery
+                returnPaginationQuery,
+                returnListState
               )
             );
           }
@@ -439,9 +486,10 @@ export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: Purchas
         if (isFormMode && createdPurchaseOrder?.id) {
           router.replace(
             buildFormRouteWithReturnPagination(
-              "/purchaseOrder/form",
+              "/salesOrder/form",
               createdPurchaseOrder.id,
-              returnPaginationQuery
+              returnPaginationQuery,
+              returnListState
             )
           );
         }
@@ -466,7 +514,7 @@ export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: Purchas
         setIsSaving(false);
       }
     },
-    [isFormMode, loadPurchaseOrders, returnPaginationQuery, router, showToast, t]
+    [isFormMode, loadPurchaseOrders, returnListState, returnPaginationQuery, router, showToast, t]
   );
 
   const executeDeletePurchaseOrder = useCallback(
@@ -703,17 +751,18 @@ export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: Purchas
 
   return (
     <>
-      <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-        <section className="rounded-2xl border border-sky-100 bg-gradient-to-r from-sky-50 to-white p-4 shadow-sm dark:border-slate-800 dark:from-slate-900 dark:to-slate-950 sm:p-5">
-          <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100 sm:text-2xl">{t("nav.purchaseOrder")}</h1>
-          <p className="mt-1 max-w-3xl text-sm text-slate-600 dark:text-slate-300">{t("purchaseOrder.page.description")}</p>
-        </section>
+      <main className="erp-page">
+        <ListViewHeader
+          title={t("nav.purchaseOrder")}
+          addLabel={t("common.addPageData", { page: t("nav.purchaseOrder") })}
+          onAdd={isFormMode ? undefined : () => navigateToForm()}
+        />
 
-        <div className="mt-5 space-y-5">
+        <div className="mt-3 space-y-3">
           {isLoading ? <ApiLoadingState /> : null}
 
           {!isLoading && errorMessage ? (
-            <section className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/50 dark:text-red-200">
+            <section className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/50 dark:text-red-200">
               <p>{errorMessage}</p>
               <button
                 type="button"
@@ -744,6 +793,7 @@ export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: Purchas
                       {t("common.close")}
                     </button>
                   </div>
+                  {selectedRow ? <SalesOrderFulfillmentSummary item={selectedRow} /> : null}
                   <PurchaseOrderEditForm
                     key={selectedId || "new"}
                     item={selectedRow}
@@ -759,9 +809,10 @@ export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: Purchas
                       setSelectedId("");
                       router.replace(
                         buildFormRouteWithReturnPagination(
-                          "/purchaseOrder/form",
+                          "/salesOrder/form",
                           "",
-                          returnPaginationQuery
+                          returnPaginationQuery,
+                          returnListState
                         )
                       );
                     }}
@@ -772,26 +823,30 @@ export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: Purchas
                     onCreateInvoice={(item) =>
                       handlePurchaseOrderShortcut("invoice", item)
                     }
+                    onPrint={(item) => window.open(`/salesOrder/export/${item.id}`, "_blank", "noopener,noreferrer")}
                   />
                 </>
               ) : (
                 <>
-                  <div className="flex justify-end">
-                    <button
-                      type="button"
-                      onClick={() => navigateToForm()}
-                      className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600 dark:bg-sky-500 dark:text-slate-950 dark:hover:bg-sky-400"
-                    >
-                      {t("common.newData")}
-                    </button>
-                  </div>
                   <PurchaseOrderTableFilter
-                    rows={rows}
+                    rows={sortedRows}
                     filter={filter}
                     filteredCount={filteredCount}
                     pagination={pagination}
                     selectedId=""
                     canExport={canExport}
+                    sortValue={sortValue}
+                    onSortChange={setSortValue}
+                    sortOptions={[
+                      { value: "updatedDesc", label: t("common.sort.updatedDesc") },
+                      { value: "updatedAsc", label: t("common.sort.updatedAsc") },
+                      { value: "dateDesc", label: t("common.sort.dateDesc") },
+                      { value: "dateAsc", label: t("common.sort.dateAsc") },
+                      { value: "nameAsc", label: t("common.sort.nameAsc") },
+                      { value: "nameDesc", label: t("common.sort.nameDesc") },
+                      { value: "amountDesc", label: t("common.sort.amountDesc") },
+                      { value: "amountAsc", label: t("common.sort.amountAsc") },
+                    ]}
                     resolveCustomerLabel={resolveCustomerLabel}
                     resolveInvoiceLabel={resolveInvoiceLabel}
                     onExportPage={handleOpenExportPage}

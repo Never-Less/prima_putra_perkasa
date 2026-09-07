@@ -2,21 +2,33 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #eef6ff;
+  --font-geist-sans: "Segoe UI", Arial, sans-serif;
+  --font-geist-mono: "Cascadia Mono", Consolas, monospace;
+  --background: #f4f6f8;
   --surface: #ffffff;
-  --surface-soft: #f0f9ff;
-  --foreground: #111827;
-  --muted: #6b7280;
-  --line: #dbeafe;
+  --surface-soft: #f8fafc;
+  --surface-muted: #eef2f6;
+  --foreground: #182230;
+  --muted: #667085;
+  --line: #d7dde5;
+  --line-strong: #c4ccd8;
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --focus-ring: rgba(37, 99, 235, 0.24);
 }
 
 .dark {
-  --background: #07111f;
-  --surface: #0f172a;
-  --surface-soft: #162033;
-  --foreground: #e5eefb;
-  --muted: #94a3b8;
-  --line: #243142;
+  --background: #101318;
+  --surface: #171b22;
+  --surface-soft: #1d222b;
+  --surface-muted: #252b35;
+  --foreground: #f0f3f7;
+  --muted: #9ca6b5;
+  --line: #303744;
+  --line-strong: #414a59;
+  --accent: #60a5fa;
+  --accent-hover: #93c5fd;
+  --focus-ring: rgba(96, 165, 250, 0.28);
   color-scheme: dark;
 }
 
@@ -34,19 +46,74 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background:
-    radial-gradient(circle at top right, #dbeafe 0%, transparent 38%),
-    radial-gradient(circle at bottom left, #e0f2fe 0%, transparent 42%),
-    var(--background);
+  background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), "Segoe UI", sans-serif;
+  font-size: 14px;
+  text-rendering: optimizeLegibility;
 }
 
 .dark body {
-  background:
-    radial-gradient(circle at top right, rgba(14, 116, 144, 0.24) 0%, transparent 38%),
-    radial-gradient(circle at bottom left, rgba(5, 150, 105, 0.22) 0%, transparent 42%),
-    var(--background);
+  background: var(--background);
+}
+
+::selection {
+  background: rgba(37, 99, 235, 0.18);
+}
+
+:where(button, [role="button"], a, input, select, textarea) {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:where(button, [role="button"], a) {
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease,
+    box-shadow 140ms ease,
+    opacity 140ms ease,
+    transform 90ms ease;
+}
+
+:where(button, [role="button"]):not(:disabled) {
+  touch-action: manipulation;
+}
+
+:where(button, [role="button"]):not(:disabled):active {
+  transform: translateY(1px);
+}
+
+:where(button, input, select, textarea, a):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+:where(button, input, select, textarea):disabled {
+  cursor: not-allowed;
+}
+
+:where(input, select, textarea) {
+  transition:
+    border-color 140ms ease,
+    background-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+:where(input, select, textarea):focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px var(--focus-ring);
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 @keyframes modalBackdropEnter {
@@ -93,6 +160,131 @@ body {
 
 .toast-enter {
   animation: toastEnter 180ms ease-out;
+}
+
+.erp-page {
+  width: 100%;
+  padding: 1rem;
+}
+
+.erp-panel {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+
+.erp-button,
+.erp-icon-button {
+  display: inline-flex;
+  min-height: 2.25rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--foreground);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1;
+  box-shadow: 0 1px 1px rgba(16, 24, 40, 0.04);
+}
+
+.erp-button {
+  gap: 0.5rem;
+  padding: 0 0.75rem;
+}
+
+.erp-icon-button {
+  width: 2.25rem;
+  padding: 0;
+}
+
+.erp-button:hover,
+.erp-icon-button:hover {
+  border-color: var(--line-strong);
+  background: var(--surface-muted);
+}
+
+.erp-button-primary {
+  border-color: #1d4ed8;
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.erp-button-primary:hover {
+  border-color: #1e40af;
+  background: #1d4ed8;
+}
+
+.dark .erp-button-primary {
+  border-color: #3b82f6;
+  background: #3b82f6;
+  color: #07111f;
+}
+
+.dark .erp-button-primary:hover {
+  border-color: #60a5fa;
+  background: #60a5fa;
+}
+
+.erp-button-danger {
+  border-color: #fca5a5;
+  color: #b42318;
+}
+
+.erp-button-danger:hover {
+  border-color: #f87171;
+  background: #fef2f2;
+}
+
+.dark .erp-button-danger {
+  border-color: #7f1d1d;
+  color: #fca5a5;
+}
+
+.dark .erp-button-danger:hover {
+  background: #450a0a;
+}
+
+.erp-button:disabled,
+.erp-icon-button:disabled {
+  opacity: 0.5;
+  box-shadow: none;
+}
+
+.erp-field {
+  min-height: 2.375rem;
+  border: 1px solid var(--line) !important;
+  border-radius: 6px !important;
+  background: var(--surface) !important;
+  color: var(--foreground) !important;
+  font-size: 0.875rem !important;
+  box-shadow: 0 1px 1px rgba(16, 24, 40, 0.03);
+}
+
+.erp-field::placeholder {
+  color: #98a2b3;
+}
+
+.erp-menu {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: 0 12px 28px rgba(16, 24, 40, 0.14);
+}
+
+@media (min-width: 640px) {
+  .erp-page {
+    padding: 1.25rem 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .erp-page {
+    padding: 1.5rem 2rem;
+  }
 }
 
 .app-date-picker-popper {
@@ -193,9 +385,9 @@ body {
 .app-date-picker-calendar {
   overflow: hidden;
   border: 1px solid var(--line) !important;
-  border-radius: 16px !important;
+  border-radius: 8px !important;
   background: var(--surface) !important;
-  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.18);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.16);
   color: var(--foreground) !important;
   font-family: var(--font-geist-sans), "Segoe UI", sans-serif !important;
 }
@@ -217,7 +409,7 @@ body {
 .app-date-picker-calendar .react-datepicker__month-select,
 .app-date-picker-calendar .react-datepicker__year-select {
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 6px;
   background: var(--surface);
   color: var(--foreground);
 }
@@ -232,7 +424,7 @@ body {
 .app-date-picker-calendar .react-datepicker__year-dropdown {
   overflow: hidden;
   border: 1px solid var(--line) !important;
-  border-radius: 12px !important;
+  border-radius: 8px !important;
   background: var(--surface) !important;
   box-shadow: 0 16px 36px rgba(15, 23, 42, 0.22);
 }
@@ -300,4 +492,234 @@ body {
 .dark .app-date-picker-calendar .react-datepicker__year-option--selected_year {
   background: #0284c7 !important;
   color: #ffffff !important;
+}
+
+.ppp-list-view {
+  overflow: visible;
+  border-color: var(--line) !important;
+  border-radius: 8px !important;
+  background: var(--surface) !important;
+  padding: 0 !important;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04) !important;
+}
+
+.dark .ppp-list-view {
+  border-color: var(--line) !important;
+  background: var(--surface) !important;
+}
+
+.ppp-list-view > div:first-of-type {
+  margin: 0 !important;
+  min-height: 3rem;
+  border-bottom: 1px solid var(--line);
+  padding: 0.5rem 0.75rem;
+  justify-content: flex-end !important;
+}
+
+.ppp-list-view > div:first-of-type h2 {
+  display: none !important;
+}
+
+.ppp-list-view > div:first-of-type button {
+  min-height: 2.125rem !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 6px !important;
+  background: var(--surface-soft) !important;
+  color: var(--foreground) !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+}
+
+.ppp-list-view > div:first-of-type button:hover {
+  border-color: var(--line-strong) !important;
+  background: var(--surface-muted) !important;
+}
+
+.ppp-list-view > form {
+  margin: 0 !important;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-soft);
+  padding: 1rem;
+}
+
+.ppp-list-view > form > p:first-child {
+  margin-bottom: 0.75rem !important;
+  color: var(--muted) !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ppp-list-view > form > div {
+  gap: 0.75rem !important;
+}
+
+.ppp-list-view > form label {
+  color: var(--muted) !important;
+  font-size: 0.75rem !important;
+  font-weight: 600;
+}
+
+.ppp-list-view > form :where(input, select) {
+  margin-top: 0.25rem !important;
+  min-height: 2.25rem;
+  border: 1px solid var(--line) !important;
+  border-radius: 6px !important;
+  background: var(--surface) !important;
+  color: var(--foreground) !important;
+  font-size: 0.875rem !important;
+  padding: 0.45rem 0.75rem !important;
+  box-shadow: 0 1px 1px rgba(16, 24, 40, 0.03);
+}
+
+.ppp-list-view > form :where(input, select)::placeholder {
+  color: #98a2b3 !important;
+}
+
+.ppp-list-view > form :where(input, select):focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px var(--focus-ring) !important;
+}
+
+.ppp-list-view > form > div:last-child {
+  margin-top: 1rem !important;
+  border-top: 1px solid var(--line);
+  padding-top: 0.75rem;
+}
+
+.ppp-list-view > form > div:last-child button {
+  min-height: 2.25rem;
+  border-radius: 6px !important;
+  font-weight: 600 !important;
+}
+
+.ppp-list-view > div:nth-last-child(2),
+.ppp-list-view > div:nth-last-child(3) {
+  margin: 0 !important;
+  padding: 0.75rem;
+}
+
+.ppp-list-view table thead {
+  background: transparent !important;
+}
+
+.ppp-list-view table thead tr {
+  background: var(--surface-muted) !important;
+}
+
+.ppp-list-view table thead th {
+  border-bottom: 1px solid var(--line-strong);
+  color: var(--muted) !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  padding-top: 0.625rem !important;
+  padding-bottom: 0.625rem !important;
+}
+
+.ppp-list-view table tbody td {
+  border-color: var(--line) !important;
+  padding-top: 0.625rem !important;
+  padding-bottom: 0.625rem !important;
+}
+
+.ppp-list-view table tbody tr {
+  background: var(--surface) !important;
+}
+
+.ppp-list-view table tbody tr:hover {
+  background: var(--surface-soft) !important;
+}
+
+.ppp-list-view table tbody tr:focus-within {
+  background: var(--surface-soft) !important;
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.ppp-list-view table button {
+  min-height: 2rem;
+  border-radius: 6px !important;
+}
+
+.ppp-list-view > div:last-child {
+  border-top: 1px solid var(--line) !important;
+  border-right: 0 !important;
+  border-bottom: 0 !important;
+  border-left: 0 !important;
+  border-radius: 0 !important;
+  background: var(--surface-soft) !important;
+  box-shadow: none !important;
+}
+
+.ppp-form-view {
+  border-color: var(--line) !important;
+  border-radius: 8px !important;
+  background: var(--surface) !important;
+  padding: 1rem !important;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04) !important;
+}
+
+.ppp-form-view > div:first-child h2 {
+  color: var(--foreground) !important;
+  font-size: 1.125rem !important;
+}
+
+.ppp-form-view > div:first-child p {
+  color: var(--muted) !important;
+}
+
+.ppp-form-view :where(.rounded-xl, .rounded-2xl) {
+  border-color: var(--line) !important;
+  border-radius: 8px !important;
+  background: var(--surface-soft) !important;
+  box-shadow: none !important;
+}
+
+.ppp-form-view :where(label, legend) {
+  color: var(--foreground) !important;
+  font-weight: 500;
+}
+
+.ppp-form-view :where(input, select, textarea) {
+  min-height: 2.375rem;
+  border-color: var(--line) !important;
+  border-radius: 6px !important;
+  background: var(--surface) !important;
+  color: var(--foreground) !important;
+  box-shadow: 0 1px 1px rgba(16, 24, 40, 0.03) !important;
+}
+
+.ppp-form-view :where(input, select, textarea):focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px var(--focus-ring) !important;
+}
+
+.ppp-form-view :where(input, select, textarea):disabled {
+  background: var(--surface-muted) !important;
+  color: var(--muted) !important;
+}
+
+.ppp-form-view button {
+  min-height: 2.25rem;
+  border-radius: 6px !important;
+}
+
+@media (min-width: 640px) {
+  .ppp-form-view {
+    padding: 1.25rem !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .ppp-list-view > form > div {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .ppp-list-view article {
+    border-color: var(--line) !important;
+    border-radius: 8px !important;
+    background: var(--surface) !important;
+    box-shadow: none !important;
+  }
 }

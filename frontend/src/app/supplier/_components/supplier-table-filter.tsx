@@ -1,10 +1,18 @@
 "use client";
 
+import { useMemo, useState } from "react";
+import {
+  ColumnSettingsMenu,
+  HiddenColumnStyles,
+  ListSortControl,
+  SortableHeader,
+} from "../../_components/list-view-header";
 import { PaginationControls } from "../../_components/pagination-controls";
 import { DebouncedFilterInput } from "../../_components/debounced-filter-input";
 import { type ServerPaginationMeta } from "../../_lib/pagination";
 import { type SupplierFilter, type SupplierItem } from "../_lib/supplier";
 import { useI18n } from "../../_i18n/provider";
+import { useFilterDraft } from "../../_hooks/use-filter-draft";
 
 type SupplierTableFilterProps = {
   rows: SupplierItem[];
@@ -12,7 +20,10 @@ type SupplierTableFilterProps = {
   filteredCount: number;
   pagination: ServerPaginationMeta;
   selectedId?: string;
+  sortValue?: string;
+  sortOptions?: Array<{ value: string; label: string }>;
   onSelectRow?: (row: SupplierItem) => void;
+  onSortChange?: (value: string) => void;
   onFilterChange: <K extends keyof SupplierFilter>(key: K, value: SupplierFilter[K]) => void;
   onResetFilter: () => void;
   onPageChange: (page: number) => void;
@@ -27,50 +38,69 @@ export function SupplierTableFilter({
   filteredCount,
   pagination,
   selectedId,
+  sortValue,
+  sortOptions = [],
   onSelectRow,
+  onSortChange,
   onFilterChange,
   onResetFilter,
   onPageChange,
   onPageSizeChange,
 }: SupplierTableFilterProps) {
   const { t } = useI18n();
-  const filterPlaceholder = (fieldKey: string) =>
-    t("common.placeholder.filter", { field: t(fieldKey) });
+  const { draftFilter, updateDraftFilter, applyDraftFilter, resetDraftFilter } =
+    useFilterDraft(filter, onFilterChange, onResetFilter);
+  const filterPlaceholder = (fieldKey: string) => t(fieldKey);
+  const columns = useMemo(
+    () => [
+      { key: "action", label: t("common.action"), index: 1, locked: true },
+      { key: "namaSupplier", label: t("field.namaSupplier"), index: 2 },
+      { key: "hutang", label: t("field.hutang"), index: 3 },
+      { key: "lamaHutang", label: t("field.lamaHutang"), index: 4 },
+    ],
+    [t]
+  );
+  const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
+  const hiddenColumnIndexes = columns
+    .filter((column) => hiddenColumns.includes(column.key))
+    .map((column) => column.index);
 
   return (
-    <section className="space-y-4 rounded-2xl border border-sky-200 bg-sky-50/40 p-5 shadow-sm dark:border-sky-900/70 dark:bg-slate-950/85">
+    <section className="ppp-list-view ppp-supplier-list space-y-4 rounded-xl border border-slate-100 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+      <HiddenColumnStyles scopeClassName="ppp-supplier-list" hiddenColumnIndexes={hiddenColumnIndexes} />
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-lg font-semibold text-sky-900 dark:text-sky-100">{t("supplier.table.title")}</h2>
-        <button
-          type="button"
-          onClick={onResetFilter}
-          className="rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
-        >
-          {t("common.resetFilter")}
-        </button>
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{t("supplier.table.title")}</h2>
+        <div className="flex flex-wrap items-center gap-2">
+          <ListSortControl sortValue={sortValue} sortOptions={sortOptions} onSortChange={onSortChange} />
+          <ColumnSettingsMenu
+            columns={columns}
+            hiddenColumns={hiddenColumns}
+            onHiddenColumnsChange={setHiddenColumns}
+          />
+        </div>
       </div>
 
-      <div>
-        <p className="mb-2 text-sm font-medium text-sky-800 dark:text-sky-200">{t("common.filterByField")}</p>
+      <form onSubmit={applyDraftFilter}>
+        <p className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">{t("common.filterByField")}</p>
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.namaSupplier")}
             <DebouncedFilterInput
-              value={filter.namaSupplier}
-              onValueChange={(value) => onFilterChange("namaSupplier", value)}
+              value={draftFilter.namaSupplier}
+              onValueChange={(value) => updateDraftFilter("namaSupplier", value)}
               placeholder={filterPlaceholder("field.namaSupplier")}
-              className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+              className="mt-1 w-full rounded-lg border border-transparent bg-slate-100 px-3 py-2 text-sm text-slate-900 outline-none focus:border-sky-400 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.hutang")}
             <select
-              value={filter.hutang}
+              value={draftFilter.hutang}
               onChange={(event) =>
-                onFilterChange("hutang", event.target.value as SupplierFilter["hutang"])
+                updateDraftFilter("hutang", event.target.value as SupplierFilter["hutang"])
               }
-              className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+              className="mt-1 w-full rounded-lg border border-transparent bg-slate-100 px-3 py-2 text-sm text-slate-900 outline-none focus:border-sky-400 dark:bg-slate-900 dark:text-slate-100"
             >
               <option value="">{t("common.all")}</option>
               <option value="true">{t("common.true")}</option>
@@ -83,10 +113,10 @@ export function SupplierTableFilter({
             <DebouncedFilterInput
               type="number"
               min={0}
-              value={filter.lamaHutangMin}
-              onValueChange={(value) => onFilterChange("lamaHutangMin", value)}
+              value={draftFilter.lamaHutangMin}
+              onValueChange={(value) => updateDraftFilter("lamaHutangMin", value)}
               placeholder={filterPlaceholder("field.lamaHutangMin")}
-              className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+              className="mt-1 w-full rounded-lg border border-transparent bg-slate-100 px-3 py-2 text-sm text-slate-900 outline-none focus:border-sky-400 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
 
@@ -95,14 +125,22 @@ export function SupplierTableFilter({
             <DebouncedFilterInput
               type="number"
               min={0}
-              value={filter.lamaHutangMax}
-              onValueChange={(value) => onFilterChange("lamaHutangMax", value)}
+              value={draftFilter.lamaHutangMax}
+              onValueChange={(value) => updateDraftFilter("lamaHutangMax", value)}
               placeholder={filterPlaceholder("field.lamaHutangMax")}
-              className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+              className="mt-1 w-full rounded-lg border border-transparent bg-slate-100 px-3 py-2 text-sm text-slate-900 outline-none focus:border-sky-400 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
         </div>
-      </div>
+        <div className="mt-3 flex flex-wrap justify-end gap-2">
+          <button type="button" onClick={resetDraftFilter} className="border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+            {t("common.resetFilter")}
+          </button>
+          <button type="submit" className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600 dark:bg-sky-500 dark:text-slate-950">
+            {t("common.applyFilter")}
+          </button>
+        </div>
+      </form>
 
       <div className="space-y-3 md:hidden">
         {rows.length === 0 ? (
@@ -165,7 +203,7 @@ export function SupplierTableFilter({
       </div>
 
       <div className="hidden md:block">
-        <div className="overflow-hidden rounded-xl border border-sky-300 bg-white shadow-sm dark:border-sky-900/70 dark:bg-slate-900">
+        <div className="overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[760px] table-fixed text-sm">
               <colgroup>
@@ -174,10 +212,18 @@ export function SupplierTableFilter({
                 <col style={{ width: "120px" }} />
                 <col style={{ width: "160px" }} />
               </colgroup>
-              <thead className="bg-sky-800 text-left text-white dark:bg-sky-950">
+              <thead className="bg-slate-100 text-left text-slate-600 dark:bg-slate-900 dark:text-slate-300">
                 <tr>
                   <th className="px-3 py-2 font-medium">{t("common.action")}</th>
-                  <th className="px-3 py-2 font-medium">{t("field.namaSupplier")}</th>
+                  <th className="px-3 py-2 font-medium">
+                    <SortableHeader
+                      label={t("field.namaSupplier")}
+                      sortValue={sortValue}
+                      ascValue="nameAsc"
+                      descValue="nameDesc"
+                      onSortChange={onSortChange}
+                    />
+                  </th>
                   <th className="px-3 py-2 font-medium">{t("field.hutang")}</th>
                   <th className="px-3 py-2 font-medium">{t("field.lamaHutang")}</th>
                 </tr>

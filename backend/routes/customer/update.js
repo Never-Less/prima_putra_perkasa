@@ -5,6 +5,7 @@ const { Customer } = require("../../models/Customer");
 const { ROLE_ADMIN, ROLE_STAFF } = require("../../models/User");
 const { sanitizeCustomer } = require("./sanitize-customer");
 const { isValidId } = require("./validate-id");
+const { normalizePaymentTerm } = require("../../utils/payment-term");
 
 const router = express.Router();
 
@@ -31,6 +32,14 @@ router.put("/:id", requireRole(ROLE_ADMIN, ROLE_STAFF), async (req, res) => {
 
   if (req.body.atasNama !== undefined) {
     updates.atasNama = String(req.body.atasNama || "").trim();
+  }
+
+  if (req.body.defaultPaymentTerm !== undefined) {
+    const defaultPaymentTerm = normalizePaymentTerm(req.body.defaultPaymentTerm);
+    if (!defaultPaymentTerm) {
+      return res.status(400).json({ message: "Term of payment default customer tidak valid." });
+    }
+    updates.defaultPaymentTerm = defaultPaymentTerm;
   }
 
   if (Object.keys(updates).length === 0) {

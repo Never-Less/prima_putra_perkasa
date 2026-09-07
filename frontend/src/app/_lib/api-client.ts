@@ -181,10 +181,11 @@ async function sendRequest(
   void accessToken;
   void invalidateCachePaths;
   const requestHeaders = new Headers(headers);
+  const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
 
   requestHeaders.set("Accept", "application/json");
 
-  if (body !== undefined) {
+  if (body !== undefined && !isFormData) {
     requestHeaders.set("Content-Type", "application/json");
   }
 
@@ -196,7 +197,7 @@ async function sendRequest(
     ...restOptions,
     method: method || "GET",
     headers: requestHeaders,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
+    body: isFormData ? body : body !== undefined ? JSON.stringify(body) : undefined,
   });
 
   const responseText = await response.text();
@@ -206,6 +207,44 @@ async function sendRequest(
     response,
     responsePayload,
   };
+}
+
+async function sendBlobRequest(path: string, token: string) {
+  const headers = new Headers();
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  return fetch(buildUrl(path), { headers, cache: "force-cache" });
+}
+
+export async function requestApiBlob(path: string) {
+  let token = getStoredAccessToken();
+
+  if (token && isAccessTokenExpired(token)) {
+    const refreshedToken = await refreshAuthSession();
+    if (!refreshedToken) {
+      clearAuthSession();
+      redirectToLogin();
+      throw new ApiRequestError("Session expired", 401, null);
+    }
+    token = refreshedToken;
+  }
+
+  let response = await sendBlobRequest(path, token);
+  if (response.status === 401 && token) {
+    const refreshedToken = await refreshAuthSession();
+    if (refreshedToken) {
+      response = await sendBlobRequest(path, refreshedToken);
+    } else {
+      clearAuthSession();
+      redirectToLogin();
+    }
+  }
+
+  if (!response.ok) {
+    const payload = parseResponseBody(await response.text());
+    throw new ApiRequestError(getErrorMessage(response.status, payload), response.status, payload);
+  }
+
+  return response.blob();
 }
 
 export async function requestApi<TResponse>(path: string, options: ApiRequestOptions = {}) {

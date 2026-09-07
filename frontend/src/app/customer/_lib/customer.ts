@@ -6,6 +6,7 @@ import {
   type PaginationQueryState,
   type ServerListResult,
 } from "../../_lib/pagination";
+import { defaultPaymentTerm, normalizePaymentTerm, type PaymentTerm } from "../../_lib/payment-term";
 
 export type CustomerItem = {
   id: string;
@@ -13,6 +14,7 @@ export type CustomerItem = {
   alamat: string;
   npwp: string;
   atasNama: string;
+  defaultPaymentTerm: PaymentTerm;
   createdAt: string;
   updatedAt: string;
 };
@@ -29,6 +31,7 @@ export type CustomerFormState = {
   alamat: string;
   npwp: string;
   atasNama: string;
+  defaultPaymentTerm: PaymentTerm;
 };
 
 export type CustomerListQuery = CustomerFilter & PaginationQueryState;
@@ -88,6 +91,7 @@ function toCustomerItem(value: unknown): CustomerItem | null {
     alamat: toDecodedText(row.alamat).trim(),
     npwp: toDecodedText(row.npwp).trim(),
     atasNama: toDecodedText(row.atasNama).trim(),
+    defaultPaymentTerm: normalizePaymentTerm(row.defaultPaymentTerm),
     createdAt: toText(row.createdAt).trim(),
     updatedAt: toText(row.updatedAt).trim(),
   };
@@ -99,6 +103,7 @@ function toNormalizedCustomerPayload(form: CustomerFormState) {
     alamat: toDecodedText(form.alamat).trim(),
     npwp: toDecodedText(form.npwp).trim(),
     atasNama: toDecodedText(form.atasNama).trim(),
+    defaultPaymentTerm: normalizePaymentTerm(form.defaultPaymentTerm || defaultPaymentTerm),
   };
 }
 
@@ -199,5 +204,6 @@ export function toCustomerFormState(item: CustomerItem): CustomerFormState {
     alamat: item.alamat,
     npwp: item.npwp,
     atasNama: item.atasNama,
+    defaultPaymentTerm: normalizePaymentTerm(item.defaultPaymentTerm),
   };
 }

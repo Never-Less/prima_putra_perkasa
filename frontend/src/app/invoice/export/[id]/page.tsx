@@ -13,6 +13,7 @@ import {
   type JspreadsheetExportWorksheet,
 } from "../../../_lib/jspreadsheet-xlsx-export";
 import { printDocumentWhenFontsReady } from "../../../_lib/print";
+import { formatPaymentTermLabel } from "../../../_lib/payment-term";
 import { useI18n } from "../../../_i18n/provider";
 import { fetchCustomerById, type CustomerItem } from "../../../customer/_lib/customer";
 import {
@@ -913,7 +914,7 @@ function InvoiceMeasureFooter({ variant, t }: InvoiceMeasureFooterProps) {
           <ol className="mt-0.5 list-decimal pl-5 text-[13px] leading-[1.2]">
             <li>{t("invoice.export.note.1")}</li>
             <li>{t("invoice.export.note.2")}</li>
-            <li>{t("invoice.export.note.3")}</li>
+            <li>{t("invoice.export.note.paymentTerm", { paymentTerm: "Net 30 hari" })}</li>
           </ol>
         </div>
       </div>
@@ -1334,6 +1335,13 @@ export default function InvoiceExportPage() {
   const defaultPpnLabel = isMaxxisCustomer
     ? t("invoice.export.summary.ppnNoRate")
     : t("invoice.export.summary.ppn", { rate: invoice?.ppnRate || 0 });
+  const paymentTermNote = t("invoice.export.note.paymentTerm", {
+    paymentTerm: formatPaymentTermLabel(invoice?.paymentTerm || { type: "net", netDays: 30, downPaymentPercent: 0, remainingPaymentPercent: 100 }, {
+      cashBeforeDelivery: t("paymentTerm.cashBeforeDelivery"),
+      cashOnDelivery: t("paymentTerm.cashOnDelivery"),
+      days: t("common.days"),
+    }),
+  });
 
   const meiloonCustomerNameValue = useMemo(
     () => String(customer?.nama || meiloonInvoiceProfile.name).trim(),
@@ -1656,7 +1664,7 @@ export default function InvoiceExportPage() {
                       <ol className="mt-0.5 list-decimal pl-5 text-[13px] leading-[1.2]">
                         <li>{t("invoice.export.note.1")}</li>
                         <li>{t("invoice.export.note.2")}</li>
-                        <li>{t("invoice.export.note.3")}</li>
+                        <li>{paymentTermNote}</li>
                       </ol>
                     </div>
                   </div>
@@ -1748,7 +1756,7 @@ export default function InvoiceExportPage() {
                         <ol className="mt-0.5 list-decimal pl-5 text-[13px] leading-[1.2]">
                           <li>{t("invoice.export.note.1")}</li>
                           <li>{t("invoice.export.note.2")}</li>
-                          <li>{t("invoice.export.note.3")}</li>
+                          <li>{paymentTermNote}</li>
                         </ol>
                       </div>
                     </div>
@@ -1895,7 +1903,7 @@ export default function InvoiceExportPage() {
                       <ol className="mt-0.5 list-decimal pl-5 text-[13px] leading-[1.2]">
                         <li>{t("invoice.export.note.1")}</li>
                         <li>{t("invoice.export.note.2")}</li>
-                        <li>{t("invoice.export.note.3")}</li>
+                        <li>{paymentTermNote}</li>
                       </ol>
                     </div>
                   </div>
@@ -1979,7 +1987,7 @@ export default function InvoiceExportPage() {
                         <ol className="mt-0.5 list-decimal pl-5 text-[13px] leading-[1.2]">
                           <li>{t("invoice.export.note.1")}</li>
                           <li>{t("invoice.export.note.2")}</li>
-                          <li>{t("invoice.export.note.3")}</li>
+                          <li>{paymentTermNote}</li>
                         </ol>
                       </div>
                     </div>

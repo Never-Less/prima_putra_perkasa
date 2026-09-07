@@ -11,6 +11,7 @@ const {
   parseDate,
   parseNumber,
 } = require("./validators");
+const { normalizePaymentTerm } = require("../../utils/payment-term");
 
 const router = express.Router();
 
@@ -21,11 +22,9 @@ router.post("/", async (req, res) => {
   const barang = normalizeBarangList(req.body.barang);
   const parsedNominalPo = parseNumber(req.body.nominalPo);
   const nominalPo =
-    parsedNominalPo !== null
-      ? parsedNominalPo
-      : barang && barang.length > 0
-        ? calculateBarangSubtotal(barang)
-        : null;
+    barang && barang.length > 0
+      ? calculateBarangSubtotal(barang)
+      : parsedNominalPo;
   const tanggalInvoice =
     req.body.tanggalInvoice === null
       ? null
@@ -67,10 +66,26 @@ router.post("/", async (req, res) => {
   }
 
   try {
+    const existingNoPo = await PurchaseOrder.findOne({ noPo })
+      .collation({ locale: "en", strength: 2 })
+      .select("_id")
+      .lean();
+
+    if (existingNoPo) {
+      return res.status(409).json({ message: `No. SO "${noPo}" sudah digunakan.` });
+    }
+
     const customer = await Customer.findById(namaCustomer);
 
     if (!customer) {
       return res.status(404).json({ message: "Customer yang dipilih tidak ditemukan." });
+    }
+
+    const paymentTerm = normalizePaymentTerm(
+      req.body.paymentTerm !== undefined ? req.body.paymentTerm : customer.defaultPaymentTerm
+    );
+    if (!paymentTerm) {
+      return res.status(400).json({ message: "Term of payment sales order tidak valid." });
     }
 
     if (noInvoice) {
@@ -87,6 +102,7 @@ router.post("/", async (req, res) => {
       namaCustomer: namaCustomer,
       nominalPo: nominalPo,
       barang: barang,
+      paymentTerm,
       tanggalInvoice: tanggalInvoice,
       noInvoice: noInvoice,
     });
@@ -95,7 +111,11 @@ router.post("/", async (req, res) => {
       message: "purchase order created",
       purchaseOrder: sanitizePurchaseOrder(purchaseOrder),
     });
-  } catch (_error) {
+  } catch (error) {
+    if (error?.code === 11000) {
+      return res.status(409).json({ message: `No. SO "${noPo}" sudah digunakan.` });
+    }
+
     return res.status(500).json({ message: "Data sales order belum bisa disimpan. Coba lagi." });
   }
 });

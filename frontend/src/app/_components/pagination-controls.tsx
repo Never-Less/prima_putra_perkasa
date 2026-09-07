@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useI18n } from "../_i18n/provider";
 
 type PaginationControlsProps = {
@@ -93,14 +94,14 @@ export function PaginationControls({
   const paginationTokens = buildPaginationTokens(currentPage, totalPages);
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-sky-200 bg-white/80 px-3 py-3 text-sm shadow-sm dark:border-slate-800 dark:bg-slate-900/70 md:flex-row md:items-center md:justify-between">
+    <div className="flex flex-col gap-3 border-t border-slate-200 bg-white px-3 py-3 text-sm dark:border-slate-800 dark:bg-slate-950 md:flex-row md:items-center md:justify-between">
       <div className="flex flex-wrap items-center gap-2 text-slate-600 dark:text-slate-300">
         <label className="flex items-center gap-2">
           <span>{t("common.pagination.itemsPerPage")}</span>
           <select
             value={pageSize}
             onChange={(event) => onPageSizeChange(Number(event.target.value))}
-            className="rounded-lg border border-sky-200 bg-white px-2 py-1 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+            className="erp-field h-8 w-16 py-1"
           >
             {pageSizeOptions.map((option) => (
               <option key={option} value={option}>
@@ -116,7 +117,7 @@ export function PaginationControls({
         </span>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-1.5">
         <span className="text-slate-600 dark:text-slate-300">
           {t("common.pagination.pageInfo", { page: currentPage, totalPages })}
         </span>
@@ -124,9 +125,11 @@ export function PaginationControls({
           type="button"
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage <= 1}
-          className="rounded-lg border border-sky-200 bg-white px-3 py-1.5 text-sm text-sky-700 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
+          className="erp-icon-button h-8 w-8"
+          aria-label={t("common.pagination.previous")}
+          title={t("common.pagination.previous")}
         >
-          {t("common.pagination.previous")}
+          <ChevronLeft aria-hidden="true" className="h-4 w-4" />
         </button>
         {paginationTokens.map((token) => {
           if (token.type === "ellipsis") {
@@ -145,10 +148,10 @@ export function PaginationControls({
               type="button"
               onClick={() => onPageChange(token.value)}
               aria-current={isActive ? "page" : undefined}
-              className={`min-w-9 rounded-lg border px-3 py-1.5 text-sm ${
+              className={`h-8 min-w-8 rounded-md border px-2 text-sm font-medium ${
                 isActive
-                  ? "border-sky-700 bg-sky-700 text-white dark:border-sky-500 dark:bg-sky-500 dark:text-slate-950"
-                  : "border-sky-200 bg-white text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
+                  ? "border-blue-600 bg-blue-600 text-white dark:border-blue-500 dark:bg-blue-500 dark:text-white"
+                  : "border-slate-200 bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-950 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
               }`}
             >
               {token.value}
@@ -159,9 +162,11 @@ export function PaginationControls({
           type="button"
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage >= totalPages}
-          className="rounded-lg border border-sky-200 bg-white px-3 py-1.5 text-sm text-sky-700 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
+          className="erp-icon-button h-8 w-8"
+          aria-label={t("common.pagination.next")}
+          title={t("common.pagination.next")}
         >
-          {t("common.pagination.next")}
+          <ChevronRight aria-hidden="true" className="h-4 w-4" />
         </button>
       </div>
     </div>

@@ -36,6 +36,19 @@ type RawReturnPaginationParams = {
   returnLimit?: string | number | null;
 };
 
+type SearchParamsReader = {
+  get(name: string): string | null;
+};
+
+export function normalizeStringFilterQueryState<TFilter extends Record<string, string>>(
+  searchParams: SearchParamsReader,
+  defaults: TFilter
+): TFilter {
+  return Object.fromEntries(
+    Object.keys(defaults).map((key) => [key, String(searchParams.get(key) || "").trim()])
+  ) as TFilter;
+}
+
 function normalizePositiveInteger(value: string | number | null | undefined, fallback: number) {
   const parsedValue = Number(value);
 
@@ -71,9 +84,11 @@ export function normalizeReturnPaginationQueryState(
 
 export function buildListRouteWithPagination(
   basePath: string,
-  pagination: PaginationQueryState
+  pagination: PaginationQueryState,
+  listState: Record<string, string | number | undefined | null> = {}
 ) {
   const queryString = buildListQueryString({
+    ...listState,
     page: pagination.page,
     limit: pagination.limit,
   });
@@ -84,9 +99,11 @@ export function buildListRouteWithPagination(
 export function buildFormRouteWithReturnPagination(
   basePath: string,
   id: string | undefined | null,
-  pagination: PaginationQueryState
+  pagination: PaginationQueryState,
+  listState: Record<string, string | number | undefined | null> = {}
 ) {
   const queryString = buildListQueryString({
+    ...listState,
     id,
     returnPage: pagination.page,
     returnLimit: pagination.limit,

@@ -6,6 +6,8 @@ function normalizeText(value) {
   return String(value).trim();
 }
 
+const { calculateDueDate } = require("../../utils/payment-term");
+
 function normalizeNoPoList(value) {
   const source = Array.isArray(value) ? value : normalizeText(value).split(",");
   const seen = new Set();
@@ -63,6 +65,12 @@ function sanitizeBarangList(barangInput) {
 
 function sanitizeInvoice(invoice) {
   const noPoList = getInvoiceNoPoList(invoice);
+  const paymentTerm = invoice.paymentTerm || {
+    type: "net",
+    netDays: 30,
+    downPaymentPercent: 0,
+    remainingPaymentPercent: 100,
+  };
 
   return {
     id: invoice._id,
@@ -76,6 +84,13 @@ function sanitizeInvoice(invoice) {
     isPpn: invoice.isPpn,
     isPaid: invoice.isPaid,
     tanggalBayar: invoice.tanggalBayar,
+    paymentTerm: {
+      type: paymentTerm.type,
+      netDays: paymentTerm.netDays,
+      downPaymentPercent: paymentTerm.downPaymentPercent,
+      remainingPaymentPercent: paymentTerm.remainingPaymentPercent,
+    },
+    dueDate: invoice.dueDate || calculateDueDate(invoice.tanggal, paymentTerm),
     ppnRate: invoice.ppnRate,
     ppnAmount: invoice.ppnAmount,
     subtotal: invoice.subtotal,

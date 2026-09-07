@@ -1,10 +1,18 @@
 "use client";
 
+import { useMemo, useState } from "react";
+import {
+  ColumnSettingsMenu,
+  HiddenColumnStyles,
+  ListSortControl,
+  SortableHeader,
+} from "../../_components/list-view-header";
 import { PaginationControls } from "../../_components/pagination-controls";
 import { DebouncedFilterInput } from "../../_components/debounced-filter-input";
 import { type ServerPaginationMeta } from "../../_lib/pagination";
 import { type CustomerFilter, type CustomerItem } from "../_lib/customer";
 import { useI18n } from "../../_i18n/provider";
+import { useFilterDraft } from "../../_hooks/use-filter-draft";
 
 type CustomerTableFilterProps = {
   rows: CustomerItem[];
@@ -12,7 +20,10 @@ type CustomerTableFilterProps = {
   filteredCount: number;
   pagination: ServerPaginationMeta;
   selectedId?: string;
+  sortValue?: string;
+  sortOptions?: Array<{ value: string; label: string }>;
   onSelectRow?: (row: CustomerItem) => void;
+  onSortChange?: (value: string) => void;
   onFilterChange: <K extends keyof CustomerFilter>(key: K, value: CustomerFilter[K]) => void;
   onResetFilter: () => void;
   onPageChange: (page: number) => void;
@@ -28,72 +39,101 @@ export function CustomerTableFilter({
   filteredCount,
   pagination,
   selectedId,
+  sortValue,
+  sortOptions = [],
   onSelectRow,
+  onSortChange,
   onFilterChange,
   onResetFilter,
   onPageChange,
   onPageSizeChange,
 }: CustomerTableFilterProps) {
   const { t } = useI18n();
-  const filterPlaceholder = (fieldKey: string) =>
-    t("common.placeholder.filter", { field: t(fieldKey) });
+  const { draftFilter, updateDraftFilter, applyDraftFilter, resetDraftFilter } =
+    useFilterDraft(filter, onFilterChange, onResetFilter);
+  const filterPlaceholder = (fieldKey: string) => t(fieldKey);
+  const columns = useMemo(
+    () => [
+      { key: "action", label: t("common.action"), index: 1, locked: true },
+      { key: "nama", label: t("field.nama"), index: 2 },
+      { key: "alamat", label: t("field.alamat"), index: 3 },
+      { key: "npwp", label: t("field.npwp"), index: 4 },
+      { key: "atasNama", label: t("field.atasNama"), index: 5 },
+    ],
+    [t]
+  );
+  const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
+  const hiddenColumnIndexes = columns
+    .filter((column) => hiddenColumns.includes(column.key))
+    .map((column) => column.index);
 
   return (
-    <section className="space-y-4 rounded-2xl border border-sky-200 bg-sky-50/40 p-5 shadow-sm dark:border-sky-900/70 dark:bg-slate-950/85">
+    <section className="ppp-list-view ppp-customer-list space-y-4 rounded-xl border border-slate-100 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+      <HiddenColumnStyles scopeClassName="ppp-customer-list" hiddenColumnIndexes={hiddenColumnIndexes} />
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-lg font-semibold text-sky-900 dark:text-sky-100">{t("customer.table.title")}</h2>
-        <button
-          onClick={onResetFilter}
-          className="rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
-        >
-          {t("common.resetFilter")}
-        </button>
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{t("customer.table.title")}</h2>
+        <div className="flex flex-wrap items-center gap-2">
+          <ListSortControl sortValue={sortValue} sortOptions={sortOptions} onSortChange={onSortChange} />
+          <ColumnSettingsMenu
+            columns={columns}
+            hiddenColumns={hiddenColumns}
+            onHiddenColumnsChange={setHiddenColumns}
+          />
+        </div>
       </div>
 
-      <div>
-        <p className="mb-2 text-sm font-medium text-sky-800 dark:text-sky-200">{t("common.filterByField")}</p>
+      <form onSubmit={applyDraftFilter}>
+        <p className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">{t("common.filterByField")}</p>
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.nama")}
             <DebouncedFilterInput
-              value={filter.nama}
-              onValueChange={(value) => onFilterChange("nama", value)}
+              value={draftFilter.nama}
+              onValueChange={(value) => updateDraftFilter("nama", value)}
               placeholder={filterPlaceholder("field.nama")}
-              className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+              className="mt-1 w-full rounded-lg border border-transparent bg-slate-100 px-3 py-2 text-sm text-slate-900 outline-none focus:border-sky-400 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.alamat")}
             <DebouncedFilterInput
-              value={filter.alamat}
-              onValueChange={(value) => onFilterChange("alamat", value)}
+              value={draftFilter.alamat}
+              onValueChange={(value) => updateDraftFilter("alamat", value)}
               placeholder={filterPlaceholder("field.alamat")}
-              className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+              className="mt-1 w-full rounded-lg border border-transparent bg-slate-100 px-3 py-2 text-sm text-slate-900 outline-none focus:border-sky-400 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.npwp")}
             <DebouncedFilterInput
-              value={filter.npwp}
-              onValueChange={(value) => onFilterChange("npwp", value)}
+              value={draftFilter.npwp}
+              onValueChange={(value) => updateDraftFilter("npwp", value)}
               placeholder={filterPlaceholder("field.npwp")}
-              className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+              className="mt-1 w-full rounded-lg border border-transparent bg-slate-100 px-3 py-2 text-sm text-slate-900 outline-none focus:border-sky-400 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.atasNama")}
             <DebouncedFilterInput
-              value={filter.atasNama}
-              onValueChange={(value) => onFilterChange("atasNama", value)}
+              value={draftFilter.atasNama}
+              onValueChange={(value) => updateDraftFilter("atasNama", value)}
               placeholder={filterPlaceholder("field.atasNama")}
-              className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+              className="mt-1 w-full rounded-lg border border-transparent bg-slate-100 px-3 py-2 text-sm text-slate-900 outline-none focus:border-sky-400 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
         </div>
-      </div>
+        <div className="mt-3 flex flex-wrap justify-end gap-2">
+          <button type="button" onClick={resetDraftFilter} className="border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+            {t("common.resetFilter")}
+          </button>
+          <button type="submit" className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600 dark:bg-sky-500 dark:text-slate-950">
+            {t("common.applyFilter")}
+          </button>
+        </div>
+      </form>
 
       <div className="space-y-3 md:hidden">
         {rows.length === 0 ? (
@@ -160,7 +200,7 @@ export function CustomerTableFilter({
       </div>
 
       <div className="hidden md:block">
-        <div className="overflow-hidden rounded-xl border border-sky-300 bg-white shadow-sm dark:border-sky-900/70 dark:bg-slate-900">
+        <div className="overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1020px] table-fixed text-sm">
               <colgroup>
@@ -170,10 +210,18 @@ export function CustomerTableFilter({
                 <col style={{ width: "170px" }} />
                 <col style={{ width: "220px" }} />
               </colgroup>
-              <thead className="bg-sky-800 text-left text-white dark:bg-sky-950">
+              <thead className="bg-slate-100 text-left text-slate-600 dark:bg-slate-900 dark:text-slate-300">
                 <tr>
                   <th className="px-3 py-2 font-medium">{t("common.action")}</th>
-                  <th className="px-3 py-2 font-medium">{t("field.nama")}</th>
+                  <th className="px-3 py-2 font-medium">
+                    <SortableHeader
+                      label={t("field.nama")}
+                      sortValue={sortValue}
+                      ascValue="nameAsc"
+                      descValue="nameDesc"
+                      onSortChange={onSortChange}
+                    />
+                  </th>
                   <th className="px-3 py-2 font-medium">{t("field.alamat")}</th>
                   <th className="px-3 py-2 font-medium">{t("field.npwp")}</th>
                   <th className="px-3 py-2 font-medium">{t("field.atasNama")}</th>

@@ -15,6 +15,7 @@ const {
   parseDate,
   parseNumber,
 } = require("./validators");
+const { calculateDueDate, normalizePaymentTerm } = require("../../utils/payment-term");
 
 const router = express.Router();
 
@@ -105,6 +106,13 @@ router.post("/", async (req, res) => {
       return res.status(404).json({ message: "Customer yang dipilih tidak ditemukan." });
     }
 
+    const paymentTerm = normalizePaymentTerm(
+      req.body.paymentTerm !== undefined ? req.body.paymentTerm : customer.defaultPaymentTerm
+    );
+    if (!paymentTerm) {
+      return res.status(400).json({ message: "Term of payment invoice tidak valid." });
+    }
+
     const invoice = await Invoice.create({
       tanggal: tanggal,
       noInvoice: noInvoice,
@@ -116,6 +124,8 @@ router.post("/", async (req, res) => {
       isPpn: parsedIsPpn,
       isPaid: parsedIsPaid,
       tanggalBayar: parsedIsPaid ? tanggalBayar : null,
+      paymentTerm,
+      dueDate: calculateDueDate(tanggal, paymentTerm),
       ppnRate: parsedPpnRate,
       ppnAmount: ppnAmount,
       subtotal: subtotal,

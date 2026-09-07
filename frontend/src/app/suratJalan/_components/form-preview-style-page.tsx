@@ -14,12 +14,14 @@ import {
 } from "../../invoice/_lib/invoice";
 import { useExportAccess } from "../../_hooks/use-export-access";
 import { requestUnsavedChangesConfirmation } from "../../_hooks/use-unsaved-changes-warning";
+import { usePersistentListUrl } from "../../_hooks/use-persistent-list-url";
 import { ApiRequestError } from "../../_lib/api-client";
 import {
   buildFormRouteWithReturnPagination,
   buildListRouteWithPagination,
   normalizePaginationQueryState,
   normalizeReturnPaginationQueryState,
+  normalizeStringFilterQueryState,
   type ServerPaginationMeta,
 } from "../../_lib/pagination";
 import { useI18n } from "../../_i18n/provider";
@@ -60,6 +62,9 @@ type FormPreviewStylePageMode = "list" | "form";
 type FormPreviewStylePageProps = {
   mode?: FormPreviewStylePageMode;
   itemId?: string;
+  showListAddButton?: boolean;
+  sortValue?: string;
+  onSortChange?: (value: string) => void;
 };
 
 const defaultSuratJalanPaginationQuery = {
@@ -67,7 +72,13 @@ const defaultSuratJalanPaginationQuery = {
   limit: 10,
 };
 
-export function FormPreviewStylePage({ mode = "list", itemId = "" }: FormPreviewStylePageProps) {
+export function FormPreviewStylePage({
+  mode = "list",
+  itemId = "",
+  showListAddButton = true,
+  sortValue = "updatedDesc",
+  onSortChange,
+}: FormPreviewStylePageProps) {
   const { t } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -95,12 +106,15 @@ export function FormPreviewStylePage({ mode = "list", itemId = "" }: FormPreview
       ),
     [searchParams]
   );
+  const initialFilterQuery = useMemo(() => normalizeStringFilterQueryState(searchParams, defaultSuratJalanFilter), [searchParams]);
+  const initialSortValue = String(searchParams.get("sort") || sortValue);
+  const returnListState = useMemo(() => ({ ...initialFilterQuery, sort: initialSortValue }), [initialFilterQuery, initialSortValue]);
   const returnListPath = useMemo(
-    () => buildListRouteWithPagination("/suratJalan", returnPaginationQuery),
-    [returnPaginationQuery]
+    () => buildListRouteWithPagination("/suratJalan", returnPaginationQuery, returnListState),
+    [returnListState, returnPaginationQuery]
   );
   const [rows, setRows] = useState<SuratJalanItem[]>([]);
-  const [filter, setFilter] = useState<SuratJalanFilter>(defaultSuratJalanFilter);
+  const [filter, setFilter] = useState<SuratJalanFilter>(initialFilterQuery);
   const [paginationQuery, setPaginationQuery] = useState(() =>
     isFormMode ? defaultSuratJalanPaginationQuery : initialPaginationQuery
   );
@@ -141,6 +155,9 @@ export function FormPreviewStylePage({ mode = "list", itemId = "" }: FormPreview
       }
     | null
   >(null);
+
+  const setPersistentSort = useCallback((value: string) => onSortChange?.(value), [onSortChange]);
+  usePersistentListUrl({ enabled: !isFormMode, basePath: "/suratJalan", defaultFilter: defaultSuratJalanFilter, defaultPagination: defaultSuratJalanPaginationQuery, defaultSort: "updatedDesc", filter, pagination: paginationQuery, sort: sortValue, setFilter, setPagination: setPaginationQuery, setSort: setPersistentSort });
 
   const showToast = useCallback((message: string, variant: ToastState["variant"]) => {
     setToast({
@@ -349,6 +366,32 @@ export function FormPreviewStylePage({ mode = "list", itemId = "" }: FormPreview
     [customerLabelMap]
   );
 
+  const sortedRows = useMemo(() => {
+    return [...rows].sort((left, right) => {
+      if (sortValue === "updatedAsc") {
+        return left.updatedAt.localeCompare(right.updatedAt);
+      }
+
+      if (sortValue === "dateDesc") {
+        return right.tanggal.localeCompare(left.tanggal);
+      }
+
+      if (sortValue === "dateAsc") {
+        return left.tanggal.localeCompare(right.tanggal);
+      }
+
+      if (sortValue === "nameAsc") {
+        return resolveCustomerLabel(left.idCustomer).localeCompare(resolveCustomerLabel(right.idCustomer));
+      }
+
+      if (sortValue === "nameDesc") {
+        return resolveCustomerLabel(right.idCustomer).localeCompare(resolveCustomerLabel(left.idCustomer));
+      }
+
+      return right.updatedAt.localeCompare(left.updatedAt);
+    });
+  }, [resolveCustomerLabel, rows, sortValue]);
+
   const customerOptions = useMemo(() => {
     return customerRows.map((customer) => ({
       id: customer.id,
@@ -360,10 +403,10 @@ export function FormPreviewStylePage({ mode = "list", itemId = "" }: FormPreview
     (id?: string) => {
       const normalizedId = String(id || "").trim();
       router.push(
-        buildFormRouteWithReturnPagination("/suratJalan/form", normalizedId, paginationQuery)
+        buildFormRouteWithReturnPagination("/suratJalan/form", normalizedId, paginationQuery, { ...filter, sort: sortValue })
       );
     },
-    [paginationQuery, router]
+    [filter, paginationQuery, router, sortValue]
   );
 
   const handleExportSuratJalanByNoPo = useCallback((rawNoPo: string) => {
@@ -480,7 +523,8 @@ export function FormPreviewStylePage({ mode = "list", itemId = "" }: FormPreview
               buildFormRouteWithReturnPagination(
                 "/suratJalan/form",
                 currentUpdatedItem?.id || selectedItem.id,
-                returnPaginationQuery
+                returnPaginationQuery,
+                returnListState
               )
             );
           }
@@ -511,7 +555,8 @@ export function FormPreviewStylePage({ mode = "list", itemId = "" }: FormPreview
             buildFormRouteWithReturnPagination(
               "/suratJalan/form",
               currentCreatedItem.id,
-              returnPaginationQuery
+              returnPaginationQuery,
+              returnListState
             )
           );
         }
@@ -548,6 +593,7 @@ export function FormPreviewStylePage({ mode = "list", itemId = "" }: FormPreview
       isFormMode,
       loadSuratJalanData,
       returnPaginationQuery,
+      returnListState,
       router,
       showToast,
       t,
@@ -714,7 +760,7 @@ export function FormPreviewStylePage({ mode = "list", itemId = "" }: FormPreview
         {isLoading ? <ApiLoadingState /> : null}
 
         {!isLoading && errorMessage ? (
-          <section className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/50 dark:text-red-200">
+          <section className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/50 dark:text-red-200">
             <p>{errorMessage}</p>
             <button
               type="button"
@@ -766,7 +812,8 @@ export function FormPreviewStylePage({ mode = "list", itemId = "" }: FormPreview
                       buildFormRouteWithReturnPagination(
                         "/suratJalan/form",
                         "",
-                        returnPaginationQuery
+                        returnPaginationQuery,
+                        returnListState
                       )
                     );
                   }}
@@ -780,17 +827,19 @@ export function FormPreviewStylePage({ mode = "list", itemId = "" }: FormPreview
               </>
             ) : (
               <>
-                <div className="flex justify-end">
-                  <button
-                    type="button"
-                    onClick={() => navigateToForm()}
-                    className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600 dark:bg-sky-500 dark:text-slate-950 dark:hover:bg-sky-400"
-                  >
-                    {t("common.newData")}
-                  </button>
-                </div>
+                {showListAddButton ? (
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => navigateToForm()}
+                      className="rounded-lg bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-950 dark:hover:bg-white"
+                    >
+                      {t("common.newData")}
+                    </button>
+                  </div>
+                ) : null}
                 <SuratJalanTableFilter
-                  rows={rows}
+                  rows={sortedRows}
                   filter={filter}
                   filteredCount={filteredCount}
                   pagination={pagination}
@@ -810,6 +859,16 @@ export function FormPreviewStylePage({ mode = "list", itemId = "" }: FormPreview
                   resolveCustomerLabel={resolveCustomerLabel}
                   colorTone="sky"
                   tableStyle="compact"
+                  sortValue={sortValue}
+                  onSortChange={onSortChange}
+                  sortOptions={[
+                    { value: "updatedDesc", label: t("common.sort.updatedDesc") },
+                    { value: "updatedAsc", label: t("common.sort.updatedAsc") },
+                    { value: "dateDesc", label: t("common.sort.dateDesc") },
+                    { value: "dateAsc", label: t("common.sort.dateAsc") },
+                    { value: "nameAsc", label: t("common.sort.nameAsc") },
+                    { value: "nameDesc", label: t("common.sort.nameDesc") },
+                  ]}
                 />
               </>
             )}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ApiLoadingState } from "../_components/api-loading-state";
 import { AppDateInput } from "../_components/app-date-input";
 import { AppToast } from "../_components/app-toast";
@@ -12,6 +12,10 @@ import {
 } from "../_hooks/use-unsaved-changes-warning";
 import { useI18n } from "../_i18n/provider";
 import { ApiRequestError } from "../_lib/api-client";
+import {
+  readPersistentQueryValues,
+  usePersistentQueryValues,
+} from "../_hooks/use-persistent-query-values";
 import { fetchCustomerRows } from "../customer/_lib/customer";
 import {
   calculatePembelianStockTotalByMonth,
@@ -131,10 +135,19 @@ export function LaporanKeuanganPageContent({
 }: LaporanKeuanganPageContentProps) {
   const { locale, t } = useI18n();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const isFormMode = mode === "form";
-  const [reportMode, setReportMode] = useState<ReportMode>("monthly");
-  const [bulan, setBulan] = useState(initialBulan || getCurrentMonthValue);
-  const [tahun, setTahun] = useState(getCurrentYearValue);
+  const [queryDefaults] = useState(() => ({
+    reportMode: "monthly",
+    bulan: initialBulan || getCurrentMonthValue(),
+    tahun: getCurrentYearValue(),
+  }));
+  const [initialQuery] = useState(() => readPersistentQueryValues(searchParams, queryDefaults));
+  const [reportMode, setReportMode] = useState<ReportMode>(
+    initialQuery.reportMode === "yearly" ? "yearly" : "monthly"
+  );
+  const [bulan, setBulan] = useState(initialQuery.bulan);
+  const [tahun, setTahun] = useState(initialQuery.tahun);
   const [rows, setRows] = useState<FormRow[]>(() => [createFormRow()]);
   const [invoiceRows, setInvoiceRows] = useState<InvoiceItem[]>([]);
   const [pembelianRows, setPembelianRows] = useState<PembelianItem[]>([]);
@@ -148,6 +161,28 @@ export function LaporanKeuanganPageContent({
   const [yearlyErrorMessage, setYearlyErrorMessage] = useState("");
   const [actionErrorMessage, setActionErrorMessage] = useState("");
   const [toast, setToast] = useState<ToastState | null>(null);
+
+  const restoreReportFilter = useCallback((values: typeof queryDefaults) => {
+    setReportMode(values.reportMode === "yearly" ? "yearly" : "monthly");
+    setBulan(values.bulan);
+    setTahun(values.tahun);
+  }, []);
+  usePersistentQueryValues({
+    enabled: !isFormMode,
+    basePath: "/laporanKeuangan",
+    values: { reportMode, bulan, tahun },
+    defaults: queryDefaults,
+    onRestore: restoreReportFilter,
+  });
+
+  const reportReturnPath = useMemo(() => {
+    const params = new URLSearchParams({
+      reportMode: searchParams.get("returnReportMode") || reportMode,
+      bulan: searchParams.get("returnBulan") || bulan,
+      tahun: searchParams.get("returnTahun") || tahun,
+    });
+    return `/laporanKeuangan?${params.toString()}`;
+  }, [bulan, reportMode, searchParams, tahun]);
 
   const showToast = useCallback((message: string, variant: ToastState["variant"]) => {
     setToast({
@@ -419,12 +454,16 @@ export function LaporanKeuanganPageContent({
       searchParams.set("bulan", bulan);
     }
 
+    searchParams.set("returnReportMode", reportMode);
+    searchParams.set("returnBulan", bulan);
+    searchParams.set("returnTahun", tahun);
+
     router.push(
       searchParams.toString()
         ? `/laporanKeuangan/form?${searchParams.toString()}`
         : "/laporanKeuangan/form"
     );
-  }, [bulan, router]);
+  }, [bulan, reportMode, router, tahun]);
 
   const handleNewData = useCallback(async () => {
     const canLeave = await requestUnsavedChangesConfirmation(t("common.unsavedChangesWarning"));
@@ -507,8 +546,8 @@ export function LaporanKeuanganPageContent({
 
   return (
     <>
-      <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-        <section className="rounded-2xl border border-sky-100 bg-gradient-to-r from-sky-50 to-white p-4 shadow-sm dark:border-slate-800 dark:from-slate-900 dark:to-slate-950 sm:p-5">
+      <main className="erp-page mx-auto max-w-7xl">
+        <section className="erp-panel p-4 sm:p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100 sm:text-2xl">{t("nav.laporanKeuangan")}</h1>
@@ -521,11 +560,11 @@ export function LaporanKeuanganPageContent({
                   onClick={() => {
                     void requestUnsavedChangesConfirmation(t("common.unsavedChangesWarning")).then((canLeave) => {
                       if (canLeave) {
-                        router.push("/laporanKeuangan");
+                        router.push(reportReturnPath);
                       }
                     });
                   }}
-                  className="rounded-lg border border-sky-200 bg-white px-4 py-2 text-sm font-medium text-sky-800 shadow-sm transition hover:bg-sky-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+                  className="erp-button"
                 >
                   {t("common.close")}
                 </button>
@@ -535,7 +574,7 @@ export function LaporanKeuanganPageContent({
                     type="button"
                     onClick={handleOpenFormPage}
                     disabled={!bulan}
-                    className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-sky-500 dark:text-slate-950 dark:hover:bg-sky-400"
+                    className="erp-button erp-button-primary"
                   >
                     {t("laporanKeuangan.form.title")}
                   </button>
@@ -545,7 +584,7 @@ export function LaporanKeuanganPageContent({
                     disabled={
                       reportMode === "monthly" ? !bulan : getYearMonthValues(tahun).length === 0
                     }
-                    className="rounded-lg border border-sky-200 bg-white px-4 py-2 text-sm font-medium text-sky-800 shadow-sm transition hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+                    className="erp-button"
                   >
                     {t("laporanKeuangan.exportPage.openButton")}
                   </button>
@@ -578,25 +617,27 @@ export function LaporanKeuanganPageContent({
               </div>
             ) : null}
             {reportMode === "monthly" ? (
-              <label className="block min-w-48 text-sm font-medium text-slate-700 dark:text-slate-200">
-                {t("field.bulan")}
+              <label className="block min-w-48 self-end">
+                <span className="sr-only">{t("field.bulan")}</span>
                 <AppDateInput
                   mode="month"
                   value={bulan}
                   onValueChange={setBulan}
-                  className="mt-1 w-full rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-sky-900/60"
+                  placeholder={t("field.bulan")}
+                  className="erp-field w-full px-3 py-2"
                 />
               </label>
             ) : (
-              <label className="block min-w-48 text-sm font-medium text-slate-700 dark:text-slate-200">
-                {t("field.tahun")}
+              <label className="block min-w-48 self-end">
+                <span className="sr-only">{t("field.tahun")}</span>
                 <input
                   type="number"
                   min="1000"
                   max="9999"
                   value={tahun}
                   onChange={(event) => setTahun(event.target.value)}
-                  className="mt-1 w-full rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-sky-900/60"
+                  placeholder={t("field.tahun")}
+                  className="erp-field w-full px-3 py-2"
                 />
               </label>
             )}
@@ -605,7 +646,7 @@ export function LaporanKeuanganPageContent({
 
         {!isFormMode ? (
           reportMode === "monthly" ? (
-          <section className="mt-5 rounded-2xl border border-sky-100 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:p-5">
+          <section className="erp-panel mt-5 p-4 sm:p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{t("laporanKeuangan.invoiceTable.title")}</h2>
@@ -730,7 +771,7 @@ export function LaporanKeuanganPageContent({
           </div>
           </section>
         ) : (
-          <section className="mt-5 rounded-2xl border border-sky-100 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:p-5">
+          <section className="erp-panel mt-5 p-4 sm:p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{t("laporanKeuangan.yearlyTable.title")}</h2>
@@ -837,7 +878,7 @@ export function LaporanKeuanganPageContent({
 
         <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_22rem]">
           {isFormMode ? (
-            <section className="rounded-2xl border border-sky-100 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:p-5">
+            <section className="erp-panel p-4 sm:p-5">
             <div className="border-b border-sky-100 pb-4 dark:border-slate-800">
               <div>
                 <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{t("laporanKeuangan.form.title")}</h2>
@@ -938,7 +979,7 @@ export function LaporanKeuanganPageContent({
             ) : null}
             </section>
           ) : reportMode === "yearly" ? (
-            <section className="rounded-2xl border border-sky-100 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:p-5">
+            <section className="erp-panel p-4 sm:p-5">
               <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
                 {t("laporanKeuangan.yearlyInfo.title")}
               </h2>
@@ -948,7 +989,7 @@ export function LaporanKeuanganPageContent({
             </section>
           ) : null}
 
-          <aside className="rounded-2xl border border-sky-100 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:p-5">
+          <aside className="erp-panel p-4 sm:p-5">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
               {t(reportMode === "yearly" ? "laporanKeuangan.summary.yearlyTitle" : "laporanKeuangan.summary.title")}
             </p>

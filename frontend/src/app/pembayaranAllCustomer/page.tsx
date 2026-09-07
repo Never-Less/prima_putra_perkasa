@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { ApiLoadingState } from "../_components/api-loading-state";
 import { AppDateInput } from "../_components/app-date-input";
 import { ExportCurrencyValue } from "../_components/export-currency-value";
 import { ApiRequestError } from "../_lib/api-client";
 import { formatAppDate } from "../_lib/date";
 import { useI18n } from "../_i18n/provider";
+import { readPersistentQueryValues, usePersistentQueryValues } from "../_hooks/use-persistent-query-values";
 import { fetchCustomerRows, type CustomerItem } from "../customer/_lib/customer";
 import {
   defaultInvoiceFilter,
@@ -150,12 +152,17 @@ function buildPaymentReportGroups(
 
 export default function PembayaranAllCustomerPage() {
   const { locale, t } = useI18n();
-  const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthValue);
-  const [customerSearch, setCustomerSearch] = useState("");
+  const searchParams = useSearchParams();
+  const [queryDefaults] = useState(() => ({ month: getCurrentMonthValue(), search: "" }));
+  const initialQuery = readPersistentQueryValues(searchParams, queryDefaults);
+  const [selectedMonth, setSelectedMonth] = useState(initialQuery.month);
+  const [customerSearch, setCustomerSearch] = useState(initialQuery.search);
   const [invoiceRows, setInvoiceRows] = useState<InvoiceItem[]>([]);
   const [customerRows, setCustomerRows] = useState<CustomerItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const restoreQuery = useCallback((values: typeof queryDefaults) => { setSelectedMonth(values.month); setCustomerSearch(values.search); }, []);
+  usePersistentQueryValues({ basePath: "/pembayaranAllCustomer", values: { month: selectedMonth, search: customerSearch }, defaults: queryDefaults, onRestore: restoreQuery });
 
   useEffect(() => {
     let isCancelled = false;
@@ -254,8 +261,8 @@ export default function PembayaranAllCustomerPage() {
         }
       `}</style>
 
-      <main className="export-normal-weight mx-auto min-h-screen w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8 print:max-w-none print:px-0 print:py-0">
-        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950 print:hidden">
+      <main className="export-normal-weight erp-page mx-auto min-h-screen max-w-7xl print:max-w-none print:px-0 print:py-0">
+        <section className="erp-panel p-4 print:hidden">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
@@ -270,25 +277,26 @@ export default function PembayaranAllCustomerPage() {
             </div>
 
             <div className="grid gap-2 sm:grid-cols-[180px_minmax(240px,1fr)_auto_auto] lg:min-w-[680px]">
-              <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
-                {t("field.bulan")}
+              <label className="self-end">
+                <span className="sr-only">{t("field.bulan")}</span>
                 <AppDateInput
                   mode="month"
                   value={selectedMonth}
                   onValueChange={setSelectedMonth}
-                  className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                  placeholder={t("field.bulan")}
+                  className="erp-field w-full px-3 py-2"
                 />
               </label>
 
-              <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
-                {t("pembayaranAllCustomer.customerSearchLabel")}
+              <label className="self-end">
+                <span className="sr-only">{t("pembayaranAllCustomer.customerSearchLabel")}</span>
                 <input
                   type="search"
                   value={customerSearch}
                   list="payment-all-customer-options"
-                  placeholder={t("pembayaranAllCustomer.customerSearchPlaceholder")}
+                  placeholder={t("pembayaranAllCustomer.customerSearchLabel")}
                   onChange={(event) => setCustomerSearch(event.target.value)}
-                  className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                  className="erp-field w-full px-3 py-2"
                 />
                 <datalist id="payment-all-customer-options">
                   {customerNameOptions.map((customerName) => (
@@ -322,7 +330,7 @@ export default function PembayaranAllCustomerPage() {
         ) : null}
 
         {!isLoading && errorMessage ? (
-          <section className="mt-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 print:hidden">
+          <section className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 print:hidden">
             {errorMessage}
           </section>
         ) : null}
