@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { CheckCircle2, ClipboardList, Copy, Eraser, Keyboard, Loader2, Plus, RotateCcw, Save, Search, Send, TriangleAlert, X } from "lucide-react";
+import { useI18n } from "../../_i18n/provider";
 import jspreadsheet from "jspreadsheet-ce";
 import "jsuites/dist/jsuites.css";
 import "jspreadsheet-ce/dist/jspreadsheet.css";
@@ -307,6 +309,7 @@ const normalizeCellValue = (columnKey, value) => {
 };
 
 const BulkProductDraft = () => {
+  const { t, locale } = useI18n();
   const [rows, setRows] = useState(() => {
     try {
       const savedDraft = JSON.parse(localStorage.getItem(storageKey));
@@ -1983,52 +1986,45 @@ const BulkProductDraft = () => {
   return (
     <section className="bulk_page">
       <div className="bulk_header">
-        <div>
-          <h2>Multiple Item Draft</h2>
-          <p>{filledRows.length} item terisi</p>
+        <div className="bulk_heading">
+          <span className="bulk_heading_icon"><ClipboardList aria-hidden="true" /></span>
+          <div><h2>{t("priceList.bulk.title")}</h2>
+          <p>{t("priceList.bulk.description")}</p></div>
         </div>
-        <div className="bulk_actions">
-          <button type="button" onClick={addRows}>
-            Tambah Baris
-          </button>
-          <button type="button" onClick={removeEmptyRows}>
-            Hapus Kosong
-          </button>
-          <button type="button" onClick={resetDraft}>
-            Reset
-          </button>
-          <button type="button" onClick={copyAllFilledRows}>
-            Copy Rows
-          </button>
-          <button
-            type="button"
-            onClick={openPriceListCheck}
-            disabled={isCheckingDuplicates || isSubmitting}
-          >
-            {isCheckingDuplicates ? "Cek..." : "Cek Price List"}
-          </button>
-          <button type="button" className="primary_action" onClick={saveDraft}>
-            Simpan Draft
+        <div className="bulk_actions bulk_primary_actions">
+          <button type="button" onClick={saveDraft} disabled={isSubmitting}>
+            <Save aria-hidden="true" />{t("priceList.bulk.saveDraft")}
           </button>
           <button
             type="button"
             className="submit_action"
             onClick={submitRows}
-            disabled={isSubmitting}
+            disabled={isSubmitting || validRows.length === 0}
           >
-            {isSubmitting ? "Submit..." : "Submit"}
+            {isSubmitting ? <Loader2 className="bulk_spinner" aria-hidden="true" /> : <Send aria-hidden="true" />}
+            {isSubmitting ? t("priceList.bulk.submitting") : t("priceList.bulk.submit", { count: validRows.length })}
           </button>
         </div>
       </div>
 
-      <div className="bulk_meta">
-        <span>
-          {validRows.length} siap submit, {invalidRows} belum lengkap
-          {selectedCellCount > 1 ? `, ${selectedCellCount} cell dipilih` : ""}
-        </span>
-        {status && <strong>{status}</strong>}
+      <div className="bulk_stats">
+        <div><ClipboardList aria-hidden="true" /><span>{t("priceList.bulk.filled")}<strong>{filledRows.length}</strong></span></div>
+        <div className="bulk_stat_ready"><CheckCircle2 aria-hidden="true" /><span>{t("priceList.bulk.ready")}<strong>{validRows.length}</strong></span></div>
+        <div className={invalidRows > 0 ? "bulk_stat_warning" : ""}><TriangleAlert aria-hidden="true" /><span>{t("priceList.bulk.incomplete")}<strong>{invalidRows}</strong></span></div>
       </div>
 
+      <div className="bulk_editor">
+      <div className="bulk_editor_toolbar">
+        <div className="bulk_actions">
+          <button type="button" onClick={addRows} disabled={isSubmitting}><Plus aria-hidden="true" />{t("priceList.bulk.addRows")}</button>
+          <button type="button" onClick={copyAllFilledRows} disabled={filledRows.length === 0 || isSubmitting}><Copy aria-hidden="true" />{t("priceList.bulk.copyRows")}</button>
+          <button type="button" onClick={removeEmptyRows} disabled={isSubmitting}><Eraser aria-hidden="true" />{t("priceList.bulk.removeEmpty")}</button>
+          <button type="button" className="bulk_reset_action" onClick={resetDraft} disabled={isSubmitting}><RotateCcw aria-hidden="true" />{t("priceList.bulk.reset")}</button>
+        </div>
+        <div className="bulk_actions"><button type="button" className="primary_action" onClick={openPriceListCheck} disabled={isCheckingDuplicates || isSubmitting || filledRows.length === 0}>
+          {isCheckingDuplicates ? <Loader2 className="bulk_spinner" aria-hidden="true" /> : <Search aria-hidden="true" />}{t("priceList.bulk.checkPrices")}
+        </button></div>
+      </div>
       <div
         className="bulk_table_wrap"
         ref={tableWrapRef}
@@ -2036,13 +2032,16 @@ const BulkProductDraft = () => {
       >
         <div className="bulk_spreadsheet" ref={spreadsheetRootRef} />
       </div>
+      <div className="bulk_editor_footer"><span><Keyboard aria-hidden="true" />{t("priceList.bulk.pasteHint")}</span><span>{t("priceList.bulk.selectedCells", { count: selectedCellCount })}</span></div>
+      </div>
+      {status && <div className="bulk_status" role="status" aria-live="polite">{status}</div>}
 
       {priceCheckItems.length > 0 && (
         <div className="price_check_panel">
           <div className="price_check_list">
             <div className="price_check_header">
-              <strong>Item Draft</strong>
-              <span>{priceCheckItems.length} nama</span>
+              <strong>{t("priceList.bulk.draftItems")}</strong>
+              <span>{priceCheckItems.length}</span>
             </div>
             <div className="price_check_buttons">
               {priceCheckItems.map((item) => (
@@ -2056,10 +2055,11 @@ const BulkProductDraft = () => {
                       : ""
                   }
                   onClick={() => searchPriceListItem(item)}
+                  aria-pressed={activePriceCheck?.name === item.name && activePriceCheck?.customer === item.customer}
                 >
                   <span>{item.name}</span>
                   <small>
-                    {item.customer} | baris {item.rows.join(", ")}
+                    {item.customer} · {t("priceList.bulk.rows", { rows: item.rows.join(", ") })}
                   </small>
                 </button>
               ))}
@@ -2068,24 +2068,26 @@ const BulkProductDraft = () => {
 
           <div className="price_check_results">
             <div className="price_check_header">
-              <strong>Hasil Search Price List</strong>
-              <span>{isSearchingPriceList ? "search..." : `${priceSearchResults.length} hasil`}</span>
+              <strong>{t("priceList.bulk.results")}</strong>
+              <div className="price_check_result_actions"><span>{t("priceList.bulk.resultCount", { count: priceSearchResults.length })}</span><button type="button" onClick={clearPriceCheck} aria-label={t("priceList.bulk.closeResults")}><X aria-hidden="true" /></button></div>
             </div>
 
-            {!activePriceCheck && <p>Pilih nama item di sebelah kiri.</p>}
+            {isSearchingPriceList && <div className="bulk_empty_state" role="status"><Loader2 className="bulk_spinner" aria-hidden="true" /><p>{t("priceList.bulk.searching")}</p></div>}
+            {!activePriceCheck && !isSearchingPriceList && <div className="bulk_empty_state"><Search aria-hidden="true" /><p>{t("priceList.bulk.chooseItem")}</p></div>}
             {activePriceCheck && priceSearchResults.length === 0 && !isSearchingPriceList && (
-              <p>Tidak ada hasil untuk {activePriceCheck.name}.</p>
+              <div className="bulk_empty_state"><Search aria-hidden="true" /><p>{t("priceList.bulk.noResults", { name: activePriceCheck.name })}</p></div>
             )}
 
-            {priceSearchResults.length > 0 && (
+            {priceSearchResults.length > 0 && !isSearchingPriceList && (
+              <div className="price_result_scroll">
               <table className="price_result_table">
                 <thead>
                   <tr>
-                    <th>Foto</th>
-                    <th>Nama</th>
-                    <th>Harga Jual</th>
-                    <th>Tgl Jual</th>
-                    <th>Tgl Beli</th>
+                    <th>{t("priceList.field.photo")}</th>
+                    <th>{t("priceList.field.namaBarang")}</th>
+                    <th>{t("priceList.field.hargaJual")}</th>
+                    <th>{t("priceList.field.tanggalJual")}</th>
+                    <th>{t("priceList.field.tanggalBeli")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -2099,7 +2101,7 @@ const BulkProductDraft = () => {
                         />
                       </td>
                       <td>{product.name}</td>
-                      <td>{Number(product.sell_price || 0).toLocaleString("id-ID")}</td>
+                      <td>{new Intl.NumberFormat(locale === "en" ? "en-US" : "id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(Number(product.sell_price || 0))}</td>
                       <td>{formatDisplayDate(product.sell_date)}</td>
                       <td>
                         {product.productDetails?.[0]?.date
@@ -2110,6 +2112,7 @@ const BulkProductDraft = () => {
                   ))}
                 </tbody>
               </table>
+              </div>
             )}
           </div>
         </div>

@@ -7,11 +7,40 @@ function itemKey(name, specification, unit) {
 }
 
 function invoiceNoPoList(invoice) {
-  const source = Array.isArray(invoice?.noPoList)
+  const source = Array.isArray(invoice?.noPoList) && invoice.noPoList.length > 0
     ? invoice.noPoList
     : String(invoice?.noPo || "").split(",");
 
-  return source.map((value) => String(value || "").trim()).filter(Boolean);
+  return [...new Set([
+    ...source,
+    ...(invoice?.barang || []).flatMap((item) => [
+      item?.noPoManual,
+      ...(item?.sources || []).map((row) => row?.noPo),
+    ]),
+  ].map((value) => String(value || "").trim()).filter(Boolean))];
+}
+
+function allocatedItemQuantity(purchaseOrder, suratJalanList, invoice, item) {
+  const salesOrderKey = normalizeText(purchaseOrder?.noPo);
+  const quantity = Math.max(0, Number(item?.kuantitas) || 0);
+  const sources = Array.isArray(item?.sources) ? item.sources : [];
+  if (sources.length > 0) {
+    const suratJalanIds = new Set(suratJalanList.map((row) => String(row?._id || row?.id || "")));
+    const totalSourceQty = sources.reduce((sum, source) => sum + Math.max(0, Number(source?.kuantitas) || 0), 0);
+    const linkedQty = sources.reduce((sum, source) => {
+      const sourceNoPo = normalizeText(source?.noPo);
+      const belongs = sourceNoPo
+        ? sourceNoPo === salesOrderKey
+        : suratJalanIds.has(String(source?.suratJalanId || ""));
+      return sum + (belongs ? Math.max(0, Number(source?.kuantitas) || 0) : 0);
+    }, 0);
+    // Never allocate more than the actual invoice quantity across its sources.
+    return totalSourceQty > 0 ? linkedQty * Math.min(quantity / totalSourceQty, 1) : 0;
+  }
+  const manualNoPo = normalizeText(item?.noPoManual);
+  if (manualNoPo) return manualNoPo === salesOrderKey ? quantity : 0;
+  const keys = new Set(invoiceNoPoList(invoice).map(normalizeText));
+  return keys.size === 1 && keys.has(salesOrderKey) ? quantity : 0;
 }
 
 function indexSalesOrderRelations(suratJalanList, invoiceList) {
@@ -24,8 +53,7 @@ function indexSalesOrderRelations(suratJalanList, invoiceList) {
   });
 
   invoiceList.forEach((row) => {
-    invoiceNoPoList(row).forEach((noPo) => {
-      const key = normalizeText(noPo);
+    new Set(invoiceNoPoList(row).map(normalizeText)).forEach((key) => {
       if (key) invoiceByNoPo.set(key, [...(invoiceByNoPo.get(key) || []), row]);
     });
   });
@@ -61,10 +89,6 @@ function buildDeliverySummary(purchaseOrder, suratJalanList) {
 }
 
 function buildItemProgress(purchaseOrder, suratJalanList, invoiceList) {
-  const salesOrderKey = normalizeText(purchaseOrder?.noPo);
-  const suratJalanIds = new Set(
-    suratJalanList.map((row) => String(row?._id || row?.id || "").trim()).filter(Boolean)
-  );
   const deliveredByItem = new Map();
   const billedByItem = new Map();
 
@@ -76,32 +100,9 @@ function buildItemProgress(purchaseOrder, suratJalanList, invoiceList) {
   });
 
   invoiceList.forEach((invoice) => {
-    const noPoKeys = new Set(invoiceNoPoList(invoice).map(normalizeText));
-
     (invoice?.barang || []).forEach((item) => {
       const key = itemKey(item?.namaBarang, item?.spesifikasi, item?.unit);
-      const sources = Array.isArray(item?.sources) ? item.sources : [];
-      const linkedSources = sources.filter((source) => {
-        const suratJalanId = String(source?.suratJalanId || "").trim();
-        return (
-          normalizeText(source?.noPo) === salesOrderKey ||
-          suratJalanIds.has(suratJalanId)
-        );
-      });
-      let billedQty = linkedSources.reduce(
-        (total, source) => total + Number(source?.kuantitas || 0),
-        0
-      );
-
-      // Invoice lama belum selalu memiliki sumber barang per Surat Jalan.
-      if (
-        billedQty === 0 &&
-        sources.length === 0 &&
-        (normalizeText(item?.noPoManual) === salesOrderKey ||
-          (noPoKeys.size === 1 && noPoKeys.has(salesOrderKey)))
-      ) {
-        billedQty = Number(item?.kuantitas || 0);
-      }
+      const billedQty = allocatedItemQuantity(purchaseOrder, suratJalanList, invoice, item);
 
       if (billedQty > 0) {
         billedByItem.set(key, (billedByItem.get(key) || 0) + billedQty);
@@ -114,6 +115,9 @@ function buildItemProgress(purchaseOrder, suratJalanList, invoiceList) {
     const orderedQty = Number(item?.kuantitas || 0);
     const deliveredQty = Math.min(deliveredByItem.get(key) || 0, orderedQty);
     const billedQty = Math.min(billedByItem.get(key) || 0, orderedQty);
+    // Identical SO rows share a quantity pool instead of each claiming the same invoice units.
+    deliveredByItem.set(key, Math.max((deliveredByItem.get(key) || 0) - deliveredQty, 0));
+    billedByItem.set(key, Math.max((billedByItem.get(key) || 0) - billedQty, 0));
 
     return {
       namaBarang: item?.namaBarang,
@@ -128,109 +132,58 @@ function buildItemProgress(purchaseOrder, suratJalanList, invoiceList) {
   });
 }
 
-function allocatedInvoiceAmount(purchaseOrder, suratJalanList, invoice) {
-  const salesOrderKey = normalizeText(purchaseOrder?.noPo);
-  const suratJalanIds = new Set(
-    suratJalanList.map((row) => String(row?._id || row?.id || "").trim()).filter(Boolean)
-  );
-  const invoiceSalesOrderKeys = new Set(invoiceNoPoList(invoice).map(normalizeText));
-  const grandTotal = Number(invoice?.grandTotal || 0);
-  const subtotal = Number(invoice?.subtotal || 0);
-  const comparableInvoiceAmount = subtotal > 0 ? subtotal : grandTotal;
-
-  if (invoiceSalesOrderKeys.size === 1 && invoiceSalesOrderKeys.has(salesOrderKey)) {
-    return comparableInvoiceAmount;
+function allocatedInvoiceAmount(purchaseOrder, suratJalanList, invoice, remainingQuantities) {
+  const orderedKeys = new Set((purchaseOrder?.barang || []).map((item) =>
+    itemKey(item?.namaBarang, item?.spesifikasi, item?.unit)
+  ));
+  const invoiceItems = invoice?.barang || [];
+  // Legacy records without item details can only be compared by their own subtotal.
+  if (orderedKeys.size === 0 && invoiceItems.length === 0) {
+    const keys = new Set(invoiceNoPoList(invoice).map(normalizeText));
+    if (keys.size !== 1 || !keys.has(normalizeText(purchaseOrder?.noPo))) return 0;
+    return Number(invoice?.subtotal ?? (Number(invoice?.grandTotal || 0) - Number(invoice?.ppnAmount || 0)));
   }
-
-  let allocatedSubtotal = 0;
-
-  (invoice?.barang || []).forEach((item) => {
+  return invoiceItems.reduce((total, item) => {
+    const key = itemKey(item?.namaBarang, item?.spesifikasi, item?.unit);
+    if (orderedKeys.size > 0 && !orderedKeys.has(key)) return total;
     const quantity = Number(item?.kuantitas || 0);
-    const lineAmount = Number(item?.jumlah || 0);
-    const sources = Array.isArray(item?.sources) ? item.sources : [];
-    const linkedQuantity = sources.reduce((total, source) => {
-      const suratJalanId = String(source?.suratJalanId || "").trim();
-      const belongsToSalesOrder =
-        normalizeText(source?.noPo) === salesOrderKey ||
-        suratJalanIds.has(suratJalanId);
-
-      return belongsToSalesOrder
-        ? total + Number(source?.kuantitas || 0)
-        : total;
-    }, 0);
-
-    if (linkedQuantity > 0 && quantity > 0) {
-      allocatedSubtotal += lineAmount * Math.min(linkedQuantity / quantity, 1);
-      return;
-    }
-
-    if (normalizeText(item?.noPoManual) === salesOrderKey) {
-      allocatedSubtotal += lineAmount;
-    }
-  });
-
-  if (allocatedSubtotal <= 0) return 0;
-  return allocatedSubtotal;
+    if (quantity <= 0) return total;
+    const availableQuantity = allocatedItemQuantity(purchaseOrder, suratJalanList, invoice, item);
+    const linkedQuantity = orderedKeys.size > 0
+      ? Math.min(availableQuantity, remainingQuantities.get(key) || 0)
+      : availableQuantity;
+    if (orderedKeys.size > 0) remainingQuantities.set(key, (remainingQuantities.get(key) || 0) - linkedQuantity);
+    return total + Number(item?.jumlah || 0) * linkedQuantity / quantity;
+  }, 0);
 }
 
-function buildBillingSummary(purchaseOrder, suratJalanList, invoiceList) {
+function buildBillingSummary(purchaseOrder, suratJalanList, invoiceList, items) {
   const orderAmount = Number(purchaseOrder?.nominalPo || 0);
+  const remainingQuantities = new Map();
+  (purchaseOrder?.barang || []).forEach((item) => {
+    const key = itemKey(item?.namaBarang, item?.spesifikasi, item?.unit);
+    remainingQuantities.set(key, (remainingQuantities.get(key) || 0) + Number(item?.kuantitas || 0));
+  });
   const invoicedAmount = invoiceList.reduce(
-    (total, invoice) => total + allocatedInvoiceAmount(purchaseOrder, suratJalanList, invoice),
+    (total, invoice) => total + allocatedInvoiceAmount(purchaseOrder, suratJalanList, invoice, remainingQuantities),
     0
   );
-  const tolerance = 1;
-
+  // Complete every ordered quantity; an expensive partial invoice cannot complete an SO.
+  let isComplete = items.length > 0
+    ? items.every((item) => item.orderedQty > 0 && item.remainingBillingQty <= 1e-8)
+    : orderAmount > 0 && invoicedAmount + 1 >= orderAmount;
+  if (items.length === 0 && orderAmount <= 0 && suratJalanList.length > 0) {
+    const invoicedNumbers = new Set(invoiceList.flatMap((invoice) =>
+      (invoice?.noSuratJalan || []).map(normalizeText)
+    ));
+    isComplete = suratJalanList.every((row) => invoicedNumbers.has(normalizeText(row?.noSuratJalan)));
+  }
   return {
     orderAmount,
     invoicedAmount: Math.round(invoicedAmount),
     remainingAmount: Math.max(Math.round(orderAmount - invoicedAmount), 0),
-    isComplete: orderAmount > 0 && invoicedAmount + tolerance >= orderAmount,
+    isComplete,
   };
-}
-
-function isBillingComplete(purchaseOrder, suratJalanList, invoiceList, billingSummary) {
-  if (billingSummary.isComplete) return true;
-
-  const salesOrderKey = normalizeText(purchaseOrder?.noPo);
-  const suratJalanIds = new Set(
-    suratJalanList.map((row) => String(row?._id || row?.id || "").trim()).filter(Boolean)
-  );
-  const billedByItem = new Map();
-  let hasTrackedSources = false;
-
-  invoiceList.forEach((invoice) => {
-    (invoice?.barang || []).forEach((item) => {
-      const key = itemKey(item?.namaBarang, item?.spesifikasi, item?.unit);
-      (item?.sources || []).forEach((source) => {
-        const belongsToSalesOrder =
-          normalizeText(source?.noPo) === salesOrderKey ||
-          suratJalanIds.has(String(source?.suratJalanId || "").trim());
-        if (!belongsToSalesOrder) return;
-        hasTrackedSources = true;
-        billedByItem.set(key, (billedByItem.get(key) || 0) + Number(source?.kuantitas || 0));
-      });
-    });
-  });
-
-  // Fallback untuk data lama tanpa nominal SO yang dapat dibandingkan.
-  if (
-    Number(purchaseOrder?.nominalPo || 0) <= 0 &&
-    hasTrackedSources &&
-    (purchaseOrder?.barang || []).length > 0
-  ) {
-    return purchaseOrder.barang.every((item) => {
-      const key = itemKey(item?.namaBarang, item?.spesifikasi, item?.unit);
-      return (billedByItem.get(key) || 0) >= Number(item?.kuantitas || 0);
-    });
-  }
-
-  if (Number(purchaseOrder?.nominalPo || 0) > 0) return false;
-
-  const invoicedNumbers = new Set(
-    invoiceList.flatMap((invoice) => (invoice?.noSuratJalan || []).map(normalizeText))
-  );
-  return suratJalanList.every((row) => invoicedNumbers.has(normalizeText(row?.noSuratJalan)));
 }
 
 function buildSalesOrderWorkflow(
@@ -240,13 +193,23 @@ function buildSalesOrderWorkflow(
   { includeItems = false } = {}
 ) {
   const delivery = buildDeliverySummary(purchaseOrder, suratJalanList);
-  const billing = buildBillingSummary(purchaseOrder, suratJalanList, invoiceList);
+  const items = buildItemProgress(purchaseOrder, suratJalanList, invoiceList);
+  const billing = buildBillingSummary(purchaseOrder, suratJalanList, invoiceList, items);
+  const orderedKeys = new Set((purchaseOrder?.barang || []).map((item) =>
+    itemKey(item?.namaBarang, item?.spesifikasi, item?.unit)
+  ));
+  const billingInvoices = orderedKeys.size === 0 ? invoiceList : invoiceList.filter((invoice) =>
+    (invoice?.barang || []).some((item) =>
+      orderedKeys.has(itemKey(item?.namaBarang, item?.spesifikasi, item?.unit)) &&
+      allocatedItemQuantity(purchaseOrder, suratJalanList, invoice, item) > 0
+    )
+  );
   let status = "toDeliver";
 
   if (invoiceList.length > 0) {
-    if (!isBillingComplete(purchaseOrder, suratJalanList, invoiceList, billing)) {
+    if (!billing.isComplete) {
       status = "partlyBilled";
-    } else if (invoiceList.every((invoice) => Boolean(invoice?.isPaid))) {
+    } else if (billingInvoices.length > 0 && billingInvoices.every((invoice) => Boolean(invoice?.isPaid))) {
       status = "paid";
     } else {
       status = "billed";
@@ -271,7 +234,7 @@ function buildSalesOrderWorkflow(
       isPaid: Boolean(row?.isPaid),
     })),
     ...(includeItems
-      ? { items: buildItemProgress(purchaseOrder, suratJalanList, invoiceList) }
+      ? { items }
       : {}),
   };
 }

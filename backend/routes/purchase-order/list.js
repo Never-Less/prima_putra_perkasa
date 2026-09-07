@@ -239,6 +239,8 @@ router.get("/", async (req, res) => {
             $or: [
               { noPoList: { $in: noPoList } },
               { noPo: { $in: noPoList } },
+              { "barang.sources.noPo": { $in: noPoList } },
+              { "barang.noPoManual": { $in: noPoList } },
             ],
           }).lean(),
         ])
