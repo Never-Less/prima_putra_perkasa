@@ -1,5 +1,26 @@
 "use client";
 
+import {
+  BarChart3,
+  Building2,
+  CircleDollarSign,
+  Factory,
+  Home,
+  Languages,
+  Landmark,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  PackageSearch,
+  ReceiptText,
+  ShoppingCart,
+  Truck,
+  UserCog,
+  UsersRound,
+  WalletCards,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -10,6 +31,18 @@ import { type Locale } from "../_i18n/messages";
 import { requestApi } from "../_lib/api-client";
 import { clearAuthSession, getStoredRefreshToken } from "../_lib/auth-session";
 import { ThemeToggle } from "./theme-toggle";
+import { ReleaseNotesNotificationCenter } from "./release-notes-notification-center";
+
+type NavItem = {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+};
+
+type NavGroup = {
+  label: string;
+  items: NavItem[];
+};
 
 function isActivePath(pathname: string, href: string) {
   if (href === "/") {
@@ -17,6 +50,57 @@ function isActivePath(pathname: string, href: string) {
   }
 
   return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+function NavigationGroups({
+  groups,
+  pathname,
+  onNavigate,
+  ariaLabel,
+}: {
+  groups: NavGroup[];
+  pathname: string;
+  onNavigate?: () => void;
+  ariaLabel: string;
+}) {
+  return (
+    <nav className="flex flex-col gap-5" aria-label={ariaLabel}>
+      {groups.map((group) => (
+        <section key={group.label} aria-labelledby={`nav-group-${group.label.replaceAll(" ", "-")}`}>
+          <h2
+            id={`nav-group-${group.label.replaceAll(" ", "-")}`}
+            className="mb-1.5 px-3 text-[11px] font-semibold uppercase text-slate-400 dark:text-slate-500"
+          >
+            {group.label}
+          </h2>
+          <div className="flex flex-col gap-0.5">
+            {group.items.map((item) => {
+              const isActive = isActivePath(pathname, item.href);
+              const Icon = item.icon;
+
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={onNavigate}
+                  aria-current={isActive ? "page" : undefined}
+                  className={`relative flex min-h-9 items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                    isActive
+                      ? "bg-blue-50 text-blue-700 dark:bg-blue-950/55 dark:text-blue-300"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+                  }`}
+                >
+                  {isActive ? <span className="absolute inset-y-1.5 left-0 w-0.5 rounded-r bg-blue-600" /> : null}
+                  <Icon aria-hidden="true" className="h-4 w-4 shrink-0" strokeWidth={1.8} />
+                  <span className="truncate">{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      ))}
+    </nav>
+  );
 }
 
 export function AppNavbar() {
@@ -27,26 +111,66 @@ export function AppNavbar() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const navItems = useMemo(
-    () =>
-      [
-        { href: "/", label: t("nav.home") },
-        isAdminAccess ? { href: "/user", label: t("nav.user") } : null,
-        { href: "/customer", label: t("nav.customer") },
-        { href: "/purchaseOrder", label: t("nav.purchaseOrder") },
-        { href: "/suratJalan", label: t("nav.suratJalan") },
-        { href: "/invoice", label: t("nav.invoice") },
-        { href: "/pembelian", label: t("nav.pembelian") },
-        { href: "/supplier", label: t("nav.supplier") },
-        { href: "/pembayaranAllCustomer", label: t("nav.pembayaranAllCustomer") },
-        { href: "/rekapTagihanPembayaranPabrik", label: t("nav.rekapTagihanPembayaranPabrik") },
-        isAdminAccess ? { href: "/laporanKeuangan", label: t("nav.laporanKeuangan") } : null,
-      ].filter((item): item is { href: string; label: string } => Boolean(item)),
+  const navGroups = useMemo<NavGroup[]>(
+    () => [
+      {
+        label: t("nav.group.overview"),
+        items: [
+          { href: "/", label: t("nav.home"), icon: Home },
+          { href: "/dashboardPenjualan", label: t("nav.salesDashboard"), icon: BarChart3 },
+          { href: "/salesOrderDashboard", label: t("nav.salesOrderDashboard"), icon: LayoutDashboard },
+        ],
+      },
+      {
+        label: t("nav.group.sales"),
+        items: [
+          { href: "/salesOrder", label: t("nav.purchaseOrder"), icon: ShoppingCart },
+          { href: "/priceList", label: t("nav.priceList"), icon: PackageSearch },
+          { href: "/suratJalan", label: t("nav.suratJalan"), icon: Truck },
+          { href: "/invoice", label: t("nav.invoice"), icon: ReceiptText },
+        ],
+      },
+      {
+        label: t("nav.group.purchasing"),
+        items: [
+          { href: "/pembelian", label: t("nav.pembelian"), icon: PackageSearch },
+          {
+            href: "/rekapTagihanPembayaranPabrik",
+            label: t("nav.rekapTagihanPembayaranPabrik"),
+            icon: Factory,
+          },
+        ],
+      },
+      {
+        label: t("nav.group.finance"),
+        items: [
+          ...(isAdminAccess
+            ? [{ href: "/dashboardFinance", label: t("nav.financeDashboard"), icon: Landmark }]
+            : []),
+          { href: "/kasBank", label: t("nav.cashLedger"), icon: WalletCards },
+          { href: "/pembayaranAllCustomer", label: t("nav.pembayaranAllCustomer"), icon: WalletCards },
+          { href: "/tagihanBelumDibayar", label: t("nav.tagihanBelumDibayar"), icon: CircleDollarSign },
+          ...(isAdminAccess
+            ? [{ href: "/laporanKeuangan", label: t("nav.laporanKeuangan"), icon: BarChart3 }]
+            : []),
+        ],
+      },
+      {
+        label: t("nav.group.master"),
+        items: [
+          { href: "/customer", label: t("nav.customer"), icon: UsersRound },
+          { href: "/supplier", label: t("nav.supplier"), icon: Building2 },
+          ...(isAdminAccess ? [{ href: "/user", label: t("nav.user"), icon: UserCog }] : []),
+        ],
+      },
+    ],
     [isAdminAccess, t]
   );
-  const activeNavItem = useMemo(() => {
-    return navItems.find((item) => isActivePath(pathname, item.href));
-  }, [navItems, pathname]);
+
+  const activeNavItem = useMemo(
+    () => navGroups.flatMap((group) => group.items).find((item) => isActivePath(pathname, item.href)),
+    [navGroups, pathname]
+  );
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
@@ -90,9 +214,7 @@ export function AppNavbar() {
       if (refreshToken) {
         await requestApi("/api/auth/logout", {
           method: "POST",
-          body: {
-            refreshToken: refreshToken,
-          },
+          body: { refreshToken },
         });
       }
     } catch {
@@ -106,166 +228,124 @@ export function AppNavbar() {
     }
   }
 
+  const navigationFooter = (
+    <div className="space-y-2">
+      <ThemeToggle fullWidth={true} />
+      <label className="relative block">
+        <span className="sr-only">{t("nav.language")}</span>
+        <Languages
+          aria-hidden="true"
+          className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+        />
+        <select
+          value={locale}
+          onChange={(event) => setLocale(event.target.value as Locale)}
+          aria-label={t("nav.language")}
+          className="erp-field w-full appearance-none pl-9"
+        >
+          <option value="id">{t("nav.language.id")}</option>
+          <option value="en">{t("nav.language.en")}</option>
+        </select>
+      </label>
+      <button
+        type="button"
+        onClick={() => void handleLogout()}
+        disabled={isLoggingOut}
+        className="erp-button erp-button-danger w-full justify-start"
+      >
+        <LogOut aria-hidden="true" className="h-4 w-4" />
+        <span>{isLoggingOut ? t("common.loading") : t("nav.logout")}</span>
+      </button>
+    </div>
+  );
+
   return (
     <>
-      <header className="sticky top-0 z-50 border-b border-sky-100/80 bg-white/90 backdrop-blur-sm dark:border-slate-800/80 dark:bg-slate-950/90 lg:hidden">
-        <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6">
-          <div className="min-w-0">
-            <Link href="/" className="block truncate text-sm font-semibold tracking-wide text-slate-900 dark:text-slate-100">
-              {t("brand.name")}
-            </Link>
-            <p className="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400">
-              {activeNavItem?.label || t("nav.sidebar.subtitle")}
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setIsMobileMenuOpen(true)}
-            aria-expanded={isMobileMenuOpen}
-            aria-label={t("nav.menu")}
-            className="inline-flex items-center gap-2 rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm font-medium text-sky-800 shadow-sm transition hover:bg-sky-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
-          >
-            <svg
-              aria-hidden="true"
-              viewBox="0 0 24 24"
-              className="h-4 w-4"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M4 7h16" />
-              <path d="M4 12h16" />
-              <path d="M4 17h16" />
-            </svg>
-            <span>{t("nav.menu")}</span>
-          </button>
+      <header className="sticky top-0 z-50 flex h-14 items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 dark:border-slate-800 dark:bg-slate-950 sm:px-6 lg:hidden">
+        <div className="min-w-0">
+          <Link href="/" className="block truncate text-sm font-semibold text-slate-950 dark:text-white">
+            {t("brand.name")}
+          </Link>
+          <p className="truncate text-xs text-slate-500 dark:text-slate-400">
+            {activeNavItem?.label || t("nav.sidebar.subtitle")}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+        <ReleaseNotesNotificationCenter />
+        <button
+          type="button"
+          onClick={() => setIsMobileMenuOpen(true)}
+          aria-expanded={isMobileMenuOpen}
+          aria-label={t("nav.menu")}
+          title={t("nav.menu")}
+          className="erp-icon-button"
+        >
+          <Menu aria-hidden="true" className="h-5 w-5" />
+        </button>
         </div>
       </header>
 
       {isMobileMenuOpen ? (
-        <div className="fixed inset-0 z-[60] bg-slate-900/45 lg:hidden" onClick={() => setIsMobileMenuOpen(false)}>
+        <div className="fixed inset-0 z-[60] bg-slate-950/45 lg:hidden" onClick={() => setIsMobileMenuOpen(false)}>
           <aside
-            className="absolute inset-y-0 left-0 flex w-[min(22rem,calc(100vw-1.5rem))] flex-col border-r border-sky-100 bg-sky-50/95 p-4 shadow-2xl dark:border-slate-800 dark:bg-slate-950"
+            className="absolute inset-y-0 left-0 flex w-[min(19rem,calc(100vw-1.5rem))] flex-col border-r border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-950"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="flex items-start justify-between gap-3 border-b border-sky-100 pb-4 dark:border-slate-800">
-              <div className="min-w-0">
-                <Link href="/" className="block truncate text-sm font-semibold tracking-wide text-slate-900 dark:text-slate-100">
-                  {t("brand.name")}
-                </Link>
-                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("nav.sidebar.subtitle")}</p>
+            <div className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-slate-200 px-4 dark:border-slate-800">
+              <div className="flex min-w-0 items-center gap-3">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-blue-600 text-white">
+                  <Building2 aria-hidden="true" className="h-4 w-4" />
+                </span>
+                <div className="min-w-0">
+                  <Link href="/" className="block truncate text-sm font-semibold text-slate-950 dark:text-white">
+                    {t("brand.name")}
+                  </Link>
+                  <p className="truncate text-xs text-slate-500 dark:text-slate-400">{t("nav.sidebar.subtitle")}</p>
+                </div>
               </div>
               <button
                 type="button"
                 onClick={() => setIsMobileMenuOpen(false)}
                 aria-label={t("common.close")}
-                className="rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-sky-800 hover:bg-sky-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+                title={t("common.close")}
+                className="erp-icon-button"
               >
-                {t("common.close")}
+                <X aria-hidden="true" className="h-4 w-4" />
               </button>
             </div>
 
-            <nav className="mt-4 flex flex-1 flex-col gap-2" aria-label="Mobile navigation drawer">
-              {navItems.map((item) => {
-                const isActive = isActivePath(pathname, item.href);
-
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={`rounded-xl px-4 py-3 text-sm font-medium transition ${
-                      isActive
-                        ? "bg-sky-500 text-white shadow-sm dark:bg-sky-500 dark:text-slate-950"
-                        : "border border-sky-100 bg-white text-slate-700 hover:bg-sky-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
-                    }`}
-                  >
-                    {item.label}
-                  </Link>
-                );
-              })}
-            </nav>
-
-            <div className="mt-4 border-t border-sky-100 pt-4 dark:border-slate-800">
-              <ThemeToggle fullWidth={true} />
-              <label className="mt-4 block text-xs font-medium text-slate-600 dark:text-slate-300">
-                {t("nav.language")}
-                <select
-                  value={locale}
-                  onChange={(event) => setLocale(event.target.value as Locale)}
-                  className="mt-1 w-full rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                >
-                  <option value="id">{t("nav.language.id")}</option>
-                  <option value="en">{t("nav.language.en")}</option>
-                </select>
-              </label>
-              <button
-                type="button"
-                onClick={() => void handleLogout()}
-                disabled={isLoggingOut}
-                className="mt-3 w-full rounded-lg border border-red-300 bg-white px-3 py-2 text-sm text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-900 dark:bg-slate-900 dark:text-red-300 dark:hover:bg-red-950/40"
-              >
-                {isLoggingOut ? t("common.loading") : t("nav.logout")}
-              </button>
+            <div className="flex-1 overflow-y-auto px-3 py-4">
+              <NavigationGroups
+                groups={navGroups}
+                pathname={pathname}
+                onNavigate={() => setIsMobileMenuOpen(false)}
+                ariaLabel={t("nav.mobileLabel")}
+              />
             </div>
+            <div className="shrink-0 border-t border-slate-200 p-3 dark:border-slate-800">{navigationFooter}</div>
           </aside>
         </div>
       ) : null}
 
-      <aside className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:flex lg:w-64 lg:flex-col lg:border-r lg:border-sky-100/80 lg:bg-white/90 lg:backdrop-blur-sm dark:border-slate-800/80 dark:bg-slate-950/90">
-        <div className="border-b border-sky-100 px-5 py-4 dark:border-slate-800">
-          <Link href="/" className="text-sm font-semibold tracking-wide text-slate-900 dark:text-slate-100">
-            {t("brand.name")}
-          </Link>
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("nav.sidebar.subtitle")}</p>
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 lg:flex">
+        <div className="flex h-16 shrink-0 items-center gap-3 border-b border-slate-200 px-4 dark:border-slate-800">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-blue-600 text-white">
+            <Building2 aria-hidden="true" className="h-4 w-4" />
+          </span>
+          <div className="min-w-0">
+            <Link href="/" className="block truncate text-sm font-semibold text-slate-950 dark:text-white">
+              {t("brand.name")}
+            </Link>
+            <p className="truncate text-xs text-slate-500 dark:text-slate-400">{t("nav.sidebar.subtitle")}</p>
+          </div>
         </div>
 
-        <nav className="flex flex-1 flex-col gap-2 px-4 py-4 text-sm" aria-label="Desktop sidebar navigation">
-          {navItems.map((item) => {
-            const isActive = isActivePath(pathname, item.href);
-
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`rounded-lg px-3 py-2 transition ${
-                  isActive
-                    ? "bg-sky-500 text-white dark:bg-sky-500 dark:text-slate-950"
-                    : "border border-sky-100 bg-white text-slate-700 hover:bg-sky-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
-                }`}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
-
-        <div className="border-t border-sky-100 px-4 py-4 dark:border-slate-800">
-          <ThemeToggle fullWidth={true} />
-          <label className="mt-4 block text-xs font-medium text-slate-600 dark:text-slate-300">
-            {t("nav.language")}
-            <select
-              value={locale}
-              onChange={(event) => setLocale(event.target.value as Locale)}
-              className="mt-1 w-full rounded-md border border-sky-200 bg-white px-2 py-2 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-            >
-              <option value="id">{t("nav.language.id")}</option>
-              <option value="en">{t("nav.language.en")}</option>
-            </select>
-          </label>
-          <button
-            type="button"
-            onClick={() => void handleLogout()}
-            disabled={isLoggingOut}
-            className="mt-3 w-full rounded-lg border border-red-300 bg-white px-3 py-2 text-sm text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-900 dark:bg-slate-900 dark:text-red-300 dark:hover:bg-red-950/40"
-          >
-            {isLoggingOut ? t("common.loading") : t("nav.logout")}
-          </button>
+        <div className="flex-1 overflow-y-auto px-3 py-4">
+          <NavigationGroups groups={navGroups} pathname={pathname} ariaLabel={t("nav.desktopLabel")} />
         </div>
+        <div className="shrink-0 border-t border-slate-200 p-3 dark:border-slate-800">{navigationFooter}</div>
       </aside>
+      <div className="fixed right-5 top-4 z-50 hidden lg:block"><ReleaseNotesNotificationCenter /></div>
     </>
   );
 }

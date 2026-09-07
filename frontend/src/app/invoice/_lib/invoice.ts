@@ -7,6 +7,7 @@ import {
   type PaginationQueryState,
   type ServerListResult,
 } from "../../_lib/pagination";
+import { defaultPaymentTerm, normalizePaymentTerm, type PaymentTerm } from "../../_lib/payment-term";
 
 export type InvoiceBarangSource = {
   suratJalanId: string;
@@ -41,6 +42,8 @@ export type InvoiceItem = {
   isPpn: boolean;
   isPaid: boolean;
   tanggalBayar: string | null;
+  paymentTerm: PaymentTerm;
+  dueDate: string;
   ppnRate: number;
   ppnAmount: number;
   subtotal: number;
@@ -67,6 +70,7 @@ export type InvoiceFormState = {
   isPpn: boolean;
   isPaid: boolean;
   tanggalBayar: string;
+  paymentTerm: PaymentTerm;
   ppnRate: string;
   barangRows: InvoiceBarangFormRow[];
 };
@@ -205,6 +209,8 @@ export const sampleInvoiceRows: InvoiceItem[] = [
     isPpn: true,
     isPaid: false,
     tanggalBayar: null,
+    paymentTerm: { ...defaultPaymentTerm },
+    dueDate: "2026-03-31",
     ppnRate: 11,
     ppnAmount: 2310000,
     subtotal: 21000000,
@@ -233,6 +239,8 @@ export const sampleInvoiceRows: InvoiceItem[] = [
     isPpn: false,
     isPaid: false,
     tanggalBayar: null,
+    paymentTerm: { ...defaultPaymentTerm },
+    dueDate: "2026-04-01",
     ppnRate: 11,
     ppnAmount: 0,
     subtotal: 7600000,
@@ -261,6 +269,8 @@ export const sampleInvoiceRows: InvoiceItem[] = [
     isPpn: true,
     isPaid: false,
     tanggalBayar: null,
+    paymentTerm: { ...defaultPaymentTerm },
+    dueDate: "2026-04-02",
     ppnRate: 11,
     ppnAmount: 396000,
     subtotal: 3600000,
@@ -543,7 +553,7 @@ function toInvoiceBarang(value: unknown): InvoiceBarang | null {
   };
 }
 
-function toInvoiceItem(value: unknown): InvoiceItem | null {
+export function toInvoiceItem(value: unknown): InvoiceItem | null {
   if (!value || typeof value !== "object") {
     return null;
   }
@@ -576,6 +586,8 @@ function toInvoiceItem(value: unknown): InvoiceItem | null {
     isPpn: Boolean(row.isPpn),
     isPaid,
     tanggalBayar: isPaid ? toText(row.tanggalBayar).trim() || null : null,
+    paymentTerm: normalizePaymentTerm(row.paymentTerm),
+    dueDate: toText(row.dueDate).trim(),
     ppnRate: parseNumberFromUnknown(row.ppnRate, 11),
     ppnAmount: parseNumberFromUnknown(row.ppnAmount),
     subtotal: parseNumberFromUnknown(row.subtotal),
@@ -665,6 +677,7 @@ function toNormalizedInvoicePayload(form: InvoiceFormState) {
     isPpn: form.isPpn,
     isPaid: form.isPaid,
     tanggalBayar: form.isPaid ? toText(form.tanggalBayar).trim() || null : null,
+    paymentTerm: normalizePaymentTerm(form.paymentTerm),
     ppnRate: Number.isFinite(ppnRateValue) ? ppnRateValue : 0,
   };
 }
@@ -1222,6 +1235,7 @@ export function toInvoiceFormState(item: InvoiceItem): InvoiceFormState {
     isPpn: item.isPpn,
     isPaid: item.isPaid,
     tanggalBayar: item.isPaid ? toInputDate(item.tanggalBayar) : "",
+    paymentTerm: normalizePaymentTerm(item.paymentTerm),
     ppnRate: String(item.ppnRate),
     barangRows: ensureTrailingEmptyInvoiceBarangRow(
       item.barang.map((barang) => ({
@@ -1264,6 +1278,7 @@ export function toInvoiceFormStateFromPrefill(prefill: InvoicePrefillPayload): I
     isPpn: typeof prefill.isPpn === "boolean" ? prefill.isPpn : true,
     isPaid: false,
     tanggalBayar: "",
+    paymentTerm: { ...defaultPaymentTerm },
     ppnRate: String(normalizedPpnRate),
     barangRows,
   };
@@ -1317,7 +1332,9 @@ export function filterInvoiceRows(
     const namaBarangFilter = normalize(filter.namaBarang);
     const matchNamaBarang =
       !namaBarangFilter ||
-      row.barang.some((barang) => normalize(barang.namaBarang).includes(namaBarangFilter));
+      row.barang.some((barang) =>
+        normalize(`${barang.namaBarang} ${barang.spesifikasi}`).includes(namaBarangFilter)
+      );
     const customerLabel = resolveCustomerLabel ? resolveCustomerLabel(row.idCustomer) : row.idCustomer;
     const matchIdCustomer = normalize(customerLabel).includes(normalize(filter.idCustomer));
 

@@ -15,6 +15,7 @@ const {
   parseDate,
   parseNumber,
 } = require("./validators");
+const { calculateDueDate, normalizePaymentTerm } = require("../../utils/payment-term");
 
 const router = express.Router();
 
@@ -131,6 +132,14 @@ router.put("/:id", async (req, res) => {
     updates.ppnRate = ppnRate;
   }
 
+  if (req.body.paymentTerm !== undefined) {
+    const paymentTerm = normalizePaymentTerm(req.body.paymentTerm);
+    if (!paymentTerm) {
+      return res.status(400).json({ message: "Term of payment invoice tidak valid." });
+    }
+    updates.paymentTerm = paymentTerm;
+  }
+
   if (req.body.barang !== undefined) {
     const barang = normalizeBarangList(req.body.barang);
     if (!barang) {
@@ -175,6 +184,8 @@ router.put("/:id", async (req, res) => {
     const effectiveSubtotal =
       updates.subtotal !== undefined ? updates.subtotal : existingInvoice.subtotal;
     const effectiveTanggal = updates.tanggal ?? existingInvoice.tanggal;
+    const effectivePaymentTerm =
+      updates.paymentTerm || normalizePaymentTerm(existingInvoice.paymentTerm);
     const effectiveIsPaid = updates.isPaid ?? existingInvoice.isPaid ?? false;
     const effectiveTanggalBayar = effectiveIsPaid
       ? updates.tanggalBayar !== undefined
@@ -204,6 +215,8 @@ router.put("/:id", async (req, res) => {
     );
 
     updates.grandTotal = calculateGrandTotal(effectiveSubtotal, updates.ppnAmount);
+    updates.paymentTerm = effectivePaymentTerm;
+    updates.dueDate = calculateDueDate(effectiveTanggal, effectivePaymentTerm);
 
     const invoice = await Invoice.findByIdAndUpdate(id, updates, {
       new: true,

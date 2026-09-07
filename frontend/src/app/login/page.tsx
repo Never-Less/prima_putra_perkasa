@@ -102,8 +102,8 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-      <section className="mx-auto w-full max-w-md rounded-2xl border border-sky-200 bg-sky-50/40 p-5 shadow-sm dark:border-sky-900/70 dark:bg-slate-950/85 sm:p-6">
+    <main className="flex min-h-screen w-full items-center justify-center p-4 sm:p-6">
+      <section className="ppp-form-view w-full max-w-md border p-5 sm:p-6">
         <div className="flex items-start justify-between gap-3">
           <div>
             <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100 sm:text-2xl">{t("login.title")}</h1>

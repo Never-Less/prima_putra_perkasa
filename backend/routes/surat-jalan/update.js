@@ -4,6 +4,7 @@ const { Customer } = require("../../models/Customer");
 const { SuratJalan } = require("../../models/SuratJalan");
 const { sanitizeSuratJalan } = require("./sanitize-surat-jalan");
 const { isValidId, normalizeBarangList, parseDate } = require("./validators");
+const { validateDeliveryAgainstSalesOrder } = require("../../utils/delivery-validation");
 
 const router = express.Router();
 
@@ -87,6 +88,8 @@ router.put("/:id", async (req, res) => {
   }
 
   try {
+    const existingDocument = await SuratJalan.findById(id).lean();
+    if (!existingDocument) return res.status(404).json({ message: "Data surat jalan tidak ditemukan." });
     if (updates.idCustomer) {
       const customer = await Customer.findById(updates.idCustomer);
       if (!customer) {
@@ -106,6 +109,15 @@ router.put("/:id", async (req, res) => {
         return res.status(409).json({ message: "No. Surat Jalan ini sudah digunakan." });
       }
     }
+
+
+    const deliveryError = await validateDeliveryAgainstSalesOrder({
+      noPo: updates.noPo || existingDocument.noPo,
+      customerId: updates.idCustomer || existingDocument.idCustomer,
+      barang: updates.barang || existingDocument.barang,
+      excludeSuratJalanId: id,
+    });
+    if (deliveryError) return res.status(409).json({ message: deliveryError });
 
     const suratJalan = await SuratJalan.findByIdAndUpdate(id, updates, {
       new: true,

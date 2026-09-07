@@ -16,10 +16,17 @@ import {
 } from "../_lib/purchase-order";
 
 function toSearchFilter(searchParams: URLSearchParams): PurchaseOrderFilter {
+  const workflowStatus = String(searchParams.get("workflowStatus") || "").trim();
+
   return {
     ...defaultPurchaseOrderFilter,
     noPo: String(searchParams.get("noPo") || "").trim(),
+    workflowStatus:
+      workflowStatus === "withoutSuratJalan" || workflowStatus === "readyForInvoice"
+        ? workflowStatus
+        : "",
     namaCustomer: String(searchParams.get("namaCustomer") || "").trim(),
+    namaBarang: String(searchParams.get("namaBarang") || "").trim(),
     noInvoice: String(searchParams.get("noInvoice") || "").trim(),
     tanggalPoDari: String(searchParams.get("tanggalPoDari") || "").trim(),
     tanggalPoSampai: String(searchParams.get("tanggalPoSampai") || "").trim(),
@@ -44,7 +51,14 @@ export default function PurchaseOrderExportPage() {
   const activeFilterEntries = useMemo(() => {
     return [
       ["field.noPo", filter.noPo],
+      [
+        "field.workflowStatus",
+        filter.workflowStatus
+          ? t(`purchaseOrder.workflowStatus.${filter.workflowStatus}`)
+          : "",
+      ],
       ["field.namaCustomer", filter.namaCustomer],
+      ["field.namaBarang", filter.namaBarang],
       ["field.noInvoice", filter.noInvoice],
       ["field.tanggalPoDari", filter.tanggalPoDari],
       ["field.tanggalPoSampai", filter.tanggalPoSampai],
@@ -53,7 +67,7 @@ export default function PurchaseOrderExportPage() {
       ["field.nominalPoMin", filter.nominalPoMin],
       ["field.nominalPoMax", filter.nominalPoMax],
     ].filter((entry) => Boolean(String(entry[1] || "").trim()));
-  }, [filter]);
+  }, [filter, t]);
 
   useEffect(() => {
     const previousTitle = document.title;
@@ -117,7 +131,7 @@ export default function PurchaseOrderExportPage() {
 
     window.setTimeout(() => {
       if (!document.hidden) {
-        router.push("/purchaseOrder");
+        router.push("/salesOrder");
       }
     }, 150);
   }

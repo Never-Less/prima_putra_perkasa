@@ -52,6 +52,7 @@ const suratJalanSchema = new mongoose.Schema(
       required: true,
       trim: true,
       maxlength: 100,
+      index: true,
     },
     tanggal: {
       type: Date,

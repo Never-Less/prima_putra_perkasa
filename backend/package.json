@@ -14,6 +14,8 @@
     "migrate:is-paid-to-invoice": "node scripts/migrate-invoice-payment-fields.js",
     "migrate:invoice-payment-fields": "node scripts/migrate-invoice-payment-fields.js",
     "migrate:pembelian-no-nota": "node scripts/migrate-pembelian-no-npwp-to-no-nota.js",
+    "migrate:customer-payment-terms": "node scripts/apply-customer-payment-terms.js",
+    "repair:sales-order-item-totals": "node scripts/repair-sales-order-item-totals.js",
     "test": "echo \"No tests configured\""
   },
   "keywords": [],
@@ -22,12 +24,14 @@
   "description": "",
   "dependencies": {
     "bcryptjs": "^3.0.3",
+    "cloudinary": "^2.11.0",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.3",
-    "mongoose": "^9.2.1"
+    "mongoose": "^9.2.1",
+    "multer": "^2.3.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"

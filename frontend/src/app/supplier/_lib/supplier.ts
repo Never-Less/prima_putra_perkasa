@@ -11,6 +11,15 @@ export type SupplierItem = {
   namaSupplier: string;
   hutang: boolean;
   lamaHutang: number | null;
+  alamat: string;
+  npwp: string;
+  picName: string;
+  phone: string;
+  email: string;
+  productCategories: string[];
+  notes: string;
+  documentLinks: Array<{ label: string; url: string }>;
+  isActive: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -26,6 +35,15 @@ export type SupplierFormState = {
   namaSupplier: string;
   hutang: boolean;
   lamaHutang: string;
+  alamat: string;
+  npwp: string;
+  picName: string;
+  phone: string;
+  email: string;
+  productCategories: string;
+  notes: string;
+  documentLinksText: string;
+  isActive: boolean;
 };
 
 export type SupplierListQuery = SupplierFilter & PaginationQueryState;
@@ -94,6 +112,12 @@ function toSupplierItem(value: unknown): SupplierItem | null {
     namaSupplier: toText(row.namaSupplier).trim(),
     hutang,
     lamaHutang: hutang ? toNullableNumber(row.lamaHutang) : null,
+    alamat: toText(row.alamat).trim(), npwp: toText(row.npwp).trim(),
+    picName: toText(row.picName).trim(), phone: toText(row.phone).trim(), email: toText(row.email).trim(),
+    productCategories: Array.isArray(row.productCategories) ? row.productCategories.map(toText).filter(Boolean) : [],
+    notes: toText(row.notes).trim(),
+    documentLinks: Array.isArray(row.documentLinks) ? row.documentLinks.map((item) => { const link = item as Record<string, unknown>; return { label: toText(link.label), url: toText(link.url) }; }).filter((item) => item.label && item.url) : [],
+    isActive: row.isActive !== false,
     createdAt: toText(row.createdAt).trim(),
     updatedAt: toText(row.updatedAt).trim(),
   };
@@ -107,6 +131,10 @@ function toNormalizedSupplierPayload(form: SupplierFormState) {
     namaSupplier: toText(form.namaSupplier).trim(),
     hutang,
     lamaHutang: hutang && Number.isFinite(lamaHutang) ? lamaHutang : null,
+    alamat: form.alamat.trim(), npwp: form.npwp.trim(), picName: form.picName.trim(),
+    phone: form.phone.trim(), email: form.email.trim(), notes: form.notes.trim(), isActive: form.isActive,
+    productCategories: form.productCategories.split(",").map((value) => value.trim()).filter(Boolean),
+    documentLinks: form.documentLinksText.split("\n").map((line) => { const separator = line.indexOf("|"); return separator < 0 ? null : { label: line.slice(0, separator).trim(), url: line.slice(separator + 1).trim() }; }).filter((row): row is { label: string; url: string } => Boolean(row?.label && /^https?:\/\//i.test(row.url))),
   };
 }
 
@@ -197,5 +225,9 @@ export function toSupplierFormState(item: SupplierItem): SupplierFormState {
     namaSupplier: item.namaSupplier,
     hutang: item.hutang,
     lamaHutang: item.hutang && item.lamaHutang ? String(item.lamaHutang) : "",
+    alamat: item.alamat, npwp: item.npwp, picName: item.picName, phone: item.phone,
+    email: item.email, productCategories: item.productCategories.join(", "), notes: item.notes,
+    documentLinksText: item.documentLinks.map((row) => `${row.label}|${row.url}`).join("\n"),
+    isActive: item.isActive,
   };
 }

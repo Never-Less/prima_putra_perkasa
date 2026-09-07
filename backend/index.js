@@ -5,20 +5,25 @@ const express = require("express");
 const helmet = require("helmet");
 const { connectDatabase, getDatabaseState, mongoose } = require("./config/database");
 const { cleanupLegacyUserIndexes } = require("./models/User");
+const { createDocumentAuditMiddleware } = require("./middlewares/audit-document");
 const {
   createCsrfProtection,
   isOriginAllowed,
   parseAllowedOrigins,
 } = require("./middlewares/csrf");
 const authRoutes = require("./routes/auth");
+const auditLogRoutes = require("./routes/audit-log");
 const customerRoutes = require("./routes/customer");
+const dashboardRoutes = require("./routes/dashboard");
 const invoiceRoutes = require("./routes/invoice");
 const laporanKeuanganRoutes = require("./routes/laporan-keuangan");
 const pembelianRoutes = require("./routes/pembelian");
+const priceListRoutes = require("./routes/price-list");
 const purchaseOrderRoutes = require("./routes/purchase-order");
 const suratJalanRoutes = require("./routes/surat-jalan");
 const supplierRoutes = require("./routes/supplier");
 const userRoutes = require("./routes/user");
+const cashLedgerRoutes = require("./routes/cash-ledger");
 
 const app = express();
 const port = Number(process.env.PORT) || 5000;
@@ -39,6 +44,7 @@ app.use(
 );
 app.use(express.json());
 app.use(createCsrfProtection(allowedOrigins));
+app.use(createDocumentAuditMiddleware());
 
 app.get("/api/health", (_req, res) => {
   res.json({
@@ -48,14 +54,18 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/audit-logs", auditLogRoutes);
 app.use("/api/customers", customerRoutes);
+app.use("/api/dashboards", dashboardRoutes);
 app.use("/api/invoices", invoiceRoutes);
 app.use("/api/laporan-keuangan", laporanKeuanganRoutes);
 app.use("/api/pembelian", pembelianRoutes);
+app.use("/api/price-list", priceListRoutes);
 app.use("/api/purchase-orders", purchaseOrderRoutes);
 app.use("/api/surat-jalan", suratJalanRoutes);
 app.use("/api/suppliers", supplierRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/cash-ledger", cashLedgerRoutes);
 
 app.use((error, _req, res, next) => {
   if (error?.message === "Origin blocked by CORS policy") {

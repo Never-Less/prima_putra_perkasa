@@ -25,6 +25,8 @@ function createEmptySupplierFormState(): SupplierFormState {
     namaSupplier: "",
     hutang: false,
     lamaHutang: "",
+    alamat: "", npwp: "", picName: "", phone: "", email: "", productCategories: "",
+    notes: "", documentLinksText: "", isActive: true,
   };
 }
 
@@ -66,7 +68,7 @@ export function SupplierEditForm({
   };
 
   return (
-    <section className="rounded-2xl border border-sky-200 bg-sky-50/40 p-5 shadow-sm dark:border-sky-900/70 dark:bg-slate-950/85">
+    <section className="ppp-form-view rounded-2xl border border-sky-200 bg-sky-50/40 p-5 shadow-sm dark:border-sky-900/70 dark:bg-slate-950/85">
       <div className="mb-3">
         <h2 className="text-lg font-semibold text-sky-900 dark:text-sky-100">{t("supplier.form.title")}</h2>
         <p className="text-sm text-sky-800 dark:text-sky-200">{t("supplier.form.description")}</p>
@@ -84,6 +86,16 @@ export function SupplierEditForm({
                 className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               />
             </label>
+
+            <label className="text-sm text-slate-700 dark:text-slate-200 sm:col-span-2">{t("supplier.field.alamat")}<textarea value={form.alamat} onChange={(event) => setForm((prev) => ({ ...prev, alamat: event.target.value }))} className="erp-field mt-1 min-h-20 w-full" /></label>
+            <label className="text-sm text-slate-700 dark:text-slate-200">{t("supplier.field.npwp")}<input value={form.npwp} onChange={(event) => setForm((prev) => ({ ...prev, npwp: event.target.value }))} className="erp-field mt-1 w-full" /></label>
+            <label className="text-sm text-slate-700 dark:text-slate-200">{t("supplier.field.pic")}<input value={form.picName} onChange={(event) => setForm((prev) => ({ ...prev, picName: event.target.value }))} className="erp-field mt-1 w-full" /></label>
+            <label className="text-sm text-slate-700 dark:text-slate-200">{t("supplier.field.phone")}<input value={form.phone} onChange={(event) => setForm((prev) => ({ ...prev, phone: event.target.value }))} className="erp-field mt-1 w-full" /></label>
+            <label className="text-sm text-slate-700 dark:text-slate-200">{t("supplier.field.email")}<input type="email" value={form.email} onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))} className="erp-field mt-1 w-full" /></label>
+            <label className="text-sm text-slate-700 dark:text-slate-200 sm:col-span-2">{t("supplier.field.categories")}<input value={form.productCategories} onChange={(event) => setForm((prev) => ({ ...prev, productCategories: event.target.value }))} placeholder={t("supplier.field.categoriesHint")} className="erp-field mt-1 w-full" /></label>
+            <label className="text-sm text-slate-700 dark:text-slate-200 sm:col-span-2">{t("supplier.field.documents")}<textarea value={form.documentLinksText} onChange={(event) => setForm((prev) => ({ ...prev, documentLinksText: event.target.value }))} placeholder={t("supplier.field.documentsHint")} className="erp-field mt-1 min-h-24 w-full" /></label>
+            <label className="text-sm text-slate-700 dark:text-slate-200 sm:col-span-2">{t("field.note")}<textarea value={form.notes} onChange={(event) => setForm((prev) => ({ ...prev, notes: event.target.value }))} className="erp-field mt-1 min-h-20 w-full" /></label>
+            <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200"><input type="checkbox" checked={form.isActive} onChange={(event) => setForm((prev) => ({ ...prev, isActive: event.target.checked }))} />{t("supplier.field.active")}</label>
 
             <label className="text-sm text-slate-700 dark:text-slate-200">
               {t("field.hutang")}

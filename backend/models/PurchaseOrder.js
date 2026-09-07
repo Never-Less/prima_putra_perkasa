@@ -1,5 +1,20 @@
 const mongoose = require("mongoose");
 
+const paymentTermSchema = new mongoose.Schema(
+  {
+    type: {
+      type: String,
+      enum: ["net", "cashBeforeDelivery", "cashOnDelivery", "dpNet"],
+      required: true,
+      default: "net",
+    },
+    netDays: { type: Number, min: 0, max: 3650, required: true, default: 30 },
+    downPaymentPercent: { type: Number, min: 0, max: 100, required: true, default: 0 },
+    remainingPaymentPercent: { type: Number, min: 0, max: 100, required: true, default: 100 },
+  },
+  { _id: false }
+);
+
 const barangPurchaseOrderSchema = new mongoose.Schema(
   {
     namaBarang: {
@@ -65,6 +80,15 @@ const purchaseOrderSchema = new mongoose.Schema(
       type: [barangPurchaseOrderSchema],
       default: [],
     },
+    paymentTerm: {
+      type: paymentTermSchema,
+      default: () => ({
+        type: "net",
+        netDays: 30,
+        downPaymentPercent: 0,
+        remainingPaymentPercent: 100,
+      }),
+    },
     tanggalInvoice: {
       type: Date,
       default: null,
@@ -75,8 +99,30 @@ const purchaseOrderSchema = new mongoose.Schema(
       default: null,
       index: true,
     },
+    revision: { type: Number, required: true, min: 0, default: 0 },
+    revisionHistory: {
+      type: [{
+        revision: { type: Number, required: true },
+        reason: { type: String, trim: true, maxlength: 500, default: "" },
+        revisedAt: { type: Date, required: true, default: Date.now },
+        revisedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+        snapshot: { type: mongoose.Schema.Types.Mixed, required: true },
+        affectedSuratJalan: { type: Number, default: 0 },
+        affectedInvoices: { type: Number, default: 0 },
+      }],
+      default: [],
+    },
   },
   { timestamps: true }
+);
+
+purchaseOrderSchema.index(
+  { noPo: 1 },
+  {
+    unique: true,
+    collation: { locale: "en", strength: 2 },
+    name: "uniq_purchase_order_no_po_ci",
+  }
 );
 
 const PurchaseOrder = mongoose.model("PurchaseOrder", purchaseOrderSchema);

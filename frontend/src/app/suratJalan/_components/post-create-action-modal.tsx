@@ -33,7 +33,7 @@ export function PostCreateActionModal({
 
   return (
     <div className="modal-backdrop-enter fixed inset-0 z-[72] flex items-center justify-center bg-slate-900/35 p-4">
-      <div className="modal-panel-enter w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-xl dark:border-slate-800 dark:bg-slate-950">
+      <div className="modal-panel-enter w-full max-w-md rounded-lg border border-slate-200 bg-white p-5 shadow-xl dark:border-slate-800 dark:bg-slate-950">
         <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{title}</h3>
         <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{description}</p>
 

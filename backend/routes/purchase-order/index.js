@@ -2,6 +2,7 @@ const express = require("express");
 
 const { requireAuth } = require("../../middlewares/auth");
 const createRoute = require("./create");
+const dashboardRoute = require("./dashboard");
 const getByIdRoute = require("./get-by-id");
 const listRoute = require("./list");
 const optionsRoute = require("./options");
@@ -14,6 +15,7 @@ router.use(requireAuth);
 
 router.use(createRoute);
 router.use(optionsRoute);
+router.use(dashboardRoute);
 router.use(listRoute);
 router.use(getByIdRoute);
 router.use(updateRoute);

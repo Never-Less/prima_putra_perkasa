@@ -19,7 +19,7 @@ function isChromelessPath(pathname: string) {
     pathname.startsWith("/suratJalan/export/") ||
     pathname === "/invoice/export" ||
     pathname.startsWith("/invoice/export/") ||
-    pathname.startsWith("/purchaseOrder/export")
+    pathname.startsWith("/salesOrder/export")
   );
 }
 
@@ -32,7 +32,7 @@ export function AppShell({ children }: AppShellProps) {
   return (
     <PrivateRouteGuard key={pathname}>
       {hideAppChrome ? null : <AppNavbar />}
-      <div className={hideAppChrome ? "" : "lg:pl-64"}>{children}</div>
+      <div className={hideAppChrome ? "" : "min-h-screen lg:pl-64"}>{children}</div>
       <UnsavedChangesModal />
     </PrivateRouteGuard>
   );

@@ -33,6 +33,22 @@ function parseNumber(value) {
   return Number.isFinite(number) ? number : null;
 }
 
+function profileFields(body) {
+  const productCategories = Array.isArray(body.productCategories)
+    ? body.productCategories.map((value) => String(value || "").trim()).filter(Boolean)
+    : String(body.productCategories || "").split(",").map((value) => value.trim()).filter(Boolean);
+  const documentLinks = Array.isArray(body.documentLinks)
+    ? body.documentLinks.map((row) => ({ label: String(row?.label || "").trim(), url: String(row?.url || "").trim() })).filter((row) => row.label && /^https?:\/\//i.test(row.url))
+    : [];
+  return {
+    alamat: String(body.alamat || "").trim(), npwp: String(body.npwp || "").trim(),
+    picName: String(body.picName || "").trim(), phone: String(body.phone || "").trim(),
+    email: String(body.email || "").trim(), notes: String(body.notes || "").trim(),
+    productCategories: [...new Set(productCategories)], documentLinks,
+    isActive: body.isActive === undefined ? true : parseBoolean(body.isActive),
+  };
+}
+
 router.post("/", requireRole(ROLE_ADMIN, ROLE_STAFF), async (req, res) => {
   const namaSupplier = String(req.body.namaSupplier || "").trim();
   const hutang = req.body.hutang !== undefined ? parseBoolean(req.body.hutang) : false;
@@ -57,6 +73,7 @@ router.post("/", requireRole(ROLE_ADMIN, ROLE_STAFF), async (req, res) => {
       namaSupplier,
       hutang,
       lamaHutang,
+      ...profileFields(req.body),
     });
 
     return res.status(201).json({

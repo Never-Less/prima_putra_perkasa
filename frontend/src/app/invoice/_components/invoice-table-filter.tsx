@@ -1,5 +1,12 @@
 "use client";
 
+import { useMemo, useState } from "react";
+import {
+  ColumnSettingsMenu,
+  HiddenColumnStyles,
+  ListSortControl,
+  SortableHeader,
+} from "../../_components/list-view-header";
 import { PaginationControls } from "../../_components/pagination-controls";
 import { DebouncedFilterInput } from "../../_components/debounced-filter-input";
 import { AppDateInput } from "../../_components/app-date-input";
@@ -13,6 +20,7 @@ import {
   type InvoiceItem,
 } from "../_lib/invoice";
 import { useI18n } from "../../_i18n/provider";
+import { useFilterDraft } from "../../_hooks/use-filter-draft";
 
 type InvoiceTableFilterProps = {
   rows: InvoiceItem[];
@@ -21,9 +29,12 @@ type InvoiceTableFilterProps = {
   pagination: ServerPaginationMeta;
   selectedId?: string;
   canExport?: boolean;
+  sortValue?: string;
+  sortOptions?: Array<{ value: string; label: string }>;
   onSelectRow?: (row: InvoiceItem) => void;
   onExportRow?: (row: InvoiceItem) => void;
   onExportPage?: () => void;
+  onSortChange?: (value: string) => void;
   resolveCustomerLabel?: (customerId: string) => string;
   onFilterChange: <K extends keyof InvoiceFilter>(key: K, value: InvoiceFilter[K]) => void;
   onResetFilter: () => void;
@@ -34,6 +45,20 @@ type InvoiceTableFilterProps = {
 const clampedCellClassName =
   "truncate";
 
+function dueDateIndicatorClass(dueDate: string, isPaid: boolean) {
+  if (isPaid || !dueDate) return "text-slate-700 dark:text-slate-200";
+  const date = new Date(dueDate);
+  if (Number.isNaN(date.getTime())) return "text-slate-700 dark:text-slate-200";
+  const today = new Date();
+  const dueDay = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+  const todayDay = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
+  const overdueDays = Math.floor((todayDay - dueDay) / 86400000);
+  if (overdueDays > 7) return "bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-300";
+  if (overdueDays > 3) return "bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-300";
+  if (overdueDays > 0) return "bg-yellow-50 text-yellow-700 dark:bg-yellow-950/30 dark:text-yellow-300";
+  return "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300";
+}
+
 export function InvoiceTableFilter({
   rows,
   filter,
@@ -41,9 +66,12 @@ export function InvoiceTableFilter({
   pagination,
   selectedId,
   canExport = false,
+  sortValue,
+  sortOptions = [],
   onSelectRow,
   onExportRow,
   onExportPage,
+  onSortChange,
   resolveCustomerLabel,
   onFilterChange,
   onResetFilter,
@@ -51,96 +79,125 @@ export function InvoiceTableFilter({
   onPageSizeChange,
 }: InvoiceTableFilterProps) {
   const { locale, t } = useI18n();
-  const filterPlaceholder = (fieldKey: string) =>
-    t("common.placeholder.filter", { field: t(fieldKey) });
+  const { draftFilter, updateDraftFilter, applyDraftFilter, resetDraftFilter } =
+    useFilterDraft(filter, onFilterChange, onResetFilter);
+  const filterPlaceholder = (fieldKey: string) => t(fieldKey);
   const paidLabel = t("invoice.status.paid");
   const unpaidLabel = t("invoice.status.unpaid");
+  const columns = useMemo(
+    () => [
+      { key: "action", label: t("common.action"), index: 1, locked: true },
+      { key: "noInvoice", label: t("field.noInvoice"), index: 2 },
+      { key: "tanggal", label: t("field.tanggal"), index: 3 },
+      { key: "dueDate", label: t("field.dueDate"), index: 4 },
+      { key: "noPo", label: t("field.noPo"), index: 5 },
+      { key: "noSuratJalan", label: t("field.noSuratJalan"), index: 6 },
+      { key: "barang", label: t("field.barang"), index: 7 },
+      { key: "namaCustomer", label: t("field.namaCustomer"), index: 8 },
+      { key: "subtotal", label: t("field.subtotal"), index: 9 },
+      { key: "ppnAmount", label: t("field.ppnAmount"), index: 10 },
+      { key: "grandTotal", label: t("field.grandTotal"), index: 11 },
+      { key: "isPaid", label: t("field.isPaid"), index: 12 },
+      { key: "tanggalBayar", label: t("field.tanggalBayar"), index: 13 },
+    ],
+    [t]
+  );
+  const [hiddenColumns, setHiddenColumns] = useState<string[]>([
+    "noSuratJalan",
+    "barang",
+    "subtotal",
+    "ppnAmount",
+    "tanggalBayar",
+  ]);
+  const hiddenColumnIndexes = columns
+    .filter((column) => hiddenColumns.includes(column.key))
+    .map((column) => column.index);
 
   return (
-    <section className="space-y-4 rounded-2xl border border-sky-200 bg-sky-50/40 p-5 shadow-sm dark:border-sky-900/70 dark:bg-slate-950/85">
+    <section className="ppp-list-view ppp-invoice-list space-y-4 rounded-xl border border-slate-100 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+      <HiddenColumnStyles scopeClassName="ppp-invoice-list" hiddenColumnIndexes={hiddenColumnIndexes} />
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-lg font-semibold text-sky-900 dark:text-sky-100">{t("invoice.table.title")}</h2>
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{t("invoice.table.title")}</h2>
         <div className="flex flex-wrap items-center gap-2">
           {canExport ? (
             <button
               type="button"
               onClick={onExportPage}
-              className="rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
+              className="rounded-lg bg-slate-100 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
             >
               {t("invoice.exportPage.openButton")}
             </button>
           ) : null}
-          <button
-            type="button"
-            onClick={onResetFilter}
-            className="rounded-lg border border-sky-200 bg-white px-3 py-2 text-sm text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
-          >
-            {t("common.resetFilter")}
-          </button>
+          <ListSortControl sortValue={sortValue} sortOptions={sortOptions} onSortChange={onSortChange} />
+          <ColumnSettingsMenu
+            columns={columns}
+            hiddenColumns={hiddenColumns}
+            onHiddenColumnsChange={setHiddenColumns}
+          />
         </div>
       </div>
 
-      <div>
-        <p className="mb-2 text-sm font-medium text-sky-800 dark:text-sky-200">{t("common.filterByField")}</p>
+      <form onSubmit={applyDraftFilter}>
+        <p className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">{t("common.filterByField")}</p>
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.noInvoice")}
             <DebouncedFilterInput
-              value={filter.noInvoice}
-              onValueChange={(value) => onFilterChange("noInvoice", value)}
+              value={draftFilter.noInvoice}
+              onValueChange={(value) => updateDraftFilter("noInvoice", value)}
               placeholder={filterPlaceholder("field.noInvoice")}
-              className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+              className="mt-1 w-full rounded-lg border border-transparent bg-slate-100 px-3 py-2 text-sm text-slate-900 outline-none focus:border-sky-400 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.noPo")}
             <DebouncedFilterInput
-              value={filter.noPo}
-              onValueChange={(value) => onFilterChange("noPo", value)}
+              value={draftFilter.noPo}
+              onValueChange={(value) => updateDraftFilter("noPo", value)}
               placeholder={filterPlaceholder("field.noPo")}
-              className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+              className="mt-1 w-full rounded-lg border border-transparent bg-slate-100 px-3 py-2 text-sm text-slate-900 outline-none focus:border-sky-400 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.noSuratJalan")}
             <DebouncedFilterInput
-              value={filter.noSuratJalan}
-              onValueChange={(value) => onFilterChange("noSuratJalan", value)}
+              value={draftFilter.noSuratJalan}
+              onValueChange={(value) => updateDraftFilter("noSuratJalan", value)}
               placeholder={filterPlaceholder("field.noSuratJalan")}
-              className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+              className="mt-1 w-full rounded-lg border border-transparent bg-slate-100 px-3 py-2 text-sm text-slate-900 outline-none focus:border-sky-400 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.namaBarang")}
             <DebouncedFilterInput
-              value={filter.namaBarang}
-              onValueChange={(value) => onFilterChange("namaBarang", value)}
+              value={draftFilter.namaBarang}
+              onValueChange={(value) => updateDraftFilter("namaBarang", value)}
               placeholder={filterPlaceholder("field.namaBarang")}
-              className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+              className="mt-1 w-full rounded-lg border border-transparent bg-slate-100 px-3 py-2 text-sm text-slate-900 outline-none focus:border-sky-400 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.namaCustomer")}
             <DebouncedFilterInput
-              value={filter.idCustomer}
-              onValueChange={(value) => onFilterChange("idCustomer", value)}
+              value={draftFilter.idCustomer}
+              onValueChange={(value) => updateDraftFilter("idCustomer", value)}
               placeholder={filterPlaceholder("field.namaCustomer")}
-              className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+              className="mt-1 w-full rounded-lg border border-transparent bg-slate-100 px-3 py-2 text-sm text-slate-900 outline-none focus:border-sky-400 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.isPpn")}
             <select
-              value={filter.isPpn}
+              value={draftFilter.isPpn}
               onChange={(event) =>
-                onFilterChange("isPpn", event.target.value as InvoiceFilter["isPpn"])
+                updateDraftFilter("isPpn", event.target.value as InvoiceFilter["isPpn"])
               }
-              className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+              className="mt-1 w-full rounded-lg border border-transparent bg-slate-100 px-3 py-2 text-sm text-slate-900 outline-none focus:border-sky-400 dark:bg-slate-900 dark:text-slate-100"
             >
               <option value="">{t("common.all")}</option>
               <option value="true">{t("common.true")}</option>
@@ -151,11 +208,11 @@ export function InvoiceTableFilter({
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.isPaid")}
             <select
-              value={filter.isPaid}
+              value={draftFilter.isPaid}
               onChange={(event) =>
-                onFilterChange("isPaid", event.target.value as InvoiceFilter["isPaid"])
+                updateDraftFilter("isPaid", event.target.value as InvoiceFilter["isPaid"])
               }
-              className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+              className="mt-1 w-full rounded-lg border border-transparent bg-slate-100 px-3 py-2 text-sm text-slate-900 outline-none focus:border-sky-400 dark:bg-slate-900 dark:text-slate-100"
             >
               <option value="">{t("common.all")}</option>
               <option value="true">{paidLabel}</option>
@@ -166,40 +223,52 @@ export function InvoiceTableFilter({
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.tanggalBayarDari")}
             <AppDateInput
-              value={filter.tanggalBayarDari}
-              onValueChange={(value) => onFilterChange("tanggalBayarDari", value)}
-              className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+              value={draftFilter.tanggalBayarDari}
+              onValueChange={(value) => updateDraftFilter("tanggalBayarDari", value)}
+              placeholder={t("common.filter.after", { field: t("field.tanggalBayar") })}
+              className="mt-1 w-full rounded-lg border border-transparent bg-slate-100 px-3 py-2 text-sm text-slate-900 outline-none focus:border-sky-400 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.tanggalBayarSampai")}
             <AppDateInput
-              value={filter.tanggalBayarSampai}
-              onValueChange={(value) => onFilterChange("tanggalBayarSampai", value)}
-              className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+              value={draftFilter.tanggalBayarSampai}
+              onValueChange={(value) => updateDraftFilter("tanggalBayarSampai", value)}
+              placeholder={t("common.filter.before", { field: t("field.tanggalBayar") })}
+              className="mt-1 w-full rounded-lg border border-transparent bg-slate-100 px-3 py-2 text-sm text-slate-900 outline-none focus:border-sky-400 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.tanggalDari")}
             <AppDateInput
-              value={filter.tanggalDari}
-              onValueChange={(value) => onFilterChange("tanggalDari", value)}
-              className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+              value={draftFilter.tanggalDari}
+              onValueChange={(value) => updateDraftFilter("tanggalDari", value)}
+              placeholder={t("common.filter.after", { field: t("field.tanggal") })}
+              className="mt-1 w-full rounded-lg border border-transparent bg-slate-100 px-3 py-2 text-sm text-slate-900 outline-none focus:border-sky-400 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.tanggalSampai")}
             <AppDateInput
-              value={filter.tanggalSampai}
-              onValueChange={(value) => onFilterChange("tanggalSampai", value)}
-              className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+              value={draftFilter.tanggalSampai}
+              onValueChange={(value) => updateDraftFilter("tanggalSampai", value)}
+              placeholder={t("common.filter.before", { field: t("field.tanggal") })}
+              className="mt-1 w-full rounded-lg border border-transparent bg-slate-100 px-3 py-2 text-sm text-slate-900 outline-none focus:border-sky-400 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
         </div>
-      </div>
+        <div className="mt-3 flex flex-wrap justify-end gap-2">
+          <button type="button" onClick={resetDraftFilter} className="border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+            {t("common.resetFilter")}
+          </button>
+          <button type="submit" className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600 dark:bg-sky-500 dark:text-slate-950">
+            {t("common.applyFilter")}
+          </button>
+        </div>
+      </form>
 
       <div className="space-y-3 md:hidden">
         {rows.length === 0 ? (
@@ -259,6 +328,10 @@ export function InvoiceTableFilter({
                   </div>
                   <div className="grid gap-3 sm:grid-cols-3">
                     <div>
+                      <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.dueDate")}</dt>
+                      <dd className={`mt-1 rounded px-1.5 py-1 font-medium ${dueDateIndicatorClass(row.dueDate, row.isPaid)}`}>{formatTanggal(row.dueDate, locale)}</dd>
+                    </div>
+                    <div>
                       <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.isPaid")}</dt>
                       <dd className="mt-1 text-slate-700 dark:text-slate-200">{row.isPaid ? paidLabel : unpaidLabel}</dd>
                     </div>
@@ -285,13 +358,9 @@ export function InvoiceTableFilter({
                   <button
                     type="button"
                     onClick={() => onSelectRow?.(row)}
-                    className={`w-full rounded-lg px-3 py-2 text-sm font-medium ${
-                      isSelected
-                        ? "bg-sky-700 text-white dark:bg-sky-500 dark:text-slate-950"
-                        : "border border-sky-200 bg-white text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
-                    }`}
+                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50 dark:border-slate-700 dark:bg-slate-900 dark:text-blue-300 dark:hover:bg-slate-800"
                   >
-                    {isSelected ? t("common.selected") : t("common.selectRow")}
+                    {t("common.openDetails")}
                   </button>
                   {canExport ? (
                     <button
@@ -310,13 +379,14 @@ export function InvoiceTableFilter({
       </div>
 
       <div className="hidden md:block">
-        <div className="overflow-hidden rounded-xl border border-sky-300 bg-white shadow-sm dark:border-sky-900/70 dark:bg-slate-900">
+        <div className="overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1700px] table-fixed text-sm">
+            <table className="w-full min-w-[1120px] table-fixed text-sm">
               <colgroup>
-                <col style={{ width: "160px" }} />
+                <col style={{ width: "100px" }} />
                 <col style={{ width: "130px" }} />
                 <col style={{ width: "110px" }} />
+                <col style={{ width: "120px" }} />
                 <col style={{ width: "140px" }} />
                 <col style={{ width: "150px" }} />
                 <col style={{ width: "320px" }} />
@@ -327,18 +397,43 @@ export function InvoiceTableFilter({
                 <col style={{ width: "90px" }} />
                 <col style={{ width: "120px" }} />
               </colgroup>
-              <thead className="bg-sky-800 text-left text-white dark:bg-sky-950">
+              <thead className="bg-slate-100 text-left text-slate-600 dark:bg-slate-900 dark:text-slate-300">
                 <tr>
                   <th className="px-3 py-2 font-medium">{t("common.action")}</th>
                   <th className="px-3 py-2 font-medium">{t("field.noInvoice")}</th>
-                  <th className="px-3 py-2 font-medium">{t("field.tanggal")}</th>
+                  <th className="px-3 py-2 font-medium">
+                    <SortableHeader
+                      label={t("field.tanggal")}
+                      sortValue={sortValue}
+                      ascValue="dateAsc"
+                      descValue="dateDesc"
+                      onSortChange={onSortChange}
+                    />
+                  </th>
+                  <th className="px-3 py-2 font-medium">{t("field.dueDate")}</th>
                   <th className="px-3 py-2 font-medium">{t("field.noPo")}</th>
                   <th className="px-3 py-2 font-medium">{t("field.noSuratJalan")}</th>
                   <th className="px-3 py-2 font-medium">{t("field.barang")}</th>
-                  <th className="px-3 py-2 font-medium">{t("field.namaCustomer")}</th>
+                  <th className="px-3 py-2 font-medium">
+                    <SortableHeader
+                      label={t("field.namaCustomer")}
+                      sortValue={sortValue}
+                      ascValue="nameAsc"
+                      descValue="nameDesc"
+                      onSortChange={onSortChange}
+                    />
+                  </th>
                   <th className="px-3 py-2 font-medium">{t("field.subtotal")}</th>
                   <th className="px-3 py-2 font-medium">{t("field.ppnAmount")}</th>
-                  <th className="px-3 py-2 font-medium">{t("field.grandTotal")}</th>
+                  <th className="px-3 py-2 font-medium">
+                    <SortableHeader
+                      label={t("field.grandTotal")}
+                      sortValue={sortValue}
+                      ascValue="amountAsc"
+                      descValue="amountDesc"
+                      onSortChange={onSortChange}
+                    />
+                  </th>
                   <th className="px-3 py-2 font-medium">{t("field.isPaid")}</th>
                   <th className="px-3 py-2 font-medium">{t("field.tanggalBayar")}</th>
                 </tr>
@@ -346,7 +441,7 @@ export function InvoiceTableFilter({
               <tbody className="divide-y divide-slate-200 bg-white dark:divide-slate-800 dark:bg-slate-900">
                 {rows.length === 0 ? (
                   <tr>
-                    <td colSpan={12} className="px-3 py-4 text-center text-slate-500 dark:text-slate-400">
+                    <td colSpan={13} className="px-3 py-4 text-center text-slate-500 dark:text-slate-400">
                       {t("common.noData")}
                     </td>
                   </tr>
@@ -363,17 +458,6 @@ export function InvoiceTableFilter({
                       <tr key={row.id} className={isSelected ? "bg-sky-100 dark:bg-sky-950/40" : index % 2 ? "bg-sky-50/70 dark:bg-slate-950/40" : undefined}>
                         <td className="whitespace-nowrap px-3 py-2">
                           <div className="flex flex-nowrap items-center gap-1.5">
-                            <button
-                              type="button"
-                              onClick={() => onSelectRow?.(row)}
-                              className={`rounded-lg px-3 py-1.5 text-xs font-medium ${
-                                isSelected
-                                  ? "bg-sky-700 text-white dark:bg-sky-500 dark:text-slate-950"
-                                  : "border border-sky-200 bg-white text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-900 dark:text-sky-200 dark:hover:bg-slate-800"
-                              }`}
-                            >
-                              {isSelected ? t("common.selected") : t("common.selectRow")}
-                            </button>
                             {canExport ? (
                               <button
                                 type="button"
@@ -385,8 +469,17 @@ export function InvoiceTableFilter({
                             ) : null}
                           </div>
                         </td>
-                        <td className="truncate px-3 py-2 font-medium text-slate-800 dark:text-slate-100" title={row.noInvoice || "-"}>{row.noInvoice}</td>
+                        <td className="truncate px-3 py-2 font-medium" title={row.noInvoice || "-"}>
+                          <button
+                            type="button"
+                            onClick={() => onSelectRow?.(row)}
+                            className="truncate text-left font-semibold text-blue-700 hover:underline dark:text-blue-300"
+                          >
+                            {row.noInvoice || "-"}
+                          </button>
+                        </td>
                         <td className="truncate px-3 py-2 text-slate-600 dark:text-slate-300">{formatTanggal(row.tanggal, locale)}</td>
+                        <td className={`truncate px-3 py-2 font-medium ${dueDateIndicatorClass(row.dueDate, row.isPaid)}`}>{formatTanggal(row.dueDate, locale)}</td>
                         <td className="px-3 py-2 text-slate-600 dark:text-slate-300" title={row.noPo || "-"}>
                           <div className={clampedCellClassName}>{row.noPo || "-"}</div>
                         </td>
