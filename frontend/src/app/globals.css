@@ -600,41 +600,63 @@ body {
   padding: 0.75rem;
 }
 
-.ppp-list-view table thead {
-  background: transparent !important;
-}
+/* Shared screen tables follow the pricelist multiple-item spreadsheet.
+   Export routes and the spreadsheet's own selection/editor styles stay scoped. */
+@media screen {
+  [data-app-tables="spreadsheet"] {
+    --table-border: #dce4ee;
+    --table-header: #eef3f8;
+    --table-heading: #0f172a;
+  }
 
-.ppp-list-view table thead tr {
-  background: var(--surface-muted) !important;
-}
+  .dark [data-app-tables="spreadsheet"] {
+    --table-border: #273449;
+    --table-header: #1e293b;
+    --table-heading: #f8fafc;
+  }
 
-.ppp-list-view table thead th {
-  border-bottom: 1px solid var(--line-strong);
-  color: var(--muted) !important;
-  font-size: 0.75rem !important;
-  font-weight: 700 !important;
-  text-transform: uppercase;
-  padding-top: 0.625rem !important;
-  padding-bottom: 0.625rem !important;
-}
+  [data-app-tables="spreadsheet"] table:not(.jss_worksheet) {
+    border-collapse: collapse;
+    border: 1px solid var(--table-border);
+    font-size: 12px;
 
-.ppp-list-view table tbody td {
-  border-color: var(--line) !important;
-  padding-top: 0.625rem !important;
-  padding-bottom: 0.625rem !important;
-}
+    & > thead > tr > :is(th, td) {
+      border: 1px solid var(--table-border) !important;
+      background: var(--table-header) !important;
+      color: var(--table-heading) !important;
+      height: 31px;
+      padding: 5px 8px !important;
+      font-size: 11px !important;
+      font-weight: 800 !important;
+      letter-spacing: normal;
+      text-transform: none;
+    }
 
-.ppp-list-view table tbody tr {
-  background: var(--surface) !important;
-}
+    & > tbody > tr > :is(th, td),
+    & > tfoot > tr > :is(th, td) {
+      border: 1px solid var(--table-border) !important;
+      height: 31px;
+      padding: 5px 8px !important;
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.5;
+    }
 
-.ppp-list-view table tbody tr:hover {
-  background: var(--surface-soft) !important;
-}
+    & > tfoot > tr > :is(th, td) {
+      background: var(--table-header);
+      font-weight: 800;
+    }
 
-.ppp-list-view table tbody tr:focus-within {
-  background: var(--surface-soft) !important;
-  box-shadow: inset 3px 0 0 var(--accent);
+    & > tbody > tr:hover {
+      box-shadow: inset 0 0 0 9999px rgb(34 197 94 / 6%);
+    }
+
+    & > tbody > tr > :is(th, td):focus-within {
+      outline: 1px solid #22c55e;
+      outline-offset: -1px;
+      box-shadow: inset 0 0 0 9999px rgb(34 197 94 / 10%);
+    }
+  }
 }
 
 .ppp-list-view table button {

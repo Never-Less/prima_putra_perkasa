@@ -31,6 +31,7 @@ router.get("/:id", async (req, res) => {
           { noPoList: noPo },
           { noPo },
           { "barang.sources.noPo": noPo },
+          { "barang.noPoManual": noPo },
         ],
       }).lean(),
     ]);

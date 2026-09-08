@@ -9,12 +9,15 @@ const router = express.Router();
 router.get("/", async (req, res) => {
   try {
     const query = {};
+    const search = typeof req.query.search === "string" ? req.query.search.trim() : "";
     const namaBarang = buildSearchRegex(req.query.namaBarang);
     const namaCustomer = buildSearchRegex(req.query.namaCustomer);
     const unit = buildSearchRegex(req.query.unit);
     const sumber = buildSearchRegex(req.query.sumber);
     const page = parsePositiveInt(req.query.page, 1);
     const limit = parsePositiveInt(req.query.limit, 10);
+
+    if (search) query.$text = { $search: search };
 
     if (namaBarang) query.namaBarang = namaBarang;
     if (namaCustomer) query.namaCustomer = namaCustomer;
@@ -33,7 +36,9 @@ router.get("/", async (req, res) => {
     const totalRows = await PriceList.countDocuments(query);
     const pagination = buildPaginationMeta(totalRows, page, limit);
     const items = await PriceList.find(query)
-      .sort({ updatedAt: -1 })
+      .sort(search
+        ? { score: { $meta: "textScore" }, updatedAt: -1, _id: -1 }
+        : { updatedAt: -1, _id: -1 })
       .skip((pagination.page - 1) * pagination.limit)
       .limit(pagination.limit);
 

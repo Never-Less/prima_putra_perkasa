@@ -25,6 +25,7 @@ export type PriceListItem = {
 
 export type PriceListCustomerOption = { id: string; nama: string };
 export type PriceListFilter = {
+  search: string;
   namaBarang: string;
   namaCustomer: string;
   unit: string;
@@ -45,6 +46,7 @@ export type PriceListFormState = {
 };
 
 export const defaultPriceListFilter: PriceListFilter = {
+  search: "",
   namaBarang: "",
   namaCustomer: "",
   unit: "",
