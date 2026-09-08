@@ -32,7 +32,10 @@ export function AppShell({ children }: AppShellProps) {
   return (
     <PrivateRouteGuard key={pathname}>
       {hideAppChrome ? null : <AppNavbar />}
-      <div className={hideAppChrome ? "" : "min-h-screen lg:pl-64"}>{children}</div>
+      <div
+        className={hideAppChrome ? "" : "min-h-screen lg:pl-64"}
+        data-app-tables={!isLoginRoute && !pathname.split("/").includes("export") ? "spreadsheet" : undefined}
+      >{children}</div>
       <UnsavedChangesModal />
     </PrivateRouteGuard>
   );

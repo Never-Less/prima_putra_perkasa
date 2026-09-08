@@ -6,6 +6,7 @@ const { connectDatabase } = require("../config/database");
 const { PurchaseOrder } = require("../models/PurchaseOrder");
 
 const isApplyMode = process.argv.includes("--apply");
+const isVatOnlyMode = process.argv.includes("--vat-only");
 const idArgument = process.argv.find((argument) => argument.startsWith("--id="));
 const salesOrderId = String(idArgument || "").slice(5).trim();
 
@@ -39,13 +40,17 @@ async function main() {
       nominalLama: Number(salesOrder.nominalPo || 0),
       totalBarang: calculateItemTotal(salesOrder.barang),
     }))
-    .filter((row) => Math.abs(row.nominalLama - row.totalBarang) > 0.5);
+    .filter((row) => Math.abs(row.nominalLama - row.totalBarang) > 0.5)
+    .filter((row) => !isVatOnlyMode || (
+      row.totalBarang > 0 &&
+      Math.abs(row.nominalLama - Math.round(row.totalBarang * 1.11)) <= 1
+    ));
 
   if (isApplyMode && mismatches.length > 0) {
     await PurchaseOrder.bulkWrite(
       mismatches.map((row) => ({
         updateOne: {
-          filter: { _id: row.id },
+          filter: { _id: row.id, nominalPo: row.nominalLama },
           update: { $set: { nominalPo: row.totalBarang } },
         },
       }))

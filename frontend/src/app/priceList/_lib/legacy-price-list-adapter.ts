@@ -53,7 +53,7 @@ const apiClient = {
     if (path === "/product") {
       const params = options.params || {};
       const query = buildListQueryString({
-        namaBarang: String(params.search || ""),
+        search: String(params.search || ""),
         namaCustomer: String(params.category || ""),
         page: Number(params.page || 1),
         limit: Number(params.perPage || 10),

@@ -11,6 +11,7 @@ import { ListViewHeader } from "../_components/list-view-header";
 import { PaginationControls } from "../_components/pagination-controls";
 import { useI18n } from "../_i18n/provider";
 import { ApiRequestError } from "../_lib/api-client";
+import { normalizeStringFilterQueryState } from "../_lib/pagination";
 import BulkProductDraft from "./_components/bulk-product-draft";
 import { PriceListImage } from "./_components/price-list-image";
 import {
@@ -24,7 +25,7 @@ type ConfirmAction = { type: "save" } | { type: "delete" } | null;
 const maxImages = 4;
 const maxImageSize = 2 * 1024 * 1024;
 const allowedImageTypes = ["image/jpeg", "image/png", "image/webp"];
-const filterKeys: Array<keyof PriceListFilter> = ["namaBarang", "namaCustomer", "unit", "sumber", "hargaJualMin", "hargaJualMax"];
+const filterKeys = Object.keys(defaultPriceListFilter) as Array<keyof PriceListFilter>;
 
 function parsePositiveInteger(value: string | null, fallback: number) {
   const parsed = Number(value);
@@ -33,8 +34,7 @@ function parsePositiveInteger(value: string | null, fallback: number) {
 
 function readUrlState(query: string) {
   const params = new URLSearchParams(query);
-  const filter = { ...defaultPriceListFilter };
-  filterKeys.forEach((key) => { filter[key] = String(params.get(key) || "").trim(); });
+  const filter = normalizeStringFilterQueryState(params, defaultPriceListFilter);
   return { filter, page: parsePositiveInteger(params.get("page"), 1), limit: parsePositiveInteger(params.get("limit"), 10), item: String(params.get("item") || "").trim(), bulk: params.get("bulk") === "1" };
 }
 
@@ -178,6 +178,7 @@ export default function PriceListPage() {
         <section className="erp-panel overflow-hidden">
           <form className="border-b border-slate-200 bg-slate-50/60 p-4 dark:border-slate-800 dark:bg-slate-900/40" onSubmit={(event) => { event.preventDefault(); router.push(buildPath(filterDraft, 1, pagination.limit)); }}>
             <div className="mb-3 flex items-center justify-between gap-3"><div><h2 className="flex items-center gap-2 font-semibold"><Filter className="h-4 w-4 text-blue-600" />{t("priceList.filter.title")}</h2><p className="mt-0.5 text-xs text-slate-500">{t("priceList.filter.description")}</p></div><button type="button" className="erp-button" onClick={() => router.push(buildPath(filter, pagination.page, pagination.limit, { bulk: true }))}><Plus className="h-4 w-4" />{t("priceList.bulk.open")}</button></div>
+            <div className="mb-3 grid">{filterField("search")}</div>
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">{filterField("namaBarang")}{filterField("namaCustomer")}{filterField("unit")}{filterField("sumber")}{filterField("hargaJualMin", "numeric")}{filterField("hargaJualMax", "numeric")}</div>
             <div className="mt-3 flex gap-2"><button className="erp-button erp-button-primary"><Search className="h-4 w-4" />{t("common.applyFilter")}</button><button type="button" className="erp-button" onClick={() => router.push(buildPath(defaultPriceListFilter, 1, pagination.limit))}>{t("common.resetFilter")}</button></div>
           </form>

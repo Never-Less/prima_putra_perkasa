@@ -175,3 +175,9 @@ Proteksi yang diterapkan:
 - CORS allowlist dari `APP_ORIGINS`
 - Validasi `Origin/Referer` untuk request mutasi (`POST/PUT/PATCH/DELETE`)
 - `credentials: false` agar cookie tidak dipakai untuk auth
+
+## Perubahan Branch Development
+
+Perubahan berikut tersedia di branch `development` dan belum menjadi bagian dari rilis utama:
+
+- `fix: akuratkan billing sales order dan rapikan price list`
