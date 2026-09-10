@@ -145,7 +145,6 @@ function createEmptySuratJalanFormState(): SuratJalanFormState {
     tanggal: "",
     idCustomer: "",
     kendaraan: "",
-    tipe: "partial",
     barangRows: ensureTrailingEmptyBarangRow([createEmptyBarangRow()]),
   };
 }
@@ -527,22 +526,6 @@ export function SuratJalanEditForm({
               ) : null}
             </label>
 
-            <label className={`text-sm ${tone.label}`}>
-              {t("field.tipe")}
-              <select
-                value={form.tipe}
-                onChange={(event) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    tipe: event.target.value as SuratJalanFormState["tipe"],
-                  }))
-                }
-                className={inputClassName}
-              >
-                <option value="partial">partial</option>
-                <option value="non partial">non partial</option>
-              </select>
-            </label>
 
             <div className={`text-sm sm:col-span-2 ${tone.label}`}>
               <p>{t("suratJalan.form.items.title")}</p>
@@ -616,9 +599,6 @@ export function SuratJalanEditForm({
               </p>
               <p>
                 <span className="text-slate-500 dark:text-slate-400">{t("field.kendaraan")}:</span> {form.kendaraan || "-"}
-              </p>
-              <p>
-                <span className="text-slate-500 dark:text-slate-400">{t("field.tipe")}:</span> {form.tipe}
               </p>
             </div>
 

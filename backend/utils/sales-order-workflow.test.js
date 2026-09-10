@@ -7,16 +7,16 @@ const order = (noPo, barang, nominalPo = barang.reduce((sum, row) => sum + row.j
 const invoice = (noPoList, barang, extra = {}) => ({ noPoList, barang, isPaid: false, ...extra });
 const workflow = (so, invoices) => build(so, [], invoices, { includeItems: true });
 
-test("72260002282: shared invoice allocates only each record's items", () => {
+test("72260002282: allocation includes all invoice lines tagged with that SO number", () => {
   const cables = [item("KABEL", 250, 171250000, { spesifikasi: "NYY 5 X 35MM² SUPREME" }), item("KABEL", 200, 28000000, { spesifikasi: "NYY 5 X 6MM² SUPREME" })];
   const burst = item("BURST TESTER", 10, 2500000, { unit: "PIECE" });
   const bill = invoice(["72260002282"], [...cables, burst].map((row) => ({ ...row, sources: [{ noPo: "72260002282", kuantitas: row.kuantitas }] })), { subtotal: 201750000, grandTotal: 223942500 });
   const cableResult = workflow(order("72260002282", cables), [bill]);
-  assert.equal(cableResult.billing.invoicedAmount, 199250000);
+  assert.equal(cableResult.billing.invoicedAmount, 201750000);
   assert.equal(cableResult.billing.remainingAmount, 0);
   assert.equal(cableResult.status, "billed");
   assert.deepEqual(cableResult.items.map((row) => row.remainingBillingQty), [0, 0]);
-  assert.equal(workflow(order("72260002282", [burst]), [bill]).billing.invoicedAmount, 2500000);
+  assert.equal(workflow(order("72260002282", [burst]), [bill]).billing.invoicedAmount, 201750000);
 });
 
 test("multiple SO and SJ in a merged invoice line allocate quantities and money proportionally", () => {
@@ -76,25 +76,26 @@ test("legacy monetary fallback stays before VAT; empty records are not complete"
   assert.equal(workflow(order("A", [], 0), []).billing.isComplete, false);
 });
 
-test("same-number records only claim amounts for their own ordered quantities", () => {
+test("allocation follows the SO number without capping its invoice value to ordered quantities", () => {
   const first = order("A", [item("Cable", 1, 100)]);
   const second = order("A", [item("Cable", 4, 400), item("Cable", 5, 500)]);
   const bills = [invoice(["A"], [item("Cable", 10, 1000)])];
   const a = build(first, [], bills, { includeItems: true });
   const b = build(second, [], bills, { includeItems: true });
-  assert.equal(a.billing.invoicedAmount, 100);
-  assert.equal(b.billing.invoicedAmount, 900);
+  assert.equal(a.billing.invoicedAmount, 1000);
+  assert.equal(b.billing.invoicedAmount, 1000);
   assert.deepEqual(b.items.map((row) => row.billedQty), [4, 5]);
   assert.equal(a.status, "billed");
   assert.equal(b.status, "billed");
 });
 
-test("an unpaid invoice for other items on a same-number record does not block paid status", () => {
+test("every invoice allocated to the SO must be paid, even when its item label differs", () => {
   const result = workflow(order("A", [item("Cable", 1, 100)]), [
     invoice(["A"], [item("Cable", 1, 100)], { isPaid: true }),
     invoice(["A"], [item("Other", 1, 100)]),
   ]);
-  assert.equal(result.status, "paid");
+  assert.equal(result.billing.invoicedAmount, 200);
+  assert.equal(result.status, "billed");
 });
 
 test("case variants of a relation do not count an invoice twice", () => {

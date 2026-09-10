@@ -1,3 +1,5 @@
+const { validateInvoiceIntegrity } = require("../../utils/invoice-integrity");
+const { documentMutation } = require("../../utils/document-mutation");
 const express = require("express");
 
 const { Customer } = require("../../models/Customer");
@@ -19,7 +21,7 @@ const { calculateDueDate, normalizePaymentTerm } = require("../../utils/payment-
 
 const router = express.Router();
 
-router.post("/", async (req, res) => {
+router.post("/", documentMutation(async (req, res) => {
   const tanggal = parseDate(req.body.tanggal);
   const noInvoice = String(req.body.noInvoice || "").trim();
   const noPoList = normalizeStringList(
@@ -113,6 +115,9 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ message: "Term of payment invoice tidak valid." });
     }
 
+    const integrityError = await validateInvoiceIntegrity({ noInvoice, noPoList, noSuratJalan, idCustomer, barang });
+    if (integrityError) return res.status(409).json({ message: integrityError });
+
     const invoice = await Invoice.create({
       tanggal: tanggal,
       noInvoice: noInvoice,
@@ -141,8 +146,9 @@ router.post("/", async (req, res) => {
       invoice: sanitizeInvoice(invoice),
     });
   } catch (_error) {
+    if (_error?.hasErrorLabel?.("TransientTransactionError")) throw _error;
     return res.status(500).json({ message: "Data invoice belum bisa disimpan. Coba lagi." });
   }
-});
+}));
 
 module.exports = router;

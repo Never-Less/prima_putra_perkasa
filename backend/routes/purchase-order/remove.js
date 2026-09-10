@@ -1,3 +1,4 @@
+const { documentMutation } = require("../../utils/document-mutation");
 const express = require("express");
 
 const { PurchaseOrder } = require("../../models/PurchaseOrder");
@@ -7,7 +8,7 @@ const { isValidId } = require("./validators");
 
 const router = express.Router();
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", documentMutation(async (req, res) => {
   const id = String(req.params.id || "");
 
   if (!isValidId(id)) {
@@ -22,10 +23,8 @@ router.delete("/:id", async (req, res) => {
     }
 
     const noPo = String(existing.noPo || "").trim();
-    const [suratJalanCount, invoiceCount] = await Promise.all([
-      SuratJalan.countDocuments({ noPo }),
-      Invoice.countDocuments({ $or: [{ noPoList: noPo }, { noPo }, { "barang.sources.noPo": noPo }] }),
-    ]);
+    const suratJalanCount = await SuratJalan.countDocuments({ noPo }).collation({ locale: "en", strength: 2 });
+    const invoiceCount = await Invoice.countDocuments({ $or: [{ noPoList: noPo }, { noPo }, { "barang.sources.noPo": noPo }, { "barang.noPoManual": noPo }] }).collation({ locale: "en", strength: 2 });
     if (suratJalanCount || invoiceCount) {
       return res.status(409).json({ message: `Sales Order tidak dapat dihapus karena terhubung ke ${suratJalanCount} Surat Jalan dan ${invoiceCount} Invoice.` });
     }
@@ -40,8 +39,9 @@ router.delete("/:id", async (req, res) => {
       message: "purchase order deleted",
     });
   } catch (_error) {
+    if (_error?.hasErrorLabel?.("TransientTransactionError")) throw _error;
     return res.status(500).json({ message: "failed to delete purchase order" });
   }
-});
+}));
 
 module.exports = router;

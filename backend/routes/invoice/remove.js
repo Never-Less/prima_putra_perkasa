@@ -1,3 +1,4 @@
+const { documentMutation } = require("../../utils/document-mutation");
 const express = require("express");
 
 const { Invoice } = require("../../models/Invoice");
@@ -7,7 +8,7 @@ const { isValidId } = require("./validators");
 
 const router = express.Router();
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", documentMutation(async (req, res) => {
   const id = String(req.params.id || "");
 
   if (!isValidId(id)) {
@@ -29,8 +30,9 @@ router.delete("/:id", async (req, res) => {
       message: "invoice deleted",
     });
   } catch (_error) {
+    if (_error?.hasErrorLabel?.("TransientTransactionError")) throw _error;
     return res.status(500).json({ message: "failed to delete invoice" });
   }
-});
+}));
 
 module.exports = router;

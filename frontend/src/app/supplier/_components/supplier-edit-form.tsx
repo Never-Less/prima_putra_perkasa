@@ -25,7 +25,7 @@ function createEmptySupplierFormState(): SupplierFormState {
     namaSupplier: "",
     hutang: false,
     lamaHutang: "",
-    alamat: "", npwp: "", picName: "", phone: "", email: "", productCategories: "",
+    alamat: "", npwp: "", picName: "", phone: "", whatsapp: "", email: "", productCategories: "", productBrands: "",
     notes: "", documentLinksText: "", isActive: true,
   };
 }
@@ -91,8 +91,10 @@ export function SupplierEditForm({
             <label className="text-sm text-slate-700 dark:text-slate-200">{t("supplier.field.npwp")}<input value={form.npwp} onChange={(event) => setForm((prev) => ({ ...prev, npwp: event.target.value }))} className="erp-field mt-1 w-full" /></label>
             <label className="text-sm text-slate-700 dark:text-slate-200">{t("supplier.field.pic")}<input value={form.picName} onChange={(event) => setForm((prev) => ({ ...prev, picName: event.target.value }))} className="erp-field mt-1 w-full" /></label>
             <label className="text-sm text-slate-700 dark:text-slate-200">{t("supplier.field.phone")}<input value={form.phone} onChange={(event) => setForm((prev) => ({ ...prev, phone: event.target.value }))} className="erp-field mt-1 w-full" /></label>
+            <label className="text-sm text-slate-700 dark:text-slate-200">{t("supplierOnboarding.whatsapp")}<input inputMode="numeric" pattern="[0-9]{7,15}" value={form.whatsapp} onChange={(event) => setForm((prev) => ({ ...prev, whatsapp: event.target.value }))} className="erp-field mt-1 w-full" /></label>
             <label className="text-sm text-slate-700 dark:text-slate-200">{t("supplier.field.email")}<input type="email" value={form.email} onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))} className="erp-field mt-1 w-full" /></label>
             <label className="text-sm text-slate-700 dark:text-slate-200 sm:col-span-2">{t("supplier.field.categories")}<input value={form.productCategories} onChange={(event) => setForm((prev) => ({ ...prev, productCategories: event.target.value }))} placeholder={t("supplier.field.categoriesHint")} className="erp-field mt-1 w-full" /></label>
+            <label className="text-sm text-slate-700 dark:text-slate-200 sm:col-span-2">{t("supplierOnboarding.productBrands")}<input value={form.productBrands} onChange={(event) => setForm((prev) => ({ ...prev, productBrands: event.target.value }))} placeholder={t("supplierOnboarding.brandsHint")} className="erp-field mt-1 w-full" /></label>
             <label className="text-sm text-slate-700 dark:text-slate-200 sm:col-span-2">{t("supplier.field.documents")}<textarea value={form.documentLinksText} onChange={(event) => setForm((prev) => ({ ...prev, documentLinksText: event.target.value }))} placeholder={t("supplier.field.documentsHint")} className="erp-field mt-1 min-h-24 w-full" /></label>
             <label className="text-sm text-slate-700 dark:text-slate-200 sm:col-span-2">{t("field.note")}<textarea value={form.notes} onChange={(event) => setForm((prev) => ({ ...prev, notes: event.target.value }))} className="erp-field mt-1 min-h-20 w-full" /></label>
             <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200"><input type="checkbox" checked={form.isActive} onChange={(event) => setForm((prev) => ({ ...prev, isActive: event.target.checked }))} />{t("supplier.field.active")}</label>

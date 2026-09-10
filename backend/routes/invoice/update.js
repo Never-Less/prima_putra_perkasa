@@ -1,3 +1,5 @@
+const { validateInvoiceIntegrity } = require("../../utils/invoice-integrity");
+const { documentMutation } = require("../../utils/document-mutation");
 const express = require("express");
 
 const { Customer } = require("../../models/Customer");
@@ -19,7 +21,7 @@ const { calculateDueDate, normalizePaymentTerm } = require("../../utils/payment-
 
 const router = express.Router();
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", documentMutation(async (req, res) => {
   const id = String(req.params.id || "");
 
   if (!isValidId(id)) {
@@ -218,6 +220,12 @@ router.put("/:id", async (req, res) => {
     updates.paymentTerm = effectivePaymentTerm;
     updates.dueDate = calculateDueDate(effectiveTanggal, effectivePaymentTerm);
 
+    const integrityFields = ["noInvoice", "noPo", "noPoList", "noSuratJalan", "idCustomer", "barang"];
+    if (integrityFields.some((field) => req.body[field] !== undefined)) {
+      const integrityError = await validateInvoiceIntegrity({ ...existingInvoice.toObject(), ...updates, noPoList: updates.noPoList || getInvoiceNoPoList(existingInvoice) }, id);
+      if (integrityError) return res.status(409).json({ message: integrityError });
+    }
+
     const invoice = await Invoice.findByIdAndUpdate(id, updates, {
       new: true,
       runValidators: true,
@@ -245,8 +253,9 @@ router.put("/:id", async (req, res) => {
       invoice: sanitizeInvoice(invoice),
     });
   } catch (_error) {
+    if (_error?.hasErrorLabel?.("TransientTransactionError")) throw _error;
     return res.status(500).json({ message: "Data invoice belum bisa disimpan. Coba lagi." });
   }
-});
+}));
 
 module.exports = router;

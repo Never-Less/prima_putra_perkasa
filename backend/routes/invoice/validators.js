@@ -94,18 +94,20 @@ function normalizeBarangList(barangInput) {
     const kuantitas = parseNumber(item?.kuantitas);
     const unit = String(item?.unit || "").trim();
     const hargasatuan = parseNumber(item?.hargaSatuan);
-    const jumlah = parseNumber(item?.jumlah);
+    const jumlah = kuantitas !== null && hargasatuan !== null
+      ? roundCurrency(kuantitas * hargasatuan) : null;
     const noPoManual = String(item?.noPoManual || "").trim();
     const sources = normalizeBarangSources(item?.sources);
 
     if (
       !namaBarang ||
       kuantitas === null ||
-      kuantitas < 0 ||
+      kuantitas <= 0 ||
       !unit ||
       hargasatuan === null ||
       hargasatuan < 0 ||
       jumlah === null ||
+      !Number.isFinite(jumlah) ||
       jumlah < 0 ||
       noPoManual.length > 100 ||
       sources === null

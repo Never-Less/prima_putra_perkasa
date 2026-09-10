@@ -180,4 +180,4 @@ Proteksi yang diterapkan:
 
 Perubahan berikut tersedia di branch `development` dan belum menjadi bagian dari rilis utama:
 
-- `fix: akuratkan billing sales order dan rapikan price list`
+- `fix: Update cara partial dan non-partial`

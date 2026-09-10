@@ -17,6 +17,7 @@ import {
   normalizeStringFilterQueryState,
   type ServerPaginationMeta,
 } from "../_lib/pagination";
+import { SupplierOnboardingPanel } from "./_components/supplier-onboarding-panel";
 import { SupplierEditForm } from "./_components/supplier-edit-form";
 import { SupplierTableFilter } from "./_components/supplier-table-filter";
 import {
@@ -171,6 +172,7 @@ export function SupplierPageContent({ mode = "list", itemId = "" }: SupplierPage
       const supplierResult = await fetchSupplierList({
         ...filter,
         ...paginationQuery,
+        sort: sortValue,
       });
       const supplierRows = supplierResult.items;
 
@@ -205,7 +207,7 @@ export function SupplierPageContent({ mode = "list", itemId = "" }: SupplierPage
         setIsLoading(false);
       }
     }
-  }, [filter, isFormMode, itemId, paginationQuery, t]);
+  }, [filter, isFormMode, itemId, paginationQuery, sortValue, t]);
 
   useEffect(() => {
     void loadSuppliers();
@@ -503,8 +505,9 @@ export function SupplierPageContent({ mode = "list", itemId = "" }: SupplierPage
                       {t("common.close")}
                     </button>
                   </div>
+                  {selectedRow ? <SupplierOnboardingPanel key={selectedRow.id} item={selectedRow} onChanged={() => loadSuppliers({ showLoading: false })} onCompleted={() => router.push(returnListPath)} /> : <p className="text-sm text-slate-600 dark:text-slate-300">{t("supplierOnboarding.saveFirst")}</p>}
                   <SupplierEditForm
-                    key={selectedId || "new"}
+                    key={selectedRow ? `${selectedRow.id}:${selectedRow.updatedAt}` : "new"}
                     item={selectedRow}
                     canManageSupplier={canManageSupplier}
                     isSaving={isSaving}

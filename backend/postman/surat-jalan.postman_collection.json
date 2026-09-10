@@ -136,7 +136,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"noSuratJalan\": \"{{no_surat_jalan}}\",\n  \"noPo\": \"{{no_po}}\",\n  \"tanggal\": \"{{tanggal}}\",\n  \"idCustomer\": \"{{customer_id}}\",\n  \"barang\": [\n    {\n      \"nama\": \"{{barang_1_nama}}\",\n      \"jumlah\": {{barang_1_jumlah}}\n    },\n    {\n      \"nama\": \"{{barang_2_nama}}\",\n      \"jumlah\": {{barang_2_jumlah}}\n    }\n  ],\n  \"kendaraan\": \"{{kendaraan}}\",\n  \"tipe\": \"{{tipe}}\",\n  \"sudahSelesai\": {{sudah_selesai}}\n}",
+              "raw": "{\n  \"noSuratJalan\": \"{{no_surat_jalan}}\",\n  \"noPo\": \"{{no_po}}\",\n  \"tanggal\": \"{{tanggal}}\",\n  \"idCustomer\": \"{{customer_id}}\",\n  \"barang\": [\n    {\n      \"nama\": \"{{barang_1_nama}}\",\n      \"jumlah\": {{barang_1_jumlah}}\n    },\n    {\n      \"nama\": \"{{barang_2_nama}}\",\n      \"jumlah\": {{barang_2_jumlah}}\n    }\n  ],\n  \"kendaraan\": \"{{kendaraan}}\",\n  \"sudahSelesai\": {{sudah_selesai}}\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -204,7 +204,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"noSuratJalan\": \"{{no_surat_jalan_update}}\",\n  \"noPo\": \"{{no_po_update}}\",\n  \"tanggal\": \"{{tanggal_update}}\",\n  \"idCustomer\": \"{{customer_id}}\",\n  \"barang\": [\n    {\n      \"nama\": \"{{barang_update_nama}}\",\n      \"jumlah\": {{barang_update_jumlah}}\n    }\n  ],\n  \"kendaraan\": \"{{kendaraan_update}}\",\n  \"tipe\": \"{{tipe_update}}\",\n  \"sudahSelesai\": {{sudah_selesai_update}}\n}",
+              "raw": "{\n  \"noSuratJalan\": \"{{no_surat_jalan_update}}\",\n  \"noPo\": \"{{no_po_update}}\",\n  \"tanggal\": \"{{tanggal_update}}\",\n  \"idCustomer\": \"{{customer_id}}\",\n  \"barang\": [\n    {\n      \"nama\": \"{{barang_update_nama}}\",\n      \"jumlah\": {{barang_update_jumlah}}\n    }\n  ],\n  \"kendaraan\": \"{{kendaraan_update}}\",\n  \"sudahSelesai\": {{sudah_selesai_update}}\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -318,10 +318,6 @@
       "value": "B 1234 XYZ"
     },
     {
-      "key": "tipe",
-      "value": "partial"
-    },
-    {
       "key": "sudah_selesai",
       "value": "false"
     },
@@ -348,10 +344,6 @@
     {
       "key": "kendaraan_update",
       "value": "B 5678 ABC"
-    },
-    {
-      "key": "tipe_update",
-      "value": "non partial"
     },
     {
       "key": "sudah_selesai_update",

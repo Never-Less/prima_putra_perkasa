@@ -1010,15 +1010,26 @@ export function buildInvoiceBarangRowsFromSuratJalanSelection(
     return ensureTrailingEmptyInvoiceBarangRow([createEmptyInvoiceBarangRow()]);
   }
 
-  const hargaSatuanMap = new Map<string, string>();
-  const salesOrderHargaSatuanMap = new Map<string, string>();
+  type PriceCandidate = { hargaSatuan: string; kuantitas: number };
+  const hargaSatuanMap = new Map<string, PriceCandidate[]>();
+  const salesOrderHargaSatuanMap = new Map<string, PriceCandidate[]>();
+  const sourceHargaSatuanMap = new Map<string, string>();
+  const sourceKey = (source: InvoiceBarangSource) =>
+    JSON.stringify([source.suratJalanId, source.noSuratJalan, source.barangId, source.noPo]);
+  const findPrice = (candidates: PriceCandidate[] = [], kuantitas: number, exactOnly = false) => {
+    const exactQuantity = candidates.filter((candidate) => candidate.kuantitas === kuantitas);
+    const prices = new Set((exactOnly || exactQuantity.length > 0 ? exactQuantity : candidates).map((candidate) => candidate.hargaSatuan));
+    // A delivery has no SO line ID. Do not guess when matching rows have different prices.
+    return prices.size === 1 ? [...prices][0] : "";
+  };
 
   const addSalesOrderHargaSatuan = (
     noPoValue: string,
     namaBarangValue: string,
     spesifikasiValue: string,
     unitValue: string,
-    hargaSatuanValue: number
+    hargaSatuanValue: number,
+    kuantitas: number
   ) => {
     if (!namaBarangValue || !unitValue || hargaSatuanValue <= 0) {
       return;
@@ -1028,9 +1039,9 @@ export function buildInvoiceBarangRowsFromSuratJalanSelection(
     const keys = [createInvoiceBarangIdentityKey(namaBarangValue, spesifikasiValue, unitValue, noPoValue)];
 
     keys.forEach((key) => {
-      if (!salesOrderHargaSatuanMap.has(key)) {
-        salesOrderHargaSatuanMap.set(key, hargaSatuanText);
-      }
+      const candidates = salesOrderHargaSatuanMap.get(key) || [];
+      candidates.push({ hargaSatuan: hargaSatuanText, kuantitas });
+      salesOrderHargaSatuanMap.set(key, candidates);
     });
   };
 
@@ -1039,6 +1050,7 @@ export function buildInvoiceBarangRowsFromSuratJalanSelection(
     namaBarangValue: string,
     spesifikasiValue: string,
     unitValue: string,
+    kuantitas: number,
     fallbackSpesifikasiValue = ""
   ) => {
     const keys = [
@@ -1047,7 +1059,7 @@ export function buildInvoiceBarangRowsFromSuratJalanSelection(
     ];
 
     for (const key of keys) {
-      const hargaSatuan = salesOrderHargaSatuanMap.get(key);
+      const hargaSatuan = findPrice(salesOrderHargaSatuanMap.get(key), kuantitas);
 
       if (hargaSatuan) {
         return hargaSatuan;
@@ -1064,7 +1076,8 @@ export function buildInvoiceBarangRowsFromSuratJalanSelection(
         toDecodedText(barang.nama).trim(),
         toDecodedText(barang.spesifikasi).trim(),
         toDecodedText(barang.unit).trim(),
-        barang.hargaSatuan
+        barang.hargaSatuan,
+        barang.jumlah
       );
     });
   });
@@ -1082,12 +1095,15 @@ export function buildInvoiceBarangRowsFromSuratJalanSelection(
     const identityKey = createInvoiceBarangIdentityKey(namaBarang, spesifikasi, unit, noPo);
     const hargaSatuan = toText(row.hargaSatuan).trim();
 
-    if (parseNumber(hargaSatuan) > 0 && !hargaSatuanMap.has(identityKey)) {
-      hargaSatuanMap.set(identityKey, hargaSatuan);
+    if (parseNumber(hargaSatuan) > 0) {
+      const candidates = hargaSatuanMap.get(identityKey) || [];
+      candidates.push({ hargaSatuan, kuantitas: parseNumber(row.kuantitas) });
+      hargaSatuanMap.set(identityKey, candidates);
+      row.sources.forEach((source) => sourceHargaSatuanMap.set(sourceKey(source), hargaSatuan));
     }
   });
 
-  const barangMap = new Map<string, InvoiceBarangFormRow>();
+  const rows: InvoiceBarangFormRow[] = [];
 
   selectedNoPoOptions.forEach((selectedNoPoOption) => {
     let hasSelectedSuratJalan = false;
@@ -1112,28 +1128,25 @@ export function buildInvoiceBarangRowsFromSuratJalanSelection(
           kuantitas: barang.jumlah,
         };
         const identityKey = createInvoiceBarangIdentityKey(namaBarang, spesifikasi, unit, noPoValue);
-        const existingItem = barangMap.get(identityKey);
         const salesOrderHargaSatuan = findSalesOrderHargaSatuan(
           noPoValue,
           namaBarang,
           spesifikasi,
           unit,
+          barang.jumlah,
           toDecodedText(barang.spesifikasi).trim()
         );
 
-        if (existingItem) {
-          const currentQty = parseNumber(existingItem.kuantitas);
-          existingItem.kuantitas = String(currentQty + barang.jumlah);
-          existingItem.sources = [...existingItem.sources, source];
-          return;
-        }
-
-        barangMap.set(identityKey, {
+        // Keep delivery lines separate, including identically named goods sold at different prices.
+        rows.push({
           namaBarang,
           spesifikasi,
           kuantitas: String(barang.jumlah),
           unit,
-          hargaSatuan: hargaSatuanMap.get(identityKey) || salesOrderHargaSatuan,
+          hargaSatuan:
+            sourceHargaSatuanMap.get(sourceKey(source)) ||
+            findPrice(hargaSatuanMap.get(identityKey), barang.jumlah, true) ||
+            salesOrderHargaSatuan,
           noPoManual: noPoValue,
           sources: [source],
         });
@@ -1155,29 +1168,19 @@ export function buildInvoiceBarangRowsFromSuratJalanSelection(
         return;
       }
 
-      const existingItem = barangMap.get(identityKey);
-
-      if (existingItem) {
-        const currentQty = parseNumber(existingItem.kuantitas);
-        existingItem.kuantitas = String(currentQty + barang.jumlah);
-        return;
-      }
-
-      barangMap.set(identityKey, {
+      rows.push({
         namaBarang,
         spesifikasi,
         kuantitas: String(barang.jumlah),
         unit,
         hargaSatuan:
-          hargaSatuanMap.get(identityKey) ||
-          findSalesOrderHargaSatuan(noPoValue, namaBarang, spesifikasi, unit),
+          findPrice(hargaSatuanMap.get(identityKey), barang.jumlah, true) ||
+          (barang.hargaSatuan > 0 ? String(barang.hargaSatuan) : ""),
         noPoManual: noPoValue,
         sources: [],
       });
     });
   });
-
-  const rows = Array.from(barangMap.values());
 
   if (rows.length === 0) {
     return ensureTrailingEmptyInvoiceBarangRow([createEmptyInvoiceBarangRow()]);
@@ -1195,7 +1198,12 @@ export function invoiceBarangRowsToList(rows: InvoiceBarangFormRow[]): InvoiceBa
       const hargaSatuan = parseNumber(row.hargaSatuan.trim());
       const unit = toDecodedText(row.unit).trim();
       const jumlah = roundCurrency(kuantitas * hargaSatuan);
-      const sources = normalizeInvoiceBarangSources(row.sources);
+      const originalSources = normalizeInvoiceBarangSources(row.sources);
+      const originalSourceQty = originalSources.reduce((sum, source) => sum + source.kuantitas, 0);
+      // Editing the invoice quantity must update its source allocation too.
+      const sources = originalSourceQty > 0
+        ? originalSources.map((source) => ({ ...source, kuantitas: source.kuantitas * kuantitas / originalSourceQty }))
+        : originalSources;
       const noPoManual = sources.length > 0 ? invoiceBarangSourceNoPoList(sources).join(", ") : row.noPoManual.trim();
 
       return {

@@ -1,0 +1,107 @@
+/* One grid theme for Price List, Sales Order, Surat Jalan, and Invoice. */
+.app-spreadsheet, .spreadsheet-frame {
+  --sheet-surface: #fff;
+  --sheet-stripe: #f8fafc;
+  --sheet-header: #eef3f8;
+  --sheet-border: #dce4ee;
+  --sheet-text: #172033;
+  --sheet-muted: #65758b;
+  --sheet-selection: #dcfce7;
+  --sheet-accent: #16a34a;
+  color: var(--sheet-text);
+  min-width: 0;
+}
+.dark .app-spreadsheet, .dark .spreadsheet-frame {
+  --sheet-surface: #111827;
+  --sheet-stripe: #162033;
+  --sheet-header: #1e293b;
+  --sheet-border: #334155;
+  --sheet-text: #e5edf8;
+  --sheet-muted: #94a3b8;
+  --sheet-selection: #164332;
+  --sheet-accent: #4ade80;
+}
+.spreadsheet-frame {
+  margin-top: 8px;
+  border: 1px solid var(--sheet-border);
+  border-radius: 9px;
+  background: var(--sheet-surface);
+  overflow: hidden;
+}
+.spreadsheet-frame:focus-within { border-color: var(--sheet-accent); }
+.spreadsheet-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--sheet-border);
+  background: var(--sheet-surface);
+  color: var(--sheet-muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+.spreadsheet-footer svg { width: 16px; height: 16px; flex-shrink: 0; }
+.app-spreadsheet, .app-spreadsheet .jss_container, .app-spreadsheet .jss_spreadsheet {
+  width: 100%;
+  font-family: var(--font-geist-sans), "Segoe UI", sans-serif;
+}
+.app-spreadsheet .jss_content {
+  width: 100% !important;
+  max-width: 100%;
+  max-height: min(60dvh, 560px);
+  overflow: auto !important;
+  background: var(--sheet-surface);
+  scrollbar-color: var(--sheet-border) var(--sheet-surface);
+  scrollbar-gutter: stable;
+}
+.app-spreadsheet--bulk, .app-spreadsheet--bulk .jss_container,
+.app-spreadsheet--bulk .jss_spreadsheet { height: 100%; }
+.app-spreadsheet--bulk .jss_content { height: 100% !important; max-height: none; }
+.app-spreadsheet .jss_worksheet { min-width: 100%; background: var(--sheet-surface); }
+.app-spreadsheet .jss_worksheet, .app-spreadsheet .jss_worksheet td,
+.app-spreadsheet .jss_corner { border-color: var(--sheet-border); }
+.app-spreadsheet .jss_worksheet > tbody > tr > td {
+  height: 31px;
+  padding: 5px 8px;
+  background: var(--sheet-surface);
+  color: var(--sheet-text);
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.app-spreadsheet .jss_worksheet > tbody > tr:nth-child(even) > td:not(:first-child) { background: var(--sheet-stripe); }
+.app-spreadsheet .jss_worksheet > thead > tr > td,
+.app-spreadsheet .jss_worksheet > tbody > tr > td:first-child {
+  height: 31px;
+  background: var(--sheet-header);
+  color: var(--sheet-text);
+  font-size: 11px;
+  font-weight: 800;
+}
+.app-spreadsheet .jss_worksheet > thead > tr > td { position: sticky; top: 0; z-index: 2; }
+.app-spreadsheet .jss_worksheet > tbody > tr > td.readonly { color: var(--sheet-muted); }
+.app-spreadsheet .jss_worksheet > tbody > tr > td.highlight {
+  background: var(--sheet-selection);
+}
+.app-spreadsheet .jss_worksheet td.highlight-top,
+.app-spreadsheet .jss_worksheet td.highlight-right,
+.app-spreadsheet .jss_worksheet td.highlight-bottom,
+.app-spreadsheet .jss_worksheet td.highlight-left,
+.app-spreadsheet .jss_worksheet td.selection-left,
+.app-spreadsheet .jss_worksheet td.selection-right,
+.app-spreadsheet .jss_worksheet td.selection-top,
+.app-spreadsheet .jss_worksheet td.selection-bottom,
+.app-spreadsheet .jss_worksheet td.selected { border-color: var(--sheet-accent); }
+.app-spreadsheet .jss_worksheet > thead > tr > td.selected,
+.app-spreadsheet .jss_worksheet > tbody > tr.selected > td:first-child {
+  background: var(--sheet-selection);
+  color: var(--sheet-text);
+}
+.app-spreadsheet .jss_worksheet td.editor { background: var(--sheet-surface); }
+.app-spreadsheet .jss_worksheet td > input,
+.app-spreadsheet .jss_worksheet td > select,
+.app-spreadsheet .jss_worksheet td > textarea {
+  background: var(--sheet-surface);
+  color: var(--sheet-text);
+  font: inherit;
+}

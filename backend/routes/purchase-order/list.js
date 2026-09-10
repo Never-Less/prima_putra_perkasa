@@ -47,10 +47,10 @@ router.get("/", async (req, res) => {
         query.noPo = noPoCondition;
       }
     } else if (workflowStatus === "readyForInvoice") {
-      const [invoicedSuratJalanNumbers, nonPartialSuratJalan] = await Promise.all([
+      const [invoicedSuratJalanNumbers, deliveryNotes] = await Promise.all([
         Invoice.distinct("noSuratJalan"),
         SuratJalan.find(
-          { tipe: "non partial" },
+          {},
           "noPo noSuratJalan"
         ).lean(),
       ]);
@@ -61,7 +61,7 @@ router.get("/", async (req, res) => {
       );
       const readyNoPo = Array.from(
         new Set(
-          nonPartialSuratJalan
+          deliveryNotes
             .filter(
               (item) =>
                 !invoicedNumberSet.has(
