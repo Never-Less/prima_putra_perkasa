@@ -7,6 +7,7 @@ import {
   ensureTrailingEmptyBarangRow,
   type SuratJalanBarangFormRow,
 } from "../_lib/surat-jalan";
+import { SpreadsheetFrame } from "../../_components/spreadsheet-frame";
 import { useI18n } from "../../_i18n/provider";
 
 type SuratJalanBarangSpreadsheetProps = {
@@ -213,12 +214,8 @@ export function SuratJalanBarangSpreadsheet({
   }, [rows]);
 
   return (
-    <div
-      className={`surat-jalan-barang-spreadsheet mt-2 overflow-hidden rounded-lg border border-sky-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 ${
-        disabled ? "pointer-events-none opacity-70" : ""
-      }`}
-    >
-      <div ref={rootRef} />
-    </div>
+    <SpreadsheetFrame disabled={disabled}>
+      <div className="app-spreadsheet" ref={rootRef} />
+    </SpreadsheetFrame>
   );
 }

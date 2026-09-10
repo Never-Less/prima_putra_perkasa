@@ -27,14 +27,15 @@ export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const isLoginRoute = isLoginPath(pathname);
   const isChromelessRoute = isChromelessPath(pathname);
-  const hideAppChrome = isLoginRoute || isChromelessRoute;
+  const isSupplierFormRoute = pathname === "/supplier-registration";
+  const hideAppChrome = isLoginRoute || isChromelessRoute || isSupplierFormRoute;
 
   return (
     <PrivateRouteGuard key={pathname}>
       {hideAppChrome ? null : <AppNavbar />}
       <div
         className={hideAppChrome ? "" : "min-h-screen lg:pl-64"}
-        data-app-tables={!isLoginRoute && !pathname.split("/").includes("export") ? "spreadsheet" : undefined}
+        data-app-tables={!isLoginRoute && !isSupplierFormRoute && !pathname.split("/").includes("export") ? "spreadsheet" : undefined}
       >{children}</div>
       <UnsavedChangesModal />
     </PrivateRouteGuard>

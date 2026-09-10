@@ -34,7 +34,7 @@ function parseNumber(value) {
   return Number.isFinite(number) ? number : null;
 }
 
-const textProfileFields = ["alamat", "npwp", "picName", "phone", "email", "notes"];
+const textProfileFields = ["alamat", "npwp", "picName", "phone", "whatsapp", "email", "notes"];
 
 router.put("/:id", requireRole(ROLE_ADMIN, ROLE_STAFF), async (req, res) => {
   const id = String(req.params.id || "");
@@ -55,6 +55,11 @@ router.put("/:id", requireRole(ROLE_ADMIN, ROLE_STAFF), async (req, res) => {
     textProfileFields.forEach((field) => {
       if (req.body[field] !== undefined) updates[field] = String(req.body[field] || "").trim();
     });
+
+    if (req.body.productBrands !== undefined) {
+      const source = Array.isArray(req.body.productBrands) ? req.body.productBrands : String(req.body.productBrands || "").split(",");
+      updates.productBrands = [...new Set(source.map((value) => String(value || "").trim()).filter(Boolean))];
+    }
 
     if (req.body.productCategories !== undefined) {
       const source = Array.isArray(req.body.productCategories) ? req.body.productCategories : String(req.body.productCategories || "").split(",");

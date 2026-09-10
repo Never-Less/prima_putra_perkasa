@@ -22,6 +22,19 @@ const supplierSchema = new mongoose.Schema(
     npwp: { type: String, trim: true, maxlength: 100, default: "" },
     picName: { type: String, trim: true, maxlength: 120, default: "" },
     phone: { type: String, trim: true, maxlength: 50, default: "" },
+    whatsapp: { type: String, trim: true, maxlength: 20, default: "" },
+    productBrands: { type: [{ type: String, trim: true, maxlength: 100 }], default: [] },
+    onboarding: {
+      status: { type: String, enum: ["notGenerated", "generated", "sent", "submitted", "completed"], default: "notGenerated" },
+      tokenHash: { type: String, select: false },
+      generatedAt: Date,
+      expiresAt: Date,
+      sentAt: Date,
+      submittedAt: Date,
+      completedAt: Date,
+      reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      pendingData: { type: mongoose.Schema.Types.Mixed, default: null },
+    },
     email: { type: String, trim: true, lowercase: true, maxlength: 150, default: "" },
     productCategories: {
       type: [{ type: String, trim: true, maxlength: 100 }],
@@ -54,6 +67,8 @@ supplierSchema.pre("validate", function validateSupplier() {
 
   this.lamaHutang = null;
 });
+
+supplierSchema.index({ "onboarding.tokenHash": 1 }, { unique: true, sparse: true });
 
 const Supplier = mongoose.model("Supplier", supplierSchema);
 

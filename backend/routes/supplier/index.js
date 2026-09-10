@@ -10,6 +10,7 @@ const updateRoute = require("./update");
 const router = express.Router();
 
 router.use(requireAuth);
+router.use(require("./onboarding"));
 
 router.use(createRoute);
 router.use(listRoute);

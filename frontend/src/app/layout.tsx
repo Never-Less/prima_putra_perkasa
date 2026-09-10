@@ -6,6 +6,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import "jsuites/dist/jsuites.css";
 import "jspreadsheet-ce/dist/jspreadsheet.css";
 import "./globals.css";
+import "./_components/app-spreadsheet.css";
 
 export const metadata: Metadata = {
   title: {

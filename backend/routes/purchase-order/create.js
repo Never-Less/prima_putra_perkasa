@@ -1,3 +1,4 @@
+const { documentMutation } = require("../../utils/document-mutation");
 const express = require("express");
 
 const { Customer } = require("../../models/Customer");
@@ -15,7 +16,7 @@ const { normalizePaymentTerm } = require("../../utils/payment-term");
 
 const router = express.Router();
 
-router.post("/", async (req, res) => {
+router.post("/", documentMutation(async (req, res) => {
   const noPo = String(req.body.noPo || "").trim();
   const tanggalPo = parseDate(req.body.tanggalPo);
   const namaCustomer = String(req.body.namaCustomer || "").trim();
@@ -112,12 +113,13 @@ router.post("/", async (req, res) => {
       purchaseOrder: sanitizePurchaseOrder(purchaseOrder),
     });
   } catch (error) {
+    if (error?.hasErrorLabel?.("TransientTransactionError")) throw error;
     if (error?.code === 11000) {
       return res.status(409).json({ message: `No. SO "${noPo}" sudah digunakan.` });
     }
 
     return res.status(500).json({ message: "Data sales order belum bisa disimpan. Coba lagi." });
   }
-});
+}));
 
 module.exports = router;

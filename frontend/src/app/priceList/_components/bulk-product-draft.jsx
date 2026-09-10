@@ -100,7 +100,6 @@ const isRowReadyForPriceCheck = (row, categoriesToCheck = []) => {
 
   return (
     `${row.item_name || ""}`.trim() &&
-    `${row.specification || ""}`.trim() &&
     customer &&
     categoriesToCheck.some((category) => category.name === customer)
   );
@@ -1848,7 +1847,7 @@ const BulkProductDraft = () => {
   const openPriceListCheck = () => {
     if (priceCheckRowsWithIndex.length === 0) {
       clearPriceCheck();
-      setStatus("Isi Nama Barang, Spesifikasi, dan Customer yang valid untuk cek price list.");
+      setStatus(t("priceList.bulk.priceCheckRequirements"));
       return;
     }
 
@@ -1872,7 +1871,7 @@ const BulkProductDraft = () => {
     setPriceCheckItems(items);
     setActivePriceCheck(null);
     setPriceSearchResults([]);
-    setStatus(`${items.length} nama item siap dicek manual.`);
+    setStatus(t("priceList.bulk.priceCheckReady", { count: items.length }));
   };
 
   const searchPriceListItem = async (item) => {
@@ -2030,7 +2029,7 @@ const BulkProductDraft = () => {
         ref={tableWrapRef}
         onKeyDownCapture={handleSpreadsheetShortcutKeyDown}
       >
-        <div className="bulk_spreadsheet" ref={spreadsheetRootRef} />
+        <div className="app-spreadsheet app-spreadsheet--bulk" ref={spreadsheetRootRef} />
       </div>
       <div className="bulk_editor_footer"><span><Keyboard aria-hidden="true" />{t("priceList.bulk.pasteHint")}</span><span>{t("priceList.bulk.selectedCells", { count: selectedCellCount })}</span></div>
       </div>

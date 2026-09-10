@@ -13,6 +13,12 @@ const router = express.Router();
 router.get("/", async (req, res) => {
   try {
     const query = {};
+    const status = req.query.onboardingStatus;
+    if (status === "notGenerated") {
+      query.$or = [{ "onboarding.status": "notGenerated" }, { "onboarding.status": { $exists: false } }];
+    } else if (["generated", "sent", "submitted", "completed"].includes(status)) {
+      query["onboarding.status"] = status;
+    }
     const namaSupplierRegex = buildSearchRegex(req.query.namaSupplier);
     const hasPagination =
       req.query.page !== undefined || req.query.limit !== undefined;
@@ -58,7 +64,8 @@ router.get("/", async (req, res) => {
       hasPagination ? requestedLimit : Math.max(totalRows, 1)
     );
 
-    let supplierQuery = Supplier.find(query).sort({ createdAt: -1 });
+    const sorts = { updatedDesc: { updatedAt: -1, _id: -1 }, updatedAsc: { updatedAt: 1, _id: 1 }, nameAsc: { namaSupplier: 1, _id: 1 }, nameDesc: { namaSupplier: -1, _id: -1 } };
+    let supplierQuery = Supplier.find(query).select("-onboarding.pendingData").sort(sorts[req.query.sort] || { createdAt: -1 });
 
     if (hasPagination) {
       supplierQuery = supplierQuery

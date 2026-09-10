@@ -57,7 +57,7 @@ export type SalesOrderWorkflow = {
   status: SalesOrderWorkflowStatus;
   deliveryStatus: "notDelivered" | "partial" | "complete";
   suratJalan: SalesOrderDocumentReference[];
-  invoices: Array<SalesOrderDocumentReference & { isPaid: boolean }>;
+  invoices: Array<SalesOrderDocumentReference & { isPaid: boolean; allocatedAmount: number | null }>;
   items: SalesOrderItemProgress[];
   billing: {
     orderAmount: number;
@@ -277,6 +277,8 @@ function normalizeWorkflow(value: unknown): SalesOrderWorkflow | null {
           number: toText(document[numberKey]).trim(),
           date: toText(document.tanggal).trim(),
           isPaid: Boolean(document.isPaid),
+          allocatedAmount: document.allocatedAmount === undefined || document.allocatedAmount === null
+            ? null : parseNumberFromUnknown(document.allocatedAmount),
         };
       })
       .filter((item) => item.number);

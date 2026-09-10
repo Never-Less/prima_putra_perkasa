@@ -7,14 +7,18 @@ function key(name, specification, unit) {
 
 async function validateDeliveryAgainstSalesOrder({ noPo, customerId, barang, excludeSuratJalanId = null }) {
   const salesOrder = await PurchaseOrder.findOne({ noPo }).collation({ locale: "en", strength: 2 }).lean();
-  if (!salesOrder) return null;
+  if (!salesOrder) return "Sales Order tidak ditemukan. Pilih Sales Order yang masih tersedia sebelum menyimpan Surat Jalan.";
   if (String(salesOrder.namaCustomer || "") !== String(customerId || "")) {
     return "Customer Surat Jalan harus sama dengan customer pada Sales Order.";
   }
   const query = { noPo: salesOrder.noPo };
   if (excludeSuratJalanId) query._id = { $ne: excludeSuratJalanId };
   const previous = await SuratJalan.find(query).select("barang").lean();
-  const ordered = new Map((salesOrder.barang || []).map((row) => [key(row.namaBarang, row.spesifikasi, row.unit), Number(row.kuantitas || 0)]));
+  const ordered = new Map();
+  for (const row of salesOrder.barang || []) {
+    const itemKey = key(row.namaBarang, row.spesifikasi, row.unit);
+    ordered.set(itemKey, (ordered.get(itemKey) || 0) + Number(row.kuantitas || 0));
+  }
   const delivered = new Map();
   previous.flatMap((row) => row.barang || []).forEach((row) => {
     const itemKey = key(row.nama, row.spesifikasi, row.unit);
