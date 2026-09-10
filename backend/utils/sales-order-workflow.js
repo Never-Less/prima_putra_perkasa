@@ -6,6 +6,17 @@ function itemKey(name, specification, unit) {
   return [name, specification, unit].map(normalizeText).join("::");
 }
 
+function invoiceItemKey(item, suratJalanList) {
+  for (const source of item?.sources || []) {
+    const sj = suratJalanList.find((row) => String(row._id || row.id) === String(source.suratJalanId) || normalizeText(row.noSuratJalan) === normalizeText(source.noSuratJalan));
+    const original = (sj?.barang || []).find((row, index) =>
+      String(row._id || row.id || `legacy:${sj.noSuratJalan}:${index}`) === String(source.barangId)
+    );
+    if (original) return itemKey(original.nama, original.spesifikasi, original.unit);
+  }
+  return itemKey(item?.namaBarang, item?.spesifikasi, item?.unit);
+}
+
 function invoiceNoPoList(invoice) {
   const source = Array.isArray(invoice?.noPoList) && invoice.noPoList.length > 0
     ? invoice.noPoList
@@ -20,9 +31,8 @@ function invoiceNoPoList(invoice) {
   ].map((value) => String(value || "").trim()).filter(Boolean))];
 }
 
-function allocatedItemQuantity(purchaseOrder, suratJalanList, invoice, item) {
+function allocatedItemShare(purchaseOrder, suratJalanList, invoice, item) {
   const salesOrderKey = normalizeText(purchaseOrder?.noPo);
-  const quantity = Math.max(0, Number(item?.kuantitas) || 0);
   const sources = Array.isArray(item?.sources) ? item.sources : [];
   if (sources.length > 0) {
     const suratJalanIds = new Set(suratJalanList.map((row) => String(row?._id || row?.id || "")));
@@ -34,13 +44,17 @@ function allocatedItemQuantity(purchaseOrder, suratJalanList, invoice, item) {
         : suratJalanIds.has(String(source?.suratJalanId || ""));
       return sum + (belongs ? Math.max(0, Number(source?.kuantitas) || 0) : 0);
     }, 0);
-    // Never allocate more than the actual invoice quantity across its sources.
-    return totalSourceQty > 0 ? linkedQty * Math.min(quantity / totalSourceQty, 1) : 0;
+    // A merged line's entire value is split across its SO references by source quantity.
+    return totalSourceQty > 0 ? linkedQty / totalSourceQty : 0;
   }
   const manualNoPo = normalizeText(item?.noPoManual);
-  if (manualNoPo) return manualNoPo === salesOrderKey ? quantity : 0;
+  if (manualNoPo) return manualNoPo === salesOrderKey ? 1 : 0;
   const keys = new Set(invoiceNoPoList(invoice).map(normalizeText));
-  return keys.size === 1 && keys.has(salesOrderKey) ? quantity : 0;
+  return keys.size === 1 && keys.has(salesOrderKey) ? 1 : 0;
+}
+
+function allocatedItemQuantity(purchaseOrder, suratJalanList, invoice, item) {
+  return Math.max(0, Number(item?.kuantitas) || 0) * allocatedItemShare(purchaseOrder, suratJalanList, invoice, item);
 }
 
 function indexSalesOrderRelations(suratJalanList, invoiceList) {
@@ -74,7 +88,10 @@ function buildDeliverySummary(purchaseOrder, suratJalanList) {
   const orderedItems = purchaseOrder?.barang || [];
   const deliveredItems = orderedItems.filter((item) => {
     const key = itemKey(item?.namaBarang, item?.spesifikasi, item?.unit);
-    return (deliveredByItem.get(key) || 0) >= Number(item?.kuantitas || 0);
+    const available = deliveredByItem.get(key) || 0;
+    const ordered = Number(item?.kuantitas || 0);
+    deliveredByItem.set(key, Math.max(available - ordered, 0));
+    return available >= ordered;
   }).length;
 
   return {
@@ -82,9 +99,7 @@ function buildDeliverySummary(purchaseOrder, suratJalanList) {
     totalItems: orderedItems.length,
     isComplete:
       suratJalanList.length > 0 &&
-      (orderedItems.length > 0
-        ? deliveredItems === orderedItems.length
-        : suratJalanList.some((row) => row?.tipe === "non partial")),
+      orderedItems.length > 0 && deliveredItems === orderedItems.length,
   };
 }
 
@@ -101,7 +116,7 @@ function buildItemProgress(purchaseOrder, suratJalanList, invoiceList) {
 
   invoiceList.forEach((invoice) => {
     (invoice?.barang || []).forEach((item) => {
-      const key = itemKey(item?.namaBarang, item?.spesifikasi, item?.unit);
+      const key = invoiceItemKey(item, suratJalanList);
       const billedQty = allocatedItemQuantity(purchaseOrder, suratJalanList, invoice, item);
 
       if (billedQty > 0) {
@@ -111,7 +126,7 @@ function buildItemProgress(purchaseOrder, suratJalanList, invoiceList) {
   });
 
   return (purchaseOrder?.barang || []).map((item) => {
-    const key = itemKey(item?.namaBarang, item?.spesifikasi, item?.unit);
+    const key = invoiceItemKey(item, suratJalanList);
     const orderedQty = Number(item?.kuantitas || 0);
     const deliveredQty = Math.min(deliveredByItem.get(key) || 0, orderedQty);
     const billedQty = Math.min(billedByItem.get(key) || 0, orderedQty);
@@ -132,40 +147,27 @@ function buildItemProgress(purchaseOrder, suratJalanList, invoiceList) {
   });
 }
 
-function allocatedInvoiceAmount(purchaseOrder, suratJalanList, invoice, remainingQuantities) {
-  const orderedKeys = new Set((purchaseOrder?.barang || []).map((item) =>
-    itemKey(item?.namaBarang, item?.spesifikasi, item?.unit)
-  ));
+function allocatedInvoiceAmount(purchaseOrder, suratJalanList, invoice) {
   const invoiceItems = invoice?.barang || [];
   // Legacy records without item details can only be compared by their own subtotal.
-  if (orderedKeys.size === 0 && invoiceItems.length === 0) {
+  if (!(purchaseOrder?.barang || []).length && invoiceItems.length === 0) {
     const keys = new Set(invoiceNoPoList(invoice).map(normalizeText));
     if (keys.size !== 1 || !keys.has(normalizeText(purchaseOrder?.noPo))) return 0;
     return Number(invoice?.subtotal ?? (Number(invoice?.grandTotal || 0) - Number(invoice?.ppnAmount || 0)));
   }
+  // Allocation follows the SO column on each invoice line, independent of item labels
+  // and of quantities already billed by another invoice. Keep the actual line value.
   return invoiceItems.reduce((total, item) => {
-    const key = itemKey(item?.namaBarang, item?.spesifikasi, item?.unit);
-    if (orderedKeys.size > 0 && !orderedKeys.has(key)) return total;
-    const quantity = Number(item?.kuantitas || 0);
-    if (quantity <= 0) return total;
-    const availableQuantity = allocatedItemQuantity(purchaseOrder, suratJalanList, invoice, item);
-    const linkedQuantity = orderedKeys.size > 0
-      ? Math.min(availableQuantity, remainingQuantities.get(key) || 0)
-      : availableQuantity;
-    if (orderedKeys.size > 0) remainingQuantities.set(key, (remainingQuantities.get(key) || 0) - linkedQuantity);
-    return total + Number(item?.jumlah || 0) * linkedQuantity / quantity;
+    const amount = Number(item?.jumlah || 0);
+    if (!Number.isFinite(amount)) return total;
+    return total + amount * allocatedItemShare(purchaseOrder, suratJalanList, invoice, item);
   }, 0);
 }
 
 function buildBillingSummary(purchaseOrder, suratJalanList, invoiceList, items) {
   const orderAmount = Number(purchaseOrder?.nominalPo || 0);
-  const remainingQuantities = new Map();
-  (purchaseOrder?.barang || []).forEach((item) => {
-    const key = itemKey(item?.namaBarang, item?.spesifikasi, item?.unit);
-    remainingQuantities.set(key, (remainingQuantities.get(key) || 0) + Number(item?.kuantitas || 0));
-  });
   const invoicedAmount = invoiceList.reduce(
-    (total, invoice) => total + allocatedInvoiceAmount(purchaseOrder, suratJalanList, invoice, remainingQuantities),
+    (total, invoice) => total + allocatedInvoiceAmount(purchaseOrder, suratJalanList, invoice),
     0
   );
   // Complete every ordered quantity; an expensive partial invoice cannot complete an SO.
@@ -180,8 +182,8 @@ function buildBillingSummary(purchaseOrder, suratJalanList, invoiceList, items) 
   }
   return {
     orderAmount,
-    invoicedAmount: Math.round(invoicedAmount),
-    remainingAmount: Math.max(Math.round(orderAmount - invoicedAmount), 0),
+    invoicedAmount: Number(invoicedAmount.toFixed(2)),
+    remainingAmount: Math.max(Number((orderAmount - invoicedAmount).toFixed(2)), 0),
     isComplete,
   };
 }
@@ -195,18 +197,13 @@ function buildSalesOrderWorkflow(
   const delivery = buildDeliverySummary(purchaseOrder, suratJalanList);
   const items = buildItemProgress(purchaseOrder, suratJalanList, invoiceList);
   const billing = buildBillingSummary(purchaseOrder, suratJalanList, invoiceList, items);
-  const orderedKeys = new Set((purchaseOrder?.barang || []).map((item) =>
-    itemKey(item?.namaBarang, item?.spesifikasi, item?.unit)
-  ));
-  const billingInvoices = orderedKeys.size === 0 ? invoiceList : invoiceList.filter((invoice) =>
-    (invoice?.barang || []).some((item) =>
-      orderedKeys.has(itemKey(item?.namaBarang, item?.spesifikasi, item?.unit)) &&
-      allocatedItemQuantity(purchaseOrder, suratJalanList, invoice, item) > 0
-    )
+  const billingInvoices = invoiceList.filter((invoice) =>
+    (invoice?.barang || []).some((item) => allocatedItemShare(purchaseOrder, suratJalanList, invoice, item) > 0) ||
+    allocatedInvoiceAmount(purchaseOrder, suratJalanList, invoice) > 0
   );
   let status = "toDeliver";
 
-  if (invoiceList.length > 0) {
+  if (billingInvoices.length > 0) {
     if (!billing.isComplete) {
       status = "partlyBilled";
     } else if (billingInvoices.length > 0 && billingInvoices.every((invoice) => Boolean(invoice?.isPaid))) {
@@ -232,6 +229,7 @@ function buildSalesOrderWorkflow(
       noInvoice: row?.noInvoice,
       tanggal: row?.tanggal,
       isPaid: Boolean(row?.isPaid),
+      allocatedAmount: Number(allocatedInvoiceAmount(purchaseOrder, suratJalanList, row).toFixed(2)),
     })),
     ...(includeItems
       ? { items }

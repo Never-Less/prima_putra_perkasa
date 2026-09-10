@@ -154,9 +154,8 @@ export function SuratJalanTableFilter({
       { key: "namaCustomer", label: t("field.namaCustomer"), index: 6 },
       { key: "barang", label: t("field.barang"), index: 7 },
       { key: "kendaraan", label: t("field.kendaraan"), index: 8 },
-      { key: "tipe", label: t("field.tipe"), index: 9 },
-      { key: "statusInvoice", label: t("field.statusInvoice"), index: 10 },
-      { key: "deliveryStatus", label: t("field.deliveryStatus"), index: 11 },
+      { key: "statusInvoice", label: t("field.statusInvoice"), index: 9 },
+      { key: "deliveryStatus", label: t("field.deliveryStatus"), index: 10 },
     ],
     [t]
   );
@@ -164,18 +163,11 @@ export function SuratJalanTableFilter({
     "kodeDepartemen",
     "barang",
     "kendaraan",
-    "tipe",
   ]);
   const hiddenColumnIndexes = columns
     .filter((column) => hiddenColumns.includes(column.key))
     .map((column) => column.index);
   const getInvoiceStatus = (row: SuratJalanItem) => {
-    if (row.tipe !== "non partial") {
-      return {
-        label: t("suratJalan.invoiceStatus.notRequired"),
-        className: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
-      };
-    }
 
     if (isSuratJalanInvoiced(row, invoicedSuratJalanNumbers)) {
       return {
@@ -267,20 +259,6 @@ export function SuratJalanTableFilter({
             />
           </label>
 
-          <label className="text-sm text-slate-700 dark:text-slate-200">
-            {t("field.tipe")}
-            <select
-              value={draftFilter.tipe}
-              onChange={(event) =>
-                updateDraftFilter("tipe", event.target.value as SuratJalanFilter["tipe"])
-              }
-              className="mt-1 w-full rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-            >
-              <option value="">{t("common.all")}</option>
-              <option value="partial">partial</option>
-              <option value="non partial">non partial</option>
-            </select>
-          </label>
 
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.tanggalDari")}
@@ -339,13 +317,6 @@ export function SuratJalanTableFilter({
                         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{formatTanggal(row.tanggal, locale)}</p>
                       </div>
                       <div className="flex flex-col items-end gap-1">
-                        <span
-                          className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${
-                            isSelected ? tone.actionActive : "bg-sky-100 text-sky-700 dark:bg-slate-800 dark:text-slate-300"
-                          }`}
-                        >
-                          {row.tipe}
-                        </span>
                         <span className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${invoiceStatus.className}`}>
                           {invoiceStatus.label}
                         </span>
@@ -424,7 +395,6 @@ export function SuratJalanTableFilter({
                     <col style={{ width: "230px" }} />
                     <col style={{ width: "340px" }} />
                     <col style={{ width: "130px" }} />
-                    <col style={{ width: "150px" }} />
                     <col style={{ width: "120px" }} />
                     <col style={{ width: "130px" }} />
                   </colgroup>
@@ -454,7 +424,6 @@ export function SuratJalanTableFilter({
                       </th>
                       <th className={`${cellPadding} font-medium`}>{t("field.barang")}</th>
                       <th className={`${cellPadding} font-medium`}>{t("field.kendaraan")}</th>
-                      <th className={`${cellPadding} font-medium`}>{t("field.tipe")}</th>
                       <th className={`${cellPadding} font-medium`}>{t("field.statusInvoice")}</th>
                       <th className={`${cellPadding} font-medium`}>{t("field.deliveryStatus")}</th>
                     </tr>
@@ -521,7 +490,6 @@ export function SuratJalanTableFilter({
                             <div className={clampedCellClassName}>{barangText}</div>
                           </td>
                           <td className={`truncate ${cellPadding} text-slate-600 dark:text-slate-300`} title={row.kendaraan || "-"}>{row.kendaraan}</td>
-                          <td className={`truncate ${cellPadding} text-slate-600 dark:text-slate-300`} title={row.tipe || "-"}>{row.tipe}</td>
                           <td className={`whitespace-nowrap ${cellPadding}`}>
                             <span className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${invoiceStatus.className}`}>
                               {invoiceStatus.label}

@@ -2,7 +2,7 @@
 
 import { Filter, ImagePlus, PackageSearch, Plus, Search, Trash2, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { ApiLoadingState } from "../_components/api-loading-state";
 import { AppDateInput } from "../_components/app-date-input";
 import { AppToast } from "../_components/app-toast";
@@ -11,7 +11,7 @@ import { ListViewHeader } from "../_components/list-view-header";
 import { PaginationControls } from "../_components/pagination-controls";
 import { useI18n } from "../_i18n/provider";
 import { ApiRequestError } from "../_lib/api-client";
-import { normalizeStringFilterQueryState } from "../_lib/pagination";
+import { buildListRouteWithPagination, normalizeStringFilterQueryState } from "../_lib/pagination";
 import BulkProductDraft from "./_components/bulk-product-draft";
 import { PriceListImage } from "./_components/price-list-image";
 import {
@@ -39,12 +39,9 @@ function readUrlState(query: string) {
 }
 
 function buildPath(filter: PriceListFilter, page: number, limit: number, view?: { item?: string; bulk?: boolean }) {
-  const params = new URLSearchParams();
-  filterKeys.forEach((key) => { const value = filter[key].trim(); if (value) params.set(key, value); });
-  params.set("page", String(page)); params.set("limit", String(limit));
-  if (view?.item) params.set("item", view.item);
-  if (view?.bulk) params.set("bulk", "1");
-  return `/priceList?${params.toString()}`;
+  return buildListRouteWithPagination("/priceList", { page, limit }, {
+    ...filter, item: view?.item, bulk: view?.bulk ? "1" : undefined,
+  });
 }
 
 function formatCurrency(value: number, locale: string) {
@@ -88,6 +85,7 @@ export default function PriceListPage() {
   const [removedImages, setRemovedImages] = useState<string[]>([]);
   const [toast, setToast] = useState<{ id: number; message: string; variant: "success" | "error" } | null>(null);
   const [pagination, setPagination] = useState({ page: initial.page, limit: initial.limit, totalItems: 0, totalPages: 1 });
+  const loadVersion = useRef(0);
 
   const selectedItem = useMemo(() => rows.find((row) => row.id === selectedId) || null, [rows, selectedId]);
   const visibleImages = useMemo(() => (selectedItem?.images || []).filter((name) => !removedImages.includes(name)), [removedImages, selectedItem]);
@@ -96,13 +94,21 @@ export default function PriceListPage() {
   const notify = useCallback((message: string, variant: "success" | "error") => setToast({ id: Date.now(), message, variant }), []);
 
   const loadRows = useCallback(async () => {
+    const version = ++loadVersion.current;
     setIsLoading(true); setError("");
-    try { const result = await fetchPriceList(filter, pagination.page, pagination.limit); setRows(result.items); setPagination(result.pagination); }
-    catch (loadError) { setRows([]); setError(loadError instanceof ApiRequestError ? loadError.message : t("priceList.apiLoadError")); }
-    finally { setIsLoading(false); }
+    try {
+      const result = await fetchPriceList(filter, pagination.page, pagination.limit);
+      if (version !== loadVersion.current) return;
+      setRows(result.items); setPagination(result.pagination);
+    }
+    catch (loadError) {
+      if (version !== loadVersion.current) return;
+      setRows([]); setError(loadError instanceof ApiRequestError ? loadError.message : t("priceList.apiLoadError"));
+    }
+    finally { if (version === loadVersion.current) setIsLoading(false); }
   }, [filter, pagination.limit, pagination.page, t]);
 
-  useEffect(() => { void loadRows(); }, [loadRows]);
+  useEffect(() => { void loadRows(); return () => { loadVersion.current += 1; }; }, [loadRows]);
   useEffect(() => {
     const state = readUrlState(query);
     setFilterDraft(state.filter); setFilter(state.filter);
@@ -122,6 +128,14 @@ export default function PriceListPage() {
   useEffect(() => { void fetchPriceListOptions().then(setCustomers).catch(() => notify(t("priceList.optionsLoadError"), "error")); }, [notify, t]);
 
   const resetImages = () => { setPendingImages([]); setRemovedImages([]); };
+  const applyFilter = (nextFilter: PriceListFilter) => {
+    const normalized = normalizeStringFilterQueryState(new URLSearchParams(nextFilter), defaultPriceListFilter);
+    loadVersion.current += 1;
+    setFilterDraft(normalized);
+    setFilter(normalized);
+    setPagination((current) => ({ ...current, page: 1 }));
+    router.push(buildPath(normalized, 1, pagination.limit), { scroll: false });
+  };
   const openNew = () => { setSelectedId(""); setForm({ ...defaultPriceListForm, riwayatPembelian: [] }); resetImages(); setIsFormOpen(true); router.push(buildPath(filter, pagination.page, pagination.limit, { item: "new" })); };
   const openItem = (item: PriceListItem) => { setSelectedId(item.id); setForm(toPriceListForm(item)); resetImages(); setIsFormOpen(true); router.push(buildPath(filter, pagination.page, pagination.limit, { item: item.id })); };
   const closeView = () => { setIsFormOpen(false); setIsBulkOpen(false); resetImages(); router.replace(buildPath(filter, pagination.page, pagination.limit)); };
@@ -176,11 +190,11 @@ export default function PriceListPage() {
           <Summary icon={<Filter className="h-5 w-5" />} color="violet" label={t("priceList.summary.filters")} value={String(activeFilters)} />
         </section>
         <section className="erp-panel overflow-hidden">
-          <form className="border-b border-slate-200 bg-slate-50/60 p-4 dark:border-slate-800 dark:bg-slate-900/40" onSubmit={(event) => { event.preventDefault(); router.push(buildPath(filterDraft, 1, pagination.limit)); }}>
+          <form className="border-b border-slate-200 bg-slate-50/60 p-4 dark:border-slate-800 dark:bg-slate-900/40" onSubmit={(event) => { event.preventDefault(); applyFilter(filterDraft); }}>
             <div className="mb-3 flex items-center justify-between gap-3"><div><h2 className="flex items-center gap-2 font-semibold"><Filter className="h-4 w-4 text-blue-600" />{t("priceList.filter.title")}</h2><p className="mt-0.5 text-xs text-slate-500">{t("priceList.filter.description")}</p></div><button type="button" className="erp-button" onClick={() => router.push(buildPath(filter, pagination.page, pagination.limit, { bulk: true }))}><Plus className="h-4 w-4" />{t("priceList.bulk.open")}</button></div>
             <div className="mb-3 grid">{filterField("search")}</div>
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">{filterField("namaBarang")}{filterField("namaCustomer")}{filterField("unit")}{filterField("sumber")}{filterField("hargaJualMin", "numeric")}{filterField("hargaJualMax", "numeric")}</div>
-            <div className="mt-3 flex gap-2"><button className="erp-button erp-button-primary"><Search className="h-4 w-4" />{t("common.applyFilter")}</button><button type="button" className="erp-button" onClick={() => router.push(buildPath(defaultPriceListFilter, 1, pagination.limit))}>{t("common.resetFilter")}</button></div>
+            <div className="mt-3 flex gap-2"><button type="submit" className="erp-button erp-button-primary"><Search className="h-4 w-4" />{t("common.applyFilter")}</button><button type="button" className="erp-button" onClick={() => applyFilter(defaultPriceListFilter)}>{t("common.resetFilter")}</button></div>
           </form>
           <div className="overflow-x-auto"><table className="w-full min-w-[980px] text-sm">
             <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500 dark:bg-slate-900"><tr><th className="w-20 px-4 py-3">{t("priceList.field.photo")}</th><th className="px-4 py-3">{t("priceList.field.namaBarang")}</th><th className="px-4 py-3">{t("priceList.field.customer")}</th><th className="px-4 py-3">{t("priceList.field.unit")}</th><th className="px-4 py-3 text-right">{t("priceList.field.hargaJual")}</th><th className="px-4 py-3">{t("priceList.field.latestPurchase")}</th></tr></thead>

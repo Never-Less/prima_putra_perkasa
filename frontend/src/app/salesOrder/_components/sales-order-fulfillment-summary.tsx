@@ -78,6 +78,11 @@ export function SalesOrderFulfillmentSummary({ item }: { item: PurchaseOrderItem
                 <span className="ml-1.5 text-indigo-600/70 dark:text-indigo-400/70">
                   {formatTanggal(document.date, locale)}
                 </span>
+                {document.allocatedAmount !== null ? (
+                  <span className="mt-1 block text-indigo-700 dark:text-indigo-300">
+                    {t("purchaseOrder.workflow.invoiceAllocation", { amount: formatRupiah(document.allocatedAmount, locale) })}
+                  </span>
+                ) : null}
               </Link>
             )) : (
               <p className="text-xs text-slate-500">{t("purchaseOrder.workflow.noInvoice")}</p>
@@ -94,6 +99,7 @@ export function SalesOrderFulfillmentSummary({ item }: { item: PurchaseOrderItem
         <div className="rounded-lg bg-indigo-50 px-3 py-2 dark:bg-indigo-950/30">
           <p className="text-[11px] text-indigo-600 dark:text-indigo-300">{t("purchaseOrder.workflow.invoicedAmount")}</p>
           <p className="mt-0.5 text-sm font-semibold">{formatRupiah(workflow.billing.invoicedAmount, locale)}</p>
+          <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">{t("purchaseOrder.workflow.invoiceAllocationHint")}</p>
         </div>
         <div className="rounded-lg bg-amber-50 px-3 py-2 dark:bg-amber-950/30">
           <p className="text-[11px] text-amber-700 dark:text-amber-300">{t("purchaseOrder.workflow.remainingInvoiceAmount")}</p>

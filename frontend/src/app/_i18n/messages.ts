@@ -1,3 +1,5 @@
+import { supplierOnboardingMessages } from "./supplier-onboarding-messages";
+
 export const supportedLocales = ["id", "en"] as const;
 
 export type Locale = (typeof supportedLocales)[number];
@@ -9,6 +11,13 @@ type MessageDictionary = Record<string, string>;
 
 export const messages: Record<Locale, MessageDictionary> = {
   id: {
+    ...supplierOnboardingMessages.id,
+    "suratJalan.postCreateModal.title": "Surat Jalan tersimpan",
+    "suratJalan.postCreateModal.description": "Surat Jalan {{noSuratJalan}} untuk SO {{noPo}} tersimpan. Anda dapat mengekspor dokumen atau melanjutkan ke Invoice. Status dihitung otomatis berdasarkan qty.",
+    "suratJalan.postUpdateModal.title": "Surat Jalan diperbarui",
+    "suratJalan.postUpdateModal.description": "Surat Jalan {{noSuratJalan}} untuk SO {{noPo}} diperbarui. Status dihitung otomatis berdasarkan qty.",
+    "spreadsheet.hint": "Tempel dari Excel: Ctrl / Command + V · Tab: sel berikutnya · Klik dua kali: edit",
+    "spreadsheet.readOnly": "Hanya baca",
     "brand.name": "PRIMA PUTRA PERKASA",
     "nav.home": "Beranda",
     "nav.login": "Login",
@@ -18,7 +27,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "supplier.field.alamat": "Alamat supplier",
     "supplier.field.npwp": "NPWP",
     "supplier.field.pic": "Nama PIC",
-    "supplier.field.phone": "Telepon / WhatsApp",
+    "supplier.field.phone": "Telepon",
     "supplier.field.email": "Email",
     "supplier.field.categories": "Barang yang dijual",
     "supplier.field.categoriesHint": "Pisahkan kategori dengan koma",
@@ -69,7 +78,9 @@ export const messages: Record<Locale, MessageDictionary> = {
     "nav.tagihanBelumDibayar": "Tagihan Belum Dibayar",
     "nav.priceList": "Price List",
     "priceList.bulk.title": "Multiple Item Input",
-    "priceList.bulk.description": "Isi atau tempel beberapa barang sekaligus, lalu periksa sebelum dikirim.",
+    "priceList.bulk.description": "Untuk cek price list massal, cukup isi nama barang dan customer. Lengkapi data lainnya saat ingin menyimpan.",
+    "priceList.bulk.priceCheckRequirements": "Isi nama barang dan pilih customer yang valid untuk cek price list. Spesifikasi opsional.",
+    "priceList.bulk.priceCheckReady": "{{count}} barang siap dicek. Pilih barang untuk melihat harga.",
     "priceList.bulk.saveDraft": "Simpan draft",
     "priceList.bulk.submitting": "Mengirim?",
     "priceList.bulk.submit": "Kirim {count} item",
@@ -81,7 +92,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "priceList.bulk.removeEmpty": "Hapus baris kosong",
     "priceList.bulk.reset": "Reset draft",
     "priceList.bulk.checkPrices": "Cek price list",
-    "priceList.bulk.pasteHint": "Tempel dari Excel dengan Ctrl / ? + V ? Tab untuk pindah sel",
+    "priceList.bulk.pasteHint": "Tempel dari Excel: Ctrl / Command + V · Tab: sel berikutnya",
     "priceList.bulk.selectedCells": "{count} sel dipilih",
     "priceList.bulk.draftItems": "Barang dalam draft",
     "priceList.bulk.rows": "Baris {rows}",
@@ -141,10 +152,6 @@ export const messages: Record<Locale, MessageDictionary> = {
     "priceList.toast.updateSuccess": "Price list berhasil diperbarui.",
     "priceList.toast.deleteSuccess": "Price list berhasil dihapus.",
     "priceList.bulk.open": "Tambah Massal",
-    "priceList.bulk.title": "Input Price List Massal",
-    "priceList.bulk.description": "Masukkan beberapa barang sekaligus seperti pada aplikasi Price List lama.",
-    "priceList.bulk.addRows": "Tambah 5 Baris",
-    "priceList.bulk.submit": "Simpan Semua",
     "priceList.bulk.noRows": "Isi minimal satu nama barang sebelum menyimpan.",
     "priceList.bulk.success": "{{count}} item price list berhasil ditambahkan.",
     "field.defaultPaymentTerm": "TOP Default",
@@ -296,7 +303,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "home.route.pembelian.cta": "Buka Pembelian",
     "home.invoiceReminder.title": "{{count}} SO siap dibuat invoice",
     "home.invoiceReminder.description":
-      "Berdasarkan {{count}} Surat Jalan non partial yang belum punya invoice: {{items}}",
+      "Berdasarkan {{count}} Surat Jalan yang belum punya invoice: {{items}}",
     "home.invoiceReminder.invoiceCta": "Buat Invoice",
     "home.invoiceReminder.suratJalanCta": "Lihat Surat Jalan",
     "login.title": "Login",
@@ -652,29 +659,15 @@ export const messages: Record<Locale, MessageDictionary> = {
     "suratJalan.customerLoadError": "Gagal memuat pilihan customer untuk surat jalan.",
     "suratJalan.mutationError": "Gagal memproses perubahan surat jalan.",
     "suratJalan.confirmUpdateTitle": "Konfirmasi Ubah Surat Jalan",
-    "suratJalan.confirmUpdateDescription":
-      "Simpan perubahan untuk surat jalan \"{{noSuratJalan}}\"?",
+    "suratJalan.confirmUpdateDescription": "Simpan perubahan untuk Surat Jalan \"{{noSuratJalan}}\"? Revisi diblokir selama masih terhubung ke Invoice.",
     "suratJalan.confirmDeleteTitle": "Konfirmasi Hapus Surat Jalan",
-    "suratJalan.confirmDeleteDescription":
-      "Surat jalan \"{{noSuratJalan}}\" akan dihapus dan tidak bisa dikembalikan. Tetap lanjut?",
+    "suratJalan.confirmDeleteDescription": "Hapus Surat Jalan \"{{noSuratJalan}}\"? Penghapusan diblokir selama masih terhubung ke Invoice.",
     "suratJalan.toast.createSuccess":
       "Surat jalan \"{{noSuratJalan}}\" berhasil ditambahkan.",
     "suratJalan.toast.updateSuccess":
       "Surat jalan \"{{noSuratJalan}}\" berhasil diperbarui.",
     "suratJalan.toast.deleteSuccess":
       "Surat jalan \"{{noSuratJalan}}\" berhasil dihapus.",
-    "suratJalan.postCreateModal.partialTitle": "Surat Jalan Berhasil Dibuat",
-    "suratJalan.postCreateModal.partialDescription":
-      "Surat jalan \"{{noSuratJalan}}\" (NoSO: {{noPo}}) bertipe partial. Anda dapat mengekspor surat jalan.",
-    "suratJalan.postCreateModal.nonPartialTitle": "Surat Jalan Non Partial Dibuat",
-    "suratJalan.postCreateModal.nonPartialDescription":
-      "Surat jalan \"{{noSuratJalan}}\" (NoSO: {{noPo}}) bertipe non partial. Anda dapat mengekspor surat jalan atau lanjut membuat invoice dari data NoSO ini.",
-    "suratJalan.postUpdateModal.partialTitle": "Surat Jalan Berhasil Diperbarui",
-    "suratJalan.postUpdateModal.partialDescription":
-      "Surat jalan \"{{noSuratJalan}}\" (NoSO: {{noPo}}) bertipe partial sudah diperbarui. Anda dapat mengekspor surat jalan.",
-    "suratJalan.postUpdateModal.nonPartialTitle": "Surat Jalan Non Partial Diperbarui",
-    "suratJalan.postUpdateModal.nonPartialDescription":
-      "Surat jalan \"{{noSuratJalan}}\" (NoSO: {{noPo}}) bertipe non partial sudah diperbarui. Anda dapat mengekspor surat jalan atau lanjut membuat invoice dari data NoSO ini.",
     "suratJalan.postCreateModal.exportButton": "Export Surat Jalan",
     "suratJalan.postCreateModal.createInvoiceButton": "Buat Invoice",
     "suratJalan.export.previewTitle": "Preview Export Surat Jalan",
@@ -796,11 +789,9 @@ export const messages: Record<Locale, MessageDictionary> = {
     "purchaseOrder.optionsLoadError": "Gagal memuat pilihan customer dan invoice untuk sales order.",
     "purchaseOrder.mutationError": "Gagal memproses perubahan sales order.",
     "purchaseOrder.confirmUpdateTitle": "Konfirmasi Ubah Sales Order",
-    "purchaseOrder.confirmUpdateDescription":
-      "Simpan perubahan untuk sales order \"{{noPo}}\"?",
+    "purchaseOrder.confirmUpdateDescription": "Simpan perubahan Sales Order \"{{noPo}}\"? Revisi diblokir selama masih terhubung ke Surat Jalan atau Invoice.",
     "purchaseOrder.confirmDeleteTitle": "Konfirmasi Hapus Sales Order",
-    "purchaseOrder.confirmDeleteDescription":
-      "Sales order \"{{noPo}}\" akan dihapus dan tidak bisa dikembalikan. Tetap lanjut?",
+    "purchaseOrder.confirmDeleteDescription": "Hapus Sales Order \"{{noPo}}\"? Hapus atau lepaskan dokumen turunan terlebih dahulu: Invoice, lalu Surat Jalan.",
     "purchaseOrder.toast.createSuccess": "Sales order \"{{noPo}}\" berhasil ditambahkan.",
     "purchaseOrder.toast.updateSuccess":
       "Sales order \"{{noPo}}\" berhasil diperbarui.",
@@ -858,6 +849,8 @@ export const messages: Record<Locale, MessageDictionary> = {
     "purchaseOrder.workflow.noInvoice": "Belum ada Invoice untuk SO ini.",
     "purchaseOrder.workflow.orderAmount": "Nilai SO",
     "purchaseOrder.workflow.invoicedAmount": "Nilai Invoice Teralokasi",
+    "purchaseOrder.workflow.invoiceAllocation": "Alokasi SO: {{amount}}",
+    "purchaseOrder.workflow.invoiceAllocationHint": "Total harga baris barang untuk SO ini dari seluruh invoice terkait, sebelum PPN. Baris gabungan beberapa SO dibagi sesuai proporsi qty sumbernya.",
     "purchaseOrder.workflow.remainingInvoiceAmount": "Sisa Belum Ditagih",
     "purchaseOrder.workflow.outstandingItems": "Barang Belum Selesai",
     "purchaseOrder.workflow.ordered": "Qty SO",
@@ -973,6 +966,13 @@ export const messages: Record<Locale, MessageDictionary> = {
     "field.netProfit": "Net Profit",
   },
   en: {
+    ...supplierOnboardingMessages.en,
+    "suratJalan.postCreateModal.title": "Delivery note saved",
+    "suratJalan.postCreateModal.description": "Delivery note {{noSuratJalan}} for SO {{noPo}} was saved. Export the document or continue to Invoice. Status is calculated automatically from quantities.",
+    "suratJalan.postUpdateModal.title": "Delivery note updated",
+    "suratJalan.postUpdateModal.description": "Delivery note {{noSuratJalan}} for SO {{noPo}} was updated. Status is calculated automatically from quantities.",
+    "spreadsheet.hint": "Paste from Excel: Ctrl / Command + V · Tab: next cell · Double-click: edit",
+    "spreadsheet.readOnly": "Read only",
     "brand.name": "PRIMA PUTRA PERKASA",
     "nav.home": "Home",
     "nav.login": "Login",
@@ -982,7 +982,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "supplier.field.alamat": "Supplier address",
     "supplier.field.npwp": "Tax ID",
     "supplier.field.pic": "Contact person",
-    "supplier.field.phone": "Phone / WhatsApp",
+    "supplier.field.phone": "Phone",
     "supplier.field.email": "Email",
     "supplier.field.categories": "Products supplied",
     "supplier.field.categoriesHint": "Separate categories with commas",
@@ -1033,7 +1033,9 @@ export const messages: Record<Locale, MessageDictionary> = {
     "nav.tagihanBelumDibayar": "Outstanding Invoices",
     "nav.priceList": "Price List",
     "priceList.bulk.title": "Multiple Item Input",
-    "priceList.bulk.description": "Enter or paste several items, then review before submitting.",
+    "priceList.bulk.description": "Bulk price checks only need an item name and customer. Complete the other fields when you want to save.",
+    "priceList.bulk.priceCheckRequirements": "Enter an item name and select a valid customer to check prices. Specifications are optional.",
+    "priceList.bulk.priceCheckReady": "{{count}} items ready to check. Select an item to view prices.",
     "priceList.bulk.saveDraft": "Save draft",
     "priceList.bulk.submitting": "Submitting?",
     "priceList.bulk.submit": "Submit {count} items",
@@ -1045,7 +1047,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "priceList.bulk.removeEmpty": "Remove empty rows",
     "priceList.bulk.reset": "Reset draft",
     "priceList.bulk.checkPrices": "Check price list",
-    "priceList.bulk.pasteHint": "Paste from Excel with Ctrl / ? + V ? Tab to move between cells",
+    "priceList.bulk.pasteHint": "Paste from Excel: Ctrl / Command + V · Tab: next cell",
     "priceList.bulk.selectedCells": "{count} cells selected",
     "priceList.bulk.draftItems": "Draft items",
     "priceList.bulk.rows": "Rows {rows}",
@@ -1105,10 +1107,6 @@ export const messages: Record<Locale, MessageDictionary> = {
     "priceList.toast.updateSuccess": "Price list entry updated successfully.",
     "priceList.toast.deleteSuccess": "Price list entry deleted successfully.",
     "priceList.bulk.open": "Bulk Entry",
-    "priceList.bulk.title": "Bulk Price List Entry",
-    "priceList.bulk.description": "Enter multiple items at once, as supported by the legacy Price List application.",
-    "priceList.bulk.addRows": "Add 5 Rows",
-    "priceList.bulk.submit": "Save All",
     "priceList.bulk.noRows": "Enter at least one item name before saving.",
     "priceList.bulk.success": "{{count}} price list items added successfully.",
     "field.defaultPaymentTerm": "Default TOP",
@@ -1260,7 +1258,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "home.route.pembelian.cta": "Open Purchase",
     "home.invoiceReminder.title": "{{count}} SOs are ready for invoice",
     "home.invoiceReminder.description":
-      "Based on {{count}} non partial delivery notes without invoices: {{items}}",
+      "Based on {{count}} delivery notes without invoices: {{items}}",
     "home.invoiceReminder.invoiceCta": "Create Invoice",
     "home.invoiceReminder.suratJalanCta": "View Delivery Notes",
     "login.title": "Login",
@@ -1617,29 +1615,15 @@ export const messages: Record<Locale, MessageDictionary> = {
       "Failed to load customer options for delivery note.",
     "suratJalan.mutationError": "Failed to process delivery note changes.",
     "suratJalan.confirmUpdateTitle": "Confirm Delivery Note Update",
-    "suratJalan.confirmUpdateDescription":
-      "Save changes for delivery note \"{{noSuratJalan}}\"?",
+    "suratJalan.confirmUpdateDescription": "Save changes to delivery note \"{{noSuratJalan}}\"? Revision is blocked while it is linked to an invoice.",
     "suratJalan.confirmDeleteTitle": "Confirm Delivery Note Deletion",
-    "suratJalan.confirmDeleteDescription":
-      "Delivery note \"{{noSuratJalan}}\" will be deleted and cannot be restored. Continue?",
+    "suratJalan.confirmDeleteDescription": "Delete delivery note \"{{noSuratJalan}}\"? Deletion is blocked while it is linked to an invoice.",
     "suratJalan.toast.createSuccess":
       "Delivery note \"{{noSuratJalan}}\" has been added successfully.",
     "suratJalan.toast.updateSuccess":
       "Delivery note \"{{noSuratJalan}}\" has been updated successfully.",
     "suratJalan.toast.deleteSuccess":
       "Delivery note \"{{noSuratJalan}}\" has been deleted successfully.",
-    "suratJalan.postCreateModal.partialTitle": "Delivery Note Created",
-    "suratJalan.postCreateModal.partialDescription":
-      "Delivery note \"{{noSuratJalan}}\" (SO No.: {{noPo}}) is partial. You can export this delivery note.",
-    "suratJalan.postCreateModal.nonPartialTitle": "Non Partial Delivery Note Created",
-    "suratJalan.postCreateModal.nonPartialDescription":
-      "Delivery note \"{{noSuratJalan}}\" (SO No.: {{noPo}}) is non partial. You can export it or continue to create an invoice from this SO No. data.",
-    "suratJalan.postUpdateModal.partialTitle": "Delivery Note Updated",
-    "suratJalan.postUpdateModal.partialDescription":
-      "Delivery note \"{{noSuratJalan}}\" (SO No.: {{noPo}}) is partial and has been updated. You can export this delivery note.",
-    "suratJalan.postUpdateModal.nonPartialTitle": "Non Partial Delivery Note Updated",
-    "suratJalan.postUpdateModal.nonPartialDescription":
-      "Delivery note \"{{noSuratJalan}}\" (SO No.: {{noPo}}) is non partial and has been updated. You can export it or continue to create an invoice from this SO No. data.",
     "suratJalan.postCreateModal.exportButton": "Export Delivery Note",
     "suratJalan.postCreateModal.createInvoiceButton": "Create Invoice",
     "suratJalan.export.previewTitle": "Delivery Note Export Preview",
@@ -1761,11 +1745,9 @@ export const messages: Record<Locale, MessageDictionary> = {
     "purchaseOrder.optionsLoadError": "Failed to load customer and invoice options for sales order.",
     "purchaseOrder.mutationError": "Failed to process sales order changes.",
     "purchaseOrder.confirmUpdateTitle": "Confirm Sales Order Update",
-    "purchaseOrder.confirmUpdateDescription":
-      "Save changes for sales order \"{{noPo}}\"?",
+    "purchaseOrder.confirmUpdateDescription": "Save changes to sales order \"{{noPo}}\"? Revision is blocked while delivery notes or invoices are linked.",
     "purchaseOrder.confirmDeleteTitle": "Confirm Sales Order Deletion",
-    "purchaseOrder.confirmDeleteDescription":
-      "Sales order \"{{noPo}}\" will be deleted and cannot be restored. Continue?",
+    "purchaseOrder.confirmDeleteDescription": "Delete sales order \"{{noPo}}\"? Remove or unlink downstream documents first: invoices, then delivery notes.",
     "purchaseOrder.toast.createSuccess": "Sales order \"{{noPo}}\" has been added successfully.",
     "purchaseOrder.toast.updateSuccess":
       "Sales order \"{{noPo}}\" has been updated successfully.",
@@ -1823,6 +1805,8 @@ export const messages: Record<Locale, MessageDictionary> = {
     "purchaseOrder.workflow.noInvoice": "No Invoice exists for this SO yet.",
     "purchaseOrder.workflow.orderAmount": "SO Amount",
     "purchaseOrder.workflow.invoicedAmount": "Allocated Invoice Amount",
+    "purchaseOrder.workflow.invoiceAllocation": "SO allocation: {{amount}}",
+    "purchaseOrder.workflow.invoiceAllocationHint": "Sum of line totals assigned to this SO across linked invoices, before VAT. Lines shared by multiple SOs are split by source quantity.",
     "purchaseOrder.workflow.remainingInvoiceAmount": "Remaining Unbilled",
     "purchaseOrder.workflow.outstandingItems": "Outstanding Items",
     "purchaseOrder.workflow.ordered": "SO Qty",

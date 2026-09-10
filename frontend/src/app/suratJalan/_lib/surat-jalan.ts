@@ -8,7 +8,6 @@ import {
   type ServerListResult,
 } from "../../_lib/pagination";
 
-export type SuratJalanTipe = "partial" | "non partial";
 type Locale = "id" | "en";
 
 export type SuratJalanBarang = {
@@ -38,7 +37,6 @@ export type SuratJalanItem = {
   idCustomer: string;
   barang: SuratJalanBarang[];
   kendaraan: string;
-  tipe: SuratJalanTipe;
   deliveryStatus: "notDelivered" | "partial" | "complete" | null;
   createdAt: string;
   updatedAt: string;
@@ -51,7 +49,6 @@ export type SuratJalanFilter = {
   kodeDepartemen: string;
   idCustomer: string;
   kendaraan: string;
-  tipe: "" | SuratJalanTipe;
   tanggalDari: string;
   tanggalSampai: string;
 };
@@ -62,7 +59,6 @@ export type SuratJalanFormState = {
   tanggal: string;
   idCustomer: string;
   kendaraan: string;
-  tipe: SuratJalanTipe;
   barangRows: SuratJalanBarangFormRow[];
 };
 
@@ -71,7 +67,6 @@ export type SuratJalanPrefillPayload = {
   tanggal: string;
   idCustomer: string;
   kendaraan?: string;
-  tipe?: SuratJalanTipe;
   barang: Array<{
     nama: string;
     spesifikasi?: string;
@@ -129,7 +124,6 @@ export const defaultSuratJalanFilter: SuratJalanFilter = {
   kodeDepartemen: "",
   idCustomer: "",
   kendaraan: "",
-  tipe: "",
   tanggalDari: "",
   tanggalSampai: "",
 };
@@ -290,7 +284,6 @@ function toSuratJalanPrefillPayload(value: unknown): SuratJalanPrefillPayload | 
   const tanggal = toText(payload.tanggal).trim();
   const idCustomer = parseCustomerId(payload.idCustomer);
   const kendaraan = toText(payload.kendaraan).trim();
-  const tipe = normalize(payload.tipe) === "non partial" ? "non partial" : "partial";
   const barang = Array.isArray(payload.barang)
     ? payload.barang
         .map(normalizeSuratJalanPrefillBarang)
@@ -308,7 +301,6 @@ function toSuratJalanPrefillPayload(value: unknown): SuratJalanPrefillPayload | 
     tanggal,
     idCustomer,
     kendaraan,
-    tipe,
     barang,
   };
 }
@@ -346,7 +338,6 @@ export function toSuratJalanItem(value: unknown): SuratJalanItem | null {
     idCustomer: parseCustomerId(row.idCustomer),
     barang: barangList,
     kendaraan: toText(row.kendaraan).trim(),
-    tipe: normalize(row.tipe) === "non partial" ? "non partial" : "partial",
     deliveryStatus:
       row.deliveryStatus === "complete" ||
       row.deliveryStatus === "partial" ||
@@ -366,7 +357,6 @@ function toNormalizedSuratJalanPayload(form: SuratJalanFormState) {
     idCustomer: toText(form.idCustomer).trim(),
     barang: barangRowsToList(form.barangRows),
     kendaraan: toText(form.kendaraan).trim(),
-    tipe: form.tipe,
   };
 }
 
@@ -404,7 +394,6 @@ export async function fetchSuratJalanList(
     kodeDepartemen: query.kodeDepartemen,
     idCustomer: query.idCustomer,
     kendaraan: query.kendaraan,
-    tipe: query.tipe,
     tanggalDari: query.tanggalDari,
     tanggalSampai: query.tanggalSampai,
     page: query.page,
@@ -552,9 +541,6 @@ export function filterSuratJalanRows(
     const customerLabel = resolveCustomerLabel ? resolveCustomerLabel(row.idCustomer) : row.idCustomer;
     const idCustomerMatch = normalize(customerLabel).includes(normalize(filters.idCustomer));
     const kendaraanMatch = normalize(row.kendaraan).includes(normalize(filters.kendaraan));
-
-    const tipeMatch = !filters.tipe || row.tipe === filters.tipe;
-
     const rowDate = parseAppDate(row.tanggal);
     const fromDateMatch = !fromDate || Boolean(rowDate && rowDate >= fromDate);
     const toDateMatch = !toDate || Boolean(rowDate && rowDate <= toDate);
@@ -566,7 +552,6 @@ export function filterSuratJalanRows(
       kodeDepartemenMatch &&
       idCustomerMatch &&
       kendaraanMatch &&
-      tipeMatch &&
       fromDateMatch &&
       toDateMatch
     );
@@ -580,7 +565,6 @@ export function toFormState(item: SuratJalanItem): SuratJalanFormState {
     tanggal: toInputDate(item.tanggal),
     idCustomer: item.idCustomer,
     kendaraan: item.kendaraan,
-    tipe: item.tipe,
     barangRows: ensureTrailingEmptyBarangRow(
       item.barang.map((barang) => ({
         nama: barang.nama,
@@ -600,7 +584,6 @@ export function toFormStateFromPrefill(prefill: SuratJalanPrefillPayload): Surat
     tanggal: toInputDate(prefill.tanggal),
     idCustomer: prefill.idCustomer,
     kendaraan: prefill.kendaraan || "",
-    tipe: prefill.tipe || "partial",
     barangRows: ensureTrailingEmptyBarangRow(
       prefill.barang.map((barang) => ({
         nama: barang.nama,

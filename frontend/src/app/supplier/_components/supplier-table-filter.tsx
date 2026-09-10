@@ -12,6 +12,7 @@ import { DebouncedFilterInput } from "../../_components/debounced-filter-input";
 import { type ServerPaginationMeta } from "../../_lib/pagination";
 import { type SupplierFilter, type SupplierItem } from "../_lib/supplier";
 import { useI18n } from "../../_i18n/provider";
+import { onboardingStatuses } from "../_lib/supplier-onboarding";
 import { useFilterDraft } from "../../_hooks/use-filter-draft";
 
 type SupplierTableFilterProps = {
@@ -57,6 +58,7 @@ export function SupplierTableFilter({
       { key: "namaSupplier", label: t("field.namaSupplier"), index: 2 },
       { key: "hutang", label: t("field.hutang"), index: 3 },
       { key: "lamaHutang", label: t("field.lamaHutang"), index: 4 },
+      { key: "onboardingStatus", label: t("supplierOnboarding.statusLabel"), index: 5 },
     ],
     [t]
   );
@@ -83,6 +85,7 @@ export function SupplierTableFilter({
       <form onSubmit={applyDraftFilter}>
         <p className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">{t("common.filterByField")}</p>
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+          <label className="text-sm text-slate-700 dark:text-slate-200">{t("supplierOnboarding.statusLabel")}<select value={draftFilter.onboardingStatus} onChange={(event) => updateDraftFilter("onboardingStatus", event.target.value)} className="erp-field mt-1 w-full"><option value="">{t("common.all")}</option>{onboardingStatuses.map((status) => <option key={status} value={status}>{t(`supplierOnboarding.status.${status}`)}</option>)}</select></label>
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.namaSupplier")}
             <DebouncedFilterInput
@@ -184,6 +187,7 @@ export function SupplierTableFilter({
                     <dd className="mt-1 text-slate-700 dark:text-slate-200">{row.hutang ? row.lamaHutang || "-" : "-"}</dd>
                   </div>
                 </dl>
+                <p className="mt-2 text-sm text-sky-700 dark:text-sky-200">{t(`supplierOnboarding.status.${row.onboarding.status}`)}</p>
 
                 <button
                   type="button"
@@ -211,6 +215,7 @@ export function SupplierTableFilter({
                 <col style={{ width: "360px" }} />
                 <col style={{ width: "120px" }} />
                 <col style={{ width: "160px" }} />
+                <col style={{ width: "230px" }} />
               </colgroup>
               <thead className="bg-slate-100 text-left text-slate-600 dark:bg-slate-900 dark:text-slate-300">
                 <tr>
@@ -226,12 +231,13 @@ export function SupplierTableFilter({
                   </th>
                   <th className="px-3 py-2 font-medium">{t("field.hutang")}</th>
                   <th className="px-3 py-2 font-medium">{t("field.lamaHutang")}</th>
+                  <th className="px-3 py-2 font-medium">{t("supplierOnboarding.statusLabel")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 bg-white dark:divide-slate-800 dark:bg-slate-900">
                 {rows.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-3 py-4 text-center text-slate-500 dark:text-slate-400">
+                    <td colSpan={5} className="px-3 py-4 text-center text-slate-500 dark:text-slate-400">
                       {t("common.noData")}
                     </td>
                   </tr>
@@ -263,6 +269,7 @@ export function SupplierTableFilter({
                         <td className="truncate px-3 py-2 text-slate-600 dark:text-slate-300">
                           {row.hutang ? row.lamaHutang || "-" : "-"}
                         </td>
+                        <td className="px-3 py-2 text-sky-700 dark:text-sky-200">{t(`supplierOnboarding.status.${row.onboarding.status}`)}</td>
                       </tr>
                     );
                   })

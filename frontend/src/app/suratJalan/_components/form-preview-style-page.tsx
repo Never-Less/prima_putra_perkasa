@@ -707,26 +707,18 @@ export function FormPreviewStylePage({
       return null;
     }
 
-    const isNonPartial = postCreateAction.createdItem.tipe === "non partial";
     const messagePrefix =
       postCreateAction.actionType === "update"
         ? "suratJalan.postUpdateModal"
         : "suratJalan.postCreateModal";
 
     return {
-      title: isNonPartial
-        ? t(`${messagePrefix}.nonPartialTitle`)
-        : t(`${messagePrefix}.partialTitle`),
-      description: isNonPartial
-        ? t(`${messagePrefix}.nonPartialDescription`, {
-            noSuratJalan: postCreateAction.createdItem.noSuratJalan || "-",
-            noPo: postCreateAction.createdItem.noPo || "-",
-          })
-        : t(`${messagePrefix}.partialDescription`, {
-            noSuratJalan: postCreateAction.createdItem.noSuratJalan || "-",
-            noPo: postCreateAction.createdItem.noPo || "-",
-          }),
-      showCreateInvoiceButton: isNonPartial,
+      title: t(`${messagePrefix}.title`),
+      description: t(`${messagePrefix}.description`, {
+        noSuratJalan: postCreateAction.createdItem.noSuratJalan || "-",
+        noPo: postCreateAction.createdItem.noPo || "-",
+      }),
+      showCreateInvoiceButton: Boolean(postCreateAction.invoicePrefill),
     };
   }, [postCreateAction, t]);
 

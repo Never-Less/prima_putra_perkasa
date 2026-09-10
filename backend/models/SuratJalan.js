@@ -80,13 +80,6 @@ const suratJalanSchema = new mongoose.Schema(
       trim: true,
       maxlength: 100,
     },
-    tipe: {
-      type: String,
-      required: true,
-      enum: ["partial", "non partial"],
-      lowercase: true,
-      trim: true,
-    },
   },
   { timestamps: true }
 );

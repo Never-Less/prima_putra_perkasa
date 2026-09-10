@@ -17,7 +17,7 @@ type PrivateRouteGuardProps = {
 };
 
 function isPublicPath(pathname: string) {
-  return pathname === "/login" || pathname.startsWith("/login/");
+  return pathname === "/supplier-registration" || pathname === "/login" || pathname.startsWith("/login/");
 }
 
 function isExportPath(pathname: string) {

@@ -1,3 +1,4 @@
+import { type SupplierOnboarding } from "./supplier-onboarding";
 import { requestApi } from "../../_lib/api-client";
 import {
   buildListQueryString,
@@ -15,8 +16,11 @@ export type SupplierItem = {
   npwp: string;
   picName: string;
   phone: string;
+  whatsapp: string;
   email: string;
   productCategories: string[];
+  productBrands: string[];
+  onboarding: SupplierOnboarding;
   notes: string;
   documentLinks: Array<{ label: string; url: string }>;
   isActive: boolean;
@@ -29,6 +33,7 @@ export type SupplierFilter = {
   hutang: "" | "true" | "false";
   lamaHutangMin: string;
   lamaHutangMax: string;
+  onboardingStatus: string;
 };
 
 export type SupplierFormState = {
@@ -39,14 +44,16 @@ export type SupplierFormState = {
   npwp: string;
   picName: string;
   phone: string;
+  whatsapp: string;
   email: string;
   productCategories: string;
+  productBrands: string;
   notes: string;
   documentLinksText: string;
   isActive: boolean;
 };
 
-export type SupplierListQuery = SupplierFilter & PaginationQueryState;
+export type SupplierListQuery = SupplierFilter & PaginationQueryState & { sort?: string };
 
 type SupplierListResponse = {
   suppliers?: unknown[];
@@ -65,6 +72,7 @@ export const defaultSupplierFilter: SupplierFilter = {
   hutang: "",
   lamaHutangMin: "",
   lamaHutangMax: "",
+  onboardingStatus: "",
 };
 
 function toText(value: unknown) {
@@ -115,6 +123,9 @@ function toSupplierItem(value: unknown): SupplierItem | null {
     alamat: toText(row.alamat).trim(), npwp: toText(row.npwp).trim(),
     picName: toText(row.picName).trim(), phone: toText(row.phone).trim(), email: toText(row.email).trim(),
     productCategories: Array.isArray(row.productCategories) ? row.productCategories.map(toText).filter(Boolean) : [],
+    whatsapp: toText(row.whatsapp).trim(),
+    productBrands: Array.isArray(row.productBrands) ? row.productBrands.map(toText).filter(Boolean) : [],
+    onboarding: row.onboarding && typeof row.onboarding === "object" ? row.onboarding as SupplierOnboarding : { status: "notGenerated" },
     notes: toText(row.notes).trim(),
     documentLinks: Array.isArray(row.documentLinks) ? row.documentLinks.map((item) => { const link = item as Record<string, unknown>; return { label: toText(link.label), url: toText(link.url) }; }).filter((item) => item.label && item.url) : [],
     isActive: row.isActive !== false,
@@ -132,6 +143,8 @@ function toNormalizedSupplierPayload(form: SupplierFormState) {
     hutang,
     lamaHutang: hutang && Number.isFinite(lamaHutang) ? lamaHutang : null,
     alamat: form.alamat.trim(), npwp: form.npwp.trim(), picName: form.picName.trim(),
+    whatsapp: form.whatsapp.trim(),
+    productBrands: form.productBrands.split(",").map((value) => value.trim()).filter(Boolean),
     phone: form.phone.trim(), email: form.email.trim(), notes: form.notes.trim(), isActive: form.isActive,
     productCategories: form.productCategories.split(",").map((value) => value.trim()).filter(Boolean),
     documentLinks: form.documentLinksText.split("\n").map((line) => { const separator = line.indexOf("|"); return separator < 0 ? null : { label: line.slice(0, separator).trim(), url: line.slice(separator + 1).trim() }; }).filter((row): row is { label: string; url: string } => Boolean(row?.label && /^https?:\/\//i.test(row.url))),
@@ -154,6 +167,8 @@ export async function fetchSupplierList(
   query: SupplierListQuery
 ): Promise<ServerListResult<SupplierItem>> {
   const requestPath = `/api/suppliers${buildListQueryString({
+    onboardingStatus: query.onboardingStatus,
+    sort: query.sort,
     namaSupplier: query.namaSupplier,
     hutang: query.hutang,
     lamaHutangMin: query.lamaHutangMin,
@@ -161,7 +176,7 @@ export async function fetchSupplierList(
     page: query.page,
     limit: query.limit,
   })}`;
-  const response = await requestApi<SupplierListResponse>(requestPath);
+  const response = await requestApi<SupplierListResponse>(requestPath, { cache: "no-store" });
   const items = Array.isArray(response?.suppliers)
     ? response.suppliers
         .map(toSupplierItem)
@@ -187,7 +202,7 @@ export async function fetchSupplierById(id: string) {
     return null;
   }
 
-  const response = await requestApi<SupplierResponse>(`/api/suppliers/${supplierId}`);
+  const response = await requestApi<SupplierResponse>(`/api/suppliers/${supplierId}`, { cache: "no-store" });
   return toSupplierItem(response?.supplier);
 }
 
@@ -226,6 +241,7 @@ export function toSupplierFormState(item: SupplierItem): SupplierFormState {
     hutang: item.hutang,
     lamaHutang: item.hutang && item.lamaHutang ? String(item.lamaHutang) : "",
     alamat: item.alamat, npwp: item.npwp, picName: item.picName, phone: item.phone,
+    whatsapp: item.whatsapp, productBrands: item.productBrands.join(", "),
     email: item.email, productCategories: item.productCategories.join(", "), notes: item.notes,
     documentLinksText: item.documentLinks.map((row) => `${row.label}|${row.url}`).join("\n"),
     isActive: item.isActive,

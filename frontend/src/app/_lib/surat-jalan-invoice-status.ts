@@ -43,23 +43,23 @@ export function isSuratJalanInvoiced(
   return invoicedSuratJalanNumbers.has(normalizeNoSuratJalan(row.noSuratJalan));
 }
 
-export function getUninvoicedNonPartialSuratJalanRows(
+export function getUninvoicedSuratJalanRows(
   suratJalanRows: SuratJalanItem[],
   invoicedSuratJalanNumbers: Set<string>
 ) {
   return suratJalanRows.filter(
-    (row) => row.tipe === "non partial" && !isSuratJalanInvoiced(row, invoicedSuratJalanNumbers)
+    (row) => !isSuratJalanInvoiced(row, invoicedSuratJalanNumbers)
   );
 }
 
-export async function fetchUninvoicedNonPartialSuratJalanRows() {
+export async function fetchUninvoicedSuratJalanRows() {
   const [suratJalanRows, invoiceRows] = await Promise.all([
     fetchSuratJalanRows(),
     fetchInvoiceRows(),
   ]);
   const invoicedSuratJalanNumbers = buildInvoicedSuratJalanNumberSet(invoiceRows);
 
-  return getUninvoicedNonPartialSuratJalanRows(suratJalanRows, invoicedSuratJalanNumbers);
+  return getUninvoicedSuratJalanRows(suratJalanRows, invoicedSuratJalanNumbers);
 }
 
 export function groupUninvoicedSuratJalanRowsByPo(rows: SuratJalanItem[]) {
@@ -93,7 +93,7 @@ export function groupUninvoicedSuratJalanRowsByPo(rows: SuratJalanItem[]) {
 }
 
 export async function fetchReadyInvoicePoGroups() {
-  const rows = await fetchUninvoicedNonPartialSuratJalanRows();
+  const rows = await fetchUninvoicedSuratJalanRows();
 
   return groupUninvoicedSuratJalanRowsByPo(rows);
 }

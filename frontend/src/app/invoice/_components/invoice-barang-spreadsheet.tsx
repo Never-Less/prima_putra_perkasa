@@ -10,6 +10,7 @@ import {
   type InvoiceBarangFormRow,
   type InvoiceBarangSource,
 } from "../_lib/invoice";
+import { SpreadsheetFrame } from "../../_components/spreadsheet-frame";
 import { useI18n } from "../../_i18n/provider";
 
 type InvoiceBarangSpreadsheetProps = {
@@ -59,19 +60,6 @@ function normalizeNumericText(value: string) {
 function parseNumber(value: string) {
   const parsed = Number(normalizeNumericText(value));
   return Number.isFinite(parsed) ? parsed : 0;
-}
-
-function formatRupiahCell(value: string | number, locale: "id" | "en") {
-  const parsed = typeof value === "number" ? value : parseNumber(value);
-
-  if (!Number.isFinite(parsed) || parsed <= 0) {
-    return "";
-  }
-
-  const numberLocale = locale === "en" ? "en-US" : "id-ID";
-  return `Rp. ${new Intl.NumberFormat(numberLocale, {
-    maximumFractionDigits: 0,
-  }).format(parsed)}`;
 }
 
 function normalizeNumericCell(value: string) {
@@ -152,7 +140,7 @@ function rowsToSpreadsheetData(rows: InvoiceBarangFormRow[], locale: "id" | "en"
       row.spesifikasi,
       row.kuantitas,
       row.unit,
-      formatRupiahCell(row.hargaSatuan, locale),
+      row.hargaSatuan,
       formatRupiah(jumlah, locale),
     ];
   });
@@ -235,7 +223,7 @@ export function InvoiceBarangSpreadsheet({
       },
       {
         title: t("invoice.excel.column.hargaSatuan"),
-        type: "text",
+        type: "numeric",
         width: 150,
       },
       {
@@ -350,12 +338,8 @@ export function InvoiceBarangSpreadsheet({
   }, [locale, rows]);
 
   return (
-    <div
-      className={`surat-jalan-barang-spreadsheet mt-2 overflow-hidden rounded-lg border border-sky-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 ${
-        disabled ? "pointer-events-none opacity-70" : ""
-      }`}
-    >
-      <div ref={rootRef} />
-    </div>
+    <SpreadsheetFrame disabled={disabled}>
+      <div className="app-spreadsheet" ref={rootRef} />
+    </SpreadsheetFrame>
   );
 }

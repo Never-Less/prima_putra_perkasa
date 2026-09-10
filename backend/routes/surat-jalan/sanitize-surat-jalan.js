@@ -35,7 +35,6 @@ function sanitizeSuratJalan(suratJalan, deliveryStatus = null) {
     idCustomer: suratJalan.idCustomer,
     barang,
     kendaraan: suratJalan.kendaraan,
-    tipe: suratJalan.tipe,
     createdAt: suratJalan.createdAt,
     updatedAt: suratJalan.updatedAt,
     deliveryStatus,

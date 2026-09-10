@@ -1,3 +1,4 @@
+const { documentMutation } = require("../../utils/document-mutation");
 const express = require("express");
 
 const { Customer } = require("../../models/Customer");
@@ -16,7 +17,7 @@ const { normalizePaymentTerm } = require("../../utils/payment-term");
 
 const router = express.Router();
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", documentMutation(async (req, res) => {
   const id = String(req.params.id || "");
 
   if (!isValidId(id)) {
@@ -156,38 +157,19 @@ router.put("/:id", async (req, res) => {
       }
     }
 
-    const operationalFields = ["noPo", "tanggalPo", "namaCustomer", "nominalPo", "barang", "paymentTerm"];
+    const operationalFields = Object.keys(updates);
     const comparable = (value) => JSON.stringify(value?.toObject ? value.toObject() : value);
     const hasOperationalChanges = operationalFields.some(
       (field) => updates[field] !== undefined && comparable(existingPurchaseOrder[field]) !== comparable(updates[field])
     );
-    let revisionImpact = null;
+    const revisionImpact = null;
 
     if (hasOperationalChanges) {
       const existingNoPo = String(existingPurchaseOrder.noPo || "").trim();
-      const [affectedSuratJalan, affectedInvoices] = await Promise.all([
-        SuratJalan.countDocuments({ noPo: existingNoPo }),
-        Invoice.countDocuments({ $or: [{ noPoList: existingNoPo }, { noPo: existingNoPo }, { "barang.sources.noPo": existingNoPo }] }),
-      ]);
+      const affectedSuratJalan = await SuratJalan.countDocuments({ noPo: existingNoPo }).collation({ locale: "en", strength: 2 });
+      const affectedInvoices = await Invoice.countDocuments({ $or: [{ noPoList: existingNoPo }, { noPo: existingNoPo }, { "barang.sources.noPo": existingNoPo }, { "barang.noPoManual": existingNoPo }] }).collation({ locale: "en", strength: 2 });
       if (affectedSuratJalan > 0 || affectedInvoices > 0) {
-        existingPurchaseOrder.revisionHistory.push({
-          revision: Number(existingPurchaseOrder.revision || 0),
-          reason: String(req.body.revisionReason || "Perubahan data Sales Order").trim(),
-          revisedAt: new Date(),
-          revisedBy: req.user?._id || null,
-          affectedSuratJalan,
-          affectedInvoices,
-          snapshot: {
-            noPo: existingPurchaseOrder.noPo,
-            tanggalPo: existingPurchaseOrder.tanggalPo,
-            namaCustomer: existingPurchaseOrder.namaCustomer,
-            nominalPo: existingPurchaseOrder.nominalPo,
-            barang: existingPurchaseOrder.barang,
-            paymentTerm: existingPurchaseOrder.paymentTerm,
-          },
-        });
-        existingPurchaseOrder.revision = Number(existingPurchaseOrder.revision || 0) + 1;
-        revisionImpact = { affectedSuratJalan, affectedInvoices, needsReview: true };
+        return res.status(409).json({ message: "Sales Order tidak dapat direvisi selama masih terhubung ke Surat Jalan atau Invoice. Hapus atau lepaskan dokumen turunan terlebih dahulu, mulai dari Invoice." });
       }
     }
 
@@ -204,12 +186,13 @@ router.put("/:id", async (req, res) => {
       revisionImpact,
     });
   } catch (error) {
+    if (error?.hasErrorLabel?.("TransientTransactionError")) throw error;
     if (error?.code === 11000) {
       return res.status(409).json({ message: "No. SO tersebut sudah digunakan." });
     }
 
     return res.status(500).json({ message: "Data sales order belum bisa disimpan. Coba lagi." });
   }
-});
+}));
 
 module.exports = router;

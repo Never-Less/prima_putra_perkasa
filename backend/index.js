@@ -64,6 +64,7 @@ app.use("/api/price-list", priceListRoutes);
 app.use("/api/purchase-orders", purchaseOrderRoutes);
 app.use("/api/surat-jalan", suratJalanRoutes);
 app.use("/api/suppliers", supplierRoutes);
+app.use("/api/supplier-forms", require("./routes/supplier-public"));
 app.use("/api/users", userRoutes);
 app.use("/api/cash-ledger", cashLedgerRoutes);
 

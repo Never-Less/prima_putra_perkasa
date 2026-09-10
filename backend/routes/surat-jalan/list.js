@@ -62,9 +62,6 @@ router.get("/", async (req, res) => {
       query.kendaraan = kendaraanRegex;
     }
 
-    if (req.query.tipe) {
-      query.tipe = String(req.query.tipe || "").trim();
-    }
 
     if (req.query.tanggalDari || req.query.tanggalSampai) {
       query.tanggal = {};

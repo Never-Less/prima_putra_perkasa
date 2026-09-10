@@ -210,6 +210,7 @@ function buildDeliveredSummary(
     const key = createBarangKey(barang.namaBarang, barang.spesifikasi, barang.unit);
     const itemDeliveredQty = deliveredByKey.get(key) || 0;
 
+    deliveredByKey.set(key, Math.max(itemDeliveredQty - barang.kuantitas, 0));
     orderedQty += barang.kuantitas;
     deliveredQty += Math.min(itemDeliveredQty, barang.kuantitas);
 
@@ -236,7 +237,7 @@ function isDeliveryComplete(
   }
 
   if (purchaseOrder.barang.length === 0) {
-    return suratJalanRows.some((suratJalan) => suratJalan.tipe === "non partial");
+    return false;
   }
 
   return deliveredSummary.deliveredItems === purchaseOrder.barang.length;

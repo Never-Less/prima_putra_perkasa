@@ -1,3 +1,4 @@
+const { documentMutation } = require("../../utils/document-mutation");
 const express = require("express");
 
 const { Customer } = require("../../models/Customer");
@@ -8,7 +9,7 @@ const { validateDeliveryAgainstSalesOrder } = require("../../utils/delivery-vali
 
 const router = express.Router();
 
-router.post("/", async (req, res) => {
+router.post("/", documentMutation(async (req, res) => {
   const noSuratJalan = String(req.body.noSuratJalan || "").trim();
   const noPo = String(req.body.noPo || "").trim();
   const tanggal = parseDate(req.body.tanggal);
@@ -17,22 +18,14 @@ router.post("/", async (req, res) => {
     defaultKodeDepartemen: req.body.kodeDepartemen,
   });
   const kendaraan = String(req.body.kendaraan || "").trim();
-  const tipe = String(req.body.tipe || "")
-    .trim()
-    .toLowerCase();
 
-  if (!noSuratJalan || !noPo || !tanggal || !idCustomer || !barang || !kendaraan || !tipe) {
+  if (!noSuratJalan || !noPo || !tanggal || !idCustomer || !barang || !kendaraan) {
     return res.status(400).json({
       message:
-        "Lengkapi No. Surat Jalan, No. SO, tanggal, customer, barang, kendaraan, dan tipe sebelum menyimpan.",
+        "Lengkapi No. Surat Jalan, No. SO, tanggal, customer, barang, dan kendaraan sebelum menyimpan.",
     });
   }
 
-  if (!["partial", "non partial"].includes(tipe)) {
-    return res.status(400).json({
-      message: "Pilih tipe surat jalan yang valid.",
-    });
-  }
 
   if (!isValidId(idCustomer)) {
     return res.status(400).json({ message: "Customer yang dipilih tidak valid." });
@@ -72,30 +65,21 @@ router.post("/", async (req, res) => {
       idCustomer,
       barang: barang,
       kendaraan: kendaraan,
-      tipe: tipe,
     });
 
-    await SuratJalan.updateMany(
-      { noPo: noPo },
-      {
-        $set: {
-          tipe: tipe,
-          idCustomer: idCustomer,
-        },
-      }
-    );
 
     return res.status(201).json({
       message: "surat jalan created",
       suratJalan: sanitizeSuratJalan(suratJalan),
     });
   } catch (error) {
+    if (error?.hasErrorLabel?.("TransientTransactionError")) throw error;
     if (error?.code === 11000 && error?.keyPattern?.noSuratJalan) {
       return res.status(409).json({ message: "No. Surat Jalan ini sudah digunakan." });
     }
 
     return res.status(500).json({ message: "Data surat jalan belum bisa disimpan. Coba lagi." });
   }
-});
+}));
 
 module.exports = router;

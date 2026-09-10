@@ -43,6 +43,8 @@ function profileFields(body) {
   return {
     alamat: String(body.alamat || "").trim(), npwp: String(body.npwp || "").trim(),
     picName: String(body.picName || "").trim(), phone: String(body.phone || "").trim(),
+    whatsapp: String(body.whatsapp || "").trim(),
+    productBrands: (Array.isArray(body.productBrands) ? body.productBrands : String(body.productBrands || "").split(",")).map((value) => String(value || "").trim()).filter(Boolean),
     email: String(body.email || "").trim(), notes: String(body.notes || "").trim(),
     productCategories: [...new Set(productCategories)], documentLinks,
     isActive: body.isActive === undefined ? true : parseBoolean(body.isActive),

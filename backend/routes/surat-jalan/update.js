@@ -1,3 +1,6 @@
+const { Invoice } = require("../../models/Invoice");
+const { deliveryInvoiceQuery } = require("../../utils/invoice-integrity");
+const { documentMutation } = require("../../utils/document-mutation");
 const express = require("express");
 
 const { Customer } = require("../../models/Customer");
@@ -8,7 +11,7 @@ const { validateDeliveryAgainstSalesOrder } = require("../../utils/delivery-vali
 
 const router = express.Router();
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", documentMutation(async (req, res) => {
   const id = String(req.params.id || "");
 
   if (!isValidId(id)) {
@@ -59,17 +62,6 @@ router.put("/:id", async (req, res) => {
     updates.kendaraan = String(req.body.kendaraan || "").trim();
   }
 
-  if (req.body.tipe !== undefined) {
-    const tipe = String(req.body.tipe || "")
-      .trim()
-      .toLowerCase();
-
-    if (!["partial", "non partial"].includes(tipe)) {
-      return res.status(400).json({ message: "Pilih tipe surat jalan yang valid." });
-    }
-
-    updates.tipe = tipe;
-  }
 
   if (Object.keys(updates).length === 0) {
     return res.status(400).json({
@@ -90,6 +82,9 @@ router.put("/:id", async (req, res) => {
   try {
     const existingDocument = await SuratJalan.findById(id).lean();
     if (!existingDocument) return res.status(404).json({ message: "Data surat jalan tidak ditemukan." });
+    if (await Invoice.countDocuments(deliveryInvoiceQuery(existingDocument)).collation({ locale: "en", strength: 2 })) {
+      return res.status(409).json({ message: "Surat Jalan tidak dapat dihapus atau direvisi selama masih terhubung ke Invoice. Hapus atau lepaskan referensi Invoice terlebih dahulu." });
+    }
     if (updates.idCustomer) {
       const customer = await Customer.findById(updates.idCustomer);
       if (!customer) {
@@ -128,27 +123,19 @@ router.put("/:id", async (req, res) => {
       return res.status(404).json({ message: "Data surat jalan tidak ditemukan." });
     }
 
-    await SuratJalan.updateMany(
-      { noPo: suratJalan.noPo },
-      {
-        $set: {
-          tipe: suratJalan.tipe,
-          idCustomer: suratJalan.idCustomer,
-        },
-      }
-    );
 
     return res.json({
       message: "surat jalan updated",
       suratJalan: sanitizeSuratJalan(suratJalan),
     });
   } catch (error) {
+    if (error?.hasErrorLabel?.("TransientTransactionError")) throw error;
     if (error?.code === 11000 && error?.keyPattern?.noSuratJalan) {
       return res.status(409).json({ message: "No. Surat Jalan ini sudah digunakan." });
     }
 
     return res.status(500).json({ message: "Data surat jalan belum bisa disimpan. Coba lagi." });
   }
-});
+}));
 
 module.exports = router;
