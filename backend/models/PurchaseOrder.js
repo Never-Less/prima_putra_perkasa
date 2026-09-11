@@ -17,6 +17,11 @@ const paymentTermSchema = new mongoose.Schema(
 
 const barangPurchaseOrderSchema = new mongoose.Schema(
   {
+    urutan: {
+      type: Number,
+      min: 1,
+      default: null,
+    },
     namaBarang: {
       type: String,
       required: true,

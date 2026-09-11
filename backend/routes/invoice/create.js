@@ -11,8 +11,8 @@ const {
   calculatePpnAmount,
   calculateSubtotal,
   isValidId,
-  normalizeBarangList,
   normalizeStringList,
+  parseBarangList,
   parseBoolean,
   parseDate,
   parseNumber,
@@ -37,7 +37,8 @@ router.post("/", documentMutation(async (req, res) => {
     maxLength: 100,
   });
   const idCustomer = String(req.body.idCustomer || "").trim();
-  const barang = normalizeBarangList(req.body.barang);
+  const barangResult = parseBarangList(req.body.barang);
+  const barang = barangResult.barang;
   const parsedIsPpn =
     req.body.isPpn !== undefined ? parseBoolean(req.body.isPpn) : true;
   const parsedIsPaid =
@@ -56,11 +57,8 @@ router.post("/", documentMutation(async (req, res) => {
     });
   }
 
-  if (!barang) {
-    return res.status(400).json({
-      message:
-        "Isi minimal satu barang invoice dengan nama barang, qty, unit, dan harga satuan yang valid.",
-    });
+  if (barangResult.error) {
+    return res.status(400).json({ message: barangResult.error });
   }
 
   if (parsedIsPpn === null) {

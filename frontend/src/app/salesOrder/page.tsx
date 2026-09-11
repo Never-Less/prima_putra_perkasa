@@ -167,6 +167,7 @@ export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: Purchas
   const [customerOptions, setCustomerOptions] = useState<PurchaseOrderCustomerOption[]>([]);
   const [invoiceOptions, setInvoiceOptions] = useState<PurchaseOrderInvoiceOption[]>([]);
   const [selectedId, setSelectedId] = useState(itemId);
+  const [formVersion, setFormVersion] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -461,6 +462,7 @@ export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: Purchas
           const updatedPurchaseOrder = await updatePurchaseOrder(selectedItem.id, form);
           await loadPurchaseOrders({ showLoading: false });
           setSelectedId(updatedPurchaseOrder?.id || selectedItem.id);
+          setFormVersion((currentVersion) => currentVersion + 1);
           if (isFormMode) {
             router.replace(
               buildFormRouteWithReturnPagination(
@@ -795,7 +797,7 @@ export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: Purchas
                   </div>
                   {selectedRow ? <SalesOrderFulfillmentSummary item={selectedRow} /> : null}
                   <PurchaseOrderEditForm
-                    key={selectedId || "new"}
+                    key={`${selectedId || "new"}-${formVersion}`}
                     item={selectedRow}
                     customerOptions={customerOptions}
                     invoiceOptions={invoiceOptions}

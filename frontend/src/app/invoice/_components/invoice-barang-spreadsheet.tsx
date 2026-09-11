@@ -12,6 +12,7 @@ import {
 } from "../_lib/invoice";
 import { SpreadsheetFrame } from "../../_components/spreadsheet-frame";
 import { useI18n } from "../../_i18n/provider";
+import { decodeHtmlEntities } from "../../_lib/html-entities";
 
 type InvoiceBarangSpreadsheetProps = {
   rows: InvoiceBarangFormRow[];
@@ -21,7 +22,7 @@ type InvoiceBarangSpreadsheetProps = {
 
 type SpreadsheetData = jspreadsheet.CellValue[][];
 
-const columnCount = 7;
+const columnCount = 8;
 
 function toCellText(value: unknown) {
   return String(value ?? "");
@@ -93,7 +94,7 @@ function getInvoiceRowKey(row: InvoiceBarangFormRow) {
     row.spesifikasi,
     row.unit,
   ]
-    .map((value) => String(value || "").trim().toLowerCase().replace(/\s+/g, " "))
+    .map((value) => decodeHtmlEntities(value).trim().toLowerCase().replace(/\s+/g, " "))
     .join("::");
 }
 
@@ -131,10 +132,11 @@ function resolveSources(
 function rowsToSpreadsheetData(rows: InvoiceBarangFormRow[], locale: "id" | "en"): SpreadsheetData {
   const normalizedRows = ensureTrailingEmptyInvoiceBarangRow(rows);
 
-  return normalizedRows.map((row) => {
+  return normalizedRows.map((row, index) => {
     const jumlah = parseNumber(row.kuantitas) * parseNumber(row.hargaSatuan);
 
     return [
+      row.urutan || String(index + 1),
       spreadsheetNoPoLabel(row),
       row.namaBarang,
       row.spesifikasi,
@@ -149,13 +151,14 @@ function rowsToSpreadsheetData(rows: InvoiceBarangFormRow[], locale: "id" | "en"
 function spreadsheetDataToRows(data: SpreadsheetData, previousRows: InvoiceBarangFormRow[]) {
   const sourceQueue = buildSourceQueue(previousRows);
   const nextRows = data.map((row) => {
-    const [noPoManual, namaBarang, spesifikasi, kuantitas, unit, hargaSatuan] = normalizeSpreadsheetRow(row);
+    const [urutan, noPoManual, namaBarang, spesifikasi, kuantitas, unit, hargaSatuan] = normalizeSpreadsheetRow(row);
     const nextRow: InvoiceBarangFormRow = {
+      urutan: normalizeNumericCell(urutan),
       noPoManual: normalizeNoPoCell(noPoManual),
-      namaBarang,
-      spesifikasi,
+      namaBarang: decodeHtmlEntities(namaBarang),
+      spesifikasi: decodeHtmlEntities(spesifikasi),
       kuantitas: normalizeNumericCell(kuantitas),
-      unit,
+      unit: decodeHtmlEntities(unit),
       hargaSatuan: normalizeNumericCell(hargaSatuan),
       sources: [],
     };
@@ -196,6 +199,11 @@ export function InvoiceBarangSpreadsheet({
 
   const columns = useMemo<NonNullable<jspreadsheet.WorksheetOptions["columns"]>>(
     () => [
+      {
+        title: t("field.no"),
+        type: "numeric",
+        width: 70,
+      },
       {
         title: t("field.noPo"),
         type: "text",
@@ -257,14 +265,23 @@ export function InvoiceBarangSpreadsheet({
         (module as unknown as jspreadsheet.JSpreadsheet);
       const initialData = rowsToSpreadsheetData(rowsRef.current, locale);
 
-      const syncRowsFromWorksheet = (instance: jspreadsheet.WorksheetInstance) => {
+      const applyRowsFromWorksheet = (
+        instance: jspreadsheet.WorksheetInstance,
+        previousRows: InvoiceBarangFormRow[]
+      ) => {
         if (isApplyingDataRef.current) {
           return;
         }
 
         const nextData = instance.getData(false, true);
+        const nextRows = spreadsheetDataToRows(nextData, previousRows);
         currentDataRef.current = serializeData(nextData);
-        onRowsChangeRef.current(spreadsheetDataToRows(nextData, rowsRef.current));
+        rowsRef.current = nextRows;
+        onRowsChangeRef.current(nextRows);
+      };
+
+      const syncRowsFromWorksheet = (instance: jspreadsheet.WorksheetInstance) => {
+        applyRowsFromWorksheet(instance, rowsRef.current);
       };
 
       currentDataRef.current = serializeData(initialData);
@@ -287,6 +304,7 @@ export function InvoiceBarangSpreadsheet({
             allowRenameColumn: false,
             columnDrag: false,
             columnSorting: false,
+            rowDrag: false,
             tableOverflow: true,
             tableWidth: "100%",
             minDimensions: [columnCount, 2],

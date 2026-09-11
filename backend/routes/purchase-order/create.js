@@ -8,7 +8,7 @@ const { sanitizePurchaseOrder } = require("./sanitize-purchase-order");
 const {
   calculateBarangSubtotal,
   isValidId,
-  normalizeBarangList,
+  parseBarangList,
   parseDate,
   parseNumber,
 } = require("./validators");
@@ -20,7 +20,8 @@ router.post("/", documentMutation(async (req, res) => {
   const noPo = String(req.body.noPo || "").trim();
   const tanggalPo = parseDate(req.body.tanggalPo);
   const namaCustomer = String(req.body.namaCustomer || "").trim();
-  const barang = normalizeBarangList(req.body.barang);
+  const barangResult = parseBarangList(req.body.barang);
+  const barang = barangResult.barang;
   const parsedNominalPo = parseNumber(req.body.nominalPo);
   const nominalPo =
     barang && barang.length > 0
@@ -37,16 +38,13 @@ router.post("/", documentMutation(async (req, res) => {
       ? null
       : String(req.body.noInvoice || "").trim();
 
+  if (barangResult.error) {
+    return res.status(400).json({ message: barangResult.error });
+  }
+
   if (!noPo || !tanggalPo || !namaCustomer || nominalPo === null) {
     return res.status(400).json({
       message: "Lengkapi No. SO, tanggal SO, customer, dan nominal SO sebelum menyimpan.",
-    });
-  }
-
-  if (!barang) {
-    return res.status(400).json({
-      message:
-        "Isi barang sales order dengan nama barang, qty, unit, dan harga satuan yang valid.",
     });
   }
 

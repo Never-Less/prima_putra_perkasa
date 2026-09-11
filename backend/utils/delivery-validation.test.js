@@ -33,7 +33,10 @@ test("identical SO rows share their total quantity, including normalized names a
 test("existing deliveries and repeated rows in a new SJ cannot exceed the combined SO total", async (t) => {
   database(t, [ordered(8), ordered(12)], [{ _id: "old", noPo: "SO-TEST", barang: [shipped(5)] }]);
   assert.equal(await validate(request([shipped(15)])), null);
-  assert.match(await validate(request([shipped(8), shipped(8)])), /melebihi sisa/);
+  assert.equal(
+    await validate(request([shipped(8), shipped(8)])),
+    `Baris 2 (${name}): jumlah kirim 8 PCS membuat total 21 melebihi sisa Sales Order. Maksimal total 20 PCS; sebelumnya sudah dialokasikan 13 PCS.`
+  );
 });
 
 test("deleting an SJ and revising the SO uses only current documents", async (t) => {

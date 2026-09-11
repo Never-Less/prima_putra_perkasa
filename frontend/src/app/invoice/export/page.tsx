@@ -17,6 +17,7 @@ import {
   defaultInvoiceFilter,
   fetchInvoiceExportRows,
   formatTanggal,
+  sortInvoiceBarangByUrutan,
   type InvoiceFilter,
   type InvoiceItem,
 } from "../_lib/invoice";
@@ -201,7 +202,7 @@ export default function InvoiceExportPage() {
 
   function handleExportExcel() {
     const detailRows = rows.flatMap((row) =>
-      row.barang.map((barang) => [
+      sortInvoiceBarangByUrutan(row.barang).map((barang) => [
         barang.namaBarang || "-",
         barang.spesifikasi || "-",
         barang.kuantitas,

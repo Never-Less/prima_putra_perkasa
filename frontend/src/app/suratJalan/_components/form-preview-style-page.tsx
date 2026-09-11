@@ -518,6 +518,7 @@ export function FormPreviewStylePage({
             ? refreshedRows.find((row) => row.id === updatedItem.id) || updatedItem
             : undefined;
           setSelectedId(currentUpdatedItem?.id || selectedItem.id);
+          setInitialFormKey((currentKey) => currentKey + 1);
           if (isFormMode) {
             router.replace(
               buildFormRouteWithReturnPagination(

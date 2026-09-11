@@ -4,7 +4,8 @@ import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState }
 import { useI18n } from "../../../_i18n/provider";
 import { formatAppUppercaseDate } from "../../../_lib/date";
 import { decodeHtmlEntities } from "../../../_lib/html-entities";
-import { type SuratJalanBarang, type SuratJalanItem } from "../../_lib/surat-jalan";
+import { exportFontFamily } from "../../../_lib/export-font";
+import { sortSuratJalanBarangByUrutan, type SuratJalanBarang, type SuratJalanItem } from "../../_lib/surat-jalan";
 
 type ExportCustomer = {
   nama?: string;
@@ -27,7 +28,7 @@ const halfPageWidth = "21.59cm";
 const halfPageHeight = "14cm";
 const fullPageWidth = "21.59cm";
 const fullPageHeight = "27.94cm";
-const suratJalanExportFontFamily = 'var(--font-geist-sans), "Segoe UI", sans-serif';
+const suratJalanExportFontFamily = exportFontFamily;
 const suratJalanBaseRowHeight = 21;
 const suratJalanFooterClassName = "shrink-0 mt-3 pb-[5mm]";
 
@@ -534,7 +535,7 @@ function isExportBarangFilled(barang: SuratJalanBarang) {
 }
 
 function getExportBarangList(suratJalan: SuratJalanItem) {
-  return (suratJalan.barang || []).filter(isExportBarangFilled);
+  return sortSuratJalanBarangByUrutan((suratJalan.barang || []).filter(isExportBarangFilled));
 }
 
 function formatTemplateDate(value: string, locale: "id" | "en") {
@@ -577,7 +578,7 @@ function buildTemplateRows(
   suratJalan: SuratJalanItem,
   minimumRows = 0
 ): TemplateRow[] {
-  const filledRows = getExportBarangList(suratJalan).map((barang, index) => {
+  const filledRows = getExportBarangList(suratJalan).map((barang) => {
     const namaBarang = toExportText(barang.nama);
     const spesifikasi = toExportText(barang.spesifikasi);
     const kodeDepartemen = toExportText(barang.kodeDepartemen || suratJalan.kodeDepartemen);
@@ -585,7 +586,7 @@ function buildTemplateRows(
       namaBarang && spesifikasi ? `${namaBarang} (${spesifikasi})` : namaBarang;
 
     return {
-      no: String(index + 1),
+      no: String(barang.urutan),
       namaBarang: namaBarangDisplay,
       kodeDepartemen,
       jumlah: `${barang.jumlah} ${toUpperText(barang.unit)}`.trim(),
@@ -605,8 +606,8 @@ function buildMeiloonTemplateRows(
   suratJalan: SuratJalanItem,
   minimumRows = 0
 ): MeiloonTemplateRow[] {
-  const filledRows = getExportBarangList(suratJalan).map((barang, index) => ({
-    no: String(index + 1),
+  const filledRows = getExportBarangList(suratJalan).map((barang) => ({
+    no: String(barang.urutan),
     namaBarang: toExportText(barang.nama),
     spesifikasi: toExportText(barang.spesifikasi),
     qty: String(barang.jumlah || "").trim(),

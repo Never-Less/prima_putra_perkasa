@@ -176,6 +176,23 @@ Proteksi yang diterapkan:
 - Validasi `Origin/Referer` untuk request mutasi (`POST/PUT/PATCH/DELETE`)
 - `credentials: false` agar cookie tidak dipakai untuk auth
 
+## Backfill Nomor Urutan Barang
+
+Jalankan dry-run untuk memeriksa Sales Order, Surat Jalan, dan Invoice tanpa mengubah MongoDB:
+
+```bash
+cd backend
+npm run backfill:item-order
+```
+
+Terapkan hasil backfill setelah ringkasan dry-run sesuai:
+
+```bash
+npm run backfill:item-order -- --apply
+```
+
+Gunakan `--only=purchase-orders`, `--only=surat-jalan`, atau `--only=invoices` untuk membatasi koleksi.
+
 ## Perubahan Branch Development
 
 Perubahan berikut tersedia di branch `development` dan belum menjadi bagian dari rilis utama:
