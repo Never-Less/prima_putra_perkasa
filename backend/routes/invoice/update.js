@@ -11,8 +11,8 @@ const {
   calculatePpnAmount,
   calculateSubtotal,
   isValidId,
-  normalizeBarangList,
   normalizeStringList,
+  parseBarangList,
   parseBoolean,
   parseDate,
   parseNumber,
@@ -143,12 +143,10 @@ router.put("/:id", documentMutation(async (req, res) => {
   }
 
   if (req.body.barang !== undefined) {
-    const barang = normalizeBarangList(req.body.barang);
-    if (!barang) {
-      return res.status(400).json({
-        message:
-          "Isi minimal satu barang invoice dengan nama barang, qty, unit, dan harga satuan yang valid.",
-      });
+    const barangResult = parseBarangList(req.body.barang);
+    const barang = barangResult.barang;
+    if (barangResult.error) {
+      return res.status(400).json({ message: barangResult.error });
     }
     updates.barang = barang;
     updates.subtotal = calculateSubtotal(barang);

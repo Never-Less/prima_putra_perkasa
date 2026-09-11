@@ -1,4 +1,4 @@
-const htmlEntityMap: Record<string, string> = {
+const htmlEntityMap = {
   amp: "&",
   apos: "'",
   gt: ">",
@@ -7,11 +7,11 @@ const htmlEntityMap: Record<string, string> = {
   quot: '"',
 };
 
-export function decodeHtmlEntities(value: unknown) {
+function decodeHtmlEntities(value) {
   let decoded = value === null || value === undefined ? "" : String(value);
 
   for (let pass = 0; pass < 10; pass += 1) {
-    const nextValue = decoded.replace(/&(#\d+|#x[\da-fA-F]+|[a-zA-Z][\w-]*);/g, (match, entity: string) => {
+    const nextValue = decoded.replace(/&(#\d+|#x[\da-fA-F]+|[a-zA-Z][\w-]*);/g, (match, entity) => {
       if (entity.startsWith("#")) {
         const isHex = entity[1]?.toLowerCase() === "x";
         const codePoint = Number.parseInt(entity.slice(isHex ? 2 : 1), isHex ? 16 : 10);
@@ -39,3 +39,5 @@ export function decodeHtmlEntities(value: unknown) {
 
   return decoded;
 }
+
+module.exports = { decodeHtmlEntities };

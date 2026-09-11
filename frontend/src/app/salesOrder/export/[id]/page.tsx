@@ -7,10 +7,11 @@ import { ExportCurrencyValue } from "../../../_components/export-currency-value"
 import { useI18n } from "../../../_i18n/provider";
 import { ApiRequestError } from "../../../_lib/api-client";
 import { formatAppUppercaseDate } from "../../../_lib/date";
+import { exportFontFamily } from "../../../_lib/export-font";
 import { formatPaymentTermLabel } from "../../../_lib/payment-term";
 import { printDocumentWhenFontsReady } from "../../../_lib/print";
 import { fetchCustomerById, type CustomerItem } from "../../../customer/_lib/customer";
-import { fetchPurchaseOrderById, type PurchaseOrderItem } from "../../_lib/purchase-order";
+import { fetchPurchaseOrderById, sortPurchaseOrderBarangByUrutan, type PurchaseOrderItem } from "../../_lib/purchase-order";
 
 const companyProfile = {
   name: "CV. PRIMA PUTRA PERKASA",
@@ -76,7 +77,7 @@ export default function PurchaseOrderPrintPage() {
       <button type="button" onClick={printDocumentWhenFontsReady} className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600">{t("common.print")}</button>
     </div>
     {isLoading ? <div className="mx-auto max-w-[8.5in] print:hidden"><ApiLoadingState /></div> : errorMessage || !purchaseOrder ? <section className="mx-auto max-w-[8.5in] rounded-xl border border-red-200 bg-red-50 p-4 text-red-700 print:hidden">{errorMessage || t("purchaseOrder.print.loadError")}</section> :
-      <section className="invoice-print-page mx-auto flex h-[11in] min-h-[11in] w-full max-w-[8.5in] flex-col bg-white px-[4mm] py-[1cm] text-[13px] leading-[1.18] text-black shadow-xl print:h-[11in] print:min-h-[11in] print:max-w-none print:shadow-none" style={{ fontFamily: 'var(--font-geist-sans), "Segoe UI", sans-serif' }}>
+      <section className="invoice-print-page mx-auto flex h-[11in] min-h-[11in] w-full max-w-[8.5in] flex-col bg-white px-[4mm] py-[1cm] text-[13px] leading-[1.18] text-black shadow-xl print:h-[11in] print:min-h-[11in] print:max-w-none print:shadow-none" style={{ fontFamily: exportFontFamily }}>
         <div className="flex items-start justify-between gap-8 pt-3">
           <div className="max-w-[58%]"><p className="text-[17px]">{companyProfile.name}</p>{companyProfile.addressLines.map((line) => <p key={line}>{line}</p>)}</div>
           <div className="shrink-0 pt-2"><div className="grid grid-cols-[86px_12px_1fr] gap-x-1"><span>{t("invoice.export.tanggalLabel")}</span><span>:</span><span>{formatAppUppercaseDate(purchaseOrder.tanggalPo, locale)}</span><span>{t("purchaseOrder.print.noSalesOrder")}</span><span>:</span><span>{purchaseOrder.noPo || "-"}</span></div></div>
@@ -88,7 +89,7 @@ export default function PurchaseOrderPrintPage() {
         <div className="mt-1 min-h-0 flex-1 overflow-hidden border border-black">
           <table className="w-full table-fixed border-collapse"><colgroup><col className="w-[7%]"/><col className="w-[38%]"/><col className="w-[12%]"/><col className="w-[10%]"/><col className="w-[16.5%]"/><col className="w-[16.5%]"/></colgroup>
             <thead><tr className="h-8"><th className="border border-black">NO</th><th className="border border-black">{t("field.namaBarang").toUpperCase()}</th><th className="border border-black">QTY</th><th className="border border-black">{t("field.unit").toUpperCase()}</th><th className="border border-black">{t("field.hargaSatuan").toUpperCase()}</th><th className="border border-black">{t("field.jumlah").toUpperCase()}</th></tr></thead>
-            <tbody>{purchaseOrder.barang.map((item, index) => <tr key={`${item.namaBarang}-${index}`} className="align-top"><td className="border-x border-black px-1 py-1 text-center">{index + 1}</td><td className="border-x border-black px-1 py-1">{item.namaBarang}{item.spesifikasi ? <><br/><span>{item.spesifikasi}</span></> : null}</td><td className="border-x border-black px-1 py-1 text-right">{item.kuantitas}</td><td className="border-x border-black px-1 py-1 text-center">{item.unit}</td><td className="border-x border-black px-1 py-1"><ExportCurrencyValue value={item.hargaSatuan} locale={locale}/></td><td className="border-x border-black px-1 py-1"><ExportCurrencyValue value={item.jumlah} locale={locale}/></td></tr>)}</tbody>
+            <tbody>{sortPurchaseOrderBarangByUrutan(purchaseOrder.barang).map((item, index) => <tr key={`${item.namaBarang}-${index}`} className="align-top"><td className="border-x border-black px-1 py-1 text-center">{item.urutan}</td><td className="border-x border-black px-1 py-1">{item.namaBarang}{item.spesifikasi ? <><br/><span>{item.spesifikasi}</span></> : null}</td><td className="border-x border-black px-1 py-1 text-right">{item.kuantitas}</td><td className="border-x border-black px-1 py-1 text-center">{item.unit}</td><td className="border-x border-black px-1 py-1"><ExportCurrencyValue value={item.hargaSatuan} locale={locale}/></td><td className="border-x border-black px-1 py-1"><ExportCurrencyValue value={item.jumlah} locale={locale}/></td></tr>)}</tbody>
           </table>
         </div>
         <div className="mt-2 grid shrink-0 grid-cols-[0.86fr_0.68fr] gap-3">

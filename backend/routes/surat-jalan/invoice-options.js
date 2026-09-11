@@ -28,6 +28,7 @@ function normalizeBarangOptions(value, defaultKodeDepartemen = "", noSuratJalan 
 
       return {
         barangId,
+        urutan: Number.isInteger(Number(item?.urutan)) && Number(item.urutan) > 0 ? Number(item.urutan) : index + 1,
         nama,
         spesifikasi,
         kodeDepartemen,
@@ -35,7 +36,8 @@ function normalizeBarangOptions(value, defaultKodeDepartemen = "", noSuratJalan 
         unit,
       };
     })
-    .filter((item) => Boolean(item));
+    .filter((item) => Boolean(item))
+    .sort((left, right) => left.urutan - right.urutan);
 }
 
 function normalizeSalesOrderBarangOptions(value, noPo = "") {
@@ -59,6 +61,7 @@ function normalizeSalesOrderBarangOptions(value, noPo = "") {
 
       return {
         barangId: `sales-order:${normalizedNoPo}:${index + 1}`,
+        urutan: Number.isInteger(Number(item?.urutan)) && Number(item.urutan) > 0 ? Number(item.urutan) : index + 1,
         nama,
         spesifikasi,
         kodeDepartemen: "",
@@ -67,7 +70,8 @@ function normalizeSalesOrderBarangOptions(value, noPo = "") {
         hargaSatuan: Number.isFinite(hargaSatuan) ? hargaSatuan : 0,
       };
     })
-    .filter((item) => Boolean(item));
+    .filter((item) => Boolean(item))
+    .sort((left, right) => left.urutan - right.urutan);
 }
 
 router.get("/invoice-options", async (_req, res) => {

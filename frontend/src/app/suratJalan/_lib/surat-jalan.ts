@@ -12,6 +12,7 @@ type Locale = "id" | "en";
 
 export type SuratJalanBarang = {
   id: string;
+  urutan: number;
   nama: string;
   spesifikasi: string | null;
   kodeDepartemen: string;
@@ -20,6 +21,7 @@ export type SuratJalanBarang = {
 };
 
 export type SuratJalanBarangFormRow = {
+  urutan: string;
   nama: string;
   spesifikasi: string;
   kodeDepartemen: string;
@@ -68,6 +70,7 @@ export type SuratJalanPrefillPayload = {
   idCustomer: string;
   kendaraan?: string;
   barang: Array<{
+    urutan?: number;
     nama: string;
     spesifikasi?: string;
     kodeDepartemen?: string;
@@ -85,6 +88,7 @@ export type SuratJalanNoPoOption = {
 };
 
 export type SuratJalanNoPoBarangOption = {
+  urutan: number;
   namaBarang: string;
   spesifikasi: string;
   kuantitas: number;
@@ -182,7 +186,7 @@ function toSuratJalanNoPoOption(value: unknown): SuratJalanNoPoOption | null {
   const idCustomer = parseCustomerId(item.idCustomer);
   const barang = Array.isArray(item.barang)
     ? item.barang
-        .map(toSuratJalanNoPoBarangOption)
+        .map((barangItem, index) => toSuratJalanNoPoBarangOption(barangItem, index))
         .filter((barangItem): barangItem is SuratJalanNoPoBarangOption =>
           Boolean(barangItem)
         )
@@ -199,7 +203,7 @@ function toSuratJalanNoPoOption(value: unknown): SuratJalanNoPoOption | null {
   };
 }
 
-function toSuratJalanNoPoBarangOption(value: unknown): SuratJalanNoPoBarangOption | null {
+function toSuratJalanNoPoBarangOption(value: unknown, index = 0): SuratJalanNoPoBarangOption | null {
   if (!value || typeof value !== "object") {
     return null;
   }
@@ -209,12 +213,14 @@ function toSuratJalanNoPoBarangOption(value: unknown): SuratJalanNoPoBarangOptio
   const spesifikasi = toDecodedText(barang.spesifikasi).trim();
   const kuantitas = toNumber(barang.kuantitas ?? barang.jumlah, 0);
   const unit = toDecodedText(barang.unit).trim();
+  const urutanValue = toNumber(barang.urutan, index + 1);
 
   if (!namaBarang || kuantitas <= 0 || !unit) {
     return null;
   }
 
   return {
+    urutan: Number.isInteger(urutanValue) && urutanValue > 0 ? urutanValue : index + 1,
     namaBarang,
     spesifikasi,
     kuantitas,
@@ -222,7 +228,7 @@ function toSuratJalanNoPoBarangOption(value: unknown): SuratJalanNoPoBarangOptio
   };
 }
 
-function toSuratJalanBarang(value: unknown): SuratJalanBarang | null {
+function toSuratJalanBarang(value: unknown, index = 0): SuratJalanBarang | null {
   if (!value || typeof value !== "object") {
     return null;
   }
@@ -234,6 +240,7 @@ function toSuratJalanBarang(value: unknown): SuratJalanBarang | null {
   const kodeDepartemen = toDecodedText(barang.kodeDepartemen).trim();
   const jumlah = toNumber(barang.jumlah, 0);
   const unit = toDecodedText(barang.unit).trim();
+  const urutanValue = toNumber(barang.urutan, index + 1);
 
   if (!nama || jumlah <= 0) {
     return null;
@@ -241,6 +248,7 @@ function toSuratJalanBarang(value: unknown): SuratJalanBarang | null {
 
   return {
     id,
+    urutan: Number.isInteger(urutanValue) && urutanValue > 0 ? urutanValue : index + 1,
     nama,
     spesifikasi,
     kodeDepartemen,
@@ -326,7 +334,7 @@ export function toSuratJalanItem(value: unknown): SuratJalanItem | null {
   }
 
   const barangList = Array.isArray(row.barang)
-    ? row.barang.map(toSuratJalanBarang).filter((barang): barang is SuratJalanBarang => Boolean(barang))
+    ? row.barang.map((barang, index) => toSuratJalanBarang(barang, index)).filter((barang): barang is SuratJalanBarang => Boolean(barang))
     : [];
 
   return {
@@ -567,6 +575,7 @@ export function toFormState(item: SuratJalanItem): SuratJalanFormState {
     kendaraan: item.kendaraan,
     barangRows: ensureTrailingEmptyBarangRow(
       item.barang.map((barang) => ({
+        urutan: String(barang.urutan),
         nama: barang.nama,
         spesifikasi: barang.spesifikasi || "",
         kodeDepartemen: barang.kodeDepartemen || "",
@@ -586,6 +595,7 @@ export function toFormStateFromPrefill(prefill: SuratJalanPrefillPayload): Surat
     kendaraan: prefill.kendaraan || "",
     barangRows: ensureTrailingEmptyBarangRow(
       prefill.barang.map((barang) => ({
+        urutan: String(barang.urutan || ""),
         nama: barang.nama,
         spesifikasi: barang.spesifikasi || "",
         kodeDepartemen: barang.kodeDepartemen || "",
@@ -626,6 +636,7 @@ export function consumeSuratJalanPrefill() {
 
 export function createEmptyBarangRow(): SuratJalanBarangFormRow {
   return {
+    urutan: "",
     nama: "",
     spesifikasi: "",
     kodeDepartemen: "",
@@ -645,7 +656,8 @@ export function isBarangRowFilled(row: SuratJalanBarangFormRow) {
 }
 
 export function ensureTrailingEmptyBarangRow(rows: SuratJalanBarangFormRow[]) {
-  const normalizedRows = rows.map((row) => ({
+  const normalizedRows = rows.map((row, index) => ({
+    urutan: String(row.urutan || index + 1),
     nama: String(row.nama || ""),
     spesifikasi: String(row.spesifikasi || ""),
     kodeDepartemen: String(row.kodeDepartemen || ""),
@@ -676,7 +688,7 @@ export function ensureTrailingEmptyBarangRow(rows: SuratJalanBarangFormRow[]) {
 
 export function barangRowsToList(rows: SuratJalanBarangFormRow[]) {
   return rows
-    .map((row) => {
+    .map((row, index) => {
       const nama = toDecodedText(row.nama).trim();
       const spesifikasi = toDecodedText(row.spesifikasi).trim() || null;
       const kodeDepartemen = toDecodedText(row.kodeDepartemen).trim();
@@ -684,6 +696,7 @@ export function barangRowsToList(rows: SuratJalanBarangFormRow[]) {
       const unit = toDecodedText(row.unit).trim();
 
       return {
+        urutan: toNumber(row.urutan, index + 1),
         nama,
         spesifikasi,
         kodeDepartemen,
@@ -691,7 +704,7 @@ export function barangRowsToList(rows: SuratJalanBarangFormRow[]) {
         unit,
       };
     })
-    .filter((barang) => barang.nama && barang.jumlah > 0 && barang.unit);
+    .filter((_barang, index) => isBarangRowFilled(rows[index]));
 }
 
 export function buildSuratJalanBarangRowsFromNoPoOption(option?: SuratJalanNoPoOption | null) {
@@ -701,6 +714,7 @@ export function buildSuratJalanBarangRowsFromNoPoOption(option?: SuratJalanNoPoO
 
   return ensureTrailingEmptyBarangRow(
     option.barang.map((barang) => ({
+      urutan: String(barang.urutan || ""),
       nama: barang.namaBarang,
       spesifikasi: barang.spesifikasi,
       kodeDepartemen: "",
@@ -708,4 +722,8 @@ export function buildSuratJalanBarangRowsFromNoPoOption(option?: SuratJalanNoPoO
       unit: barang.unit,
     }))
   );
+}
+
+export function sortSuratJalanBarangByUrutan(barang: SuratJalanBarang[]) {
+  return [...barang].sort((left, right) => left.urutan - right.urutan);
 }

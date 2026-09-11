@@ -418,6 +418,7 @@ export function InvoicePageContent({ mode = "list", itemId = "" }: InvoicePageCo
             ? refreshedRows.find((row) => row.id === updatedInvoice.id) || updatedInvoice
             : undefined;
           setSelectedId(currentUpdatedInvoice?.id || selectedItem.id);
+          setInitialFormKey((currentKey) => currentKey + 1);
           if (isFormMode) {
             router.replace(
               buildFormRouteWithReturnPagination(

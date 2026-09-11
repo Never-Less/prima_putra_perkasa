@@ -18,7 +18,7 @@ type SuratJalanBarangSpreadsheetProps = {
 
 type SpreadsheetData = jspreadsheet.CellValue[][];
 
-const columnCount = 5;
+const columnCount = 6;
 
 function toCellText(value: unknown) {
   return String(value ?? "");
@@ -31,7 +31,8 @@ function normalizeSpreadsheetRow(row: jspreadsheet.CellValue[] = []) {
 function rowsToSpreadsheetData(rows: SuratJalanBarangFormRow[]): SpreadsheetData {
   const normalizedRows = ensureTrailingEmptyBarangRow(rows);
 
-  return normalizedRows.map((row) => [
+  return normalizedRows.map((row, index) => [
+    row.urutan || String(index + 1),
     row.nama,
     row.spesifikasi,
     row.kodeDepartemen,
@@ -42,9 +43,10 @@ function rowsToSpreadsheetData(rows: SuratJalanBarangFormRow[]): SpreadsheetData
 
 function spreadsheetDataToRows(data: SpreadsheetData) {
   const nextRows = data.map((row) => {
-    const [nama, spesifikasi, kodeDepartemen, jumlah, unit] = normalizeSpreadsheetRow(row);
+    const [urutan, nama, spesifikasi, kodeDepartemen, jumlah, unit] = normalizeSpreadsheetRow(row);
 
     return {
+      urutan,
       nama,
       spesifikasi,
       kodeDepartemen,
@@ -83,6 +85,11 @@ export function SuratJalanBarangSpreadsheet({
 
   const columns = useMemo<NonNullable<jspreadsheet.WorksheetOptions["columns"]>>(
     () => [
+      {
+        title: t("field.no"),
+        type: "numeric",
+        width: 70,
+      },
       {
         title: t("field.namaBarang"),
         type: "text",
@@ -139,8 +146,10 @@ export function SuratJalanBarangSpreadsheet({
         }
 
         const nextData = instance.getData(false, true);
+        const nextRows = spreadsheetDataToRows(nextData);
         currentDataRef.current = serializeData(nextData);
-        onRowsChangeRef.current(spreadsheetDataToRows(nextData));
+        rowsRef.current = nextRows;
+        onRowsChangeRef.current(nextRows);
       };
 
       currentDataRef.current = serializeData(initialData);
@@ -163,6 +172,7 @@ export function SuratJalanBarangSpreadsheet({
             allowRenameColumn: false,
             columnDrag: false,
             columnSorting: false,
+            rowDrag: false,
             tableOverflow: true,
             tableWidth: "100%",
             minDimensions: [columnCount, 2],

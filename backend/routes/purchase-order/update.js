@@ -9,7 +9,7 @@ const { sanitizePurchaseOrder } = require("./sanitize-purchase-order");
 const {
   calculateBarangSubtotal,
   isValidId,
-  normalizeBarangList,
+  parseBarangList,
   parseDate,
   parseNumber,
 } = require("./validators");
@@ -68,13 +68,11 @@ router.put("/:id", documentMutation(async (req, res) => {
     }
 
     if (req.body.barang !== undefined) {
-      const barang = normalizeBarangList(req.body.barang);
+      const barangResult = parseBarangList(req.body.barang);
+      const barang = barangResult.barang;
 
-      if (!barang) {
-        return res.status(400).json({
-          message:
-            "Isi barang sales order dengan nama barang, qty, unit, dan harga satuan yang valid.",
-        });
+      if (barangResult.error) {
+        return res.status(400).json({ message: barangResult.error });
       }
 
       updates.barang = barang;

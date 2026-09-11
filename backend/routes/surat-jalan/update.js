@@ -6,7 +6,7 @@ const express = require("express");
 const { Customer } = require("../../models/Customer");
 const { SuratJalan } = require("../../models/SuratJalan");
 const { sanitizeSuratJalan } = require("./sanitize-surat-jalan");
-const { isValidId, normalizeBarangList, parseDate } = require("./validators");
+const { isValidId, parseBarangList, parseDate } = require("./validators");
 const { validateDeliveryAgainstSalesOrder } = require("../../utils/delivery-validation");
 
 const router = express.Router();
@@ -47,13 +47,12 @@ router.put("/:id", documentMutation(async (req, res) => {
   }
 
   if (req.body.barang !== undefined) {
-    const barang = normalizeBarangList(req.body.barang, {
+    const barangResult = parseBarangList(req.body.barang, {
       defaultKodeDepartemen: req.body.kodeDepartemen,
     });
-    if (!barang) {
-      return res.status(400).json({
-        message: "Isi minimal satu barang surat jalan dengan nama barang, jumlah, dan unit yang valid.",
-      });
+    const barang = barangResult.barang;
+    if (barangResult.error) {
+      return res.status(400).json({ message: barangResult.error });
     }
     updates.barang = barang;
   }

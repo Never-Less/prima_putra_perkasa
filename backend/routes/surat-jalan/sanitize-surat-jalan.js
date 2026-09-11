@@ -5,14 +5,15 @@ function normalizeBarangList(barangInput, fallbackKodeDepartemen = "") {
     return [];
   }
 
-  return barangInput.map((barang) => ({
+  return barangInput.map((barang, index) => ({
     id: barang?._id,
+    urutan: Number.isInteger(Number(barang?.urutan)) && Number(barang.urutan) > 0 ? Number(barang.urutan) : index + 1,
     nama: barang?.nama,
     spesifikasi: barang?.spesifikasi,
     kodeDepartemen: String(barang?.kodeDepartemen || fallbackKode).trim(),
     jumlah: barang?.jumlah,
     unit: barang?.unit,
-  }));
+  })).sort((left, right) => left.urutan - right.urutan);
 }
 
 function summarizeKodeDepartemen(barangInput, fallbackKodeDepartemen = "") {

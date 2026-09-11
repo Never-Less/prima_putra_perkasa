@@ -2,6 +2,11 @@ const mongoose = require("mongoose");
 
 const barangSchema = new mongoose.Schema(
   {
+    urutan: {
+      type: Number,
+      min: 1,
+      default: null,
+    },
     nama: {
       type: String,
       required: true,
