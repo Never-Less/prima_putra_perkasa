@@ -84,6 +84,7 @@ Panduan untuk agent yang bekerja di repository `prima_putra_perkasa`.
 ## Release Notes Aplikasi
 
 - Setiap kali Codex membuat commit yang berisi perubahan aplikasi untuk dikirim ke GitHub, update `frontend/src/app/_data/release-notes.ts` dalam commit yang sama.
+- Saat user meminta Codex membuat judul commit berdasarkan Git changes yang berisi perubahan aplikasi, update `frontend/src/app/_data/release-notes.ts` terlebih dahulu sebelum memberikan judul commit, meskipun Codex tidak diminta menjalankan `git commit`.
 - Tambahkan satu entry release note yang merangkum perubahan pada commit tersebut dengan bahasa yang mudah dipahami user.
 - Letakkan entry terbaru paling atas dan kelompokkan daftar perubahan berdasarkan area fitur.
 - Commit yang hanya mengubah changelog atau merge tanpa perubahan aplikasi tidak wajib membuat entry baru.

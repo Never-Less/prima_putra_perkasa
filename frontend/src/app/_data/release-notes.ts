@@ -15,6 +15,29 @@ export type ReleaseNote = {
 // Urutkan dari rilis terbaru. Tambahkan satu entry pada setiap commit perubahan aplikasi.
 export const releaseNotes: ReleaseNote[] = [
   {
+    id: "2026-09-15-document-correction-mode",
+    version: "2026.09.15",
+    date: "2026-09-15",
+    title: "Mode Pembetulan Dokumen dan Tampilan Total Rekap",
+    summary: "Pembetulan data Sales Order, Surat Jalan, dan Invoice kini dapat dilakukan sementara tanpa terhalang validasi relasi, serta baris total rekap tagihan lebih mudah dibaca.",
+    sections: [
+      {
+        title: "Pembetulan Data Dokumen",
+        changes: [
+          "Mode koreksi sementara memungkinkan Sales Order diperbarui meskipun sudah terhubung ke Surat Jalan atau Invoice.",
+          "Surat Jalan dan Invoice dapat diperbaiki tanpa terhalang pemeriksaan relasi antar dokumen selama mode koreksi aktif.",
+          "Validasi dasar seperti format data, identitas dokumen, dan nomor dokumen ganda tetap dipertahankan.",
+        ],
+      },
+      {
+        title: "Rekap Tagihan Pabrik",
+        changes: [
+          "Warna teks pada baris total pembayaran dan outstanding kini menyesuaikan tema terang, tema gelap, dan hasil print.",
+        ],
+      },
+    ],
+  },
+  {
     id: "2026-09-04-light-erp-finance-supplier-revision",
     version: "2026.09.04",
     date: "2026-09-04",
