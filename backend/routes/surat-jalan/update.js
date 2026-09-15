@@ -3,6 +3,7 @@ const { deliveryInvoiceQuery } = require("../../utils/invoice-integrity");
 const { documentMutation } = require("../../utils/document-mutation");
 const express = require("express");
 
+const { isDocumentCorrectionModeEnabled } = require("../../config/document-validation");
 const { Customer } = require("../../models/Customer");
 const { SuratJalan } = require("../../models/SuratJalan");
 const { sanitizeSuratJalan } = require("./sanitize-surat-jalan");
@@ -81,7 +82,10 @@ router.put("/:id", documentMutation(async (req, res) => {
   try {
     const existingDocument = await SuratJalan.findById(id).lean();
     if (!existingDocument) return res.status(404).json({ message: "Data surat jalan tidak ditemukan." });
-    if (await Invoice.countDocuments(deliveryInvoiceQuery(existingDocument)).collation({ locale: "en", strength: 2 })) {
+    if (
+      !isDocumentCorrectionModeEnabled() &&
+      await Invoice.countDocuments(deliveryInvoiceQuery(existingDocument)).collation({ locale: "en", strength: 2 })
+    ) {
       return res.status(409).json({ message: "Surat Jalan tidak dapat dihapus atau direvisi selama masih terhubung ke Invoice. Hapus atau lepaskan referensi Invoice terlebih dahulu." });
     }
     if (updates.idCustomer) {
@@ -105,13 +109,15 @@ router.put("/:id", documentMutation(async (req, res) => {
     }
 
 
-    const deliveryError = await validateDeliveryAgainstSalesOrder({
-      noPo: updates.noPo || existingDocument.noPo,
-      customerId: updates.idCustomer || existingDocument.idCustomer,
-      barang: updates.barang || existingDocument.barang,
-      excludeSuratJalanId: id,
-    });
-    if (deliveryError) return res.status(409).json({ message: deliveryError });
+    if (!isDocumentCorrectionModeEnabled()) {
+      const deliveryError = await validateDeliveryAgainstSalesOrder({
+        noPo: updates.noPo || existingDocument.noPo,
+        customerId: updates.idCustomer || existingDocument.idCustomer,
+        barang: updates.barang || existingDocument.barang,
+        excludeSuratJalanId: id,
+      });
+      if (deliveryError) return res.status(409).json({ message: deliveryError });
+    }
 
     const suratJalan = await SuratJalan.findByIdAndUpdate(id, updates, {
       new: true,

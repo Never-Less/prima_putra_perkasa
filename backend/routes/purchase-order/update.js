@@ -1,6 +1,7 @@
 const { documentMutation } = require("../../utils/document-mutation");
 const express = require("express");
 
+const { isDocumentCorrectionModeEnabled } = require("../../config/document-validation");
 const { Customer } = require("../../models/Customer");
 const { Invoice } = require("../../models/Invoice");
 const { SuratJalan } = require("../../models/SuratJalan");
@@ -162,7 +163,7 @@ router.put("/:id", documentMutation(async (req, res) => {
     );
     const revisionImpact = null;
 
-    if (hasOperationalChanges) {
+    if (hasOperationalChanges && !isDocumentCorrectionModeEnabled()) {
       const existingNoPo = String(existingPurchaseOrder.noPo || "").trim();
       const affectedSuratJalan = await SuratJalan.countDocuments({ noPo: existingNoPo }).collation({ locale: "en", strength: 2 });
       const affectedInvoices = await Invoice.countDocuments({ $or: [{ noPoList: existingNoPo }, { noPo: existingNoPo }, { "barang.sources.noPo": existingNoPo }, { "barang.noPoManual": existingNoPo }] }).collation({ locale: "en", strength: 2 });
