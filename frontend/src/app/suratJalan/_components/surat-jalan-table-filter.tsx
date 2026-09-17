@@ -20,6 +20,7 @@ import {
 } from "../_lib/surat-jalan";
 import { useI18n } from "../../_i18n/provider";
 import { useFilterDraft } from "../../_hooks/use-filter-draft";
+import { MobileFilterPanel } from "../../_components/mobile-filter-panel";
 
 type ColorTone = "slate" | "sky" | "emerald";
 type TableStyle = "default" | "striped" | "compact";
@@ -167,6 +168,7 @@ export function SuratJalanTableFilter({
   const hiddenColumnIndexes = columns
     .filter((column) => hiddenColumns.includes(column.key))
     .map((column) => column.index);
+  const isColumnVisible = (key: string) => !hiddenColumns.includes(key);
   const getInvoiceStatus = (row: SuratJalanItem) => {
 
     if (isSuratJalanInvoiced(row, invoicedSuratJalanNumbers)) {
@@ -197,8 +199,8 @@ export function SuratJalanTableFilter({
       </div>
 
       <form onSubmit={applyDraftFilter}>
-        <p className={`mb-2 text-sm font-medium ${tone.subtitle}`}>{t("common.filterByField")}</p>
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+        <MobileFilterPanel label={t("common.filterByField")} labelClassName={tone.subtitle}>
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.noPo")}
             <DebouncedFilterInput
@@ -288,6 +290,7 @@ export function SuratJalanTableFilter({
             {t("common.applyFilter")}
           </button>
         </div>
+        </MobileFilterPanel>
       </form>
 
       <div>
@@ -313,42 +316,46 @@ export function SuratJalanTableFilter({
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="truncate text-base font-semibold text-slate-900 dark:text-slate-100">{row.noSuratJalan || "-"}</p>
-                        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{formatTanggal(row.tanggal, locale)}</p>
+                        {isColumnVisible("noSuratJalan") ? (
+                          <p className="truncate text-base font-semibold text-slate-900 dark:text-slate-100">{row.noSuratJalan || "-"}</p>
+                        ) : null}
+                        {isColumnVisible("tanggal") ? (
+                          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{formatTanggal(row.tanggal, locale)}</p>
+                        ) : null}
                       </div>
-                      <div className="flex flex-col items-end gap-1">
-                        <span className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${invoiceStatus.className}`}>
+                      {isColumnVisible("statusInvoice") || isColumnVisible("deliveryStatus") ? <div className="flex flex-col items-end gap-1">
+                        {isColumnVisible("statusInvoice") ? <span className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${invoiceStatus.className}`}>
                           {invoiceStatus.label}
-                        </span>
-                        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                        </span> : null}
+                        {isColumnVisible("deliveryStatus") ? <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-200">
                           {t(`suratJalan.deliveryStatus.${row.deliveryStatus || "notDelivered"}`)}
-                        </span>
-                      </div>
+                        </span> : null}
+                      </div> : null}
                     </div>
 
                     <dl className="mt-4 space-y-3 text-sm">
                       <div className="grid gap-3 sm:grid-cols-2">
-                        <div>
+                        {isColumnVisible("noPo") ? <div>
                           <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.noPo")}</dt>
                           <dd className="mt-1 text-slate-700 dark:text-slate-200">{row.noPo || "-"}</dd>
-                        </div>
-                        <div>
+                        </div> : null}
+                        {isColumnVisible("kodeDepartemen") ? <div>
                           <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.kodeDepartemen")}</dt>
                           <dd className="mt-1 text-slate-700 dark:text-slate-200">{row.kodeDepartemen || "-"}</dd>
-                        </div>
-                        <div>
+                        </div> : null}
+                        {isColumnVisible("namaCustomer") ? <div>
                           <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.namaCustomer")}</dt>
                           <dd className="mt-1 text-slate-700 dark:text-slate-200">{customerLabel}</dd>
-                        </div>
-                        <div>
+                        </div> : null}
+                        {isColumnVisible("kendaraan") ? <div>
                           <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.kendaraan")}</dt>
                           <dd className="mt-1 text-slate-700 dark:text-slate-200">{row.kendaraan || "-"}</dd>
-                        </div>
+                        </div> : null}
                       </div>
-                      <div>
+                      {isColumnVisible("barang") ? <div>
                         <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.barang")}</dt>
                         <dd className="mt-1 break-words text-slate-700 dark:text-slate-200">{barangText || "-"}</dd>
-                      </div>
+                      </div> : null}
                     </dl>
 
                     <div className="mt-4 grid gap-2 sm:grid-cols-3">

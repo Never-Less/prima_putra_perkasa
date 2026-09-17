@@ -14,6 +14,7 @@ import { type SupplierFilter, type SupplierItem } from "../_lib/supplier";
 import { useI18n } from "../../_i18n/provider";
 import { onboardingStatuses } from "../_lib/supplier-onboarding";
 import { useFilterDraft } from "../../_hooks/use-filter-draft";
+import { MobileFilterPanel } from "../../_components/mobile-filter-panel";
 
 type SupplierTableFilterProps = {
   rows: SupplierItem[];
@@ -66,6 +67,7 @@ export function SupplierTableFilter({
   const hiddenColumnIndexes = columns
     .filter((column) => hiddenColumns.includes(column.key))
     .map((column) => column.index);
+  const isColumnVisible = (key: string) => !hiddenColumns.includes(key);
 
   return (
     <section className="ppp-list-view ppp-supplier-list space-y-4 rounded-xl border border-slate-100 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
@@ -83,8 +85,8 @@ export function SupplierTableFilter({
       </div>
 
       <form onSubmit={applyDraftFilter}>
-        <p className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">{t("common.filterByField")}</p>
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+        <MobileFilterPanel label={t("common.filterByField")} labelClassName="text-slate-500 dark:text-slate-400">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <label className="text-sm text-slate-700 dark:text-slate-200">{t("supplierOnboarding.statusLabel")}<select value={draftFilter.onboardingStatus} onChange={(event) => updateDraftFilter("onboardingStatus", event.target.value)} className="erp-field mt-1 w-full"><option value="">{t("common.all")}</option>{onboardingStatuses.map((status) => <option key={status} value={status}>{t(`supplierOnboarding.status.${status}`)}</option>)}</select></label>
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.namaSupplier")}
@@ -143,6 +145,7 @@ export function SupplierTableFilter({
             {t("common.applyFilter")}
           </button>
         </div>
+        </MobileFilterPanel>
       </form>
 
       <div className="space-y-3 md:hidden">
@@ -165,29 +168,30 @@ export function SupplierTableFilter({
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate text-base font-semibold text-slate-900 dark:text-slate-100">{row.namaSupplier || "-"}</p>
+                    {isColumnVisible("namaSupplier") ? (
+                      <p className="truncate text-base font-semibold text-slate-900 dark:text-slate-100">{row.namaSupplier || "-"}</p>
+                    ) : null}
                     <p className="mt-1 text-xs uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("nav.supplier")}</p>
                   </div>
-                  <span
+                  {isColumnVisible("hutang") ? <span
                     className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${
                       row.hutang ? "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-200" : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
                     }`}
                   >
                     {row.hutang ? t("common.true") : t("common.false")}
-                  </span>
+                  </span> : null}
                 </div>
 
                 <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
-                  <div>
-                    <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.hutang")}</dt>
-                    <dd className="mt-1 text-slate-700 dark:text-slate-200">{row.hutang ? t("common.true") : t("common.false")}</dd>
-                  </div>
-                  <div>
+                  {isColumnVisible("lamaHutang") ? <div>
                     <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.lamaHutang")}</dt>
                     <dd className="mt-1 text-slate-700 dark:text-slate-200">{row.hutang ? row.lamaHutang || "-" : "-"}</dd>
-                  </div>
+                  </div> : null}
+                  {isColumnVisible("onboardingStatus") ? <div>
+                    <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("supplierOnboarding.statusLabel")}</dt>
+                    <dd className="mt-1 text-sky-700 dark:text-sky-200">{t(`supplierOnboarding.status.${row.onboarding.status}`)}</dd>
+                  </div> : null}
                 </dl>
-                <p className="mt-2 text-sm text-sky-700 dark:text-sky-200">{t(`supplierOnboarding.status.${row.onboarding.status}`)}</p>
 
                 <button
                   type="button"

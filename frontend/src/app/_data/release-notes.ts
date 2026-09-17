@@ -15,6 +15,35 @@ export type ReleaseNote = {
 // Urutkan dari rilis terbaru. Tambahkan satu entry pada setiap commit perubahan aplikasi.
 export const releaseNotes: ReleaseNote[] = [
   {
+    id: "2026-09-17-mobile-print-purchase-update",
+    version: "2026.09.17",
+    date: "2026-09-17",
+    title: "Penyempurnaan Daftar Mobile, Print, dan Invoice Pembelian",
+    summary: "Daftar data lebih ringkas di perangkat mobile, hasil print tidak lagi terpengaruh ukuran layar, dan pilihan Invoice pada Pembelian tetap akurat saat data dimuat.",
+    sections: [
+      {
+        title: "Daftar dan Filter Mobile",
+        changes: [
+          "Filter pada halaman daftar kini dapat dibuka atau ditutup dan ditampilkan dalam dua kolom pada perangkat mobile.",
+          "Teks kartu daftar yang terlalu panjang dipotong dengan tanda elipsis agar tampilan tetap rapi.",
+          "Kolom kartu mobile mengikuti kolom desktop, termasuk pengaturan kolom tampil atau tersembunyi dan kelengkapan tanggal dokumen Sales Order.",
+        ],
+      },
+      {
+        title: "Print",
+        changes: [
+          "Navbar, sidebar, dan ruang sidebar tidak lagi ikut tercetak sehingga hasil print konsisten tanpa dipengaruhi breakpoint atau ukuran layar komputer.",
+        ],
+      },
+      {
+        title: "Pembelian",
+        changes: [
+          "Invoice yang sudah tersimpan pada Pembelian tetap dipertahankan ketika daftar pilihan Invoice masih dimuat dan tidak lagi berubah menjadi Stock karena keterlambatan data.",
+        ],
+      },
+    ],
+  },
+  {
     id: "2026-09-15-document-correction-mode",
     version: "2026.09.15",
     date: "2026-09-15",
