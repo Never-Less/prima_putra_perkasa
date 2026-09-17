@@ -21,6 +21,7 @@ import {
 } from "../_lib/invoice";
 import { useI18n } from "../../_i18n/provider";
 import { useFilterDraft } from "../../_hooks/use-filter-draft";
+import { MobileFilterPanel } from "../../_components/mobile-filter-panel";
 
 type InvoiceTableFilterProps = {
   rows: InvoiceItem[];
@@ -112,6 +113,7 @@ export function InvoiceTableFilter({
   const hiddenColumnIndexes = columns
     .filter((column) => hiddenColumns.includes(column.key))
     .map((column) => column.index);
+  const isColumnVisible = (key: string) => !hiddenColumns.includes(key);
 
   return (
     <section className="ppp-list-view ppp-invoice-list space-y-4 rounded-xl border border-slate-100 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
@@ -138,8 +140,8 @@ export function InvoiceTableFilter({
       </div>
 
       <form onSubmit={applyDraftFilter}>
-        <p className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">{t("common.filterByField")}</p>
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+        <MobileFilterPanel label={t("common.filterByField")} labelClassName="text-slate-500 dark:text-slate-400">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.noInvoice")}
             <DebouncedFilterInput
@@ -268,6 +270,7 @@ export function InvoiceTableFilter({
             {t("common.applyFilter")}
           </button>
         </div>
+        </MobileFilterPanel>
       </form>
 
       <div className="space-y-3 md:hidden">
@@ -291,66 +294,66 @@ export function InvoiceTableFilter({
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate text-base font-semibold text-slate-900 dark:text-slate-100">{row.noInvoice || "-"}</p>
-                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{formatTanggal(row.tanggal, locale)}</p>
+                    {isColumnVisible("noInvoice") ? (
+                      <p className="truncate text-base font-semibold text-slate-900 dark:text-slate-100">{row.noInvoice || "-"}</p>
+                    ) : null}
+                    {isColumnVisible("tanggal") ? (
+                      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{formatTanggal(row.tanggal, locale)}</p>
+                    ) : null}
                   </div>
-                  <span
+                  {isColumnVisible("grandTotal") ? <span
                     className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${
                       isSelected ? "bg-sky-700 text-white dark:bg-sky-500 dark:text-slate-950" : "bg-sky-100 text-sky-700 dark:bg-slate-800 dark:text-slate-300"
                     }`}
                   >
                     {formatRupiah(row.grandTotal, locale)}
-                  </span>
+                  </span> : null}
                 </div>
 
                 <dl className="mt-4 space-y-3 text-sm">
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <div>
+                    {isColumnVisible("noPo") ? <div>
                       <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.noPo")}</dt>
                       <dd className="mt-1 text-slate-700 dark:text-slate-200">{row.noPo || "-"}</dd>
-                    </div>
-                    <div>
+                    </div> : null}
+                    {isColumnVisible("namaCustomer") ? <div>
                       <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.namaCustomer")}</dt>
                       <dd className="mt-1 text-slate-700 dark:text-slate-200">{customerLabel}</dd>
-                    </div>
+                    </div> : null}
                   </div>
-                  <div>
+                  {isColumnVisible("noSuratJalan") ? <div>
                     <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.noSuratJalan")}</dt>
                     <dd className="mt-1 break-words text-slate-700 dark:text-slate-200">{invoiceNoSuratJalanListLabel(row.noSuratJalan)}</dd>
-                  </div>
-                  <div>
+                  </div> : null}
+                  {isColumnVisible("barang") ? <div>
                     <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.barang")}</dt>
                     <dd className="mt-1 break-words text-slate-700 dark:text-slate-200">
                       {row.barang
                         .map((barang) => formatInvoiceBarangLabel(barang.namaBarang, barang.spesifikasi))
                         .join(", ") || "-"}
                     </dd>
-                  </div>
+                  </div> : null}
                   <div className="grid gap-3 sm:grid-cols-3">
-                    <div>
+                    {isColumnVisible("dueDate") ? <div>
                       <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.dueDate")}</dt>
                       <dd className={`mt-1 rounded px-1.5 py-1 font-medium ${dueDateIndicatorClass(row.dueDate, row.isPaid)}`}>{formatTanggal(row.dueDate, locale)}</dd>
-                    </div>
-                    <div>
+                    </div> : null}
+                    {isColumnVisible("isPaid") ? <div>
                       <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.isPaid")}</dt>
                       <dd className="mt-1 text-slate-700 dark:text-slate-200">{row.isPaid ? paidLabel : unpaidLabel}</dd>
-                    </div>
-                    <div>
+                    </div> : null}
+                    {isColumnVisible("tanggalBayar") ? <div>
                       <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.tanggalBayar")}</dt>
                       <dd className="mt-1 text-slate-700 dark:text-slate-200">{formatTanggal(row.tanggalBayar, locale)}</dd>
-                    </div>
-                    <div>
+                    </div> : null}
+                    {isColumnVisible("subtotal") ? <div>
                       <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.subtotal")}</dt>
                       <dd className="mt-1 text-slate-700 dark:text-slate-200">{formatRupiah(row.subtotal, locale)}</dd>
-                    </div>
-                    <div>
+                    </div> : null}
+                    {isColumnVisible("ppnAmount") ? <div>
                       <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.ppnAmount")}</dt>
                       <dd className="mt-1 text-slate-700 dark:text-slate-200">{formatRupiah(row.ppnAmount, locale)}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.grandTotal")}</dt>
-                      <dd className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{formatRupiah(row.grandTotal, locale)}</dd>
-                    </div>
+                    </div> : null}
                   </div>
                 </dl>
 

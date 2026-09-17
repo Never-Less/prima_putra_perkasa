@@ -460,7 +460,7 @@ body {
   padding: 1rem;
 }
 
-.ppp-list-view > form > p:first-child {
+.ppp-list-view > form .ppp-filter-title {
   margin-bottom: 0.75rem !important;
   color: var(--muted) !important;
   font-size: 0.75rem !important;
@@ -469,7 +469,7 @@ body {
   letter-spacing: 0.04em;
 }
 
-.ppp-list-view > form > div {
+.ppp-list-view > form .ppp-filter-content > div {
   gap: 0.75rem !important;
 }
 
@@ -500,13 +500,13 @@ body {
   box-shadow: 0 0 0 3px var(--focus-ring) !important;
 }
 
-.ppp-list-view > form > div:last-child {
+.ppp-list-view > form .ppp-filter-content > div:last-child {
   margin-top: 1rem !important;
   border-top: 1px solid var(--line);
   padding-top: 0.75rem;
 }
 
-.ppp-list-view > form > div:last-child button {
+.ppp-list-view > form .ppp-filter-content > div:last-child button {
   min-height: 2.25rem;
   border-radius: 6px !important;
   font-weight: 600 !important;
@@ -652,14 +652,27 @@ body {
 }
 
 @media (max-width: 767px) {
-  .ppp-list-view > form > div {
-    grid-template-columns: minmax(0, 1fr) !important;
+  .ppp-list-view > form .ppp-filter-content > div:first-child {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 
   .ppp-list-view article {
+    min-width: 0;
     border-color: var(--line) !important;
     border-radius: 8px !important;
     background: var(--surface) !important;
     box-shadow: none !important;
+  }
+
+  .ppp-list-view article :where(header, dl, dl > div) {
+    min-width: 0;
+  }
+
+  .ppp-list-view article :where(h3, p, dd) {
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
