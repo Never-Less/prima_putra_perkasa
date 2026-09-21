@@ -20,11 +20,13 @@ import {
 } from "../../invoice/_lib/invoice";
 import {
   calculateLaporanKeuanganMonthSummary,
+  calculatePembelianPaymentSummaryByMonth,
   fetchLaporanKeuangan,
   formatLaporanKeuanganMonth,
   getCurrentMonthValue,
   getCurrentYearValue,
   getMonthDateRange,
+  getPembelianPaymentStatusAtPeriodEnd,
   getYearMonthValues,
   type LaporanKeuanganItem,
   type LaporanKeuanganMonthSummary,
@@ -65,8 +67,9 @@ type FinancialReportRow = {
   debet?: number;
   kreditPpn?: number;
   kreditNonPpn?: number;
-  bayar?: string;
-  isHutang?: boolean;
+  purchaseType?: string;
+  paymentStatus?: string;
+  isUnpaid?: boolean;
   note?: string;
 };
 
@@ -75,6 +78,7 @@ type PurchaseReportRow = {
   noNota: string;
   note: string;
   ppn: boolean;
+  statusPembayaran: "paid" | "unpaid";
   supplierName: string;
   total: number;
 };
@@ -543,8 +547,8 @@ function toFinancialReportExcelRow(row: FinancialReportRow): ExcelCellValue[] {
     row.kind === "invoiceDetail" || row.kind === "stock"
       ? excelStyleIds.tableTextIndent
       : styles.text;
-  const bayarStyle = row.bayar
-    ? row.isHutang
+  const paymentStatusStyle = row.paymentStatus
+    ? row.isUnpaid
       ? excelStyleIds.hutangStatus
       : excelStyleIds.lunasStatus
     : styles.text;
@@ -555,7 +559,8 @@ function toFinancialReportExcelRow(row: FinancialReportRow): ExcelCellValue[] {
     styledExcelCell(row.debet, styles.number),
     styledExcelCell(row.kreditPpn, styles.number),
     styledExcelCell(row.kreditNonPpn, styles.number),
-    styledExcelCell(row.bayar || null, bayarStyle),
+    styledExcelCell(row.purchaseType || null, styles.text),
+    styledExcelCell(row.paymentStatus || null, paymentStatusStyle),
     styledExcelCell(row.note || null, styles.text),
   ];
 }
@@ -609,6 +614,7 @@ export default function LaporanKeuanganExportPage() {
           noNota: String(row.noNota || "").trim(),
           note: String(row.note || "").trim(),
           ppn: Boolean(row.ppn),
+          statusPembayaran: getPembelianPaymentStatusAtPeriodEnd(row, bulan),
           supplierName,
           total: rowTotal,
         },
@@ -616,7 +622,7 @@ export default function LaporanKeuanganExportPage() {
     });
 
     return map;
-  }, [pembelianRows]);
+  }, [bulan, pembelianRows]);
   const purchaseTotalByInvoiceId = useMemo(() => {
     const map = new Map<string, number>();
 
@@ -641,6 +647,9 @@ export default function LaporanKeuanganExportPage() {
   const stockBarangTotal = useMemo(() => {
     return calculatePembelianStockTotalByMonth(pembelianRows, bulan);
   }, [bulan, pembelianRows]);
+  const pembelianPaymentSummary = useMemo(() => {
+    return calculatePembelianPaymentSummaryByMonth(pembelianRows, bulan);
+  }, [bulan, pembelianRows]);
   const grossProfit = invoiceGrandTotal - purchaseTotal;
   const totalBiayaOperasional = item?.totalBiayaOperasional || 0;
   const netProfit = grossProfit - totalBiayaOperasional;
@@ -651,6 +660,9 @@ export default function LaporanKeuanganExportPage() {
         totalInvoice: total.totalInvoice + row.totalInvoice,
         totalPembelian: total.totalPembelian + row.totalPembelian,
         totalStockBarang: total.totalStockBarang + row.totalStockBarang,
+        totalPembayaranSupplier:
+          total.totalPembayaranSupplier + row.totalPembayaranSupplier,
+        totalHutangSupplier: row.totalHutangSupplier,
         grossProfit: total.grossProfit + row.grossProfit,
         totalBiayaOperasional:
           total.totalBiayaOperasional + row.totalBiayaOperasional,
@@ -661,6 +673,8 @@ export default function LaporanKeuanganExportPage() {
         totalInvoice: 0,
         totalPembelian: 0,
         totalStockBarang: 0,
+        totalPembayaranSupplier: 0,
+        totalHutangSupplier: 0,
         grossProfit: 0,
         totalBiayaOperasional: 0,
         netProfit: 0,
@@ -675,6 +689,8 @@ export default function LaporanKeuanganExportPage() {
           totalInvoice: invoiceGrandTotal,
           totalPembelian: purchaseTotal,
           totalStockBarang: stockBarangTotal,
+          totalPembayaranSupplier: pembelianPaymentSummary.totalPembayaranSupplier,
+          totalHutangSupplier: pembelianPaymentSummary.totalHutangSupplier,
           grossProfit,
           totalBiayaOperasional,
           netProfit,
@@ -721,8 +737,11 @@ export default function LaporanKeuanganExportPage() {
           description: formatPurchaseDescription(purchase.supplierName, purchase.noNota),
           kreditPpn: purchase.ppn ? purchase.total : undefined,
           kreditNonPpn: purchase.ppn ? undefined : purchase.total,
-          bayar: purchase.hutang ? t("field.hutang").toUpperCase() : t("field.lunas").toUpperCase(),
-          isHutang: purchase.hutang,
+          purchaseType: t(
+            purchase.hutang ? "pembelian.type.debt" : "pembelian.type.cash"
+          ).toUpperCase(),
+          paymentStatus: t(`pembelian.status.${purchase.statusPembayaran}`).toUpperCase(),
+          isUnpaid: purchase.statusPembayaran === "unpaid",
           note: purchase.note || undefined,
         });
       });
@@ -768,8 +787,13 @@ export default function LaporanKeuanganExportPage() {
         description: formatPurchaseDescription(row.namaSupplier || "-", row.noNota || ""),
         kreditPpn: row.ppn ? rowTotal : undefined,
         kreditNonPpn: row.ppn ? undefined : rowTotal,
-        bayar: row.hutang ? t("field.hutang").toUpperCase() : t("field.lunas").toUpperCase(),
-        isHutang: row.hutang,
+        purchaseType: t(
+          row.hutang ? "pembelian.type.debt" : "pembelian.type.cash"
+        ).toUpperCase(),
+        paymentStatus: t(
+          `pembelian.status.${getPembelianPaymentStatusAtPeriodEnd(row, bulan)}`
+        ).toUpperCase(),
+        isUnpaid: getPembelianPaymentStatusAtPeriodEnd(row, bulan) === "unpaid",
         note: row.note || undefined,
       });
     });
@@ -822,6 +846,7 @@ export default function LaporanKeuanganExportPage() {
     stockNonPpnTotal,
     stockPembelianRows,
     stockPpnTotal,
+    bulan,
     t,
     totalBiayaOperasional,
   ]);
@@ -961,6 +986,8 @@ export default function LaporanKeuanganExportPage() {
           styledExcelCell(t("field.totalInvoice"), excelStyleIds.header),
           styledExcelCell(t("field.totalPembelian"), excelStyleIds.header),
           styledExcelCell(t("field.stockBarang"), excelStyleIds.header),
+          styledExcelCell(t("laporanKeuangan.summary.supplierPayments"), excelStyleIds.header),
+          styledExcelCell(t("laporanKeuangan.summary.supplierDebt"), excelStyleIds.header),
           styledExcelCell(t("field.grossProfit"), excelStyleIds.header),
           styledExcelCell(t("field.totalBiayaOperasional"), excelStyleIds.header),
           styledExcelCell(t("field.netProfit"), excelStyleIds.header),
@@ -970,6 +997,8 @@ export default function LaporanKeuanganExportPage() {
           styledExcelCell(row.totalInvoice, excelStyleIds.tableNumber),
           styledExcelCell(row.totalPembelian, excelStyleIds.tableNumber),
           styledExcelCell(row.totalStockBarang, excelStyleIds.tableNumber),
+          styledExcelCell(row.totalPembayaranSupplier, excelStyleIds.tableNumber),
+          styledExcelCell(row.totalHutangSupplier, excelStyleIds.tableNumber),
           styledExcelCell(row.grossProfit, excelStyleIds.tableNumber),
           styledExcelCell(row.totalBiayaOperasional, excelStyleIds.tableNumber),
           styledExcelCell(row.netProfit, excelStyleIds.tableNumber),
@@ -979,6 +1008,8 @@ export default function LaporanKeuanganExportPage() {
           styledExcelCell(yearlyTotals.totalInvoice, excelStyleIds.boldNumber),
           styledExcelCell(yearlyTotals.totalPembelian, excelStyleIds.boldNumber),
           styledExcelCell(yearlyTotals.totalStockBarang, excelStyleIds.boldNumber),
+          styledExcelCell(yearlyTotals.totalPembayaranSupplier, excelStyleIds.boldNumber),
+          styledExcelCell(yearlyTotals.totalHutangSupplier, excelStyleIds.boldNumber),
           styledExcelCell(yearlyTotals.grossProfit, excelStyleIds.boldNumber),
           styledExcelCell(yearlyTotals.totalBiayaOperasional, excelStyleIds.boldNumber),
           styledExcelCell(yearlyTotals.netProfit, excelStyleIds.boldNumber),
@@ -989,7 +1020,7 @@ export default function LaporanKeuanganExportPage() {
         {
           name: `Laporan ${tahun}`,
           rows: reportRows,
-          columnWidths: [22, 18, 18, 18, 18, 24, 18],
+          columnWidths: [22, 18, 18, 18, 24, 24, 18, 24, 18],
         },
       ]);
       return;
@@ -1002,7 +1033,8 @@ export default function LaporanKeuanganExportPage() {
         styledExcelCell(t("laporanKeuangan.report.debet"), excelStyleIds.header),
         styledExcelCell(t("laporanKeuangan.report.kredit"), excelStyleIds.header),
         styledExcelCell(null, excelStyleIds.header),
-        styledExcelCell(t("laporanKeuangan.report.bayar"), excelStyleIds.header),
+        styledExcelCell(t("laporanKeuangan.report.purchaseType"), excelStyleIds.header),
+        styledExcelCell(t("laporanKeuangan.report.paymentStatus"), excelStyleIds.header),
         styledExcelCell(t("laporanKeuangan.report.note"), excelStyleIds.header),
       ],
       [
@@ -1013,6 +1045,7 @@ export default function LaporanKeuanganExportPage() {
         styledExcelCell(t("laporanKeuangan.report.nonPpn"), excelStyleIds.header),
         styledExcelCell(null, excelStyleIds.header),
         styledExcelCell(null, excelStyleIds.header),
+        styledExcelCell(null, excelStyleIds.header),
       ],
       ...financialReportRows.map((row) => toFinancialReportExcelRow(row)),
     ];
@@ -1021,8 +1054,8 @@ export default function LaporanKeuanganExportPage() {
       {
         name: "Laporan Keuangan",
         rows: reportRows,
-        columnWidths: [8, 52, 17, 14, 14, 11, 40],
-        merges: ["A1:A2", "B1:B2", "C1:C2", "D1:E1", "F1:F2", "G1:G2"],
+        columnWidths: [8, 48, 17, 14, 14, 14, 16, 36],
+        merges: ["A1:A2", "B1:B2", "C1:C2", "D1:E1", "F1:F2", "G1:G2", "H1:H2"],
       },
     ]);
   }
@@ -1113,7 +1146,7 @@ export default function LaporanKeuanganExportPage() {
                 </div>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-6">
+              <div className="grid gap-3 sm:grid-cols-4">
                 <div className="rounded-lg border border-slate-300 px-3 py-2">
                   <p className="text-xs uppercase tracking-[0.14em] text-slate-500">{t("field.totalInvoice")}</p>
                   <p className={`${summaryCurrencyValueClassName} text-slate-900`}>
@@ -1130,6 +1163,18 @@ export default function LaporanKeuanganExportPage() {
                   <p className="text-xs uppercase tracking-[0.14em] text-slate-500">{t("field.stockBarang")}</p>
                   <p className={`${summaryCurrencyValueClassName} text-slate-900`}>
                     <ExportCurrencyValue value={exportSummary.totalStockBarang} locale={locale} />
+                  </p>
+                </div>
+                <div className="rounded-lg border border-slate-300 px-3 py-2">
+                  <p className="text-xs uppercase tracking-[0.14em] text-slate-500">{t("laporanKeuangan.summary.supplierPayments")}</p>
+                  <p className={`${summaryCurrencyValueClassName} text-slate-900`}>
+                    <ExportCurrencyValue value={exportSummary.totalPembayaranSupplier} locale={locale} />
+                  </p>
+                </div>
+                <div className="rounded-lg border border-slate-300 px-3 py-2">
+                  <p className="text-xs uppercase tracking-[0.14em] text-slate-500">{t("laporanKeuangan.summary.supplierDebt")}</p>
+                  <p className={`${summaryCurrencyValueClassName} text-slate-900`}>
+                    <ExportCurrencyValue value={exportSummary.totalHutangSupplier} locale={locale} />
                   </p>
                 </div>
                 <div className="rounded-lg border border-slate-300 px-3 py-2">
@@ -1154,13 +1199,15 @@ export default function LaporanKeuanganExportPage() {
 
               {reportMode === "yearly" ? (
                 <div className="overflow-x-auto border border-slate-300 print:overflow-visible">
-                  <table className="w-full min-w-[1020px] table-fixed border-collapse text-sm text-slate-900 print:text-[11px]">
+                  <table className="w-full min-w-[1320px] table-fixed border-collapse text-sm text-slate-900 print:min-w-0 print:text-[10px]">
                     <thead className="bg-amber-50 text-center uppercase">
                       <tr>
                         <th className="w-40 border border-slate-400 px-2 py-2">{t("field.bulan")}</th>
                         <th className="w-36 border border-slate-400 px-2 py-2">{t("field.totalInvoice")}</th>
                         <th className="w-36 border border-slate-400 px-2 py-2">{t("field.totalPembelian")}</th>
                         <th className="w-36 border border-slate-400 px-2 py-2">{t("field.stockBarang")}</th>
+                        <th className="w-44 border border-slate-400 px-2 py-2">{t("laporanKeuangan.summary.supplierPayments")}</th>
+                        <th className="w-44 border border-slate-400 px-2 py-2">{t("laporanKeuangan.summary.supplierDebt")}</th>
                         <th className="w-36 border border-slate-400 px-2 py-2">{t("field.grossProfit")}</th>
                         <th className="w-44 border border-slate-400 px-2 py-2">{t("field.totalBiayaOperasional")}</th>
                         <th className="w-36 border border-slate-400 px-2 py-2">{t("field.netProfit")}</th>
@@ -1180,6 +1227,12 @@ export default function LaporanKeuanganExportPage() {
                           </td>
                           <td className="truncate border border-slate-300 px-2 py-1 align-top">
                             <ExportCurrencyValue value={row.totalStockBarang} locale={locale} />
+                          </td>
+                          <td className="truncate border border-slate-300 px-2 py-1 align-top">
+                            <ExportCurrencyValue value={row.totalPembayaranSupplier} locale={locale} />
+                          </td>
+                          <td className="truncate border border-slate-300 px-2 py-1 align-top">
+                            <ExportCurrencyValue value={row.totalHutangSupplier} locale={locale} />
                           </td>
                           <td className="truncate border border-slate-300 px-2 py-1 align-top">
                             <ExportCurrencyValue value={row.grossProfit} locale={locale} />
@@ -1208,6 +1261,12 @@ export default function LaporanKeuanganExportPage() {
                           <ExportCurrencyValue value={yearlyTotals.totalStockBarang} locale={locale} />
                         </td>
                         <td className="truncate border border-slate-300 px-2 py-1 align-top">
+                          <ExportCurrencyValue value={yearlyTotals.totalPembayaranSupplier} locale={locale} />
+                        </td>
+                        <td className="truncate border border-slate-300 px-2 py-1 align-top">
+                          <ExportCurrencyValue value={yearlyTotals.totalHutangSupplier} locale={locale} />
+                        </td>
+                        <td className="truncate border border-slate-300 px-2 py-1 align-top">
                           <ExportCurrencyValue value={yearlyTotals.grossProfit} locale={locale} />
                         </td>
                         <td className="truncate border border-slate-300 px-2 py-1 align-top">
@@ -1224,15 +1283,16 @@ export default function LaporanKeuanganExportPage() {
                 </div>
               ) : (
                 <div className="overflow-x-auto border border-slate-300 print:overflow-visible">
-                  <table className="w-full min-w-[1280px] table-fixed border-collapse text-sm text-slate-900 print:min-w-0 print:text-[11px]">
+                  <table className="w-full min-w-[1440px] table-fixed border-collapse text-sm text-slate-900 print:min-w-0 print:text-[10px]">
                     <colgroup>
                       <col style={{ width: "7%" }} />
-                      <col style={{ width: "25%" }} />
-                      <col style={{ width: "13%" }} />
+                      <col style={{ width: "22%" }} />
+                      <col style={{ width: "12%" }} />
+                      <col style={{ width: "10%" }} />
+                      <col style={{ width: "10%" }} />
+                      <col style={{ width: "9%" }} />
                       <col style={{ width: "11%" }} />
-                      <col style={{ width: "11%" }} />
-                      <col style={{ width: "8%" }} />
-                      <col style={{ width: "15%" }} />
+                      <col style={{ width: "19%" }} />
                     </colgroup>
                     <thead className="bg-amber-50 text-center uppercase">
                       <tr>
@@ -1240,7 +1300,8 @@ export default function LaporanKeuanganExportPage() {
                         <th rowSpan={2} className="border border-slate-400 px-2 py-2">{t("laporanKeuangan.report.description")}</th>
                         <th rowSpan={2} className="border border-slate-400 px-2 py-2">{t("laporanKeuangan.report.debet")}</th>
                         <th colSpan={2} className="border border-slate-400 px-2 py-1">{t("laporanKeuangan.report.kredit")}</th>
-                        <th rowSpan={2} className="border border-slate-400 px-2 py-2">{t("laporanKeuangan.report.bayar")}</th>
+                        <th rowSpan={2} className="border border-slate-400 px-2 py-2">{t("laporanKeuangan.report.purchaseType")}</th>
+                        <th rowSpan={2} className="border border-slate-400 px-2 py-2">{t("laporanKeuangan.report.paymentStatus")}</th>
                         <th rowSpan={2} className="border border-slate-400 px-2 py-2">{t("laporanKeuangan.report.note")}</th>
                       </tr>
                       <tr>
@@ -1279,16 +1340,19 @@ export default function LaporanKeuanganExportPage() {
                             <td className="whitespace-nowrap border border-slate-300 px-2 py-1 align-top">
                               <ExportCurrencyValue value={row.kreditNonPpn} locale={locale} />
                             </td>
+                            <td className="whitespace-nowrap border border-slate-300 px-2 py-1 text-center align-top">
+                              {row.purchaseType || ""}
+                            </td>
                             <td
                               className={`whitespace-nowrap border border-slate-300 px-2 py-1 text-center align-top ${
-                                row.isHutang
+                                row.isUnpaid
                                   ? " text-red-700"
-                                  : row.bayar
+                                  : row.paymentStatus
                                     ? " text-emerald-700"
                                     : ""
                               }`}
                             >
-                              {row.bayar || ""}
+                              {row.paymentStatus || ""}
                             </td>
                             <td className="break-words border border-slate-300 px-2 py-1 align-top" title={row.note || ""}>{row.note || ""}</td>
                           </tr>
