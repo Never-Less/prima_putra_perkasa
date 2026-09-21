@@ -10,6 +10,7 @@ import { useExportAccess } from "../_hooks/use-export-access";
 import { requestUnsavedChangesConfirmation } from "../_hooks/use-unsaved-changes-warning";
 import { usePersistentListUrl } from "../_hooks/use-persistent-list-url";
 import { ApiRequestError } from "../_lib/api-client";
+import { getDocumentValidationWarning } from "../_lib/document-validation-warning";
 import {
   buildFormRouteWithReturnPagination,
   buildListRouteWithPagination,
@@ -139,6 +140,11 @@ export function InvoicePageContent({ mode = "list", itemId = "" }: InvoicePageCo
       }
     | null
   >(null);
+  const [pendingValidationWarning, setPendingValidationWarning] = useState<{
+    form: InvoiceFormState;
+    selectedItem: InvoiceItem;
+    message: string;
+  } | null>(null);
 
   usePersistentListUrl({ enabled: !isFormMode, basePath: "/invoice", defaultFilter: defaultInvoiceFilter, defaultPagination: defaultInvoicePaginationQuery, defaultSort: defaultInvoiceSort, filter, pagination: paginationQuery, sort: sortValue, setFilter, setPagination: setPaginationQuery, setSort: setSortValue });
 
@@ -382,7 +388,11 @@ export function InvoicePageContent({ mode = "list", itemId = "" }: InvoicePageCo
   );
 
   const executeSaveInvoice = useCallback(
-    async (form: InvoiceFormState, selectedItem?: InvoiceItem) => {
+    async (
+      form: InvoiceFormState,
+      selectedItem?: InvoiceItem,
+      continueOnValidationWarning = false
+    ) => {
       setActionErrorMessage("");
 
       if (form.isPaid && !String(form.tanggalBayar || "").trim()) {
@@ -411,7 +421,9 @@ export function InvoicePageContent({ mode = "list", itemId = "" }: InvoicePageCo
 
       try {
         if (selectedItem?.id) {
-          const updatedInvoice = await updateInvoice(selectedItem.id, form);
+          const updatedInvoice = await updateInvoice(selectedItem.id, form, {
+            continueOnValidationWarning,
+          });
           const refreshedRows = await loadInvoices({ showLoading: false });
           await loadSuratJalanOptions();
           const currentUpdatedInvoice = updatedInvoice
@@ -476,6 +488,12 @@ export function InvoicePageContent({ mode = "list", itemId = "" }: InvoicePageCo
           "success"
         );
       } catch (error) {
+        const validationWarning = getDocumentValidationWarning(error);
+        if (validationWarning && selectedItem?.id && !continueOnValidationWarning) {
+          setPendingValidationWarning({ form, selectedItem, message: validationWarning.message });
+          return;
+        }
+
         if (error instanceof ApiRequestError) {
           const message = error.message || t("invoice.mutationError");
           setActionErrorMessage(message);
@@ -492,6 +510,13 @@ export function InvoicePageContent({ mode = "list", itemId = "" }: InvoicePageCo
     },
     [isFormMode, loadInvoices, loadSuratJalanOptions, returnListState, returnPaginationQuery, router, showToast, t]
   );
+
+  const handleContinueAfterValidationWarning = useCallback(async () => {
+    if (!pendingValidationWarning) return;
+    const currentWarning = pendingValidationWarning;
+    setPendingValidationWarning(null);
+    await executeSaveInvoice(currentWarning.form, currentWarning.selectedItem, true);
+  }, [executeSaveInvoice, pendingValidationWarning]);
 
   const executeDeleteInvoice = useCallback(
     async (selectedItem: InvoiceItem) => {
@@ -792,6 +817,20 @@ export function InvoicePageContent({ mode = "list", itemId = "" }: InvoicePageCo
         isLoading={isSaving || isDeleting}
         onCancel={() => setPendingConfirmation(null)}
         onConfirm={() => void handleConfirmAction()}
+      />
+
+      <ConfirmationModal
+        isOpen={Boolean(pendingValidationWarning)}
+        title={t("documentValidation.warningTitle")}
+        description={t("documentValidation.warningDescription", {
+          message: pendingValidationWarning?.message || "-",
+        })}
+        confirmLabel={t("documentValidation.continue")}
+        cancelLabel={t("common.cancel")}
+        variant="warning"
+        isLoading={isSaving}
+        onCancel={() => setPendingValidationWarning(null)}
+        onConfirm={() => void handleContinueAfterValidationWarning()}
       />
 
       <PostSaveActionModal

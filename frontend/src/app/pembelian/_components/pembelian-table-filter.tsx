@@ -71,11 +71,12 @@ export function PembelianTableFilter({
       { key: "namaSupplier", label: t("field.namaSupplier"), index: 4 },
       { key: "noNota", label: t("field.noNota"), index: 5 },
       { key: "hutang", label: t("field.hutang"), index: 6 },
-      { key: "ppn", label: t("field.ppn"), index: 7 },
-      { key: "lamaHutang", label: t("field.lamaHutang"), index: 8 },
-      { key: "nilaiNota", label: t("field.nilaiNota"), index: 9 },
-      { key: "tanggalJatuhTempo", label: t("field.tanggalJatuhTempo"), index: 10 },
-      { key: "tanggalBayar", label: t("field.tanggalBayar"), index: 11 },
+      { key: "statusPembayaran", label: t("field.statusPembayaran"), index: 7 },
+      { key: "ppn", label: t("field.ppn"), index: 8 },
+      { key: "lamaHutang", label: t("field.lamaHutang"), index: 9 },
+      { key: "nilaiNota", label: t("field.nilaiNota"), index: 10 },
+      { key: "tanggalJatuhTempo", label: t("field.tanggalJatuhTempo"), index: 11 },
+      { key: "tanggalBayar", label: t("field.tanggalBayar"), index: 12 },
     ],
     [t]
   );
@@ -145,6 +146,24 @@ export function PembelianTableFilter({
               <option value="">{t("common.all")}</option>
               <option value="true">{t("common.true")}</option>
               <option value="false">{t("common.false")}</option>
+            </select>
+          </label>
+
+          <label className="text-sm text-slate-700 dark:text-slate-200">
+            {t("field.statusPembayaran")}
+            <select
+              value={draftFilter.statusPembayaran}
+              onChange={(event) =>
+                updateDraftFilter(
+                  "statusPembayaran",
+                  event.target.value as PembelianFilter["statusPembayaran"]
+                )
+              }
+              className="mt-1 w-full rounded-lg border border-transparent bg-slate-100 px-3 py-2 text-sm text-slate-900 outline-none focus:border-sky-400 dark:bg-slate-900 dark:text-slate-100"
+            >
+              <option value="">{t("common.all")}</option>
+              <option value="paid">{t("pembelian.status.paid")}</option>
+              <option value="unpaid">{t("pembelian.status.unpaid")}</option>
             </select>
           </label>
 
@@ -300,6 +319,14 @@ export function PembelianTableFilter({
                         <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.hutang")}</dt>
                         <dd className="mt-1 text-slate-700 dark:text-slate-200">{row.hutang ? t("common.true") : t("common.false")}</dd>
                       </div> : null}
+                      {isColumnVisible("statusPembayaran") ? <div>
+                        <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.statusPembayaran")}</dt>
+                        <dd className={`mt-1 font-medium ${row.statusPembayaran === "paid" ? "text-emerald-700 dark:text-emerald-300" : "text-amber-700 dark:text-amber-300"}`}>
+                          {t(`pembelian.status.${row.statusPembayaran}`)}
+                        </dd>
+                      </div> : null}
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2">
                       {isColumnVisible("ppn") ? <div>
                         <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.ppn")}</dt>
                         <dd className="mt-1 text-slate-700 dark:text-slate-200">{row.ppn ? t("common.true") : t("common.false")}</dd>
@@ -336,7 +363,7 @@ export function PembelianTableFilter({
 
         <div className="hidden md:block">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1380px] table-fixed text-sm">
+            <table className="w-full min-w-[1500px] table-fixed text-sm">
               <colgroup>
                 <col style={{ width: "120px" }} />
                 <col style={{ width: "110px" }} />
@@ -344,6 +371,7 @@ export function PembelianTableFilter({
                 <col style={{ width: "250px" }} />
                 <col style={{ width: "160px" }} />
                 <col style={{ width: "80px" }} />
+                <col style={{ width: "130px" }} />
                 <col style={{ width: "80px" }} />
                 <col style={{ width: "110px" }} />
                 <col style={{ width: "120px" }} />
@@ -374,6 +402,7 @@ export function PembelianTableFilter({
                   </th>
                   <th className="px-3 py-2 font-medium">{t("field.noNota")}</th>
                   <th className="px-3 py-2 font-medium">{t("field.hutang")}</th>
+                  <th className="px-3 py-2 font-medium">{t("field.statusPembayaran")}</th>
                   <th className="px-3 py-2 font-medium">{t("field.ppn")}</th>
                   <th className="px-3 py-2 font-medium">
                     <span>{t("field.lamaHutang")}</span>
@@ -395,7 +424,7 @@ export function PembelianTableFilter({
               <tbody className="divide-y divide-slate-200 bg-white dark:divide-slate-800 dark:bg-slate-900">
                 {rows.length === 0 ? (
                   <tr>
-                    <td colSpan={11} className="px-3 py-4 text-center text-slate-500 dark:text-slate-400">
+                    <td colSpan={12} className="px-3 py-4 text-center text-slate-500 dark:text-slate-400">
                       {t("common.noData")}
                     </td>
                   </tr>
@@ -434,6 +463,9 @@ export function PembelianTableFilter({
                         <td className="truncate px-3 py-2 text-slate-600 dark:text-slate-300" title={row.noNota || "-"}>{row.noNota || "-"}</td>
                         <td className="truncate px-3 py-2 text-slate-600 dark:text-slate-300">
                           {row.hutang ? t("common.true") : t("common.false")}
+                        </td>
+                        <td className={`truncate px-3 py-2 font-medium ${row.statusPembayaran === "paid" ? "text-emerald-700 dark:text-emerald-300" : "text-amber-700 dark:text-amber-300"}`}>
+                          {t(`pembelian.status.${row.statusPembayaran}`)}
                         </td>
                         <td className="truncate px-3 py-2 text-slate-600 dark:text-slate-300">
                           {row.ppn ? t("common.true") : t("common.false")}

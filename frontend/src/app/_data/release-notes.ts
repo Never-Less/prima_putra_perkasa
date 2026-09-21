@@ -15,6 +15,36 @@ export type ReleaseNote = {
 // Urutkan dari rilis terbaru. Tambahkan satu entry pada setiap commit perubahan aplikasi.
 export const releaseNotes: ReleaseNote[] = [
   {
+    id: "2026-09-21-supplier-debt-and-correction-warning",
+    version: "2026.09.21",
+    date: "2026-09-21",
+    title: "Hutang Supplier dan Peringatan Pembetulan Dokumen",
+    summary: "Hutang supplier kini dapat dipantau dari data Pembelian, status pelunasan lebih jelas, dan mode pembetulan dokumen tetap menampilkan peringatan sebelum perubahan dilanjutkan.",
+    sections: [
+      {
+        title: "Hutang Supplier dan Pembelian",
+        changes: [
+          "Halaman Hutang Supplier menampilkan total hutang, tingkat keterlambatan, filter supplier dan jatuh tempo, serta pengelompokan data berdasarkan supplier atau bulan.",
+          "Status pembayaran Pembelian dipisahkan dari jenis transaksi hutang dan otomatis menampilkan Lunas atau Belum Lunas berdasarkan tanggal bayar.",
+          "Daftar Pembelian dilengkapi kolom serta filter Status Pembayaran pada tampilan desktop dan mobile.",
+        ],
+      },
+      {
+        title: "Pembetulan Dokumen",
+        changes: [
+          "Sales Order, Surat Jalan, dan Invoice tetap menjalankan validasi relasi saat mode pembetulan data aktif.",
+          "Pelanggaran validasi ditampilkan sebagai peringatan dengan pilihan Tetap Lanjutkan, sedangkan mode normal tetap memblokir perubahan yang tidak valid.",
+        ],
+      },
+      {
+        title: "Navigasi",
+        changes: [
+          "Piutang Customer dan Hutang Supplier ditempatkan pada kategori Keuangan, sementara rekap pembayaran dan laporan keuangan dikelompokkan dalam kategori Laporan.",
+        ],
+      },
+    ],
+  },
+  {
     id: "2026-09-17-mobile-print-purchase-update",
     version: "2026.09.17",
     date: "2026-09-17",

@@ -524,10 +524,17 @@ export async function createPurchaseOrder(form: PurchaseOrderFormState) {
   return toPurchaseOrderItem(response?.purchaseOrder);
 }
 
-export async function updatePurchaseOrder(id: string, form: PurchaseOrderFormState) {
+export async function updatePurchaseOrder(
+  id: string,
+  form: PurchaseOrderFormState,
+  options: { continueOnValidationWarning?: boolean } = {}
+) {
+  const payload = toNormalizedPurchaseOrderPayload(form);
   const response = await requestApi<PurchaseOrderResponse>(`/api/purchase-orders/${id}`, {
     method: "PUT",
-    body: toNormalizedPurchaseOrderPayload(form),
+    body: options.continueOnValidationWarning
+      ? { ...payload, continueOnValidationWarning: true }
+      : payload,
     invalidateCachePaths: purchaseOrderMutationCachePaths,
   });
 

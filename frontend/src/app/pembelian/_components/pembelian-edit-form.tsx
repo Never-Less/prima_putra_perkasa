@@ -688,6 +688,12 @@ export function PembelianEditForm({
               {form.hutang ? t("common.true") : t("common.false")}
             </p>
             <p>
+              <span className="text-slate-500 dark:text-slate-400">{t("field.statusPembayaran")}:</span>{" "}
+              <span className={`font-medium ${!form.hutang || form.tanggalBayar ? "text-emerald-700 dark:text-emerald-300" : "text-amber-700 dark:text-amber-300"}`}>
+                {t(!form.hutang || form.tanggalBayar ? "pembelian.status.paid" : "pembelian.status.unpaid")}
+              </span>
+            </p>
+            <p>
               <span className="text-slate-500 dark:text-slate-400">{t("field.ppn")}:</span>{" "}
               {form.ppn ? t("common.true") : t("common.false")}
             </p>
