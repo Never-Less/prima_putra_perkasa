@@ -810,11 +810,17 @@ export async function createInvoice(form: InvoiceFormState) {
   return toInvoiceItem(response?.invoice);
 }
 
-export async function updateInvoice(id: string, form: InvoiceFormState) {
+export async function updateInvoice(
+  id: string,
+  form: InvoiceFormState,
+  options: { continueOnValidationWarning?: boolean } = {}
+) {
   const payload = toNormalizedInvoicePayload(form);
   const response = await requestApi<InvoiceResponse>(`/api/invoices/${id}`, {
     method: "PUT",
-    body: payload,
+    body: options.continueOnValidationWarning
+      ? { ...payload, continueOnValidationWarning: true }
+      : payload,
     invalidateCachePaths: invoiceMutationCachePaths,
   });
 

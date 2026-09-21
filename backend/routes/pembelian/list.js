@@ -17,6 +17,10 @@ function matchesStockLabel(value) {
   return "stock".includes(normalizedValue) || "stok".includes(normalizedValue);
 }
 
+function appendAndCondition(query, condition) {
+  query.$and = [...(query.$and || []), condition];
+}
+
 router.get("/", async (req, res) => {
   try {
     const query = {};
@@ -46,6 +50,14 @@ router.get("/", async (req, res) => {
       query.ppn = true;
     } else if (req.query.ppn === "false") {
       query.ppn = false;
+    }
+
+    if (req.query.statusPembayaran === "paid") {
+      appendAndCondition(query, {
+        $or: [{ hutang: false }, { tanggalBayar: { $ne: null } }],
+      });
+    } else if (req.query.statusPembayaran === "unpaid") {
+      appendAndCondition(query, { hutang: true, tanggalBayar: null });
     }
 
     if (req.query.tanggalNotaDari || req.query.tanggalNotaSampai) {

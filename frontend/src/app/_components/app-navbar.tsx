@@ -134,11 +134,6 @@ export function AppNavbar() {
         label: t("nav.group.purchasing"),
         items: [
           { href: "/pembelian", label: t("nav.pembelian"), icon: PackageSearch },
-          {
-            href: "/rekapTagihanPembayaranPabrik",
-            label: t("nav.rekapTagihanPembayaranPabrik"),
-            icon: Factory,
-          },
         ],
       },
       {
@@ -148,8 +143,19 @@ export function AppNavbar() {
             ? [{ href: "/dashboardFinance", label: t("nav.financeDashboard"), icon: Landmark }]
             : []),
           { href: "/kasBank", label: t("nav.cashLedger"), icon: WalletCards },
+          { href: "/tagihanBelumDibayar", label: t("nav.piutangCustomer"), icon: CircleDollarSign },
+          { href: "/hutangSupplier", label: t("nav.hutangSupplier"), icon: ReceiptText },
+        ],
+      },
+      {
+        label: t("nav.group.reports"),
+        items: [
+          {
+            href: "/rekapTagihanPembayaranPabrik",
+            label: t("nav.rekapTagihanPembayaranPabrik"),
+            icon: Factory,
+          },
           { href: "/pembayaranAllCustomer", label: t("nav.pembayaranAllCustomer"), icon: WalletCards },
-          { href: "/tagihanBelumDibayar", label: t("nav.tagihanBelumDibayar"), icon: CircleDollarSign },
           ...(isAdminAccess
             ? [{ href: "/laporanKeuangan", label: t("nav.laporanKeuangan"), icon: BarChart3 }]
             : []),

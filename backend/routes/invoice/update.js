@@ -2,7 +2,6 @@ const { validateInvoiceIntegrity } = require("../../utils/invoice-integrity");
 const { documentMutation } = require("../../utils/document-mutation");
 const express = require("express");
 
-const { isDocumentCorrectionModeEnabled } = require("../../config/document-validation");
 const { Customer } = require("../../models/Customer");
 const { Invoice } = require("../../models/Invoice");
 const { syncPurchaseOrderByNoPo } = require("../../utils/sync-purchase-order-from-invoice");
@@ -19,6 +18,7 @@ const {
   parseNumber,
 } = require("./validators");
 const { calculateDueDate, normalizePaymentTerm } = require("../../utils/payment-term");
+const { respondToDocumentValidation } = require("../../utils/document-validation-warning");
 
 const router = express.Router();
 
@@ -220,12 +220,9 @@ router.put("/:id", documentMutation(async (req, res) => {
     updates.dueDate = calculateDueDate(effectiveTanggal, effectivePaymentTerm);
 
     const integrityFields = ["noInvoice", "noPo", "noPoList", "noSuratJalan", "idCustomer", "barang"];
-    if (
-      !isDocumentCorrectionModeEnabled() &&
-      integrityFields.some((field) => req.body[field] !== undefined)
-    ) {
+    if (integrityFields.some((field) => req.body[field] !== undefined)) {
       const integrityError = await validateInvoiceIntegrity({ ...existingInvoice.toObject(), ...updates, noPoList: updates.noPoList || getInvoiceNoPoList(existingInvoice) }, id);
-      if (integrityError) return res.status(409).json({ message: integrityError });
+      if (integrityError && respondToDocumentValidation(req, res, integrityError)) return;
     }
 
     const invoice = await Invoice.findByIdAndUpdate(id, updates, {

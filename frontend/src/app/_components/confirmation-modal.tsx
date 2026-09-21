@@ -10,7 +10,7 @@ type ConfirmationModalProps = {
   confirmLabel: string;
   cancelLabel: string;
   isLoading?: boolean;
-  variant?: "default" | "danger";
+  variant?: "default" | "warning" | "danger";
   onConfirm: () => void;
   onCancel: () => void;
 };
@@ -53,7 +53,7 @@ export function ConfirmationModal({
     variant === "danger"
       ? "erp-button-danger"
       : "erp-button-primary";
-  const StatusIcon = variant === "danger" ? AlertTriangle : Info;
+  const StatusIcon = variant === "default" ? Info : AlertTriangle;
 
   return (
     <div
@@ -76,6 +76,8 @@ export function ConfirmationModal({
             className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md ${
               variant === "danger"
                 ? "bg-red-50 text-red-600 dark:bg-red-950/60 dark:text-red-300"
+                : variant === "warning"
+                  ? "bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-300"
                 : "bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-300"
             }`}
           >

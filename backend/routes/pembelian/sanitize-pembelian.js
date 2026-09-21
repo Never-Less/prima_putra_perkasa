@@ -1,3 +1,7 @@
+function getPembelianPaymentStatus(pembelian) {
+  return !pembelian.hutang || pembelian.tanggalBayar ? "paid" : "unpaid";
+}
+
 function sanitizePembelian(pembelian) {
   const supplierId = pembelian.idSupplier;
 
@@ -15,11 +19,13 @@ function sanitizePembelian(pembelian) {
     nilaiNota: pembelian.nilaiNota,
     tanggalJatuhTempo: pembelian.tanggalJatuhTempo,
     tanggalBayar: pembelian.tanggalBayar,
+    statusPembayaran: getPembelianPaymentStatus(pembelian),
     createdAt: pembelian.createdAt,
     updatedAt: pembelian.updatedAt,
   };
 }
 
 module.exports = {
+  getPembelianPaymentStatus,
   sanitizePembelian,
 };

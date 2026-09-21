@@ -1,7 +1,6 @@
 const { documentMutation } = require("../../utils/document-mutation");
 const express = require("express");
 
-const { isDocumentCorrectionModeEnabled } = require("../../config/document-validation");
 const { Customer } = require("../../models/Customer");
 const { Invoice } = require("../../models/Invoice");
 const { SuratJalan } = require("../../models/SuratJalan");
@@ -15,6 +14,7 @@ const {
   parseNumber,
 } = require("./validators");
 const { normalizePaymentTerm } = require("../../utils/payment-term");
+const { respondToDocumentValidation } = require("../../utils/document-validation-warning");
 
 const router = express.Router();
 
@@ -163,12 +163,13 @@ router.put("/:id", documentMutation(async (req, res) => {
     );
     const revisionImpact = null;
 
-    if (hasOperationalChanges && !isDocumentCorrectionModeEnabled()) {
+    if (hasOperationalChanges) {
       const existingNoPo = String(existingPurchaseOrder.noPo || "").trim();
       const affectedSuratJalan = await SuratJalan.countDocuments({ noPo: existingNoPo }).collation({ locale: "en", strength: 2 });
       const affectedInvoices = await Invoice.countDocuments({ $or: [{ noPoList: existingNoPo }, { noPo: existingNoPo }, { "barang.sources.noPo": existingNoPo }, { "barang.noPoManual": existingNoPo }] }).collation({ locale: "en", strength: 2 });
       if (affectedSuratJalan > 0 || affectedInvoices > 0) {
-        return res.status(409).json({ message: "Sales Order tidak dapat direvisi selama masih terhubung ke Surat Jalan atau Invoice. Hapus atau lepaskan dokumen turunan terlebih dahulu, mulai dari Invoice." });
+        const validationMessage = "Sales Order tidak dapat direvisi selama masih terhubung ke Surat Jalan atau Invoice. Hapus atau lepaskan dokumen turunan terlebih dahulu, mulai dari Invoice.";
+        if (respondToDocumentValidation(req, res, validationMessage)) return;
       }
     }
 

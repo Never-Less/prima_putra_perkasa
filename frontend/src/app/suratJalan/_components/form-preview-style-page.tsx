@@ -16,6 +16,7 @@ import { useExportAccess } from "../../_hooks/use-export-access";
 import { requestUnsavedChangesConfirmation } from "../../_hooks/use-unsaved-changes-warning";
 import { usePersistentListUrl } from "../../_hooks/use-persistent-list-url";
 import { ApiRequestError } from "../../_lib/api-client";
+import { getDocumentValidationWarning } from "../../_lib/document-validation-warning";
 import {
   buildFormRouteWithReturnPagination,
   buildListRouteWithPagination,
@@ -155,6 +156,11 @@ export function FormPreviewStylePage({
       }
     | null
   >(null);
+  const [pendingValidationWarning, setPendingValidationWarning] = useState<{
+    form: SuratJalanFormState;
+    selectedItem: SuratJalanItem;
+    message: string;
+  } | null>(null);
 
   const setPersistentSort = useCallback((value: string) => onSortChange?.(value), [onSortChange]);
   usePersistentListUrl({ enabled: !isFormMode, basePath: "/suratJalan", defaultFilter: defaultSuratJalanFilter, defaultPagination: defaultSuratJalanPaginationQuery, defaultSort: "updatedDesc", filter, pagination: paginationQuery, sort: sortValue, setFilter, setPagination: setPaginationQuery, setSort: setPersistentSort });
@@ -506,13 +512,19 @@ export function FormPreviewStylePage({
   );
 
   const executeSaveSuratJalan = useCallback(
-    async (form: SuratJalanFormState, selectedItem?: SuratJalanItem) => {
+    async (
+      form: SuratJalanFormState,
+      selectedItem?: SuratJalanItem,
+      continueOnValidationWarning = false
+    ) => {
       setActionErrorMessage("");
       setIsSaving(true);
 
       try {
         if (selectedItem?.id) {
-          const updatedItem = await updateSuratJalan(selectedItem.id, form);
+          const updatedItem = await updateSuratJalan(selectedItem.id, form, {
+            continueOnValidationWarning,
+          });
           const refreshedRows = await loadSuratJalanData({ showLoading: false });
           const currentUpdatedItem = updatedItem
             ? refreshedRows.find((row) => row.id === updatedItem.id) || updatedItem
@@ -575,6 +587,12 @@ export function FormPreviewStylePage({
           "success"
         );
       } catch (error) {
+        const validationWarning = getDocumentValidationWarning(error);
+        if (validationWarning && selectedItem?.id && !continueOnValidationWarning) {
+          setPendingValidationWarning({ form, selectedItem, message: validationWarning.message });
+          return;
+        }
+
         if (error instanceof ApiRequestError) {
           const message = error.message || t("suratJalan.mutationError");
           setActionErrorMessage(message);
@@ -600,6 +618,13 @@ export function FormPreviewStylePage({
       t,
     ]
   );
+
+  const handleContinueAfterValidationWarning = useCallback(async () => {
+    if (!pendingValidationWarning) return;
+    const currentWarning = pendingValidationWarning;
+    setPendingValidationWarning(null);
+    await executeSaveSuratJalan(currentWarning.form, currentWarning.selectedItem, true);
+  }, [executeSaveSuratJalan, pendingValidationWarning]);
 
   const executeDeleteSuratJalan = useCallback(
     async (selectedItem: SuratJalanItem) => {
@@ -879,6 +904,20 @@ export function FormPreviewStylePage({
         isLoading={isSaving || isDeleting}
         onCancel={() => setPendingConfirmation(null)}
         onConfirm={() => void handleConfirmAction()}
+      />
+
+      <ConfirmationModal
+        isOpen={Boolean(pendingValidationWarning)}
+        title={t("documentValidation.warningTitle")}
+        description={t("documentValidation.warningDescription", {
+          message: pendingValidationWarning?.message || "-",
+        })}
+        confirmLabel={t("documentValidation.continue")}
+        cancelLabel={t("common.cancel")}
+        variant="warning"
+        isLoading={isSaving}
+        onCancel={() => setPendingValidationWarning(null)}
+        onConfirm={() => void handleContinueAfterValidationWarning()}
       />
 
       <PostCreateActionModal

@@ -3,12 +3,12 @@ const { deliveryInvoiceQuery } = require("../../utils/invoice-integrity");
 const { documentMutation } = require("../../utils/document-mutation");
 const express = require("express");
 
-const { isDocumentCorrectionModeEnabled } = require("../../config/document-validation");
 const { Customer } = require("../../models/Customer");
 const { SuratJalan } = require("../../models/SuratJalan");
 const { sanitizeSuratJalan } = require("./sanitize-surat-jalan");
 const { isValidId, parseBarangList, parseDate } = require("./validators");
 const { validateDeliveryAgainstSalesOrder } = require("../../utils/delivery-validation");
+const { respondToDocumentValidation } = require("../../utils/document-validation-warning");
 
 const router = express.Router();
 
@@ -82,11 +82,9 @@ router.put("/:id", documentMutation(async (req, res) => {
   try {
     const existingDocument = await SuratJalan.findById(id).lean();
     if (!existingDocument) return res.status(404).json({ message: "Data surat jalan tidak ditemukan." });
-    if (
-      !isDocumentCorrectionModeEnabled() &&
-      await Invoice.countDocuments(deliveryInvoiceQuery(existingDocument)).collation({ locale: "en", strength: 2 })
-    ) {
-      return res.status(409).json({ message: "Surat Jalan tidak dapat dihapus atau direvisi selama masih terhubung ke Invoice. Hapus atau lepaskan referensi Invoice terlebih dahulu." });
+    if (await Invoice.countDocuments(deliveryInvoiceQuery(existingDocument)).collation({ locale: "en", strength: 2 })) {
+      const validationMessage = "Surat Jalan tidak dapat dihapus atau direvisi selama masih terhubung ke Invoice. Hapus atau lepaskan referensi Invoice terlebih dahulu.";
+      if (respondToDocumentValidation(req, res, validationMessage)) return;
     }
     if (updates.idCustomer) {
       const customer = await Customer.findById(updates.idCustomer);
@@ -109,15 +107,13 @@ router.put("/:id", documentMutation(async (req, res) => {
     }
 
 
-    if (!isDocumentCorrectionModeEnabled()) {
-      const deliveryError = await validateDeliveryAgainstSalesOrder({
-        noPo: updates.noPo || existingDocument.noPo,
-        customerId: updates.idCustomer || existingDocument.idCustomer,
-        barang: updates.barang || existingDocument.barang,
-        excludeSuratJalanId: id,
-      });
-      if (deliveryError) return res.status(409).json({ message: deliveryError });
-    }
+    const deliveryError = await validateDeliveryAgainstSalesOrder({
+      noPo: updates.noPo || existingDocument.noPo,
+      customerId: updates.idCustomer || existingDocument.idCustomer,
+      barang: updates.barang || existingDocument.barang,
+      excludeSuratJalanId: id,
+    });
+    if (deliveryError && respondToDocumentValidation(req, res, deliveryError)) return;
 
     const suratJalan = await SuratJalan.findByIdAndUpdate(id, updates, {
       new: true,

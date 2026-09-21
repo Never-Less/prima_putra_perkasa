@@ -467,11 +467,17 @@ export async function createSuratJalan(form: SuratJalanFormState) {
   return toSuratJalanItem(response?.suratJalan);
 }
 
-export async function updateSuratJalan(id: string, form: SuratJalanFormState) {
+export async function updateSuratJalan(
+  id: string,
+  form: SuratJalanFormState,
+  options: { continueOnValidationWarning?: boolean } = {}
+) {
   const payload = toNormalizedSuratJalanPayload(form);
   const response = await requestApi<SuratJalanResponse>(`/api/surat-jalan/${id}`, {
     method: "PUT",
-    body: payload,
+    body: options.continueOnValidationWarning
+      ? { ...payload, continueOnValidationWarning: true }
+      : payload,
     invalidateCachePaths: suratJalanMutationCachePaths,
   });
 
