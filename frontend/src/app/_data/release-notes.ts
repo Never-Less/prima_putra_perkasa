@@ -15,6 +15,30 @@ export type ReleaseNote = {
 // Urutkan dari rilis terbaru. Tambahkan satu entry pada setiap commit perubahan aplikasi.
 export const releaseNotes: ReleaseNote[] = [
   {
+    id: "2026-09-21-financial-report-supplier-payments",
+    version: "2026.09.21",
+    date: "2026-09-21",
+    title: "Pembayaran dan Hutang Supplier pada Laporan Keuangan",
+    summary: "Laporan keuangan kini membedakan jenis pembelian dan status pelunasan serta menampilkan pembayaran supplier dan saldo hutang pada akhir periode.",
+    sections: [
+      {
+        title: "Laporan Keuangan",
+        changes: [
+          "Ringkasan bulanan dan tahunan menampilkan total pembayaran supplier pada periode berjalan serta saldo hutang supplier pada akhir periode.",
+          "Pembelian tunai dihitung sebagai pembayaran pada tanggal nota, sedangkan pembayaran hutang mengikuti tanggal bayar yang tercatat.",
+          "Perhitungan laba tetap menggunakan seluruh pembelian yang terhubung agar nilai gross profit tidak berubah karena status pembayaran.",
+        ],
+      },
+      {
+        title: "Tampilan dan Export",
+        changes: [
+          "Tabel stock barang membedakan jenis pembelian Tunai atau Hutang dari status pembayaran Lunas atau Belum Lunas.",
+          "Print dan Excel laporan keuangan menyertakan ringkasan pembayaran, saldo hutang, jenis pembelian, dan status pembayaran.",
+        ],
+      },
+    ],
+  },
+  {
     id: "2026-09-21-supplier-debt-and-correction-warning",
     version: "2026.09.21",
     date: "2026-09-21",

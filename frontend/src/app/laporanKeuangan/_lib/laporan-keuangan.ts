@@ -29,9 +29,16 @@ export type LaporanKeuanganMonthSummary = {
   totalInvoice: number;
   totalPembelian: number;
   totalStockBarang: number;
+  totalPembayaranSupplier: number;
+  totalHutangSupplier: number;
   grossProfit: number;
   totalBiayaOperasional: number;
   netProfit: number;
+};
+
+export type PembelianPaymentSummary = {
+  totalPembayaranSupplier: number;
+  totalHutangSupplier: number;
 };
 
 type LaporanKeuanganResponse = {
@@ -189,6 +196,90 @@ export function buildPurchaseTotalByInvoiceId(pembelianRows: PembelianItem[]) {
   return map;
 }
 
+function toDateKey(value: string | null | undefined) {
+  const normalizedValue = String(value || "").trim();
+  const isoDateMatch = normalizedValue.match(/^(\d{4}-\d{2}-\d{2})/);
+
+  if (isoDateMatch) {
+    return isoDateMatch[1];
+  }
+
+  const parsedDate = new Date(normalizedValue);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return "";
+  }
+
+  const year = parsedDate.getFullYear();
+  const month = String(parsedDate.getMonth() + 1).padStart(2, "0");
+  const day = String(parsedDate.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+export function getPembelianPaymentStatusAtPeriodEnd(
+  pembelian: PembelianItem,
+  bulan: string
+) {
+  if (!pembelian.hutang) {
+    return "paid" as const;
+  }
+
+  const { tanggalSampai } = getMonthDateRange(bulan);
+  const tanggalBayar = toDateKey(pembelian.tanggalBayar);
+
+  return tanggalBayar && tanggalBayar <= tanggalSampai
+    ? ("paid" as const)
+    : ("unpaid" as const);
+}
+
+export function calculatePembelianPaymentSummaryByMonth(
+  pembelianRows: PembelianItem[],
+  bulan: string
+): PembelianPaymentSummary {
+  const { tanggalDari, tanggalSampai } = getMonthDateRange(bulan);
+
+  if (!tanggalDari || !tanggalSampai) {
+    return {
+      totalPembayaranSupplier: 0,
+      totalHutangSupplier: 0,
+    };
+  }
+
+  return pembelianRows.reduce<PembelianPaymentSummary>(
+    (summary, row) => {
+      const tanggalNota = toDateKey(row.tanggalNota);
+      const tanggalBayarEfektif = row.hutang
+        ? toDateKey(row.tanggalBayar)
+        : tanggalNota;
+      const rowTotal = Math.max(0, Number(row.nilaiNota || 0));
+
+      if (
+        tanggalBayarEfektif &&
+        tanggalBayarEfektif >= tanggalDari &&
+        tanggalBayarEfektif <= tanggalSampai
+      ) {
+        summary.totalPembayaranSupplier += rowTotal;
+      }
+
+      if (
+        row.hutang &&
+        tanggalNota &&
+        tanggalNota <= tanggalSampai &&
+        (!tanggalBayarEfektif || tanggalBayarEfektif > tanggalSampai)
+      ) {
+        summary.totalHutangSupplier += rowTotal;
+      }
+
+      return summary;
+    },
+    {
+      totalPembayaranSupplier: 0,
+      totalHutangSupplier: 0,
+    }
+  );
+}
+
 export function calculateLaporanKeuanganMonthSummary({
   bulan,
   invoiceRows,
@@ -210,6 +301,8 @@ export function calculateLaporanKeuanganMonthSummary({
     0
   );
   const totalStockBarang = calculatePembelianStockTotalByMonth(pembelianRows, bulan);
+  const { totalPembayaranSupplier, totalHutangSupplier } =
+    calculatePembelianPaymentSummaryByMonth(pembelianRows, bulan);
   const grossProfit = totalInvoice - totalPembelian;
   const totalBiayaOperasional = laporanKeuangan?.totalBiayaOperasional || 0;
   const netProfit = grossProfit - totalBiayaOperasional;
@@ -219,6 +312,8 @@ export function calculateLaporanKeuanganMonthSummary({
     totalInvoice,
     totalPembelian,
     totalStockBarang,
+    totalPembayaranSupplier,
+    totalHutangSupplier,
     grossProfit,
     totalBiayaOperasional,
     netProfit,
