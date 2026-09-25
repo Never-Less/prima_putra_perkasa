@@ -2,6 +2,7 @@ import { requestApi } from "../../_lib/api-client";
 import type { InvoiceItem } from "../../invoice/_lib/invoice";
 import {
   calculatePembelianStockTotalByMonth,
+  getPembelianPaymentStatus,
   type PembelianItem,
 } from "../../pembelian/_lib/pembelian";
 
@@ -217,22 +218,6 @@ function toDateKey(value: string | null | undefined) {
   return `${year}-${month}-${day}`;
 }
 
-export function getPembelianPaymentStatusAtPeriodEnd(
-  pembelian: PembelianItem,
-  bulan: string
-) {
-  if (!pembelian.hutang) {
-    return "paid" as const;
-  }
-
-  const { tanggalSampai } = getMonthDateRange(bulan);
-  const tanggalBayar = toDateKey(pembelian.tanggalBayar);
-
-  return tanggalBayar && tanggalBayar <= tanggalSampai
-    ? ("paid" as const)
-    : ("unpaid" as const);
-}
-
 export function calculatePembelianPaymentSummaryByMonth(
   pembelianRows: PembelianItem[],
   bulan: string
@@ -266,7 +251,7 @@ export function calculatePembelianPaymentSummaryByMonth(
         row.hutang &&
         tanggalNota &&
         tanggalNota <= tanggalSampai &&
-        (!tanggalBayarEfektif || tanggalBayarEfektif > tanggalSampai)
+        getPembelianPaymentStatus(row) === "unpaid"
       ) {
         summary.totalHutangSupplier += rowTotal;
       }
