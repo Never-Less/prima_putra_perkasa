@@ -69,6 +69,14 @@ export type PembelianFormState = {
   tanggalBayar: string;
 };
 
+export function getPembelianPaymentStatus(
+  pembelian: Pick<PembelianItem, "hutang" | "tanggalBayar">
+) {
+  return !pembelian.hutang || String(pembelian.tanggalBayar || "").trim()
+    ? ("paid" as const)
+    : ("unpaid" as const);
+}
+
 export type PembelianListQuery = PembelianFilter & PaginationQueryState;
 
 export type PembelianPrefillPayload = {
@@ -228,8 +236,7 @@ function toPembelianItem(value: unknown): PembelianItem | null {
     nilaiNota: parseNumberFromUnknown(row.nilaiNota),
     tanggalJatuhTempo: toText(row.tanggalJatuhTempo).trim() || null,
     tanggalBayar,
-    statusPembayaran:
-      row.statusPembayaran === "unpaid" || (hutang && !tanggalBayar) ? "unpaid" : "paid",
+    statusPembayaran: getPembelianPaymentStatus({ hutang, tanggalBayar }),
     createdAt: toText(row.createdAt).trim(),
     updatedAt: toText(row.updatedAt).trim(),
   };

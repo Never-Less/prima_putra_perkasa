@@ -15,6 +15,22 @@ export type ReleaseNote = {
 // Urutkan dari rilis terbaru. Tambahkan satu entry pada setiap commit perubahan aplikasi.
 export const releaseNotes: ReleaseNote[] = [
   {
+    id: "2026-09-25-purchase-payment-status-sync",
+    version: "2026.09.25",
+    date: "2026-09-25",
+    title: "Sinkronisasi Status Pembayaran Pembelian",
+    summary: "Status Lunas dan Belum Lunas pada laporan keuangan kini selalu mengikuti tanggal bayar yang tercatat pada Pembelian.",
+    sections: [
+      {
+        title: "Pembelian dan Laporan Keuangan",
+        changes: [
+          "Status pembayaran pada Pembelian, laporan keuangan, dan export menggunakan aturan yang sama berdasarkan jenis transaksi dan tanggal bayar.",
+          "Pembelian hutang yang sudah memiliki tanggal bayar tidak lagi ditampilkan atau dihitung sebagai hutang supplier yang belum lunas.",
+        ],
+      },
+    ],
+  },
+  {
     id: "2026-09-21-financial-report-supplier-payments",
     version: "2026.09.21",
     date: "2026-09-21",

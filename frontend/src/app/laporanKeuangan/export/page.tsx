@@ -11,6 +11,7 @@ import {
   calculatePembelianStockTotalByMonth,
   fetchPembelianRows,
   filterPembelianStockRowsByMonth,
+  getPembelianPaymentStatus,
   type PembelianItem,
 } from "../../pembelian/_lib/pembelian";
 import {
@@ -26,7 +27,6 @@ import {
   getCurrentMonthValue,
   getCurrentYearValue,
   getMonthDateRange,
-  getPembelianPaymentStatusAtPeriodEnd,
   getYearMonthValues,
   type LaporanKeuanganItem,
   type LaporanKeuanganMonthSummary,
@@ -614,7 +614,7 @@ export default function LaporanKeuanganExportPage() {
           noNota: String(row.noNota || "").trim(),
           note: String(row.note || "").trim(),
           ppn: Boolean(row.ppn),
-          statusPembayaran: getPembelianPaymentStatusAtPeriodEnd(row, bulan),
+          statusPembayaran: getPembelianPaymentStatus(row),
           supplierName,
           total: rowTotal,
         },
@@ -791,9 +791,9 @@ export default function LaporanKeuanganExportPage() {
           row.hutang ? "pembelian.type.debt" : "pembelian.type.cash"
         ).toUpperCase(),
         paymentStatus: t(
-          `pembelian.status.${getPembelianPaymentStatusAtPeriodEnd(row, bulan)}`
+          `pembelian.status.${getPembelianPaymentStatus(row)}`
         ).toUpperCase(),
-        isUnpaid: getPembelianPaymentStatusAtPeriodEnd(row, bulan) === "unpaid",
+        isUnpaid: getPembelianPaymentStatus(row) === "unpaid",
         note: row.note || undefined,
       });
     });

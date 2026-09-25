@@ -23,6 +23,7 @@ import {
   filterPembelianStockRowsByMonth,
   formatRupiah,
   formatTanggal,
+  getPembelianPaymentStatus,
   type PembelianItem,
 } from "../pembelian/_lib/pembelian";
 import {
@@ -40,7 +41,6 @@ import {
   getCurrentMonthValue,
   getCurrentYearValue,
   getMonthDateRange,
-  getPembelianPaymentStatusAtPeriodEnd,
   getYearMonthValues,
   saveLaporanKeuangan,
   type LaporanKeuanganItem,
@@ -763,7 +763,7 @@ export function LaporanKeuanganPageContent({
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                     {stockPembelianRows.map((row) => {
-                      const paymentStatus = getPembelianPaymentStatusAtPeriodEnd(row, bulan);
+                      const paymentStatus = getPembelianPaymentStatus(row);
 
                       return (
                         <tr key={row.id} className="text-slate-700 dark:text-slate-200">
