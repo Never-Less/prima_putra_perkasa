@@ -1,6 +1,10 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { buildSalesOrderWorkflow: build, indexSalesOrderRelations } = require("./sales-order-workflow");
+const {
+  buildSalesOrderWorkflow: build,
+  buildSalesOrderWorkflowFingerprint,
+  indexSalesOrderRelations,
+} = require("./sales-order-workflow");
 
 const item = (namaBarang, kuantitas, jumlah, extra = {}) => ({ namaBarang, spesifikasi: "", unit: "METER", kuantitas, jumlah, ...extra });
 const order = (noPo, barang, nominalPo = barang.reduce((sum, row) => sum + row.jumlah, 0)) => ({ noPo, barang, nominalPo });
@@ -101,4 +105,27 @@ test("every invoice allocated to the SO must be paid, even when its item label d
 test("case variants of a relation do not count an invoice twice", () => {
   const bill = invoice(["A"], [item("Cable", 1, 100, { noPoManual: "a" })]);
   assert.equal(indexSalesOrderRelations([], [bill]).invoiceByNoPo.get("a").length, 1);
+});
+
+test("manual status expires when automatic workflow data changes", () => {
+  const so = order("A", [item("Cable", 10, 1000)]);
+  so.workflowStatusManual = "paid";
+  so.workflowStatusManualFingerprint = buildSalesOrderWorkflowFingerprint(so, [], []);
+
+  const manualResult = build(so, [], []);
+  assert.equal(manualResult.status, "paid");
+  assert.equal(manualResult.automaticStatus, "toDeliver");
+  assert.equal(manualResult.isManualStatus, true);
+
+  const deliveryNotes = [{
+    _id: "sj-1",
+    noPo: "A",
+    noSuratJalan: "SJ-1",
+    barang: [{ nama: "Cable", spesifikasi: "", unit: "METER", jumlah: 10 }],
+  }];
+  const automaticResult = build(so, deliveryNotes, []);
+
+  assert.equal(automaticResult.status, "deliveredToBilled");
+  assert.equal(automaticResult.automaticStatus, "deliveredToBilled");
+  assert.equal(automaticResult.isManualStatus, false);
 });

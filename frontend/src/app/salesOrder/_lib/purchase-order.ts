@@ -57,6 +57,8 @@ export type SalesOrderItemProgress = {
 
 export type SalesOrderWorkflow = {
   status: SalesOrderWorkflowStatus;
+  automaticStatus: SalesOrderWorkflowStatus;
+  isManualStatus: boolean;
   deliveryStatus: "notDelivered" | "partial" | "complete";
   suratJalan: SalesOrderDocumentReference[];
   invoices: Array<SalesOrderDocumentReference & { isPaid: boolean; allocatedAmount: number | null }>;
@@ -120,6 +122,7 @@ export type PurchaseOrderFormState = {
   paymentTerm: PaymentTerm;
   tanggalInvoice: string;
   noInvoice: string;
+  workflowStatus: SalesOrderWorkflowStatus;
 };
 
 export type PurchaseOrderListQuery = PurchaseOrderFilter & PaginationQueryState;
@@ -267,6 +270,7 @@ function normalizeWorkflow(value: unknown): SalesOrderWorkflow | null {
   ];
   const status = String(row.status || "") as SalesOrderWorkflowStatus;
   if (!validStatuses.includes(status)) return null;
+  const automaticStatus = String(row.automaticStatus || status) as SalesOrderWorkflowStatus;
 
   const normalizeDocuments = (items: unknown, numberKey: string) =>
     (Array.isArray(items) ? items : [])
@@ -312,6 +316,8 @@ function normalizeWorkflow(value: unknown): SalesOrderWorkflow | null {
 
   return {
     status,
+    automaticStatus: validStatuses.includes(automaticStatus) ? automaticStatus : status,
+    isManualStatus: Boolean(row.isManualStatus),
     deliveryStatus:
       row.deliveryStatus === "complete" || row.deliveryStatus === "partial"
         ? row.deliveryStatus
@@ -447,6 +453,7 @@ function toNormalizedPurchaseOrderPayload(form: PurchaseOrderFormState) {
     paymentTerm: normalizePaymentTerm(form.paymentTerm || defaultPaymentTerm),
     tanggalInvoice: tanggalInvoice || null,
     noInvoice: noInvoice || null,
+    workflowStatus: form.workflowStatus,
   };
 }
 
@@ -666,6 +673,7 @@ export function toPurchaseOrderFormState(item: PurchaseOrderItem): PurchaseOrder
     paymentTerm: normalizePaymentTerm(item.paymentTerm),
     tanggalInvoice: toInputDate(item.tanggalInvoice),
     noInvoice: item.noInvoice,
+    workflowStatus: item.workflow?.status || "toDeliver",
   };
 }
 

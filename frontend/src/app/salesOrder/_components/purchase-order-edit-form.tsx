@@ -21,6 +21,7 @@ import {
   type PurchaseOrderFormState,
   type PurchaseOrderInvoiceOption,
   type PurchaseOrderItem,
+  type SalesOrderWorkflowStatus,
 } from "../_lib/purchase-order";
 import { PurchaseOrderBarangSpreadsheet } from "./purchase-order-barang-spreadsheet";
 import { DocumentAuditLog } from "../../_components/document-audit-log";
@@ -54,8 +55,18 @@ function createEmptyPurchaseOrderFormState(): PurchaseOrderFormState {
     paymentTerm: { ...defaultPaymentTerm },
     tanggalInvoice: "",
     noInvoice: "",
+    workflowStatus: "toDeliver",
   };
 }
+
+const workflowStatusOptions: SalesOrderWorkflowStatus[] = [
+  "toDeliver",
+  "partlyDelivered",
+  "deliveredToBilled",
+  "partlyBilled",
+  "billed",
+  "paid",
+];
 
 function createPurchaseOrderDirtyValue(form: PurchaseOrderFormState) {
   const { barangRows, ...restForm } = form;
@@ -192,6 +203,35 @@ export function PurchaseOrderEditForm({
                 ))}
               </select>
             </label>
+
+            {item ? (
+              <label className="text-sm text-slate-700 dark:text-slate-200 sm:col-span-2">
+                {t("field.workflowStatus")}
+                <select
+                  value={form.workflowStatus}
+                  onChange={(event) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      workflowStatus: event.target.value as SalesOrderWorkflowStatus,
+                    }))
+                  }
+                  className="mt-1 w-full rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm dark:border-amber-800 dark:bg-slate-800 dark:text-slate-100"
+                >
+                  {workflowStatusOptions.map((status) => (
+                    <option key={status} value={status}>
+                      {t(`salesOrderDashboard.status.${status}`)}
+                    </option>
+                  ))}
+                </select>
+                <span className="mt-1 block text-xs text-amber-700 dark:text-amber-300">
+                  {t("purchaseOrder.form.workflowStatusHint", {
+                    automaticStatus: t(
+                      `salesOrderDashboard.status.${item.workflow?.automaticStatus || "toDeliver"}`
+                    ),
+                  })}
+                </span>
+              </label>
+            ) : null}
 
             <div className="rounded-lg border border-sky-100 p-3 dark:border-slate-700 sm:col-span-2">
               <p className="text-sm font-medium text-slate-800 dark:text-slate-100">{t("field.paymentTerm")}</p>
@@ -351,6 +391,12 @@ export function PurchaseOrderEditForm({
               <span className="text-slate-500 dark:text-slate-400">{t("field.nominalPo")}:</span> {formatRupiah(Number(form.nominalPo || "0"), locale)}
             </p>
             <p><span className="text-slate-500 dark:text-slate-400">{t("field.paymentTerm")}:</span> {paymentTermLabel}</p>
+            {item ? (
+              <p>
+                <span className="text-slate-500 dark:text-slate-400">{t("field.workflowStatus")}:</span>{" "}
+                {t(`salesOrderDashboard.status.${form.workflowStatus}`)}
+              </p>
+            ) : null}
             <p>
               <span className="text-slate-500 dark:text-slate-400">{t("field.tanggalInvoice")}:</span> {formatTanggal(form.tanggalInvoice || null, locale)}
             </p>

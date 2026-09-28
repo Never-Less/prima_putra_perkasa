@@ -104,6 +104,19 @@ const purchaseOrderSchema = new mongoose.Schema(
       default: null,
       index: true,
     },
+    workflowStatusManual: {
+      type: String,
+      enum: ["toDeliver", "partlyDelivered", "deliveredToBilled", "partlyBilled", "billed", "paid"],
+      default: null,
+    },
+    workflowStatusManualFingerprint: {
+      type: String,
+      default: "",
+    },
+    workflowStatusManualUpdatedAt: {
+      type: Date,
+      default: null,
+    },
     revision: { type: Number, required: true, min: 0, default: 0 },
     revisionHistory: {
       type: [{
