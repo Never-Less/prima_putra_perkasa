@@ -1,5 +1,53 @@
+const crypto = require("crypto");
+
+const salesOrderWorkflowStatuses = [
+  "toDeliver",
+  "partlyDelivered",
+  "deliveredToBilled",
+  "partlyBilled",
+  "billed",
+  "paid",
+];
+
 function normalizeText(value) {
   return String(value || "").trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+function buildSalesOrderWorkflowFingerprint(purchaseOrder, suratJalanList = [], invoiceList = []) {
+  const normalizeItem = (item) => ({
+    nama: normalizeText(item?.namaBarang || item?.nama),
+    spesifikasi: normalizeText(item?.spesifikasi),
+    unit: normalizeText(item?.unit),
+    kuantitas: Number(item?.kuantitas ?? item?.jumlah ?? 0),
+    jumlah: Number(item?.jumlah || 0),
+    noPoManual: normalizeText(item?.noPoManual),
+    sources: (item?.sources || []).map((source) => ({
+      noPo: normalizeText(source?.noPo),
+      suratJalanId: String(source?.suratJalanId || ""),
+      barangId: String(source?.barangId || ""),
+      kuantitas: Number(source?.kuantitas || 0),
+    })),
+  });
+  const normalizeDocument = (document, type) => ({
+    id: String(document?._id || document?.id || ""),
+    number: normalizeText(type === "invoice" ? document?.noInvoice : document?.noSuratJalan),
+    updatedAt: String(document?.updatedAt || ""),
+    isPaid: type === "invoice" ? Boolean(document?.isPaid) : undefined,
+    barang: (document?.barang || []).map(normalizeItem),
+  });
+  const payload = {
+    noPo: normalizeText(purchaseOrder?.noPo),
+    nominalPo: Number(purchaseOrder?.nominalPo || 0),
+    barang: (purchaseOrder?.barang || []).map(normalizeItem),
+    suratJalan: suratJalanList
+      .map((document) => normalizeDocument(document, "suratJalan"))
+      .sort((left, right) => `${left.id}:${left.number}`.localeCompare(`${right.id}:${right.number}`)),
+    invoices: invoiceList
+      .map((document) => normalizeDocument(document, "invoice"))
+      .sort((left, right) => `${left.id}:${left.number}`.localeCompare(`${right.id}:${right.number}`)),
+  };
+
+  return crypto.createHash("sha256").update(JSON.stringify(payload)).digest("hex");
 }
 
 function itemKey(name, specification, unit) {
@@ -201,22 +249,36 @@ function buildSalesOrderWorkflow(
     (invoice?.barang || []).some((item) => allocatedItemShare(purchaseOrder, suratJalanList, invoice, item) > 0) ||
     allocatedInvoiceAmount(purchaseOrder, suratJalanList, invoice) > 0
   );
-  let status = "toDeliver";
+  let automaticStatus = "toDeliver";
 
   if (billingInvoices.length > 0) {
     if (!billing.isComplete) {
-      status = "partlyBilled";
+      automaticStatus = "partlyBilled";
     } else if (billingInvoices.length > 0 && billingInvoices.every((invoice) => Boolean(invoice?.isPaid))) {
-      status = "paid";
+      automaticStatus = "paid";
     } else {
-      status = "billed";
+      automaticStatus = "billed";
     }
   } else if (suratJalanList.length > 0) {
-    status = delivery.isComplete ? "deliveredToBilled" : "partlyDelivered";
+    automaticStatus = delivery.isComplete ? "deliveredToBilled" : "partlyDelivered";
   }
+
+  const workflowFingerprint = buildSalesOrderWorkflowFingerprint(
+    purchaseOrder,
+    suratJalanList,
+    invoiceList
+  );
+  const manualStatus = String(purchaseOrder?.workflowStatusManual || "");
+  const isManualStatus =
+    salesOrderWorkflowStatuses.includes(manualStatus) &&
+    Boolean(purchaseOrder?.workflowStatusManualFingerprint) &&
+    purchaseOrder.workflowStatusManualFingerprint === workflowFingerprint;
+  const status = isManualStatus ? manualStatus : automaticStatus;
 
   return {
     status,
+    automaticStatus,
+    isManualStatus,
     deliveryStatus: delivery.isComplete ? "complete" : suratJalanList.length > 0 ? "partial" : "notDelivered",
     billing,
     suratJalan: suratJalanList.map((row) => ({
@@ -238,6 +300,8 @@ function buildSalesOrderWorkflow(
 }
 
 module.exports = {
+  buildSalesOrderWorkflowFingerprint,
   buildSalesOrderWorkflow,
   indexSalesOrderRelations,
+  salesOrderWorkflowStatuses,
 };

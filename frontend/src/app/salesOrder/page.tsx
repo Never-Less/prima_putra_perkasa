@@ -730,6 +730,22 @@ export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: Purchas
     }
 
     if (pendingConfirmation.type === "update") {
+      const previousStatus = pendingConfirmation.selectedItem.workflow?.status || "toDeliver";
+      const nextStatus = pendingConfirmation.form.workflowStatus;
+
+      if (previousStatus !== nextStatus) {
+        return {
+          title: t("purchaseOrder.confirmStatusUpdateTitle"),
+          description: t("purchaseOrder.confirmStatusUpdateDescription", {
+            noPo: pendingConfirmation.selectedItem.noPo || "-",
+            previousStatus: t(`salesOrderDashboard.status.${previousStatus}`),
+            nextStatus: t(`salesOrderDashboard.status.${nextStatus}`),
+          }),
+          confirmLabel: t("common.saveChanges"),
+          variant: "warning" as const,
+        };
+      }
+
       return {
         title: t("purchaseOrder.confirmUpdateTitle"),
         description: t("purchaseOrder.confirmUpdateDescription", {

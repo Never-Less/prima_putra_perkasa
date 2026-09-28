@@ -783,6 +783,8 @@ export const messages: Record<Locale, MessageDictionary> = {
       "Diisi otomatis saat invoice dibuat.",
     "purchaseOrder.form.nominalFromItems":
       "Dihitung otomatis dari jumlah total harga seluruh barang Sales Order, tanpa mengambil nominal Invoice.",
+    "purchaseOrder.form.workflowStatusHint":
+      "Status otomatis saat ini: {{automaticStatus}}. Pilihan manual akan kembali mengikuti otomatis ketika data SO, Surat Jalan, Invoice, atau pembayaran berubah.",
     "purchaseOrder.form.items.title": "Barang Sales Order",
     "purchaseOrder.form.items.hint":
       "Isi nama barang, spesifikasi, qty, unit, dan harga satuan. Baris kosong baru akan muncul otomatis.",
@@ -815,6 +817,9 @@ export const messages: Record<Locale, MessageDictionary> = {
     "purchaseOrder.mutationError": "Gagal memproses perubahan sales order.",
     "purchaseOrder.confirmUpdateTitle": "Konfirmasi Ubah Sales Order",
     "purchaseOrder.confirmUpdateDescription": "Simpan perubahan Sales Order \"{{noPo}}\"? Revisi diblokir selama masih terhubung ke Surat Jalan atau Invoice.",
+    "purchaseOrder.confirmStatusUpdateTitle": "Peringatan Perubahan Status Sales Order",
+    "purchaseOrder.confirmStatusUpdateDescription":
+      "Status Sales Order \"{{noPo}}\" akan diubah manual dari {{previousStatus}} menjadi {{nextStatus}}. Status akan kembali dihitung otomatis saat data SO, Surat Jalan, Invoice, atau pembayaran berubah. Lanjutkan?",
     "purchaseOrder.confirmDeleteTitle": "Konfirmasi Hapus Sales Order",
     "purchaseOrder.confirmDeleteDescription": "Hapus Sales Order \"{{noPo}}\"? Hapus atau lepaskan dokumen turunan terlebih dahulu: Invoice, lalu Surat Jalan.",
     "purchaseOrder.toast.createSuccess": "Sales order \"{{noPo}}\" berhasil ditambahkan.",
@@ -1766,6 +1771,8 @@ export const messages: Record<Locale, MessageDictionary> = {
       "Filled automatically when the invoice is created.",
     "purchaseOrder.form.nominalFromItems":
       "Calculated automatically from the total price of all Sales Order items without taking the Invoice amount.",
+    "purchaseOrder.form.workflowStatusHint":
+      "Current automatic status: {{automaticStatus}}. A manual selection returns to automatic status when the SO, Delivery Note, Invoice, or payment data changes.",
     "purchaseOrder.form.items.title": "Sales Order Items",
     "purchaseOrder.form.items.hint":
       "Fill item name, specification, qty, unit, and unit price. A new empty row is added automatically.",
@@ -1798,6 +1805,9 @@ export const messages: Record<Locale, MessageDictionary> = {
     "purchaseOrder.mutationError": "Failed to process sales order changes.",
     "purchaseOrder.confirmUpdateTitle": "Confirm Sales Order Update",
     "purchaseOrder.confirmUpdateDescription": "Save changes to sales order \"{{noPo}}\"? Revision is blocked while delivery notes or invoices are linked.",
+    "purchaseOrder.confirmStatusUpdateTitle": "Sales Order Status Change Warning",
+    "purchaseOrder.confirmStatusUpdateDescription":
+      "Sales Order \"{{noPo}}\" will be changed manually from {{previousStatus}} to {{nextStatus}}. Its status returns to automatic calculation when the SO, Delivery Note, Invoice, or payment data changes. Continue?",
     "purchaseOrder.confirmDeleteTitle": "Confirm Sales Order Deletion",
     "purchaseOrder.confirmDeleteDescription": "Delete sales order \"{{noPo}}\"? Remove or unlink downstream documents first: invoices, then delivery notes.",
     "purchaseOrder.toast.createSuccess": "Sales order \"{{noPo}}\" has been added successfully.",

@@ -15,6 +15,23 @@ export type ReleaseNote = {
 // Urutkan dari rilis terbaru. Tambahkan satu entry pada setiap commit perubahan aplikasi.
 export const releaseNotes: ReleaseNote[] = [
   {
+    id: "2026-09-28-sales-order-manual-status",
+    version: "2026.09.28",
+    date: "2026-09-28",
+    title: "Pengaturan Manual Status Sales Order",
+    summary: "Status Sales Order kini dapat disesuaikan manual dengan peringatan konfirmasi tanpa menonaktifkan pembaruan status otomatis.",
+    sections: [
+      {
+        title: "Status Sales Order",
+        changes: [
+          "Form Sales Order menyediakan enam pilihan status proses dari To Deliver hingga Paid.",
+          "Perubahan status manual menampilkan peringatan yang menjelaskan status lama, status baru, dan kelanjutan perhitungan otomatis.",
+          "Status manual otomatis kembali mengikuti perhitungan sistem ketika data Sales Order, Surat Jalan, Invoice, atau pembayaran berubah.",
+        ],
+      },
+    ],
+  },
+  {
     id: "2026-09-25-purchase-payment-status-sync",
     version: "2026.09.25",
     date: "2026-09-25",
