@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, CalendarDays, CircleDollarSign, UsersRound } from "lucide-react";
+import { AlertTriangle, CalendarDays, CircleDollarSign, Download, UsersRound } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ApiLoadingState } from "../_components/api-loading-state";
@@ -9,6 +9,8 @@ import { requestApi } from "../_lib/api-client";
 import { fetchCustomerRows, type CustomerItem } from "../customer/_lib/customer";
 import { formatRupiah, formatTanggal, type InvoiceItem } from "../invoice/_lib/invoice";
 import { readPersistentQueryValues, usePersistentQueryValues } from "../_hooks/use-persistent-query-values";
+import { useExportAccess } from "../_hooks/use-export-access";
+import { OutstandingExportModal } from "./_components/outstanding-export-modal";
 
 type WarningLevel = "normal" | "warning" | "critical";
 type OutstandingInvoice = InvoiceItem & {
@@ -29,6 +31,7 @@ function monthKey(value: string) {
 
 export default function TagihanBelumDibayarPage() {
   const { locale, t } = useI18n();
+  const canExport = useExportAccess();
   const searchParams = useSearchParams();
   const initialFilter = readPersistentQueryValues(searchParams, outstandingFilterDefaults);
   const [rows, setRows] = useState<OutstandingInvoice[]>([]);
@@ -40,6 +43,9 @@ export default function TagihanBelumDibayarPage() {
   const [groupBy, setGroupBy] = useState<"customer" | "month">(initialFilter.groupBy === "month" ? "month" : "customer");
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [exportYear, setExportYear] = useState(String(new Date().getFullYear()));
+  const [exportCustomerId, setExportCustomerId] = useState("");
   const restoreFilter = useCallback((values: typeof outstandingFilterDefaults) => { setCustomerId(values.customerId); setDueMonth(values.dueMonth); setWarningLevel(values.warningLevel); setInvoiceSearch(values.invoiceSearch); setGroupBy(values.groupBy === "month" ? "month" : "customer"); }, []);
   usePersistentQueryValues({ basePath: "/tagihanBelumDibayar", values: { customerId, dueMonth, warningLevel, invoiceSearch, groupBy }, defaults: outstandingFilterDefaults, onRestore: restoreFilter });
 
@@ -89,12 +95,53 @@ export default function TagihanBelumDibayarPage() {
   const criticalCount = filteredRows.filter((row) => row.warningLevel === "critical").length;
   const warningCount = filteredRows.filter((row) => row.warningLevel === "warning").length;
   const inputClass = "erp-field w-full";
+  const exportYears = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    const years = new Set(
+      Array.from({ length: 11 }, (_item, index) => String(currentYear - index))
+    );
+    rows.forEach((row) => {
+      const year = String(row.tanggal || "").slice(0, 4);
+      if (/^\d{4}$/.test(year)) years.add(year);
+    });
+    return Array.from(years).sort((left, right) => right.localeCompare(left));
+  }, [rows]);
+
+  const openExportModal = useCallback(() => {
+    setExportCustomerId(customerId);
+    setIsExportModalOpen(true);
+  }, [customerId]);
+
+  const closeExportModal = useCallback(() => setIsExportModalOpen(false), []);
+
+  const openExportPage = useCallback(() => {
+    if (!exportYear || !exportCustomerId) return;
+
+    const params = new URLSearchParams({
+      year: exportYear,
+      customerId: exportCustomerId,
+    });
+    window.open(
+      `/tagihanBelumDibayar/export?${params.toString()}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
+    setIsExportModalOpen(false);
+  }, [exportCustomerId, exportYear]);
 
   return (
     <main className="mx-auto w-full max-w-[1500px] space-y-5 px-4 py-6 sm:px-6">
-      <header>
-        <h1 className="text-2xl font-semibold text-slate-950 dark:text-white">{t("outstanding.title")}</h1>
-        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{t("outstanding.description")}</p>
+      <header className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold text-slate-950 dark:text-white">{t("outstanding.title")}</h1>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{t("outstanding.description")}</p>
+        </div>
+        {canExport ? (
+          <button type="button" onClick={openExportModal} className="erp-button erp-button-primary">
+            <Download aria-hidden="true" className="h-4 w-4" />
+            {t("outstanding.exportButton")}
+          </button>
+        ) : null}
       </header>
 
       <section className="grid gap-3 sm:grid-cols-3">
@@ -127,6 +174,17 @@ export default function TagihanBelumDibayarPage() {
           })}
         </div>
       )}
+      <OutstandingExportModal
+        isOpen={isExportModalOpen}
+        years={exportYears}
+        customers={customers}
+        selectedYear={exportYear}
+        selectedCustomerId={exportCustomerId}
+        onYearChange={setExportYear}
+        onCustomerChange={setExportCustomerId}
+        onExport={openExportPage}
+        onCancel={closeExportModal}
+      />
     </main>
   );
 }
