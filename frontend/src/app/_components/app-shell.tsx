@@ -19,7 +19,8 @@ function isChromelessPath(pathname: string) {
     pathname.startsWith("/suratJalan/export/") ||
     pathname === "/invoice/export" ||
     pathname.startsWith("/invoice/export/") ||
-    pathname.startsWith("/salesOrder/export")
+    pathname.startsWith("/salesOrder/export") ||
+    pathname.startsWith("/tagihanBelumDibayar/export")
   );
 }
 

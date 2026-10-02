@@ -25,7 +25,8 @@ function isExportPath(pathname: string) {
     pathname.startsWith("/suratJalan/export/") ||
     pathname === "/invoice/export" ||
     pathname.startsWith("/invoice/export/") ||
-    pathname.startsWith("/salesOrder/export")
+    pathname.startsWith("/salesOrder/export") ||
+    pathname.startsWith("/tagihanBelumDibayar/export")
   );
 }
 
@@ -49,6 +50,10 @@ function getExportFallbackPath(pathname: string) {
 
   if (pathname.startsWith("/salesOrder/export")) {
     return "/salesOrder";
+  }
+
+  if (pathname.startsWith("/tagihanBelumDibayar/export")) {
+    return "/tagihanBelumDibayar";
   }
 
   return "/";

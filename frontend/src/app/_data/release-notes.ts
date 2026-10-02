@@ -15,6 +15,30 @@ export type ReleaseNote = {
 // Urutkan dari rilis terbaru. Tambahkan satu entry pada setiap commit perubahan aplikasi.
 export const releaseNotes: ReleaseNote[] = [
   {
+    id: "2026-10-02-customer-receivables-export",
+    version: "2026.10.02",
+    date: "2026-10-02",
+    title: "Export Piutang Customer per Tahun",
+    summary: "Piutang Customer kini dapat diekspor berdasarkan tahun dan customer dengan pengelompokan bulanan yang lebih mudah dibaca.",
+    sections: [
+      {
+        title: "Export Piutang Customer",
+        changes: [
+          "Modal export menyediakan pilihan tahun, satu customer, atau semua customer sebelum laporan dibuka.",
+          "Laporan menampilkan tanggal invoice, nomor invoice, jumlah, total bulanan, total customer, dan total tahunan.",
+          "Pilihan semua customer mengelompokkan laporan berdasarkan customer terlebih dahulu, kemudian berdasarkan bulan.",
+          "Toolbar print dan tutup tetap terlihat di atas saat halaman export digulir serta tidak ikut tercetak.",
+        ],
+      },
+      {
+        title: "Tampilan Export",
+        changes: [
+          "Ketebalan font export mengikuti penekanan masing-masing elemen agar judul dan total lebih jelas dibanding isi tabel.",
+        ],
+      },
+    ],
+  },
+  {
     id: "2026-09-28-sales-order-manual-status",
     version: "2026.09.28",
     date: "2026-09-28",
