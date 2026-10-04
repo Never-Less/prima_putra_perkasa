@@ -1,5 +1,7 @@
 # Prima Putra Perkasa
 
+[Bahasa Indonesia](README.md) | [English](README.en.md)
+
 Prima Putra Perkasa adalah aplikasi web internal untuk mengelola alur administrasi penjualan dan operasional perusahaan, mulai dari **Sales Order**, **Surat Jalan**, dan **Invoice** hingga **Pembelian**, pembayaran customer, tagihan pabrik, serta laporan keuangan.
 
 ## Ringkasan Aplikasi
