@@ -260,27 +260,6 @@ export function InvoiceBarangSpreadsheet({
         (module as unknown as jspreadsheet.JSpreadsheet);
       const initialData = rowsToSpreadsheetData(rowsRef.current, locale);
 
-      const applyRowsFromWorksheet = (
-        instance: jspreadsheet.WorksheetInstance,
-        previousRows: InvoiceBarangFormRow[]
-      ) => {
-        if (isApplyingDataRef.current) {
-          return;
-        }
-
-        const nextData = instance.getData(false, true);
-        const nextRows = spreadsheetDataToRows(nextData, previousRows);
-        currentDataRef.current = serializeData(nextData);
-        rowsRef.current = nextRows;
-        onRowsChangeRef.current(nextRows);
-      };
-
-      const syncRowsFromWorksheet = (instance: jspreadsheet.WorksheetInstance) => {
-        applyRowsFromWorksheet(instance, rowsRef.current);
-      };
-
-      currentDataRef.current = serializeData(initialData);
-      isApplyingDataRef.current = true;
       const controller = createSpreadsheetController({
         root: rootElement,
         rows: rowsRef.current,
