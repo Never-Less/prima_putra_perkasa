@@ -1,5 +1,6 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const { documentMutation } = require("../../utils/document-mutation");
 
 const { requireAuth } = require("../../middlewares/auth");
 const { CashAccount } = require("../../models/CashAccount");
@@ -118,7 +119,7 @@ router.get("/transactions", async (req, res) => {
   }
 });
 
-router.post("/transactions", async (req, res) => {
+router.post("/transactions", documentMutation(async (req, res) => {
   const payload = {
     date: new Date(req.body.date), accountId: req.body.accountId, type: String(req.body.type || ""),
     category: String(req.body.category || "").trim(), amount: Number(req.body.amount),
@@ -134,13 +135,15 @@ router.post("/transactions", async (req, res) => {
   }
   try {
     if (!(await CashAccount.exists({ _id: payload.accountId, isActive: true }))) return res.status(404).json({ message: "Kas atau rekening tidak ditemukan." });
+    if (payload.invoiceId && !(await Invoice.exists({ _id: payload.invoiceId }))) return res.status(409).json({ message: "Invoice tidak tersedia. Muat ulang pilihan invoice." });
     const row = await CashTransaction.create(payload);
     await row.populate("accountId", "name");
     return res.status(201).json({ transaction: serializeTransaction(row) });
   } catch (_error) {
+    if (_error?.hasErrorLabel?.("TransientTransactionError")) throw _error;
     return res.status(500).json({ message: "Transaksi belum bisa disimpan." });
   }
-});
+}));
 
 router.delete("/transactions/:id", async (req, res) => {
   if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ message: "Transaksi tidak valid." });

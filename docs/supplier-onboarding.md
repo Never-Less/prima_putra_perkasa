@@ -15,9 +15,26 @@ Link berlaku 30 hari dan menerima satu pengiriman jawaban. Hanya hash SHA-256 to
 - NPWP: 16 digit; NPWP badan lama 15 digit, termasuk format titik/strip standar, dinormalisasi dengan awalan `0`. Tolak seluruh digit nol. Ini validasi format, bukan verifikasi pendaftaran/kepemilikan DJP.
 - Rujukan konversi NPWP badan: [Direktorat Jenderal Pajak](https://pajak.go.id/id/berita/konsultasi-npwp-16-digit-wp-badan-sambangi-kp2kp-masamba).
 - Telepon dan WhatsApp: terpisah, 7–15 digit angka. Email: pemeriksaan format, tanpa verifikasi inbox/OTP.
+- Input NPWP, telepon, dan WhatsApp menyaring huruf serta mempertahankan angka nol di depan; NPWP lama tetap menerima titik/tanda hubung. Email menggunakan input email. Form internal memeriksa input sebelum simpan, dan backend memakai validasi kontak yang sama dengan form publik; kolom kontak internal tetap boleh kosong.
 - Kategori dan merek: masing-masing 1–50 nilai, maksimal 100 karakter per nilai. Nilai duplikat dibuang.
 - Endpoint publik hanya menampilkan nama perusahaan dan status. Data profil, catatan, dokumen, dan ketentuan hutang internal tidak ditampilkan. Kiriman publik ditampung sebagai `onboarding.pendingData`.
 - Endpoint generate, tandai terkirim, dan persetujuan memakai JWT serta role admin/staff mengikuti pengelolaan supplier yang ada. Persetujuan dan submit memakai kondisi status atomik untuk mencegah pengiriman ganda atau persetujuan jawaban lama setelah penggantian link.
+
+## Dokumen PDF dan tag
+
+- Dokumen juga dapat diberikan sebagai link tanpa upload, atau bersamaan dengan PDF. Form publik dan internal memiliki kolom nama dokumen dan URL serta tombol tambah/hapus. Maksimal 10 link per pengiriman, nama maksimal 100 karakter dan URL maksimal 1.000 karakter; hanya HTTP/HTTPS tanpa username/password. Pastikan tim memiliki akses ke link.
+- Link publik masuk ke jawaban pending dan tampil saat review. Persetujuan menambahkan link ke profil serta mempertahankan link lama; link yang sama dengan nama yang sama tidak diduplikasi. Penggantian undangan membuang jawaban link pending, tanpa menghapus link yang sudah disetujui. Sistem menyimpan URL dan tidak mengunduh isi link otomatis. Batas upload tetap 5 MB per PDF.
+
+- Kategori barang dan merek tampil sebagai tag. Koma atau Enter membentuk tag; tombol × menghapus satu tag. Teks terakhir tetap ikut tersimpan meskipun belum diberi koma. Tempel daftar dengan koma atau baris baru untuk memasukkan beberapa tag; duplikat diabaikan tanpa membedakan huruf besar/kecil.
+- Formulir publik dan form internal mendukung hingga 5 PDF per pengiriman, maksimal 5 MiB per file. Pilih beberapa file sekaligus atau tarik ke area upload, lalu hapus pilihan yang keliru sebelum mengirim. Dokumen bersifat opsional.
+- File baru dikirim saat simpan/submit. API tetap menerima JSON lama tanpa lampiran; request dengan file memakai multipart berisi `payload` (JSON) dan beberapa field `documents` (file).
+- Backend memeriksa ekstensi, MIME, header dan penanda akhir PDF, jumlah file, serta ukuran. Token undangan diperiksa sebelum membaca upload publik. Pengiriman publik tidak dapat menentukan metadata dokumen sendiri.
+- PDF publik tersimpan dalam jawaban pending dan tersedia untuk diunduh saat review. Persetujuan menambahkan dokumen ke profil tanpa mengganti dokumen lama. Link pengganti membersihkan dokumen pending; dokumen yang sudah disetujui tetap ada.
+- File disimpan di koleksi MongoDB `SupplierDocument` terpisah, satu file per dokumen database. Profil supplier hanya menyimpan metadata; binary tidak ikut response daftar/detail. Penyimpanan ini memakai kapasitas dan backup MongoDB yang sudah ada, tanpa secret atau layanan tambahan.
+- Unduh melalui `GET /api/suppliers/:id/documents/:documentId` dengan Bearer JWT. Backend memeriksa kepemilikan dan referensi pending/approved sebelum mengirim PDF sebagai attachment dengan `Cache-Control: private, no-store`. Formulir publik tidak menyediakan endpoint baca dokumen.
+- Pengiriman yang kalah dalam submit bersamaan atau gagal menyimpan supplier membersihkan file yang baru dibuat. Menghapus supplier membersihkan seluruh file miliknya.
+
+Pengujian dokumen: `node --test routes/supplier/documents.test.js routes/supplier/onboarding/onboarding.test.js` dari folder backend; `node --test tests/supplier-onboarding.test.cjs` dari folder frontend. Pengujian memakai penyimpanan tiruan dan tidak mengubah database produksi.
 
 ## Deployment
 

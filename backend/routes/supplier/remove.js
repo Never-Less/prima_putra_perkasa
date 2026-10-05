@@ -7,6 +7,7 @@ const { ROLE_ADMIN, ROLE_STAFF } = require("../../models/User");
 const { isValidId } = require("./validate-id");
 
 const router = express.Router();
+const { SupplierDocument } = require("../../models/SupplierDocument");
 
 router.delete("/:id", requireRole(ROLE_ADMIN, ROLE_STAFF), async (req, res) => {
   const id = String(req.params.id || "");
@@ -30,6 +31,7 @@ router.delete("/:id", requireRole(ROLE_ADMIN, ROLE_STAFF), async (req, res) => {
       return res.status(404).json({ message: "supplier not found" });
     }
 
+    await SupplierDocument.deleteMany({ supplierId: id });
     return res.json({
       message: "supplier deleted",
     });

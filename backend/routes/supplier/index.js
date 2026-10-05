@@ -11,6 +11,7 @@ const router = express.Router();
 
 router.use(requireAuth);
 router.use(require("./onboarding"));
+router.use(require("./download-document"));
 
 router.use(createRoute);
 router.use(listRoute);

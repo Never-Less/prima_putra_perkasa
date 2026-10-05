@@ -11,6 +11,8 @@ require.extensions[".ts"] = (module, filename) => {
 };
 const { defaultSupplierFilter, fetchSupplierList } = require("../src/app/supplier/_lib/supplier.ts");
 const { requestSupplierForm } = require("../src/app/supplier/_lib/supplier-onboarding.ts");
+const { normalizeSupplierNumberInput, supplierNpwpPattern } = require("../src/app/supplier/_lib/supplier-contact.ts");
+const { supplierRequestBody, splitSupplierTags, isSupplierDocumentUrl } = require("../src/app/supplier/_lib/supplier-documents.ts");
 const {
   buildFormRouteWithReturnPagination, buildListRouteWithPagination,
   normalizeReturnPaginationQueryState, normalizeStringFilterQueryState,
@@ -51,4 +53,44 @@ test("public requests never read internal credentials, cache responses, or send 
     return new Response(JSON.stringify({ status: "generated", namaSupplier: "Senjaya Elektronik" }), { status: 200 });
   });
   assert.equal((await requestSupplierForm("a".repeat(64))).namaSupplier, "Senjaya Elektronik");
+});
+
+test("comma and pasted multiline tags normalize whitespace and duplicates while retaining the final draft", () => {
+  assert.deepEqual(splitSupplierTags(" Kabel , Lampu LED, kabel,\nSaklar"), ["kabel", "Lampu LED", "Saklar"]);
+  assert.deepEqual(splitSupplierTags(" , ,\n"), []);
+  assert.deepEqual(splitSupplierTags("Philips,Panasonic"), ["Philips", "Panasonic"]);
+});
+
+test("public multipart requests send the original PDF bytes without internal credentials or a manual boundary", async (t) => {
+  const file = new File(["%PDF-1.7\n%%EOF"], "price-list.pdf", { type: "application/pdf" });
+  const payload = { productCategories: ["Kabel"], productBrands: ["Philips"], documentLinks: [{ label: "Catalog", url: "https://example.com/catalog.pdf" }] };
+  const body = supplierRequestBody(payload, [file]);
+  assert.deepEqual(JSON.parse(body.get("payload")), payload);
+  assert.equal(await body.get("documents").text(), await file.text());
+  assert.deepEqual(supplierRequestBody(payload), payload);
+  t.mock.method(globalThis, "fetch", async (_url, options) => {
+    assert.equal(options.body, body);
+    assert.equal(new Headers(options.headers).has("Content-Type"), false);
+    assert.equal(new Headers(options.headers).has("Authorization"), false);
+    assert.equal(options.credentials, "omit");
+    return new Response(JSON.stringify({ status: "submitted" }), { status: 200 });
+  });
+  assert.equal((await requestSupplierForm("a".repeat(64), body)).status, "submitted");
+});
+
+test("document URLs support shared-file links and reject executable, malformed, and credentialed URLs", () => {
+  assert.equal(isSupplierDocumentUrl("https://drive.google.com/file/d/catalog/view"), true);
+  assert.equal(isSupplierDocumentUrl("http://example.com/catalog.pdf"), true);
+  for (const url of ["javascript:alert(1)", "data:application/pdf;base64,abc", "https://", "https://user:pass@example.com/file", "file:///catalog.pdf"]) assert.equal(isSupplierDocumentUrl(url), false);
+});
+
+test("number inputs keep leading zeros, reject letters, and retain supported legacy NPWP formatting", () => {
+  assert.equal(normalizeSupplierNumberInput("021 123-4567", "phone"), "0211234567");
+  assert.equal(normalizeSupplierNumberInput("+62 812abc3456789", "whatsapp"), "628123456789");
+  assert.equal(normalizeSupplierNumberInput("01.234.567.8-901.000", "npwp"), "01.234.567.8-901.000");
+  assert.equal(normalizeSupplierNumberInput("abc0012345678901000", "npwp"), "0012345678901000");
+  const pattern = new RegExp(`^${supplierNpwpPattern}$`);
+  assert.equal(pattern.test("01.234.567.8-901.000"), true);
+  assert.equal(pattern.test("0012345678901000"), true);
+  assert.equal(pattern.test("01x234x567x8-901x000"), false);
 });

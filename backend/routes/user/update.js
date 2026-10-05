@@ -1,4 +1,5 @@
 const express = require("express");
+const { protectedUserIds } = require("../../utils/break-glass-access");
 
 const { User, ALLOWED_ROLES } = require("../../models/User");
 const { sanitizeUser } = require("./sanitize-user");
@@ -14,6 +15,9 @@ router.put("/:id", async (req, res) => {
   }
 
   try {
+    if (protectedUserIds().includes(id.toLowerCase())) {
+      return res.status(403).json({ message: "Akun owner/developer dilindungi. Perubahan akun dilakukan oleh pengelola deployment." });
+    }
     const user = await User.findById(id).select("+password");
 
     if (!user) {

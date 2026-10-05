@@ -1,4 +1,5 @@
 import { type SupplierOnboarding } from "./supplier-onboarding";
+import { supplierRequestBody, splitSupplierTags, type SupplierDocument } from "./supplier-documents";
 import { requestApi } from "../../_lib/api-client";
 import {
   buildListQueryString,
@@ -23,6 +24,7 @@ export type SupplierItem = {
   onboarding: SupplierOnboarding;
   notes: string;
   documentLinks: Array<{ label: string; url: string }>;
+  documents: SupplierDocument[];
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -50,6 +52,8 @@ export type SupplierFormState = {
   productBrands: string;
   notes: string;
   documentLinksText: string;
+  documentLinks?: Array<{ label: string; url: string }>;
+  documentFiles?: File[];
   isActive: boolean;
 };
 
@@ -127,6 +131,7 @@ function toSupplierItem(value: unknown): SupplierItem | null {
     productBrands: Array.isArray(row.productBrands) ? row.productBrands.map(toText).filter(Boolean) : [],
     onboarding: row.onboarding && typeof row.onboarding === "object" ? row.onboarding as SupplierOnboarding : { status: "notGenerated" },
     notes: toText(row.notes).trim(),
+    documents: Array.isArray(row.documents) ? row.documents as SupplierDocument[] : [],
     documentLinks: Array.isArray(row.documentLinks) ? row.documentLinks.map((item) => { const link = item as Record<string, unknown>; return { label: toText(link.label), url: toText(link.url) }; }).filter((item) => item.label && item.url) : [],
     isActive: row.isActive !== false,
     createdAt: toText(row.createdAt).trim(),
@@ -144,10 +149,10 @@ function toNormalizedSupplierPayload(form: SupplierFormState) {
     lamaHutang: hutang && Number.isFinite(lamaHutang) ? lamaHutang : null,
     alamat: form.alamat.trim(), npwp: form.npwp.trim(), picName: form.picName.trim(),
     whatsapp: form.whatsapp.trim(),
-    productBrands: form.productBrands.split(",").map((value) => value.trim()).filter(Boolean),
+    productBrands: splitSupplierTags(form.productBrands),
     phone: form.phone.trim(), email: form.email.trim(), notes: form.notes.trim(), isActive: form.isActive,
-    productCategories: form.productCategories.split(",").map((value) => value.trim()).filter(Boolean),
-    documentLinks: form.documentLinksText.split("\n").map((line) => { const separator = line.indexOf("|"); return separator < 0 ? null : { label: line.slice(0, separator).trim(), url: line.slice(separator + 1).trim() }; }).filter((row): row is { label: string; url: string } => Boolean(row?.label && /^https?:\/\//i.test(row.url))),
+    productCategories: splitSupplierTags(form.productCategories),
+    documentLinks: form.documentLinks?.map((link) => ({ label: link.label.trim(), url: link.url.trim() })) ?? form.documentLinksText.split("\n").map((line) => { const separator = line.indexOf("|"); return separator < 0 ? null : { label: line.slice(0, separator).trim(), url: line.slice(separator + 1).trim() }; }).filter((row): row is { label: string; url: string } => Boolean(row?.label && /^https?:\/\//i.test(row.url))),
   };
 }
 
@@ -210,7 +215,7 @@ export async function createSupplier(form: SupplierFormState) {
   const payload = toNormalizedSupplierPayload(form);
   const response = await requestApi<SupplierResponse>("/api/suppliers", {
     method: "POST",
-    body: payload,
+    body: supplierRequestBody(payload, form.documentFiles),
     invalidateCachePaths: "/api/suppliers",
   });
 
@@ -221,7 +226,7 @@ export async function updateSupplier(id: string, form: SupplierFormState) {
   const payload = toNormalizedSupplierPayload(form);
   const response = await requestApi<SupplierResponse>(`/api/suppliers/${id}`, {
     method: "PUT",
-    body: payload,
+    body: supplierRequestBody(payload, form.documentFiles),
     invalidateCachePaths: "/api/suppliers",
   });
 
@@ -241,9 +246,11 @@ export function toSupplierFormState(item: SupplierItem): SupplierFormState {
     hutang: item.hutang,
     lamaHutang: item.hutang && item.lamaHutang ? String(item.lamaHutang) : "",
     alamat: item.alamat, npwp: item.npwp, picName: item.picName, phone: item.phone,
-    whatsapp: item.whatsapp, productBrands: item.productBrands.join(", "),
-    email: item.email, productCategories: item.productCategories.join(", "), notes: item.notes,
+    whatsapp: item.whatsapp, productBrands: item.productBrands.length ? `${item.productBrands.join(",")},` : "",
+    email: item.email, productCategories: item.productCategories.length ? `${item.productCategories.join(",")},` : "", notes: item.notes,
     documentLinksText: item.documentLinks.map((row) => `${row.label}|${row.url}`).join("\n"),
+    documentLinks: item.documentLinks,
+    documentFiles: [],
     isActive: item.isActive,
   };
 }

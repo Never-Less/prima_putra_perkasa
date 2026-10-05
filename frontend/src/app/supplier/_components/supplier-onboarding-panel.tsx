@@ -6,6 +6,8 @@ import { ConfirmationModal } from "../../_components/confirmation-modal";
 import { requestUnsavedChangesConfirmation } from "../../_hooks/use-unsaved-changes-warning";
 import { type SupplierItem } from "../_lib/supplier";
 import { generateSupplierLink, onboardingError, profileFields, supplierOnboardingAction } from "../_lib/supplier-onboarding";
+import { SupplierDocumentLinksList } from "./supplier-document-links";
+import { SupplierDocumentList } from "./supplier-documents";
 
 const buttonClass = "rounded-lg border border-sky-300 px-4 py-2 text-sm font-medium text-sky-800 hover:bg-sky-50 disabled:opacity-50 dark:border-sky-800 dark:text-sky-200 dark:hover:bg-slate-800";
 
@@ -74,8 +76,10 @@ export function SupplierOnboardingPanel({ item, onChanged, onCompleted }: {
         <h3 className="font-semibold">{t("supplierOnboarding.reviewTitle")}</h3>
         <p className="text-sm text-slate-600 dark:text-slate-300">{t("supplierOnboarding.reviewHint")}</p>
         <dl className="grid gap-4 rounded-xl bg-slate-50 p-4 sm:grid-cols-2 dark:bg-slate-900">
-          {profileFields.map(({ name, label }) => <div key={name} className="min-w-0"><dt className="text-sm text-slate-500">{t(label)}</dt><dd className="mt-1 whitespace-pre-wrap break-words text-sm">{Array.isArray(pending[name]) ? pending[name].join(", ") : pending[name]}</dd></div>)}
+          {profileFields.map(({ name, label }) => <div key={name} className="min-w-0"><dt className="text-sm text-slate-500">{t(label)}</dt><dd className="mt-1 whitespace-pre-wrap break-words text-sm">{Array.isArray(pending[name]) ? <div className="flex flex-wrap gap-1.5">{pending[name].map((tag) => <span key={tag} className="rounded-lg bg-sky-100 px-2 py-1 text-sky-800 dark:bg-sky-950 dark:text-sky-200">{tag}</span>)}</div> : pending[name]}</dd></div>)}
         </dl>
+        {pending.documents?.length ? <section className="space-y-3"><h3 className="text-sm font-semibold">{t("supplierOnboarding.documentsTitle")}</h3><SupplierDocumentList supplierId={item.id} documents={pending.documents} /></section> : null}
+        <SupplierDocumentLinksList links={pending.documentLinks || []} />
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="text-sm">{t("field.hutang")}<select className="erp-field mt-1 w-full" value={String(hutang)} onChange={(event) => setHutang(event.target.value === "true")}><option value="false">{t("common.false")}</option><option value="true">{t("common.true")}</option></select></label>
           <label className="text-sm">{t("field.lamaHutang")}<input className="erp-field mt-1 w-full" type="number" min={1} step={1} required={hutang} disabled={!hutang} value={hutang ? lamaHutang : ""} onChange={(event) => setLamaHutang(event.target.value)} /></label>

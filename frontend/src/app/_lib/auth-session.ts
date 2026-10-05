@@ -13,6 +13,7 @@ type RefreshResponsePayload = {
 type StoredAuthUser = {
   id?: unknown;
   role?: unknown;
+  breakGlassRole?: unknown;
 };
 
 const accessTokenStorageKeys = ["accessToken", "access_token"];
@@ -247,6 +248,11 @@ export function getStoredAuthUser(): StoredAuthUser | null {
 
 export function getStoredUserRole() {
   return normalizeRole(getStoredAuthUser()?.role);
+}
+
+export function getStoredBreakGlassRole() {
+  const role = getStoredAuthUser()?.breakGlassRole;
+  return role === "owner" || role === "developer" ? role : "";
 }
 
 export function getStoredUserId() {

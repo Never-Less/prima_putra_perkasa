@@ -1,4 +1,5 @@
 import { ApiRequestError, requestApi } from "../../_lib/api-client";
+import { type SupplierDocument, type SupplierDocumentLink } from "./supplier-documents";
 
 export const onboardingStatuses = ["notGenerated", "generated", "sent", "submitted", "completed"] as const;
 export type OnboardingStatus = typeof onboardingStatuses[number];
@@ -11,6 +12,8 @@ export type SupplierProfile = {
   email: string;
   productCategories: string[];
   productBrands: string[];
+  documents?: SupplierDocument[];
+  documentLinks?: SupplierDocumentLink[];
 };
 export type SupplierOnboarding = {
   status: OnboardingStatus;
@@ -55,10 +58,11 @@ export function supplierOnboardingAction(id: string, action: "sent" | "approve",
 // Separate public request: never read, refresh, or send an internal user's JWT.
 export async function requestSupplierForm<T>(token: string, body?: unknown): Promise<T> {
   const base = (process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000").replace(/\/$/, "");
+  const multipart = typeof FormData !== "undefined" && body instanceof FormData;
   const response = await fetch(`${base}/api/supplier-forms/${encodeURIComponent(token)}`, {
     method: body === undefined ? "GET" : "POST", credentials: "omit", cache: "no-store", referrerPolicy: "no-referrer",
-    headers: body === undefined ? { Accept: "application/json" } : { Accept: "application/json", "Content-Type": "application/json" },
-    body: body === undefined ? undefined : JSON.stringify(body),
+    headers: body === undefined || multipart ? { Accept: "application/json" } : { Accept: "application/json", "Content-Type": "application/json" },
+    body: body === undefined ? undefined : multipart ? body : JSON.stringify(body),
   });
   const payload = await response.json();
   if (!response.ok) throw new ApiRequestError("Supplier form request failed", response.status, payload);

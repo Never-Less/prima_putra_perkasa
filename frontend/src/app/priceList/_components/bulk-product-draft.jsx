@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CheckCircle2, ClipboardList, Copy, Eraser, Keyboard, Loader2, Plus, RotateCcw, Save, Search, Send, TriangleAlert, X } from "lucide-react";
 import { useI18n } from "../../_i18n/provider";
 import jspreadsheet from "jspreadsheet-ce";
+import { createSpreadsheetController } from "../../_lib/spreadsheet-controller";
+import { SpreadsheetToolbar, SpreadsheetShortcutHelp } from "../../_components/spreadsheet-frame";
 import "jsuites/dist/jsuites.css";
 import "jspreadsheet-ce/dist/jspreadsheet.css";
 
@@ -54,9 +56,6 @@ const spreadsheetDataToRows = (data) =>
       {}
     )
   );
-
-const serializeSpreadsheetData = (data) =>
-  JSON.stringify(data.map((row = []) => columns.map((_, index) => `${row[index] ?? ""}`)));
 
 const storageKey = "bulk-product-draft";
 const visibleRowStep = 12;
@@ -347,8 +346,7 @@ const BulkProductDraft = () => {
   const tableWrapRef = useRef(null);
   const spreadsheetRootRef = useRef(null);
   const spreadsheetRef = useRef(null);
-  const isApplyingSpreadsheetDataRef = useRef(false);
-  const spreadsheetDataRef = useRef("");
+  const spreadsheetControllerRef = useRef(null);
   const rowsRef = useRef(rows);
   const submitRowsRef = useRef(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -385,104 +383,21 @@ const BulkProductDraft = () => {
     rootElement.innerHTML = "";
     const initialData = rowsToSpreadsheetData(rowsRef.current);
 
-    const syncRowsFromSpreadsheet = (worksheet) => {
-      if (isApplyingSpreadsheetDataRef.current) return;
-
-      const nextData = worksheet.getData(false, true);
-      spreadsheetDataRef.current = serializeSpreadsheetData(nextData);
-      setRows(spreadsheetDataToRows(nextData));
-      clearPriceCheck();
-      setStatus("");
-    };
-
-    const fillSpreadsheetSelectionDown = () => {
-      const worksheet = spreadsheetRef.current;
-      if (!worksheet) return;
-
-      const selection = worksheet.getSelection?.();
-      if (!selection) return;
-
-      const [leftIndex, topIndex, rightIndex, bottomIndex] = selection;
-      const range = {
-        start: {
-          rowIndex: Math.min(topIndex, bottomIndex),
-          columnIndex: Math.min(leftIndex, rightIndex),
-        },
-        end: {
-          rowIndex: Math.max(topIndex, bottomIndex),
-          columnIndex: Math.max(leftIndex, rightIndex),
-        },
-      };
-
-      if (range.end.rowIndex <= range.start.rowIndex) {
-        setStatus("Pilih minimal 2 baris untuk fill down.");
-        return;
-      }
-
-      recordHistory(rowsRef.current);
-
-      const changes = [];
-      for (
-        let rowIndex = range.start.rowIndex + 1;
-        rowIndex <= range.end.rowIndex;
-        rowIndex++
-      ) {
-        for (
-          let columnIndex = range.start.columnIndex;
-          columnIndex <= range.end.columnIndex;
-          columnIndex++
-        ) {
-          changes.push({
-            x: columnIndex,
-            y: rowIndex,
-            value: worksheet.getValueFromCoords(columnIndex, range.start.rowIndex),
-          });
-        }
-      }
-
-      worksheet.setValue(changes, undefined, true);
-      const nextData = worksheet.getData(false, true);
-      spreadsheetDataRef.current = serializeSpreadsheetData(nextData);
-      setRows(spreadsheetDataToRows(nextData));
-      clearPriceCheck();
-      setStatus("Fill down.");
-    };
-
-    const handleSpreadsheetNativeKeyDown = (event) => {
-      if (!(event.ctrlKey || event.metaKey)) {
-        return;
-      }
-
-      const activeElement = document.activeElement;
-      if (!rootElement.contains(event.target) && !rootElement.contains(activeElement)) {
-        return;
-      }
-
-      if (event.key === "Enter") {
-        event.preventDefault();
-        event.stopPropagation();
-        event.stopImmediatePropagation?.();
-        submitRowsRef.current?.();
-        return;
-      }
-
-      if (event.key.toLowerCase() !== "d") {
-        return;
-      }
-
-      event.preventDefault();
-      event.stopPropagation();
-      event.stopImmediatePropagation?.();
-      fillSpreadsheetSelectionDown();
-    };
-
-    spreadsheetDataRef.current = serializeSpreadsheetData(initialData);
-    isApplyingSpreadsheetDataRef.current = true;
+    const controller = createSpreadsheetController({
+      root: rootElement, rows: rowsRef.current, toData: rowsToSpreadsheetData, fromData: (data) => {
+        const next = spreadsheetDataToRows(data);
+        if (!next.length || isRowFilled(next[next.length - 1])) next.push(emptyRow());
+        return next;
+      },
+      onRowsChange: (nextRows) => { rowsRef.current = nextRows; setRows(nextRows); clearPriceCheck(); setStatus(""); },
+      t, onSubmit: () => submitRowsRef.current?.(),
+    });
 
     const instances = jspreadsheet(rootElement, {
-      onafterchanges: syncRowsFromSpreadsheet,
-      oninsertrow: syncRowsFromSpreadsheet,
-      ondeleterow: syncRowsFromSpreadsheet,
+      onafterchanges: controller.capture,
+      oninsertrow: controller.capture,
+      ondeleterow: controller.capture,
+      contextMenu: controller.contextMenu,
       onselection: (
         _worksheet,
         borderLeftIndex,
@@ -526,6 +441,9 @@ const BulkProductDraft = () => {
             width: column.width,
           })),
           editable: true,
+          allowInsertRow: true,
+          allowManualInsertRow: true,
+          allowDeleteRow: true,
           allowDeleteColumn: false,
           allowInsertColumn: false,
           allowManualInsertColumn: false,
@@ -541,36 +459,25 @@ const BulkProductDraft = () => {
     });
 
     spreadsheetRef.current = instances[0] || null;
-    window.requestAnimationFrame(() => {
-      isApplyingSpreadsheetDataRef.current = false;
-    });
-    window.addEventListener("keydown", handleSpreadsheetNativeKeyDown, true);
+    spreadsheetControllerRef.current = controller;
+    if (instances[0]) controller.attach(instances[0]);
 
     return () => {
-      window.removeEventListener("keydown", handleSpreadsheetNativeKeyDown, true);
-      isApplyingSpreadsheetDataRef.current = false;
+      controller.destroy();
+      spreadsheetControllerRef.current = null;
       spreadsheetRef.current = null;
       jspreadsheet.destroy(rootElement, true);
       rootElement.innerHTML = "";
     };
-  }, [categories]);
+  }, [categories, t]);
 
   useEffect(() => {
-    const worksheet = spreadsheetRef.current;
-    if (!worksheet) return;
-
-    const nextData = rowsToSpreadsheetData(rows);
-    const serializedNextData = serializeSpreadsheetData(nextData);
-
-    if (serializedNextData === spreadsheetDataRef.current) return;
-
-    isApplyingSpreadsheetDataRef.current = true;
-    spreadsheetDataRef.current = serializedNextData;
-    worksheet.setData(nextData);
-    window.requestAnimationFrame(() => {
-      isApplyingSpreadsheetDataRef.current = false;
-    });
+    spreadsheetControllerRef.current?.replaceRows(rows);
   }, [rows]);
+
+  useEffect(() => {
+    if (spreadsheetRef.current) spreadsheetRef.current.options.editable = !isSubmitting;
+  }, [isSubmitting]);
 
   useEffect(() => {
     const updateDragSelection = (event) => {
@@ -1833,17 +1740,6 @@ const BulkProductDraft = () => {
     setStatus(`${filledRows.length} baris dicopy.`);
   };
 
-  const handleSpreadsheetShortcutKeyDown = (event) => {
-    if (!(event.ctrlKey || event.metaKey)) return;
-
-    if (event.key.toLowerCase() === "d") {
-      event.preventDefault();
-      event.stopPropagation();
-      event.nativeEvent?.stopImmediatePropagation?.();
-      fillSelectionDown();
-    }
-  };
-
   const openPriceListCheck = () => {
     if (priceCheckRowsWithIndex.length === 0) {
       clearPriceCheck();
@@ -1962,11 +1858,9 @@ const BulkProductDraft = () => {
         localStorage.removeItem(storageKey);
       }
 
-      setRows(
-        remainingRows.length > 0
-          ? [...remainingRows, ...createRows(5)]
-          : createRows(12)
-      );
+      const nextDraftRows = remainingRows.length > 0 ? [...remainingRows, ...createRows(5)] : createRows(12);
+      if (spreadsheetControllerRef.current) spreadsheetControllerRef.current.resetRows(nextDraftRows);
+      else setRows(nextDraftRows);
       clearPriceCheck();
       setStatus(
         `${validRows.length} item berhasil masuk backend${
@@ -2024,15 +1918,16 @@ const BulkProductDraft = () => {
           {isCheckingDuplicates ? <Loader2 className="bulk_spinner" aria-hidden="true" /> : <Search aria-hidden="true" />}{t("priceList.bulk.checkPrices")}
         </button></div>
       </div>
+      <SpreadsheetToolbar actionsRef={spreadsheetControllerRef} disabled={isSubmitting} />
       <div
         className="bulk_table_wrap"
         ref={tableWrapRef}
-        onKeyDownCapture={handleSpreadsheetShortcutKeyDown}
       >
         <div className="app-spreadsheet app-spreadsheet--bulk" ref={spreadsheetRootRef} />
       </div>
       <div className="bulk_editor_footer"><span><Keyboard aria-hidden="true" />{t("priceList.bulk.pasteHint")}</span><span>{t("priceList.bulk.selectedCells", { count: selectedCellCount })}</span></div>
       </div>
+      <SpreadsheetShortcutHelp />
       {status && <div className="bulk_status" role="status" aria-live="polite">{status}</div>}
 
       {priceCheckItems.length > 0 && (

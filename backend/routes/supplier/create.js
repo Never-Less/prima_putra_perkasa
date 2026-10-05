@@ -6,6 +6,11 @@ const { ROLE_ADMIN, ROLE_STAFF } = require("../../models/User");
 const { sanitizeSupplier } = require("./sanitize-supplier");
 
 const router = express.Router();
+const mongoose = require("mongoose");
+const { receiveDocuments, storeDocuments, discardDocuments } = require("./document-storage");
+const { validateTags } = require("./validate-tags");
+const { validateDocumentLinks } = require("./document-links");
+const { validateContact } = require("./validate-contact");
 
 function parseBoolean(value) {
   if (typeof value === "boolean") {
@@ -51,7 +56,7 @@ function profileFields(body) {
   };
 }
 
-router.post("/", requireRole(ROLE_ADMIN, ROLE_STAFF), async (req, res) => {
+router.post("/", requireRole(ROLE_ADMIN, ROLE_STAFF), receiveDocuments, validateTags, validateDocumentLinks, validateContact, async (req, res) => {
   const namaSupplier = String(req.body.namaSupplier || "").trim();
   const hutang = req.body.hutang !== undefined ? parseBoolean(req.body.hutang) : false;
   const lamaHutang = hutang ? parseNumber(req.body.lamaHutang) : null;
@@ -70,20 +75,28 @@ router.post("/", requireRole(ROLE_ADMIN, ROLE_STAFF), async (req, res) => {
     });
   }
 
+  let documents = [];
+  let linked = false;
   try {
+    const id = new mongoose.Types.ObjectId();
+    documents = await storeDocuments(id, req.files);
     const supplier = await Supplier.create({
+      _id: id, documents,
       namaSupplier,
       hutang,
       lamaHutang,
       ...profileFields(req.body),
     });
 
+    linked = true;
     return res.status(201).json({
       message: "supplier created",
       supplier: sanitizeSupplier(supplier),
     });
   } catch (_error) {
     return res.status(500).json({ message: "Data supplier belum bisa disimpan. Coba lagi." });
+  } finally {
+    if (!linked) await discardDocuments(documents);
   }
 });
 

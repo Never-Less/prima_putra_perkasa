@@ -1,4 +1,5 @@
 const express = require("express");
+const { protectedUserIds } = require("../../utils/break-glass-access");
 
 const { User } = require("../../models/User");
 const { isValidId } = require("./validators");
@@ -19,6 +20,9 @@ router.delete("/:id", async (req, res) => {
   }
 
   try {
+    if (protectedUserIds().includes(id.toLowerCase())) {
+      return res.status(403).json({ message: "Akun owner/developer tidak dapat dihapus lewat aplikasi." });
+    }
     const user = await User.findByIdAndDelete(id);
 
     if (!user) {
