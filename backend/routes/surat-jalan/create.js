@@ -4,7 +4,7 @@ const express = require("express");
 const { Customer } = require("../../models/Customer");
 const { SuratJalan } = require("../../models/SuratJalan");
 const { sanitizeSuratJalan } = require("./sanitize-surat-jalan");
-const { isValidId, normalizeBarangList, parseDate } = require("./validators");
+const { isValidId, parseBarangList, parseDate } = require("./validators");
 const { validateDeliveryAgainstSalesOrder } = require("../../utils/delivery-validation");
 
 const router = express.Router();
@@ -14,12 +14,17 @@ router.post("/", documentMutation(async (req, res) => {
   const noPo = String(req.body.noPo || "").trim();
   const tanggal = parseDate(req.body.tanggal);
   const idCustomer = String(req.body.idCustomer || "").trim();
-  const barang = normalizeBarangList(req.body.barang, {
+  const barangResult = parseBarangList(req.body.barang, {
     defaultKodeDepartemen: req.body.kodeDepartemen,
   });
+  const barang = barangResult.barang;
   const kendaraan = String(req.body.kendaraan || "").trim();
 
-  if (!noSuratJalan || !noPo || !tanggal || !idCustomer || !barang || !kendaraan) {
+  if (barangResult.error) {
+    return res.status(400).json({ message: barangResult.error });
+  }
+
+  if (!noSuratJalan || !noPo || !tanggal || !idCustomer || !kendaraan) {
     return res.status(400).json({
       message:
         "Lengkapi No. Surat Jalan, No. SO, tanggal, customer, barang, dan kendaraan sebelum menyimpan.",

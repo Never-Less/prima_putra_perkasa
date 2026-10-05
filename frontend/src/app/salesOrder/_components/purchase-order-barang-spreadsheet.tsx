@@ -20,7 +20,7 @@ type PurchaseOrderBarangSpreadsheetProps = {
 
 type SpreadsheetData = jspreadsheet.CellValue[][];
 
-const columnCount = 6;
+const columnCount = 7;
 
 function toCellText(value: unknown) {
   return String(value ?? "");
@@ -78,10 +78,11 @@ function rowsToSpreadsheetData(
 ): SpreadsheetData {
   const normalizedRows = ensureTrailingEmptyPurchaseOrderBarangRow(rows);
 
-  return normalizedRows.map((row) => {
+  return normalizedRows.map((row, index) => {
     const jumlah = parseNumber(row.kuantitas) * parseNumber(row.hargaSatuan);
 
     return [
+      row.urutan || String(index + 1),
       row.namaBarang,
       row.spesifikasi,
       row.kuantitas,
@@ -94,10 +95,11 @@ function rowsToSpreadsheetData(
 
 function spreadsheetDataToRows(data: SpreadsheetData) {
   const nextRows = data.map((row) => {
-    const [namaBarang, spesifikasi, kuantitas, unit, hargaSatuan] =
+    const [urutan, namaBarang, spesifikasi, kuantitas, unit, hargaSatuan] =
       normalizeSpreadsheetRow(row);
 
     return {
+      urutan: normalizeNumericCell(urutan),
       namaBarang,
       spesifikasi,
       kuantitas: normalizeNumericCell(kuantitas),
@@ -132,6 +134,11 @@ export function PurchaseOrderBarangSpreadsheet({
 
   const columns = useMemo<NonNullable<jspreadsheet.WorksheetOptions["columns"]>>(
     () => [
+      {
+        title: t("field.no"),
+        type: "numeric",
+        width: 70,
+      },
       {
         title: t("field.namaBarang"),
         type: "text",
@@ -197,6 +204,20 @@ export function PurchaseOrderBarangSpreadsheet({
         t,
       });
 
+      const syncRowsFromWorksheet = (instance: jspreadsheet.WorksheetInstance) => {
+        if (isApplyingDataRef.current) {
+          return;
+        }
+
+        const nextData = instance.getData(false, true);
+        const nextRows = spreadsheetDataToRows(nextData);
+        currentDataRef.current = serializeData(nextData);
+        rowsRef.current = nextRows;
+        onRowsChangeRef.current(nextRows);
+      };
+
+      currentDataRef.current = serializeData(initialData);
+      isApplyingDataRef.current = true;
       const instances = jspreadsheetFactory(rootRef.current, {
         onafterchanges: controller.capture,
         oninsertrow: controller.capture,
@@ -217,6 +238,7 @@ export function PurchaseOrderBarangSpreadsheet({
             allowRenameColumn: false,
             columnDrag: false,
             columnSorting: false,
+            rowDrag: false,
             tableOverflow: true,
             tableWidth: "100%",
             minDimensions: [columnCount, 2],

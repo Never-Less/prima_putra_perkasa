@@ -4,7 +4,7 @@ function sanitizePurchaseOrderBarang(barang) {
   }
 
   return barang
-    .map((item) => {
+    .map((item, index) => {
       const namaBarang = String(item?.namaBarang || "").trim();
       const kuantitas = Number(item?.kuantitas);
       const unit = String(item?.unit || "").trim();
@@ -16,6 +16,7 @@ function sanitizePurchaseOrderBarang(barang) {
       }
 
       return {
+        urutan: Number.isInteger(Number(item?.urutan)) && Number(item.urutan) > 0 ? Number(item.urutan) : index + 1,
         namaBarang,
         spesifikasi: String(item?.spesifikasi || "").trim(),
         kuantitas,
@@ -24,7 +25,8 @@ function sanitizePurchaseOrderBarang(barang) {
         jumlah: Number.isFinite(jumlah) ? jumlah : 0,
       };
     })
-    .filter((item) => Boolean(item));
+    .filter((item) => Boolean(item))
+    .sort((left, right) => left.urutan - right.urutan);
 }
 
 function sanitizePurchaseOrder(purchaseOrder, workflow = null) {

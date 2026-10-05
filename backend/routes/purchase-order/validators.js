@@ -24,18 +24,28 @@ function parseNumber(value) {
   return number;
 }
 
-function normalizeBarangList(barangInput) {
+function barangRowLocation(rowIndex, namaBarang) {
+  return namaBarang ? `Baris ${rowIndex + 1} (${namaBarang})` : `Baris ${rowIndex + 1}`;
+}
+
+function fieldValue(value) {
+  const normalized = String(value ?? "").trim();
+  return normalized || "kosong";
+}
+
+function parseBarangList(barangInput) {
   if (barangInput === undefined || barangInput === null) {
-    return [];
+    return { barang: [], error: null };
   }
 
   if (!Array.isArray(barangInput)) {
-    return null;
+    return { barang: null, error: "Data barang Sales Order harus berupa daftar." };
   }
 
   const normalized = [];
+  const usedOrderNumbers = new Map();
 
-  for (const item of barangInput) {
+  for (const [rowIndex, item] of barangInput.entries()) {
     const namaBarang = String(item?.namaBarang || "").trim();
     const spesifikasi = String(item?.spesifikasi || "").trim();
     const kuantitas = parseNumber(item?.kuantitas);
@@ -48,6 +58,8 @@ function normalizeBarangList(barangInput) {
         : kuantitas !== null && hargaSatuan !== null
           ? Math.round(kuantitas * hargaSatuan)
           : null;
+    const urutanText = String(item?.urutan ?? "").trim();
+    const urutan = urutanText ? parseNumber(urutanText) : rowIndex + 1;
     const isEmptyRow =
       !namaBarang &&
       !spesifikasi &&
@@ -60,20 +72,26 @@ function normalizeBarangList(barangInput) {
       continue;
     }
 
-    if (
-      !namaBarang ||
-      kuantitas === null ||
-      kuantitas <= 0 ||
-      !unit ||
-      hargaSatuan === null ||
-      hargaSatuan < 0 ||
-      jumlah === null ||
-      jumlah < 0
-    ) {
-      return null;
-    }
+    const location = barangRowLocation(rowIndex, namaBarang);
 
+    if (urutan === null || !Number.isInteger(urutan) || urutan <= 0) {
+      return { barang: null, error: `${location}: nomor urutan harus berupa bilangan bulat lebih besar dari 0 (nilai: ${fieldValue(item?.urutan)}).` };
+    }
+    if (usedOrderNumbers.has(urutan)) {
+      return { barang: null, error: `${location}: nomor urutan ${urutan} sudah digunakan pada baris ${usedOrderNumbers.get(urutan)}.` };
+    }
+    if (!namaBarang) return { barang: null, error: `${location}: nama barang wajib diisi.` };
+    if (kuantitas === null) return { barang: null, error: `${location}: kuantitas tidak valid (nilai: ${fieldValue(item?.kuantitas)}).` };
+    if (kuantitas <= 0) return { barang: null, error: `${location}: kuantitas harus lebih besar dari 0 (nilai: ${kuantitas}).` };
+    if (!unit) return { barang: null, error: `${location}: unit wajib diisi.` };
+    if (hargaSatuan === null) return { barang: null, error: `${location}: harga satuan tidak valid (nilai: ${fieldValue(item?.hargaSatuan)}).` };
+    if (hargaSatuan < 0) return { barang: null, error: `${location}: harga satuan tidak boleh negatif (nilai: ${hargaSatuan}).` };
+    if (jumlah === null) return { barang: null, error: `${location}: harga total tidak dapat dihitung.` };
+    if (jumlah < 0) return { barang: null, error: `${location}: harga total tidak boleh negatif (nilai: ${jumlah}).` };
+
+    usedOrderNumbers.set(urutan, rowIndex + 1);
     normalized.push({
+      urutan,
       namaBarang,
       spesifikasi,
       kuantitas,
@@ -83,7 +101,16 @@ function normalizeBarangList(barangInput) {
     });
   }
 
-  return normalized;
+  return {
+    barang: normalized
+      .sort((left, right) => left.urutan - right.urutan)
+      .map((item, index) => ({ ...item, urutan: index + 1 })),
+    error: null,
+  };
+}
+
+function normalizeBarangList(barangInput) {
+  return parseBarangList(barangInput).barang;
 }
 
 function calculateBarangSubtotal(barang) {
@@ -118,6 +145,7 @@ module.exports = {
   calculateBarangSubtotal,
   isValidId,
   normalizeBarangList,
+  parseBarangList,
   parseBoolean,
   parseDate,
   parseNumber,

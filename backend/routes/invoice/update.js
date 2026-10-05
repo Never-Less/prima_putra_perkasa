@@ -11,13 +11,14 @@ const {
   calculatePpnAmount,
   calculateSubtotal,
   isValidId,
-  normalizeBarangList,
   normalizeStringList,
+  parseBarangList,
   parseBoolean,
   parseDate,
   parseNumber,
 } = require("./validators");
 const { calculateDueDate, normalizePaymentTerm } = require("../../utils/payment-term");
+const { respondToDocumentValidation } = require("../../utils/document-validation-warning");
 
 const router = express.Router();
 
@@ -143,12 +144,10 @@ router.put("/:id", documentMutation(async (req, res) => {
   }
 
   if (req.body.barang !== undefined) {
-    const barang = normalizeBarangList(req.body.barang);
-    if (!barang) {
-      return res.status(400).json({
-        message:
-          "Isi minimal satu barang invoice dengan nama barang, qty, unit, dan harga satuan yang valid.",
-      });
+    const barangResult = parseBarangList(req.body.barang);
+    const barang = barangResult.barang;
+    if (barangResult.error) {
+      return res.status(400).json({ message: barangResult.error });
     }
     updates.barang = barang;
     updates.subtotal = calculateSubtotal(barang);
@@ -223,7 +222,7 @@ router.put("/:id", documentMutation(async (req, res) => {
     const integrityFields = ["noInvoice", "noPo", "noPoList", "noSuratJalan", "idCustomer", "barang"];
     if (integrityFields.some((field) => req.body[field] !== undefined)) {
       const integrityError = await validateInvoiceIntegrity({ ...existingInvoice.toObject(), ...updates, noPoList: updates.noPoList || getInvoiceNoPoList(existingInvoice) }, id);
-      if (integrityError) return res.status(409).json({ message: integrityError });
+      if (integrityError && respondToDocumentValidation(req, res, integrityError)) return;
     }
 
     const invoice = await Invoice.findByIdAndUpdate(id, updates, {

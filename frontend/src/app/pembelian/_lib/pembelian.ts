@@ -29,6 +29,7 @@ export type PembelianItem = {
   nilaiNota: number;
   tanggalJatuhTempo: string | null;
   tanggalBayar: string | null;
+  statusPembayaran: "paid" | "unpaid";
   createdAt: string;
   updatedAt: string;
 };
@@ -43,6 +44,7 @@ export type PembelianFilter = {
   noNota: string;
   noInvoice: string;
   hutang: "" | "true" | "false";
+  statusPembayaran: "" | "paid" | "unpaid";
   ppn: "" | "true" | "false";
   tanggalNotaDari: string;
   tanggalNotaSampai: string;
@@ -66,6 +68,14 @@ export type PembelianFormState = {
   tanggalJatuhTempo: string;
   tanggalBayar: string;
 };
+
+export function getPembelianPaymentStatus(
+  pembelian: Pick<PembelianItem, "hutang" | "tanggalBayar">
+) {
+  return !pembelian.hutang || String(pembelian.tanggalBayar || "").trim()
+    ? ("paid" as const)
+    : ("unpaid" as const);
+}
 
 export type PembelianListQuery = PembelianFilter & PaginationQueryState;
 
@@ -99,6 +109,7 @@ export const defaultPembelianFilter: PembelianFilter = {
   noNota: "",
   noInvoice: "",
   hutang: "",
+  statusPembayaran: "",
   ppn: "",
   tanggalNotaDari: "",
   tanggalNotaSampai: "",
@@ -208,6 +219,9 @@ function toPembelianItem(value: unknown): PembelianItem | null {
     return null;
   }
 
+  const hutang = Boolean(row.hutang);
+  const tanggalBayar = toText(row.tanggalBayar).trim() || null;
+
   return {
     id: id,
     tanggalNota: toText(row.tanggalNota).trim(),
@@ -216,12 +230,13 @@ function toPembelianItem(value: unknown): PembelianItem | null {
     noNota: toText(row.noNota).trim(),
     note: toText(row.note).trim(),
     idInvoice: parseInvoiceId(row.idInvoice),
-    hutang: Boolean(row.hutang),
+    hutang,
     ppn: Boolean(row.ppn),
     lamaHutang: parseNumberFromUnknown(row.lamaHutang),
     nilaiNota: parseNumberFromUnknown(row.nilaiNota),
     tanggalJatuhTempo: toText(row.tanggalJatuhTempo).trim() || null,
-    tanggalBayar: toText(row.tanggalBayar).trim() || null,
+    tanggalBayar,
+    statusPembayaran: getPembelianPaymentStatus({ hutang, tanggalBayar }),
     createdAt: toText(row.createdAt).trim(),
     updatedAt: toText(row.updatedAt).trim(),
   };
@@ -335,6 +350,7 @@ export async function fetchPembelianList(
     noNota: query.noNota,
     noInvoice: query.noInvoice,
     hutang: query.hutang,
+    statusPembayaran: query.statusPembayaran,
     ppn: query.ppn,
     tanggalNotaDari: query.tanggalNotaDari,
     tanggalNotaSampai: query.tanggalNotaSampai,
@@ -516,6 +532,9 @@ export function filterPembelianRows(
       (filter.hutang === "true" && row.hutang) ||
       (filter.hutang === "false" && !row.hutang);
 
+    const matchStatusPembayaran =
+      !filter.statusPembayaran || row.statusPembayaran === filter.statusPembayaran;
+
     const matchPpn =
       !filter.ppn ||
       (filter.ppn === "true" && row.ppn) ||
@@ -532,6 +551,7 @@ export function filterPembelianRows(
       matchNoNota &&
       matchNoInvoice &&
       matchHutang &&
+      matchStatusPembayaran &&
       matchPpn &&
       matchTanggalNota &&
       matchTanggalBayar &&

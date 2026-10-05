@@ -9,11 +9,17 @@ const { sanitizePurchaseOrder } = require("./sanitize-purchase-order");
 const {
   calculateBarangSubtotal,
   isValidId,
-  normalizeBarangList,
+  parseBarangList,
   parseDate,
   parseNumber,
 } = require("./validators");
 const { normalizePaymentTerm } = require("../../utils/payment-term");
+const { respondToDocumentValidation } = require("../../utils/document-validation-warning");
+const {
+  buildSalesOrderWorkflow,
+  buildSalesOrderWorkflowFingerprint,
+  salesOrderWorkflowStatuses,
+} = require("../../utils/sales-order-workflow");
 
 const router = express.Router();
 
@@ -32,6 +38,17 @@ router.put("/:id", documentMutation(async (req, res) => {
     }
 
     const updates = {};
+    const requestedWorkflowStatus =
+      req.body.workflowStatus === undefined
+        ? null
+        : String(req.body.workflowStatus || "").trim();
+
+    if (
+      requestedWorkflowStatus !== null &&
+      !salesOrderWorkflowStatuses.includes(requestedWorkflowStatus)
+    ) {
+      return res.status(400).json({ message: "Status Sales Order tidak valid." });
+    }
 
     if (req.body.noPo !== undefined) {
       updates.noPo = String(req.body.noPo || "").trim();
@@ -68,13 +85,11 @@ router.put("/:id", documentMutation(async (req, res) => {
     }
 
     if (req.body.barang !== undefined) {
-      const barang = normalizeBarangList(req.body.barang);
+      const barangResult = parseBarangList(req.body.barang);
+      const barang = barangResult.barang;
 
-      if (!barang) {
-        return res.status(400).json({
-          message:
-            "Isi barang sales order dengan nama barang, qty, unit, dan harga satuan yang valid.",
-        });
+      if (barangResult.error) {
+        return res.status(400).json({ message: barangResult.error });
       }
 
       updates.barang = barang;
@@ -117,7 +132,7 @@ router.put("/:id", documentMutation(async (req, res) => {
       }
     }
 
-    if (Object.keys(updates).length === 0) {
+    if (Object.keys(updates).length === 0 && requestedWorkflowStatus === null) {
       return res.status(400).json({
         message: "Tidak ada perubahan yang bisa disimpan. Ubah minimal satu data terlebih dahulu.",
       });
@@ -169,7 +184,84 @@ router.put("/:id", documentMutation(async (req, res) => {
       const affectedSuratJalan = await SuratJalan.countDocuments({ noPo: existingNoPo }).collation({ locale: "en", strength: 2 });
       const affectedInvoices = await Invoice.countDocuments({ $or: [{ noPoList: existingNoPo }, { noPo: existingNoPo }, { "barang.sources.noPo": existingNoPo }, { "barang.noPoManual": existingNoPo }] }).collation({ locale: "en", strength: 2 });
       if (affectedSuratJalan > 0 || affectedInvoices > 0) {
-        return res.status(409).json({ message: "Sales Order tidak dapat direvisi selama masih terhubung ke Surat Jalan atau Invoice. Hapus atau lepaskan dokumen turunan terlebih dahulu, mulai dari Invoice." });
+        const validationMessage = "Sales Order tidak dapat direvisi selama masih terhubung ke Surat Jalan atau Invoice. Hapus atau lepaskan dokumen turunan terlebih dahulu, mulai dari Invoice.";
+        if (respondToDocumentValidation(req, res, validationMessage)) return;
+      }
+    }
+
+    let workflowRelations = null;
+
+    if (requestedWorkflowStatus !== null) {
+      const currentNoPo = String(existingPurchaseOrder.noPo || "").trim();
+      const [currentSuratJalanList, currentInvoiceList] = await Promise.all([
+        SuratJalan.find({ noPo: currentNoPo }).lean(),
+        Invoice.find({
+          $or: [
+            { noPoList: currentNoPo },
+            { noPo: currentNoPo },
+            { "barang.sources.noPo": currentNoPo },
+            { "barang.noPoManual": currentNoPo },
+          ],
+        }).lean(),
+      ]);
+      const currentWorkflow = buildSalesOrderWorkflow(
+        existingPurchaseOrder,
+        currentSuratJalanList,
+        currentInvoiceList
+      );
+
+      if (requestedWorkflowStatus !== currentWorkflow.status) {
+        const candidatePurchaseOrder = {
+          ...existingPurchaseOrder.toObject(),
+          ...updates,
+          workflowStatusManual: null,
+          workflowStatusManualFingerprint: "",
+          workflowStatusManualUpdatedAt: null,
+        };
+        const finalNoPo = String(candidatePurchaseOrder.noPo || "").trim();
+        const [finalSuratJalanList, finalInvoiceList] =
+          finalNoPo === currentNoPo
+            ? [currentSuratJalanList, currentInvoiceList]
+            : await Promise.all([
+                SuratJalan.find({ noPo: finalNoPo }).lean(),
+                Invoice.find({
+                  $or: [
+                    { noPoList: finalNoPo },
+                    { noPo: finalNoPo },
+                    { "barang.sources.noPo": finalNoPo },
+                    { "barang.noPoManual": finalNoPo },
+                  ],
+                }).lean(),
+              ]);
+        const automaticWorkflow = buildSalesOrderWorkflow(
+          candidatePurchaseOrder,
+          finalSuratJalanList,
+          finalInvoiceList
+        );
+
+        if (requestedWorkflowStatus === automaticWorkflow.automaticStatus) {
+          updates.workflowStatusManual = null;
+          updates.workflowStatusManualFingerprint = "";
+          updates.workflowStatusManualUpdatedAt = null;
+        } else {
+          updates.workflowStatusManual = requestedWorkflowStatus;
+          updates.workflowStatusManualFingerprint = buildSalesOrderWorkflowFingerprint(
+            candidatePurchaseOrder,
+            finalSuratJalanList,
+            finalInvoiceList
+          );
+          updates.workflowStatusManualUpdatedAt = new Date();
+        }
+
+        workflowRelations = {
+          suratJalanList: finalSuratJalanList,
+          invoiceList: finalInvoiceList,
+        };
+      } else {
+        workflowRelations = {
+          suratJalanList: currentSuratJalanList,
+          invoiceList: currentInvoiceList,
+        };
       }
     }
 
@@ -182,7 +274,17 @@ router.put("/:id", documentMutation(async (req, res) => {
 
     return res.json({
       message: "purchase order updated",
-      purchaseOrder: sanitizePurchaseOrder(purchaseOrder),
+      purchaseOrder: sanitizePurchaseOrder(
+        purchaseOrder,
+        workflowRelations
+          ? buildSalesOrderWorkflow(
+              purchaseOrder,
+              workflowRelations.suratJalanList,
+              workflowRelations.invoiceList,
+              { includeItems: true }
+            )
+          : null
+      ),
       revisionImpact,
     });
   } catch (error) {

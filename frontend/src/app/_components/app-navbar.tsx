@@ -135,11 +135,6 @@ export function AppNavbar() {
         label: t("nav.group.purchasing"),
         items: [
           { href: "/pembelian", label: t("nav.pembelian"), icon: PackageSearch },
-          {
-            href: "/rekapTagihanPembayaranPabrik",
-            label: t("nav.rekapTagihanPembayaranPabrik"),
-            icon: Factory,
-          },
         ],
       },
       {
@@ -149,8 +144,19 @@ export function AppNavbar() {
             ? [{ href: "/dashboardFinance", label: t("nav.financeDashboard"), icon: Landmark }]
             : []),
           { href: "/kasBank", label: t("nav.cashLedger"), icon: WalletCards },
+          { href: "/tagihanBelumDibayar", label: t("nav.piutangCustomer"), icon: CircleDollarSign },
+          { href: "/hutangSupplier", label: t("nav.hutangSupplier"), icon: ReceiptText },
+        ],
+      },
+      {
+        label: t("nav.group.reports"),
+        items: [
+          {
+            href: "/rekapTagihanPembayaranPabrik",
+            label: t("nav.rekapTagihanPembayaranPabrik"),
+            icon: Factory,
+          },
           { href: "/pembayaranAllCustomer", label: t("nav.pembayaranAllCustomer"), icon: WalletCards },
-          { href: "/tagihanBelumDibayar", label: t("nav.tagihanBelumDibayar"), icon: CircleDollarSign },
           ...(isAdminAccess
             ? [{ href: "/laporanKeuangan", label: t("nav.laporanKeuangan"), icon: BarChart3 }]
             : []),
@@ -262,7 +268,7 @@ export function AppNavbar() {
   );
 
   return (
-    <>
+    <div className="contents print:hidden">
       <header className="sticky top-0 z-50 flex h-14 items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 dark:border-slate-800 dark:bg-slate-950 sm:px-6 lg:hidden">
         <div className="min-w-0">
           <Link href="/" className="block truncate text-sm font-semibold text-slate-950 dark:text-white">
@@ -348,6 +354,6 @@ export function AppNavbar() {
         <div className="shrink-0 border-t border-slate-200 p-3 dark:border-slate-800">{navigationFooter}</div>
       </aside>
       <div className="fixed right-5 top-4 z-50 hidden lg:block"><ReleaseNotesNotificationCenter /></div>
-    </>
+    </div>
   );
 }

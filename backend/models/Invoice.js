@@ -52,6 +52,11 @@ const barangInvoiceSourceSchema = new mongoose.Schema(
 
 const barangInvoiceSchema = new mongoose.Schema(
   {
+    urutan: {
+      type: Number,
+      min: 1,
+      default: null,
+    },
     namaBarang: {
       type: String,
       required: true,

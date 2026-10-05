@@ -6,8 +6,9 @@ const express = require("express");
 const { Customer } = require("../../models/Customer");
 const { SuratJalan } = require("../../models/SuratJalan");
 const { sanitizeSuratJalan } = require("./sanitize-surat-jalan");
-const { isValidId, normalizeBarangList, parseDate } = require("./validators");
+const { isValidId, parseBarangList, parseDate } = require("./validators");
 const { validateDeliveryAgainstSalesOrder } = require("../../utils/delivery-validation");
+const { respondToDocumentValidation } = require("../../utils/document-validation-warning");
 
 const router = express.Router();
 
@@ -47,13 +48,12 @@ router.put("/:id", documentMutation(async (req, res) => {
   }
 
   if (req.body.barang !== undefined) {
-    const barang = normalizeBarangList(req.body.barang, {
+    const barangResult = parseBarangList(req.body.barang, {
       defaultKodeDepartemen: req.body.kodeDepartemen,
     });
-    if (!barang) {
-      return res.status(400).json({
-        message: "Isi minimal satu barang surat jalan dengan nama barang, jumlah, dan unit yang valid.",
-      });
+    const barang = barangResult.barang;
+    if (barangResult.error) {
+      return res.status(400).json({ message: barangResult.error });
     }
     updates.barang = barang;
   }
@@ -83,7 +83,8 @@ router.put("/:id", documentMutation(async (req, res) => {
     const existingDocument = await SuratJalan.findById(id).lean();
     if (!existingDocument) return res.status(404).json({ message: "Data surat jalan tidak ditemukan." });
     if (await Invoice.countDocuments(deliveryInvoiceQuery(existingDocument)).collation({ locale: "en", strength: 2 })) {
-      return res.status(409).json({ message: "Surat Jalan tidak dapat dihapus atau direvisi selama masih terhubung ke Invoice. Hapus atau lepaskan referensi Invoice terlebih dahulu." });
+      const validationMessage = "Surat Jalan tidak dapat dihapus atau direvisi selama masih terhubung ke Invoice. Hapus atau lepaskan referensi Invoice terlebih dahulu.";
+      if (respondToDocumentValidation(req, res, validationMessage)) return;
     }
     if (updates.idCustomer) {
       const customer = await Customer.findById(updates.idCustomer);
@@ -112,7 +113,7 @@ router.put("/:id", documentMutation(async (req, res) => {
       barang: updates.barang || existingDocument.barang,
       excludeSuratJalanId: id,
     });
-    if (deliveryError) return res.status(409).json({ message: deliveryError });
+    if (deliveryError && respondToDocumentValidation(req, res, deliveryError)) return;
 
     const suratJalan = await SuratJalan.findByIdAndUpdate(id, updates, {
       new: true,

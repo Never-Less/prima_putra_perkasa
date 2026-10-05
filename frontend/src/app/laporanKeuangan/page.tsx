@@ -23,6 +23,7 @@ import {
   filterPembelianStockRowsByMonth,
   formatRupiah,
   formatTanggal,
+  getPembelianPaymentStatus,
   type PembelianItem,
 } from "../pembelian/_lib/pembelian";
 import {
@@ -33,6 +34,7 @@ import {
 import {
   buildPurchaseTotalByInvoiceId,
   calculateLaporanKeuanganMonthSummary,
+  calculatePembelianPaymentSummaryByMonth,
   fetchLaporanKeuangan,
   formatLaporanKeuanganCurrency,
   formatLaporanKeuanganMonth,
@@ -338,6 +340,9 @@ export function LaporanKeuanganPageContent({
   const stockBarangTotal = useMemo(() => {
     return calculatePembelianStockTotalByMonth(pembelianRows, bulan);
   }, [bulan, pembelianRows]);
+  const pembelianPaymentSummary = useMemo(() => {
+    return calculatePembelianPaymentSummaryByMonth(pembelianRows, bulan);
+  }, [bulan, pembelianRows]);
   const grossProfit = invoiceGrandTotal - purchaseTotal;
   const netProfit = grossProfit - totalBiayaOperasional;
 
@@ -353,6 +358,9 @@ export function LaporanKeuanganPageContent({
         totalInvoice: total.totalInvoice + row.totalInvoice,
         totalPembelian: total.totalPembelian + row.totalPembelian,
         totalStockBarang: total.totalStockBarang + row.totalStockBarang,
+        totalPembayaranSupplier:
+          total.totalPembayaranSupplier + row.totalPembayaranSupplier,
+        totalHutangSupplier: row.totalHutangSupplier,
         grossProfit: total.grossProfit + row.grossProfit,
         totalBiayaOperasional:
           total.totalBiayaOperasional + row.totalBiayaOperasional,
@@ -363,6 +371,8 @@ export function LaporanKeuanganPageContent({
         totalInvoice: 0,
         totalPembelian: 0,
         totalStockBarang: 0,
+        totalPembayaranSupplier: 0,
+        totalHutangSupplier: 0,
         grossProfit: 0,
         totalBiayaOperasional: 0,
         netProfit: 0,
@@ -377,6 +387,8 @@ export function LaporanKeuanganPageContent({
           totalInvoice: invoiceGrandTotal,
           totalPembelian: purchaseTotal,
           totalStockBarang: stockBarangTotal,
+          totalPembayaranSupplier: pembelianPaymentSummary.totalPembayaranSupplier,
+          totalHutangSupplier: pembelianPaymentSummary.totalHutangSupplier,
           grossProfit,
           totalBiayaOperasional,
           netProfit,
@@ -736,32 +748,50 @@ export function LaporanKeuanganPageContent({
               </div>
             ) : (
               <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
-                <table className="w-full min-w-[820px] table-fixed text-left text-sm">
+                <table className="w-full min-w-[1160px] table-fixed text-left text-sm">
                   <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:bg-slate-900 dark:text-slate-400">
                     <tr>
                       <th className="px-3 py-2">{t("field.tanggalNota")}</th>
                       <th className="px-3 py-2">{t("field.namaSupplier")}</th>
                       <th className="px-3 py-2">{t("field.noNota")}</th>
-                      <th className="px-3 py-2">{t("field.hutang")}</th>
+                      <th className="px-3 py-2">{t("field.jenisPembelian")}</th>
+                      <th className="px-3 py-2">{t("field.statusPembayaran")}</th>
+                      <th className="px-3 py-2">{t("field.tanggalBayar")}</th>
                       <th className="px-3 py-2">{t("field.ppn")}</th>
                       <th className="px-3 py-2 text-right">{t("field.nilaiNota")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                    {stockPembelianRows.map((row) => (
-                      <tr key={row.id} className="text-slate-700 dark:text-slate-200">
-                        <td className="truncate px-3 py-2">{formatTanggal(row.tanggalNota, locale)}</td>
-                        <td className="truncate px-3 py-2 font-medium" title={row.namaSupplier || "-"}>{row.namaSupplier || "-"}</td>
-                        <td className="truncate px-3 py-2" title={row.noNota || "-"}>{row.noNota || "-"}</td>
-                        <td className="truncate px-3 py-2">{row.hutang ? t("common.true") : t("common.false")}</td>
-                        <td className="truncate px-3 py-2">{row.ppn ? t("common.true") : t("common.false")}</td>
-                        <td className="truncate px-3 py-2 text-right font-medium">{formatRupiah(row.nilaiNota, locale)}</td>
-                      </tr>
-                    ))}
+                    {stockPembelianRows.map((row) => {
+                      const paymentStatus = getPembelianPaymentStatus(row);
+
+                      return (
+                        <tr key={row.id} className="text-slate-700 dark:text-slate-200">
+                          <td className="truncate px-3 py-2">{formatTanggal(row.tanggalNota, locale)}</td>
+                          <td className="truncate px-3 py-2 font-medium" title={row.namaSupplier || "-"}>{row.namaSupplier || "-"}</td>
+                          <td className="truncate px-3 py-2" title={row.noNota || "-"}>{row.noNota || "-"}</td>
+                          <td className="truncate px-3 py-2">
+                            {t(row.hutang ? "pembelian.type.debt" : "pembelian.type.cash")}
+                          </td>
+                          <td className={`truncate px-3 py-2 font-medium ${
+                            paymentStatus === "unpaid"
+                              ? "text-red-700 dark:text-red-300"
+                              : "text-emerald-700 dark:text-emerald-300"
+                          }`}>
+                            {t(`pembelian.status.${paymentStatus}`)}
+                          </td>
+                          <td className="truncate px-3 py-2">
+                            {formatTanggal(row.hutang ? row.tanggalBayar : row.tanggalNota, locale)}
+                          </td>
+                          <td className="truncate px-3 py-2">{row.ppn ? t("common.true") : t("common.false")}</td>
+                          <td className="truncate px-3 py-2 text-right font-medium">{formatRupiah(row.nilaiNota, locale)}</td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                   <tfoot className="bg-slate-50 font-semibold text-slate-900 dark:bg-slate-900 dark:text-slate-100">
                     <tr>
-                      <td className="truncate px-3 py-2 text-right" colSpan={5}>{t("field.stockBarang")}</td>
+                      <td className="truncate px-3 py-2 text-right" colSpan={7}>{t("field.stockBarang")}</td>
                       <td className="truncate px-3 py-2 text-right">{formatLaporanKeuanganCurrency(stockBarangTotal, locale)}</td>
                     </tr>
                   </tfoot>
@@ -809,13 +839,15 @@ export function LaporanKeuanganPageContent({
 
             {!isYearlyLoading && !yearlyErrorMessage ? (
               <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
-                <table className="w-full min-w-[1060px] table-fixed text-left text-sm">
+                <table className="w-full min-w-[1380px] table-fixed text-left text-sm">
                   <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:bg-slate-900 dark:text-slate-400">
                     <tr>
                       <th className="px-3 py-2">{t("field.bulan")}</th>
                       <th className="px-3 py-2 text-right">{t("field.totalInvoice")}</th>
                       <th className="px-3 py-2 text-right">{t("field.totalPembelian")}</th>
                       <th className="px-3 py-2 text-right">{t("field.stockBarang")}</th>
+                      <th className="px-3 py-2 text-right">{t("laporanKeuangan.summary.supplierPayments")}</th>
+                      <th className="px-3 py-2 text-right">{t("laporanKeuangan.summary.supplierDebt")}</th>
                       <th className="px-3 py-2 text-right">{t("field.grossProfit")}</th>
                       <th className="px-3 py-2 text-right">{t("field.totalBiayaOperasional")}</th>
                       <th className="px-3 py-2 text-right">{t("field.netProfit")}</th>
@@ -835,6 +867,12 @@ export function LaporanKeuanganPageContent({
                         </td>
                         <td className="truncate px-3 py-2 text-right">
                           {formatLaporanKeuanganCurrency(row.totalStockBarang, locale)}
+                        </td>
+                        <td className="truncate px-3 py-2 text-right">
+                          {formatLaporanKeuanganCurrency(row.totalPembayaranSupplier, locale)}
+                        </td>
+                        <td className="truncate px-3 py-2 text-right">
+                          {formatLaporanKeuanganCurrency(row.totalHutangSupplier, locale)}
                         </td>
                         <td className="truncate px-3 py-2 text-right">
                           {formatLaporanKeuanganCurrency(row.grossProfit, locale)}
@@ -858,6 +896,8 @@ export function LaporanKeuanganPageContent({
                       <td className="truncate px-3 py-2 text-right">{formatLaporanKeuanganCurrency(yearlyTotals.totalInvoice, locale)}</td>
                       <td className="truncate px-3 py-2 text-right">{formatLaporanKeuanganCurrency(yearlyTotals.totalPembelian, locale)}</td>
                       <td className="truncate px-3 py-2 text-right">{formatLaporanKeuanganCurrency(yearlyTotals.totalStockBarang, locale)}</td>
+                      <td className="truncate px-3 py-2 text-right">{formatLaporanKeuanganCurrency(yearlyTotals.totalPembayaranSupplier, locale)}</td>
+                      <td className="truncate px-3 py-2 text-right">{formatLaporanKeuanganCurrency(yearlyTotals.totalHutangSupplier, locale)}</td>
                       <td className="truncate px-3 py-2 text-right">{formatLaporanKeuanganCurrency(yearlyTotals.grossProfit, locale)}</td>
                       <td className="truncate px-3 py-2 text-right">{formatLaporanKeuanganCurrency(yearlyTotals.totalBiayaOperasional, locale)}</td>
                       <td className={`truncate px-3 py-2 text-right ${
@@ -1013,6 +1053,18 @@ export function LaporanKeuanganPageContent({
                 <dt className="text-sm text-slate-500 dark:text-slate-400">{t("field.stockBarang")}</dt>
                 <dd className="mt-1 text-2xl font-semibold text-sky-700 dark:text-sky-300">
                   {formatLaporanKeuanganCurrency(activeSummary.totalStockBarang, locale)}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-sm text-slate-500 dark:text-slate-400">{t("laporanKeuangan.summary.supplierPayments")}</dt>
+                <dd className="mt-1 text-2xl font-semibold text-emerald-700 dark:text-emerald-300">
+                  {formatLaporanKeuanganCurrency(activeSummary.totalPembayaranSupplier, locale)}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-sm text-slate-500 dark:text-slate-400">{t("laporanKeuangan.summary.supplierDebt")}</dt>
+                <dd className="mt-1 text-2xl font-semibold text-amber-700 dark:text-amber-300">
+                  {formatLaporanKeuanganCurrency(activeSummary.totalHutangSupplier, locale)}
                 </dd>
               </div>
               <div>

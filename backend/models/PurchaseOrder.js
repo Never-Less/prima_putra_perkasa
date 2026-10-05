@@ -17,6 +17,11 @@ const paymentTermSchema = new mongoose.Schema(
 
 const barangPurchaseOrderSchema = new mongoose.Schema(
   {
+    urutan: {
+      type: Number,
+      min: 1,
+      default: null,
+    },
     namaBarang: {
       type: String,
       required: true,
@@ -98,6 +103,19 @@ const purchaseOrderSchema = new mongoose.Schema(
       ref: "Invoice",
       default: null,
       index: true,
+    },
+    workflowStatusManual: {
+      type: String,
+      enum: ["toDeliver", "partlyDelivered", "deliveredToBilled", "partlyBilled", "billed", "paid"],
+      default: null,
+    },
+    workflowStatusManualFingerprint: {
+      type: String,
+      default: "",
+    },
+    workflowStatusManualUpdatedAt: {
+      type: Date,
+      default: null,
     },
     revision: { type: Number, required: true, min: 0, default: 0 },
     revisionHistory: {

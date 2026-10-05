@@ -13,6 +13,7 @@ import { type ServerPaginationMeta } from "../../_lib/pagination";
 import { type CustomerFilter, type CustomerItem } from "../_lib/customer";
 import { useI18n } from "../../_i18n/provider";
 import { useFilterDraft } from "../../_hooks/use-filter-draft";
+import { MobileFilterPanel } from "../../_components/mobile-filter-panel";
 
 type CustomerTableFilterProps = {
   rows: CustomerItem[];
@@ -66,6 +67,7 @@ export function CustomerTableFilter({
   const hiddenColumnIndexes = columns
     .filter((column) => hiddenColumns.includes(column.key))
     .map((column) => column.index);
+  const isColumnVisible = (key: string) => !hiddenColumns.includes(key);
 
   return (
     <section className="ppp-list-view ppp-customer-list space-y-4 rounded-xl border border-slate-100 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
@@ -83,8 +85,8 @@ export function CustomerTableFilter({
       </div>
 
       <form onSubmit={applyDraftFilter}>
-        <p className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">{t("common.filterByField")}</p>
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+        <MobileFilterPanel label={t("common.filterByField")} labelClassName="text-slate-500 dark:text-slate-400">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.nama")}
             <DebouncedFilterInput
@@ -133,6 +135,7 @@ export function CustomerTableFilter({
             {t("common.applyFilter")}
           </button>
         </div>
+        </MobileFilterPanel>
       </form>
 
       <div className="space-y-3 md:hidden">
@@ -155,7 +158,9 @@ export function CustomerTableFilter({
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate text-base font-semibold text-slate-900 dark:text-slate-100">{row.nama || "-"}</p>
+                    {isColumnVisible("nama") ? (
+                      <p className="truncate text-base font-semibold text-slate-900 dark:text-slate-100">{row.nama || "-"}</p>
+                    ) : null}
                     <p className="mt-1 text-xs uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("nav.customer")}</p>
                   </div>
                   <span
@@ -168,18 +173,18 @@ export function CustomerTableFilter({
                 </div>
 
                 <dl className="mt-4 space-y-3 text-sm">
-                  <div>
+                  {isColumnVisible("alamat") ? <div>
                     <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.alamat")}</dt>
                     <dd className="mt-1 whitespace-pre-wrap text-slate-700 dark:text-slate-200">{row.alamat || "-"}</dd>
-                  </div>
-                  <div>
+                  </div> : null}
+                  {isColumnVisible("npwp") ? <div>
                     <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.npwp")}</dt>
                     <dd className="mt-1 text-slate-700 dark:text-slate-200">{row.npwp || "-"}</dd>
-                  </div>
-                  <div>
+                  </div> : null}
+                  {isColumnVisible("atasNama") ? <div>
                     <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.atasNama")}</dt>
                     <dd className="mt-1 text-slate-700 dark:text-slate-200">{row.atasNama || "-"}</dd>
-                  </div>
+                  </div> : null}
                 </dl>
 
                 <button

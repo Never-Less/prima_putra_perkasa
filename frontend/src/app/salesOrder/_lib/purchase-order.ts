@@ -12,6 +12,7 @@ import { defaultPaymentTerm, normalizePaymentTerm, type PaymentTerm } from "../.
 type Locale = "id" | "en";
 
 export type PurchaseOrderBarang = {
+  urutan: number;
   namaBarang: string;
   spesifikasi: string;
   kuantitas: number;
@@ -21,6 +22,7 @@ export type PurchaseOrderBarang = {
 };
 
 export type PurchaseOrderBarangFormRow = {
+  urutan: string;
   namaBarang: string;
   spesifikasi: string;
   kuantitas: string;
@@ -55,6 +57,8 @@ export type SalesOrderItemProgress = {
 
 export type SalesOrderWorkflow = {
   status: SalesOrderWorkflowStatus;
+  automaticStatus: SalesOrderWorkflowStatus;
+  isManualStatus: boolean;
   deliveryStatus: "notDelivered" | "partial" | "complete";
   suratJalan: SalesOrderDocumentReference[];
   invoices: Array<SalesOrderDocumentReference & { isPaid: boolean; allocatedAmount: number | null }>;
@@ -118,6 +122,7 @@ export type PurchaseOrderFormState = {
   paymentTerm: PaymentTerm;
   tanggalInvoice: string;
   noInvoice: string;
+  workflowStatus: SalesOrderWorkflowStatus;
 };
 
 export type PurchaseOrderListQuery = PurchaseOrderFilter & PaginationQueryState;
@@ -265,6 +270,7 @@ function normalizeWorkflow(value: unknown): SalesOrderWorkflow | null {
   ];
   const status = String(row.status || "") as SalesOrderWorkflowStatus;
   if (!validStatuses.includes(status)) return null;
+  const automaticStatus = String(row.automaticStatus || status) as SalesOrderWorkflowStatus;
 
   const normalizeDocuments = (items: unknown, numberKey: string) =>
     (Array.isArray(items) ? items : [])
@@ -310,6 +316,8 @@ function normalizeWorkflow(value: unknown): SalesOrderWorkflow | null {
 
   return {
     status,
+    automaticStatus: validStatuses.includes(automaticStatus) ? automaticStatus : status,
+    isManualStatus: Boolean(row.isManualStatus),
     deliveryStatus:
       row.deliveryStatus === "complete" || row.deliveryStatus === "partial"
         ? row.deliveryStatus
@@ -346,7 +354,7 @@ export function toPurchaseOrderItem(value: unknown): PurchaseOrderItem | null {
     nominalPo: parseNumberFromUnknown(row.nominalPo),
     barang: Array.isArray(row.barang)
       ? row.barang
-          .map(toPurchaseOrderBarang)
+          .map((item, index) => toPurchaseOrderBarang(item, index))
           .filter((item): item is PurchaseOrderBarang => Boolean(item))
       : [],
     paymentTerm: normalizePaymentTerm(row.paymentTerm),
@@ -400,7 +408,7 @@ function toPurchaseOrderInvoiceOption(value: unknown): PurchaseOrderInvoiceOptio
   };
 }
 
-function toPurchaseOrderBarang(value: unknown): PurchaseOrderBarang | null {
+function toPurchaseOrderBarang(value: unknown, index = 0): PurchaseOrderBarang | null {
   if (!value || typeof value !== "object") {
     return null;
   }
@@ -412,12 +420,14 @@ function toPurchaseOrderBarang(value: unknown): PurchaseOrderBarang | null {
   const unit = toDecodedText(row.unit).trim();
   const hargaSatuan = parseNumberFromUnknown(row.hargaSatuan);
   const jumlah = parseNumberFromUnknown(row.jumlah, kuantitas * hargaSatuan);
+  const urutan = parseNumberFromUnknown(row.urutan, index + 1);
 
   if (!namaBarang || kuantitas <= 0 || !unit || hargaSatuan < 0 || jumlah < 0) {
     return null;
   }
 
   return {
+    urutan: Number.isInteger(urutan) && urutan > 0 ? urutan : index + 1,
     namaBarang,
     spesifikasi,
     kuantitas,
@@ -443,6 +453,7 @@ function toNormalizedPurchaseOrderPayload(form: PurchaseOrderFormState) {
     paymentTerm: normalizePaymentTerm(form.paymentTerm || defaultPaymentTerm),
     tanggalInvoice: tanggalInvoice || null,
     noInvoice: noInvoice || null,
+    workflowStatus: form.workflowStatus,
   };
 }
 
@@ -520,10 +531,17 @@ export async function createPurchaseOrder(form: PurchaseOrderFormState) {
   return toPurchaseOrderItem(response?.purchaseOrder);
 }
 
-export async function updatePurchaseOrder(id: string, form: PurchaseOrderFormState) {
+export async function updatePurchaseOrder(
+  id: string,
+  form: PurchaseOrderFormState,
+  options: { continueOnValidationWarning?: boolean } = {}
+) {
+  const payload = toNormalizedPurchaseOrderPayload(form);
   const response = await requestApi<PurchaseOrderResponse>(`/api/purchase-orders/${id}`, {
     method: "PUT",
-    body: toNormalizedPurchaseOrderPayload(form),
+    body: options.continueOnValidationWarning
+      ? { ...payload, continueOnValidationWarning: true }
+      : payload,
     invalidateCachePaths: purchaseOrderMutationCachePaths,
   });
 
@@ -557,6 +575,7 @@ export function toInputDate(value: string | null) {
 
 export function createEmptyPurchaseOrderBarangRow(): PurchaseOrderBarangFormRow {
   return {
+    urutan: "",
     namaBarang: "",
     spesifikasi: "",
     kuantitas: "",
@@ -578,7 +597,8 @@ export function isPurchaseOrderBarangRowFilled(row: PurchaseOrderBarangFormRow) 
 export function ensureTrailingEmptyPurchaseOrderBarangRow(
   rows: PurchaseOrderBarangFormRow[]
 ) {
-  const normalizedRows = rows.map((row) => ({
+  const normalizedRows = rows.map((row, index) => ({
+    urutan: String(row.urutan || index + 1),
     namaBarang: String(row.namaBarang || ""),
     spesifikasi: String(row.spesifikasi || ""),
     kuantitas: String(row.kuantitas || ""),
@@ -609,7 +629,7 @@ export function ensureTrailingEmptyPurchaseOrderBarangRow(
 
 export function purchaseOrderBarangRowsToList(rows: PurchaseOrderBarangFormRow[]) {
   return rows
-    .map((row) => {
+    .map((row, index) => {
       const namaBarang = toDecodedText(row.namaBarang).trim();
       const spesifikasi = toDecodedText(row.spesifikasi).trim();
       const kuantitas = parseNumberFromUnknown(row.kuantitas);
@@ -618,6 +638,7 @@ export function purchaseOrderBarangRowsToList(rows: PurchaseOrderBarangFormRow[]
       const jumlah = Math.round(kuantitas * hargaSatuan);
 
       return {
+        urutan: parseNumberFromUnknown(row.urutan, index + 1),
         namaBarang,
         spesifikasi,
         kuantitas,
@@ -626,7 +647,7 @@ export function purchaseOrderBarangRowsToList(rows: PurchaseOrderBarangFormRow[]
         jumlah,
       };
     })
-    .filter((item) => item.namaBarang && item.kuantitas > 0 && item.unit);
+    .filter((_item, index) => isPurchaseOrderBarangRowFilled(rows[index]));
 }
 
 export function calculatePurchaseOrderBarangTotal(barang: PurchaseOrderBarang[]) {
@@ -641,6 +662,7 @@ export function toPurchaseOrderFormState(item: PurchaseOrderItem): PurchaseOrder
     nominalPo: String(item.nominalPo),
     barangRows: ensureTrailingEmptyPurchaseOrderBarangRow(
       item.barang.map((barang) => ({
+        urutan: String(barang.urutan),
         namaBarang: barang.namaBarang,
         spesifikasi: barang.spesifikasi,
         kuantitas: String(barang.kuantitas),
@@ -651,5 +673,10 @@ export function toPurchaseOrderFormState(item: PurchaseOrderItem): PurchaseOrder
     paymentTerm: normalizePaymentTerm(item.paymentTerm),
     tanggalInvoice: toInputDate(item.tanggalInvoice),
     noInvoice: item.noInvoice,
+    workflowStatus: item.workflow?.status || "toDeliver",
   };
+}
+
+export function sortPurchaseOrderBarangByUrutan(barang: PurchaseOrderBarang[]) {
+  return [...barang].sort((left, right) => left.urutan - right.urutan);
 }

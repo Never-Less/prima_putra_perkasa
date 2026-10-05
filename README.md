@@ -1,13 +1,48 @@
 # Prima Putra Perkasa
 
-Repository structure:
+[Bahasa Indonesia](README.md) | [English](README.en.md)
 
-- `frontend/` - Next.js application
-- `backend/` - Node.js + Express API
+Prima Putra Perkasa adalah aplikasi web internal untuk mengelola alur administrasi penjualan dan operasional perusahaan, mulai dari **Sales Order**, **Surat Jalan**, dan **Invoice** hingga **Pembelian**, pembayaran customer, tagihan pabrik, serta laporan keuangan.
+
+## Ringkasan Aplikasi
+
+Aplikasi menghubungkan data antarproses agar pencatatan transaksi lebih konsisten. Sales Order dapat digunakan sebagai sumber data Surat Jalan, kemudian Surat Jalan yang belum ditagihkan dapat dipilih saat membuat Invoice. Sistem juga membantu menghitung nilai transaksi, memantau status pembayaran, dan menyiapkan dokumen untuk dicetak, disimpan sebagai PDF, atau diekspor ke Excel.
+
+Alur utama aplikasi:
+
+```text
+Sales Order -> Surat Jalan -> Invoice -> Pembayaran dan Laporan
+                              |
+                              -> Pembelian
+```
+
+## Fitur Utama
+
+- Autentikasi berbasis JWT dengan access token, refresh token, logout, serta role `admin` dan `staff`.
+- Pengelolaan master data customer, supplier, dan user.
+- CRUD Sales Order, Surat Jalan, Invoice, dan Pembelian dengan tabel, filter, pagination, form, dan preview.
+- Pengisian barang berbentuk spreadsheet untuk mempercepat input transaksi.
+- Relasi data antar Sales Order, Surat Jalan, Invoice, dan Pembelian, termasuk pengisian otomatis dari dokumen terkait.
+- Perhitungan subtotal, PPN, grand total, jatuh tempo, serta status pembayaran.
+- Rekap pembayaran seluruh customer dan outstanding tagihan per pabrik.
+- Laporan keuangan bulanan dan tahunan berdasarkan invoice, pembelian stok, dan biaya operasional.
+- Export dokumen untuk print/PDF serta export Excel pada laporan yang didukung.
+- Antarmuka responsif dengan tema terang/gelap dan pilihan Bahasa Indonesia atau English.
+
+## Teknologi
+
+- **Frontend:** Next.js App Router, React, TypeScript, Tailwind CSS, React Select, dan Jspreadsheet CE.
+- **Backend:** Node.js, Express, MongoDB, dan Mongoose.
+- **Keamanan:** Bearer Token JWT, `bcryptjs`, Helmet, CORS allowlist, validasi `Origin/Referer`, dan rate limiting pada autentikasi.
+
+## Struktur Repository
+
+- `frontend/` - aplikasi Next.js untuk antarmuka, form, preview, laporan, dan export.
+- `backend/` - REST API Express, model Mongoose, autentikasi, dan proses bisnis.
 
 ## Prerequisites
 
-- Node.js 18+ (Node.js 20 recommended)
+- Node.js 20.9 atau lebih baru
 - npm
 
 ## Setup
@@ -142,3 +177,26 @@ Proteksi yang diterapkan:
 - CORS allowlist dari `APP_ORIGINS`
 - Validasi `Origin/Referer` untuk request mutasi (`POST/PUT/PATCH/DELETE`)
 - `credentials: false` agar cookie tidak dipakai untuk auth
+
+## Backfill Nomor Urutan Barang
+
+Jalankan dry-run untuk memeriksa Sales Order, Surat Jalan, dan Invoice tanpa mengubah MongoDB:
+
+```bash
+cd backend
+npm run backfill:item-order
+```
+
+Terapkan hasil backfill setelah ringkasan dry-run sesuai:
+
+```bash
+npm run backfill:item-order -- --apply
+```
+
+Gunakan `--only=purchase-orders`, `--only=surat-jalan`, atau `--only=invoices` untuk membatasi koleksi.
+
+## Perubahan Branch Development
+
+Perubahan berikut tersedia di branch `development` dan belum menjadi bagian dari rilis utama:
+
+- `fix: Update cara partial dan non-partial`

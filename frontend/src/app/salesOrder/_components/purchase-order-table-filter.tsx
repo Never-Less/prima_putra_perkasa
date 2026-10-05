@@ -13,6 +13,7 @@ import { AppDateInput } from "../../_components/app-date-input";
 import { type ServerPaginationMeta } from "../../_lib/pagination";
 import { useI18n } from "../../_i18n/provider";
 import { useFilterDraft } from "../../_hooks/use-filter-draft";
+import { MobileFilterPanel } from "../../_components/mobile-filter-panel";
 import {
   formatRupiah,
   formatTanggal,
@@ -94,6 +95,7 @@ export function PurchaseOrderTableFilter({
   const hiddenColumnIndexes = columns
     .filter((column) => hiddenColumns.includes(column.key))
     .map((column) => column.index);
+  const isColumnVisible = (key: string) => !hiddenColumns.includes(key);
 
   return (
     <section className="ppp-list-view ppp-sales-order-list space-y-4 rounded-xl border border-slate-100 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
@@ -120,8 +122,8 @@ export function PurchaseOrderTableFilter({
       </div>
 
       <form onSubmit={applyDraftFilter}>
-        <p className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">{t("common.filterByField")}</p>
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+        <MobileFilterPanel label={t("common.filterByField")} labelClassName="text-slate-500 dark:text-slate-400">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <label className="text-sm text-slate-700 dark:text-slate-200">
             {t("field.workflowStatus")}
             <select
@@ -256,6 +258,7 @@ export function PurchaseOrderTableFilter({
             {t("common.applyFilter")}
           </button>
         </div>
+        </MobileFilterPanel>
       </form>
 
       <div className="space-y-3 md:hidden">
@@ -269,7 +272,9 @@ export function PurchaseOrderTableFilter({
           const isSelected = selectedId === row.id;
           const customerLabel = resolveCustomerLabel?.(row.namaCustomer) || row.namaCustomer || "-";
           const suratJalanLabel = row.workflow?.suratJalan.map((item) => item.number).join(", ") || "-";
+          const suratJalanDateLabel = row.workflow?.suratJalan.map((item) => formatTanggal(item.date, locale)).join(", ") || "-";
           const invoiceLabel = row.workflow?.invoices.map((item) => item.number).join(", ") || resolveInvoiceLabel?.(row.noInvoice) || row.noInvoice || "-";
+          const invoiceDateLabel = row.workflow?.invoices.map((item) => formatTanggal(item.date, locale)).join(", ") || formatTanggal(row.tanggalInvoice, locale);
           const workflowStatus = row.workflow?.status || "toDeliver";
 
           return (
@@ -282,34 +287,44 @@ export function PurchaseOrderTableFilter({
               }`}
             >
               <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="truncate text-base font-semibold text-slate-900 dark:text-slate-100">{row.noPo || "-"}</p>
-                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{formatTanggal(row.tanggalPo, locale)}</p>
-                </div>
-                <span className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${isSelected ? "bg-sky-700 text-white dark:bg-sky-500 dark:text-slate-950" : "bg-sky-100 text-sky-700 dark:bg-slate-800 dark:text-slate-300"}`}>
+                  <div className="min-w-0">
+                    <p className="truncate text-base font-semibold text-slate-900 dark:text-slate-100">{row.noPo || "-"}</p>
+                    {isColumnVisible("tanggalPo") ? (
+                      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{formatTanggal(row.tanggalPo, locale)}</p>
+                    ) : null}
+                  </div>
+                {isColumnVisible("nominalPo") ? <span className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${isSelected ? "bg-sky-700 text-white dark:bg-sky-500 dark:text-slate-950" : "bg-sky-100 text-sky-700 dark:bg-slate-800 dark:text-slate-300"}`}>
                   {formatRupiah(row.nominalPo, locale)}
-                </span>
+                </span> : null}
               </div>
 
               <dl className="mt-4 space-y-3 text-sm">
-                <div>
+                {isColumnVisible("namaCustomer") ? <div>
                   <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.namaCustomer")}</dt>
                   <dd className="mt-1 text-slate-700 dark:text-slate-200">{customerLabel}</dd>
-                </div>
+                </div> : null}
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <div>
+                  {isColumnVisible("noSuratJalan") ? <div>
                     <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.noSuratJalan")}</dt>
                     <dd className="mt-1 text-slate-700 dark:text-slate-200">{suratJalanLabel}</dd>
-                  </div>
-                  <div>
+                  </div> : null}
+                  {isColumnVisible("tanggalSuratJalan") ? <div>
+                    <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.tanggalSuratJalan")}</dt>
+                    <dd className="mt-1 text-slate-700 dark:text-slate-200">{suratJalanDateLabel}</dd>
+                  </div> : null}
+                  {isColumnVisible("noInvoice") ? <div>
                     <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.noInvoice")}</dt>
                     <dd className="mt-1 text-slate-700 dark:text-slate-200">{invoiceLabel}</dd>
-                  </div>
+                  </div> : null}
+                  {isColumnVisible("tanggalInvoice") ? <div>
+                    <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.tanggalInvoice")}</dt>
+                    <dd className="mt-1 text-slate-700 dark:text-slate-200">{invoiceDateLabel}</dd>
+                  </div> : null}
                 </div>
-                <div>
+                {isColumnVisible("workflowStatus") ? <div>
                   <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.workflowStatus")}</dt>
                   <dd className="mt-1"><span className={`rounded-full px-2 py-1 text-xs font-medium ${workflowStatusClasses[workflowStatus]}`}>{t(`salesOrderDashboard.status.${workflowStatus}`)}</span></dd>
-                </div>
+                </div> : null}
               </dl>
 
               <button

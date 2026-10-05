@@ -11,6 +11,7 @@ import { requestUnsavedChangesConfirmation } from "../_hooks/use-unsaved-changes
 import { usePersistentListUrl } from "../_hooks/use-persistent-list-url";
 import { useI18n } from "../_i18n/provider";
 import { ApiRequestError } from "../_lib/api-client";
+import { getDocumentValidationWarning } from "../_lib/document-validation-warning";
 import {
   buildFormRouteWithReturnPagination,
   buildListRouteWithPagination,
@@ -167,6 +168,7 @@ export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: Purchas
   const [customerOptions, setCustomerOptions] = useState<PurchaseOrderCustomerOption[]>([]);
   const [invoiceOptions, setInvoiceOptions] = useState<PurchaseOrderInvoiceOption[]>([]);
   const [selectedId, setSelectedId] = useState(itemId);
+  const [formVersion, setFormVersion] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -186,6 +188,11 @@ export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: Purchas
       }
     | null
   >(null);
+  const [pendingValidationWarning, setPendingValidationWarning] = useState<{
+    form: PurchaseOrderFormState;
+    selectedItem: PurchaseOrderItem;
+    message: string;
+  } | null>(null);
 
   usePersistentListUrl({ enabled: !isFormMode, basePath: "/salesOrder", defaultFilter: defaultPurchaseOrderFilter, defaultPagination: defaultPurchaseOrderPaginationQuery, defaultSort: defaultPurchaseOrderSort, filter, pagination: paginationQuery, sort: sortValue, setFilter, setPagination: setPaginationQuery, setSort: setSortValue });
   const [pendingShortcutConfirmation, setPendingShortcutConfirmation] =
@@ -452,15 +459,22 @@ export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: Purchas
   }, [resolveCustomerLabel, rows, sortValue]);
 
   const executeSavePurchaseOrder = useCallback(
-    async (form: PurchaseOrderFormState, selectedItem?: PurchaseOrderItem) => {
+    async (
+      form: PurchaseOrderFormState,
+      selectedItem?: PurchaseOrderItem,
+      continueOnValidationWarning = false
+    ) => {
       setActionErrorMessage("");
       setIsSaving(true);
 
       try {
         if (selectedItem?.id) {
-          const updatedPurchaseOrder = await updatePurchaseOrder(selectedItem.id, form);
+          const updatedPurchaseOrder = await updatePurchaseOrder(selectedItem.id, form, {
+            continueOnValidationWarning,
+          });
           await loadPurchaseOrders({ showLoading: false });
           setSelectedId(updatedPurchaseOrder?.id || selectedItem.id);
+          setFormVersion((currentVersion) => currentVersion + 1);
           if (isFormMode) {
             router.replace(
               buildFormRouteWithReturnPagination(
@@ -500,6 +514,12 @@ export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: Purchas
           "success"
         );
       } catch (error) {
+        const validationWarning = getDocumentValidationWarning(error);
+        if (validationWarning && selectedItem?.id && !continueOnValidationWarning) {
+          setPendingValidationWarning({ form, selectedItem, message: validationWarning.message });
+          return;
+        }
+
         if (error instanceof ApiRequestError) {
           const message = error.message || t("purchaseOrder.mutationError");
           setActionErrorMessage(message);
@@ -516,6 +536,13 @@ export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: Purchas
     },
     [isFormMode, loadPurchaseOrders, returnListState, returnPaginationQuery, router, showToast, t]
   );
+
+  const handleContinueAfterValidationWarning = useCallback(async () => {
+    if (!pendingValidationWarning) return;
+    const currentWarning = pendingValidationWarning;
+    setPendingValidationWarning(null);
+    await executeSavePurchaseOrder(currentWarning.form, currentWarning.selectedItem, true);
+  }, [executeSavePurchaseOrder, pendingValidationWarning]);
 
   const executeDeletePurchaseOrder = useCallback(
     async (selectedItem: PurchaseOrderItem) => {
@@ -703,6 +730,22 @@ export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: Purchas
     }
 
     if (pendingConfirmation.type === "update") {
+      const previousStatus = pendingConfirmation.selectedItem.workflow?.status || "toDeliver";
+      const nextStatus = pendingConfirmation.form.workflowStatus;
+
+      if (previousStatus !== nextStatus) {
+        return {
+          title: t("purchaseOrder.confirmStatusUpdateTitle"),
+          description: t("purchaseOrder.confirmStatusUpdateDescription", {
+            noPo: pendingConfirmation.selectedItem.noPo || "-",
+            previousStatus: t(`salesOrderDashboard.status.${previousStatus}`),
+            nextStatus: t(`salesOrderDashboard.status.${nextStatus}`),
+          }),
+          confirmLabel: t("common.saveChanges"),
+          variant: "warning" as const,
+        };
+      }
+
       return {
         title: t("purchaseOrder.confirmUpdateTitle"),
         description: t("purchaseOrder.confirmUpdateDescription", {
@@ -795,7 +838,7 @@ export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: Purchas
                   </div>
                   {selectedRow ? <SalesOrderFulfillmentSummary item={selectedRow} /> : null}
                   <PurchaseOrderEditForm
-                    key={selectedId || "new"}
+                    key={`${selectedId || "new"}-${formVersion}`}
                     item={selectedRow}
                     customerOptions={customerOptions}
                     invoiceOptions={invoiceOptions}
@@ -873,6 +916,20 @@ export function PurchaseOrderPageContent({ mode = "list", itemId = "" }: Purchas
         isLoading={isSaving || isDeleting}
         onCancel={() => setPendingConfirmation(null)}
         onConfirm={() => void handleConfirmAction()}
+      />
+
+      <ConfirmationModal
+        isOpen={Boolean(pendingValidationWarning)}
+        title={t("documentValidation.warningTitle")}
+        description={t("documentValidation.warningDescription", {
+          message: pendingValidationWarning?.message || "-",
+        })}
+        confirmLabel={t("documentValidation.continue")}
+        cancelLabel={t("common.cancel")}
+        variant="warning"
+        isLoading={isSaving}
+        onCancel={() => setPendingValidationWarning(null)}
+        onConfirm={() => void handleContinueAfterValidationWarning()}
       />
 
       <ConfirmationModal

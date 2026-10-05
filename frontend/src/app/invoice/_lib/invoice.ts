@@ -18,6 +18,7 @@ export type InvoiceBarangSource = {
 };
 
 export type InvoiceBarang = {
+  urutan: number;
   namaBarang: string;
   spesifikasi: string;
   kuantitas: number;
@@ -51,6 +52,7 @@ export type InvoiceItem = {
 };
 
 export type InvoiceBarangFormRow = {
+  urutan: string;
   namaBarang: string;
   spesifikasi: string;
   kuantitas: string;
@@ -76,6 +78,7 @@ export type InvoiceFormState = {
 };
 
 export type InvoicePrefillBarang = {
+  urutan?: number;
   namaBarang: string;
   spesifikasi: string;
   kuantitas: number;
@@ -114,6 +117,7 @@ export type InvoiceListQuery = InvoiceFilter & PaginationQueryState;
 
 export type InvoiceSuratJalanBarangOption = {
   barangId: string;
+  urutan: number;
   nama: string;
   spesifikasi: string;
   kodeDepartemen: string;
@@ -186,6 +190,7 @@ export const sampleInvoiceRows: InvoiceItem[] = [
     idCustomer: "PT Nusantara Bangun",
     barang: [
       {
+        urutan: 1,
         namaBarang: "Semen Curah",
         spesifikasi: "",
         kuantitas: 120,
@@ -196,6 +201,7 @@ export const sampleInvoiceRows: InvoiceItem[] = [
         sources: [],
       },
       {
+        urutan: 2,
         namaBarang: "Pasir Halus",
         spesifikasi: "",
         kuantitas: 40,
@@ -226,6 +232,7 @@ export const sampleInvoiceRows: InvoiceItem[] = [
     idCustomer: "CV Pilar Teknik",
     barang: [
       {
+        urutan: 1,
         namaBarang: "Besi Beton",
         spesifikasi: "",
         kuantitas: 80,
@@ -256,6 +263,7 @@ export const sampleInvoiceRows: InvoiceItem[] = [
     idCustomer: "PT Sinar Baja Utama",
     barang: [
       {
+        urutan: 1,
         namaBarang: "Cat Primer",
         spesifikasi: "",
         kuantitas: 24,
@@ -380,7 +388,7 @@ export function buildSuratJalanInvoiceSpesifikasi(spesifikasiValue: unknown, kod
   return [spesifikasi, kodeDepartemen].filter(Boolean).join(" - ");
 }
 
-function toInvoiceSuratJalanBarangOption(value: unknown): InvoiceSuratJalanBarangOption | null {
+function toInvoiceSuratJalanBarangOption(value: unknown, index = 0): InvoiceSuratJalanBarangOption | null {
   if (!value || typeof value !== "object") {
     return null;
   }
@@ -393,6 +401,7 @@ function toInvoiceSuratJalanBarangOption(value: unknown): InvoiceSuratJalanBaran
   const jumlah = parseNumberFromUnknown(item.jumlah);
   const unit = toDecodedText(item.unit).trim();
   const hargaSatuan = parseNumberFromUnknown(item.hargaSatuan);
+  const urutanValue = parseNumberFromUnknown(item.urutan, index + 1);
 
   if (!nama || jumlah <= 0) {
     return null;
@@ -400,6 +409,7 @@ function toInvoiceSuratJalanBarangOption(value: unknown): InvoiceSuratJalanBaran
 
   return {
     barangId,
+    urutan: Number.isInteger(urutanValue) && urutanValue > 0 ? urutanValue : index + 1,
     nama,
     spesifikasi,
     kodeDepartemen,
@@ -433,7 +443,7 @@ function toInvoiceSuratJalanRowOption(value: unknown): InvoiceSuratJalanRowOptio
   const noSuratJalan = toText(item.noSuratJalan).trim();
   const barang = Array.isArray(item.barang)
     ? item.barang
-        .map(toInvoiceSuratJalanBarangOption)
+        .map((item, index) => toInvoiceSuratJalanBarangOption(item, index))
         .filter((barangItem): barangItem is InvoiceSuratJalanBarangOption => Boolean(barangItem))
     : [];
 
@@ -463,7 +473,7 @@ function toInvoiceSuratJalanOption(value: unknown): InvoiceSuratJalanOption | nu
     : [];
   const barang = Array.isArray(option.barang)
     ? option.barang
-        .map(toInvoiceSuratJalanBarangOption)
+        .map((item, index) => toInvoiceSuratJalanBarangOption(item, index))
         .filter((item): item is InvoiceSuratJalanBarangOption => Boolean(item))
     : [];
 
@@ -522,7 +532,7 @@ function roundCurrency(value: number) {
   return Number(value.toFixed(2));
 }
 
-function toInvoiceBarang(value: unknown): InvoiceBarang | null {
+function toInvoiceBarang(value: unknown, index = 0): InvoiceBarang | null {
   if (!value || typeof value !== "object") {
     return null;
   }
@@ -536,12 +546,14 @@ function toInvoiceBarang(value: unknown): InvoiceBarang | null {
   const jumlah = parseNumberFromUnknown(item.jumlah, roundCurrency(kuantitas * hargaSatuan));
   const noPoManual = toText(item.noPoManual).trim();
   const sources = normalizeInvoiceBarangSources(item.sources);
+  const urutanValue = parseNumberFromUnknown(item.urutan, index + 1);
 
   if (!namaBarang || !unit || kuantitas < 0 || hargaSatuan < 0 || jumlah < 0) {
     return null;
   }
 
   return {
+    urutan: Number.isInteger(urutanValue) && urutanValue > 0 ? urutanValue : index + 1,
     namaBarang,
     spesifikasi,
     kuantitas,
@@ -566,7 +578,7 @@ export function toInvoiceItem(value: unknown): InvoiceItem | null {
   }
 
   const barang = Array.isArray(row.barang)
-    ? row.barang.map(toInvoiceBarang).filter((item): item is InvoiceBarang => Boolean(item))
+    ? row.barang.map((item, index) => toInvoiceBarang(item, index)).filter((item): item is InvoiceBarang => Boolean(item))
     : [];
 
   const isPaid = Boolean(row.isPaid);
@@ -798,11 +810,17 @@ export async function createInvoice(form: InvoiceFormState) {
   return toInvoiceItem(response?.invoice);
 }
 
-export async function updateInvoice(id: string, form: InvoiceFormState) {
+export async function updateInvoice(
+  id: string,
+  form: InvoiceFormState,
+  options: { continueOnValidationWarning?: boolean } = {}
+) {
   const payload = toNormalizedInvoicePayload(form);
   const response = await requestApi<InvoiceResponse>(`/api/invoices/${id}`, {
     method: "PUT",
-    body: payload,
+    body: options.continueOnValidationWarning
+      ? { ...payload, continueOnValidationWarning: true }
+      : payload,
     invalidateCachePaths: invoiceMutationCachePaths,
   });
 
@@ -864,6 +882,7 @@ export function toInputDate(value: string | null) {
 
 export function createEmptyInvoiceBarangRow(): InvoiceBarangFormRow {
   return {
+    urutan: "",
     namaBarang: "",
     spesifikasi: "",
     kuantitas: "",
@@ -887,7 +906,8 @@ export function isInvoiceBarangRowFilled(row: InvoiceBarangFormRow) {
 }
 
 export function ensureTrailingEmptyInvoiceBarangRow(rows: InvoiceBarangFormRow[]) {
-  const normalizedRows = rows.map((row) => ({
+  const normalizedRows = rows.map((row, index) => ({
+    urutan: String(row.urutan || index + 1),
     namaBarang: String(row.namaBarang || ""),
     spesifikasi: String(row.spesifikasi || ""),
     kuantitas: String(row.kuantitas || ""),
@@ -1139,6 +1159,7 @@ export function buildInvoiceBarangRowsFromSuratJalanSelection(
 
         // Keep delivery lines separate, including identically named goods sold at different prices.
         rows.push({
+          urutan: String(rows.length + 1),
           namaBarang,
           spesifikasi,
           kuantitas: String(barang.jumlah),
@@ -1169,6 +1190,7 @@ export function buildInvoiceBarangRowsFromSuratJalanSelection(
       }
 
       rows.push({
+        urutan: String(rows.length + 1),
         namaBarang,
         spesifikasi,
         kuantitas: String(barang.jumlah),
@@ -1191,7 +1213,7 @@ export function buildInvoiceBarangRowsFromSuratJalanSelection(
 
 export function invoiceBarangRowsToList(rows: InvoiceBarangFormRow[]): InvoiceBarang[] {
   return rows
-    .map((row) => {
+    .map((row, index) => {
       const namaBarang = toDecodedText(row.namaBarang).trim();
       const spesifikasi = toDecodedText(row.spesifikasi).trim();
       const kuantitas = parseNumber(row.kuantitas.trim());
@@ -1207,6 +1229,7 @@ export function invoiceBarangRowsToList(rows: InvoiceBarangFormRow[]): InvoiceBa
       const noPoManual = sources.length > 0 ? invoiceBarangSourceNoPoList(sources).join(", ") : row.noPoManual.trim();
 
       return {
+        urutan: parseNumberFromUnknown(row.urutan, index + 1),
         namaBarang: namaBarang,
         spesifikasi: spesifikasi,
         kuantitas: kuantitas,
@@ -1218,6 +1241,10 @@ export function invoiceBarangRowsToList(rows: InvoiceBarangFormRow[]): InvoiceBa
       };
     })
     .filter((item) => item.namaBarang && item.unit);
+}
+
+export function sortInvoiceBarangByUrutan(barang: InvoiceBarang[]) {
+  return [...barang].sort((left, right) => left.urutan - right.urutan);
 }
 
 export function calculateInvoiceSummary(barang: InvoiceBarang[], isPpn: boolean, ppnRate: number) {
@@ -1247,6 +1274,7 @@ export function toInvoiceFormState(item: InvoiceItem): InvoiceFormState {
     ppnRate: String(item.ppnRate),
     barangRows: ensureTrailingEmptyInvoiceBarangRow(
       item.barang.map((barang) => ({
+        urutan: String(barang.urutan),
         namaBarang: barang.namaBarang,
         spesifikasi: barang.spesifikasi,
         kuantitas: String(barang.kuantitas),
@@ -1266,6 +1294,7 @@ export function toInvoiceFormStateFromPrefill(prefill: InvoicePrefillPayload): I
   );
   const barangRows = ensureTrailingEmptyInvoiceBarangRow(
     prefill.barang.map((item) => ({
+      urutan: String(item.urutan || ""),
       namaBarang: item.namaBarang,
       spesifikasi: item.spesifikasi,
       kuantitas: String(item.kuantitas),

@@ -81,14 +81,27 @@ function normalizeBarangSources(sourcesInput) {
   return normalized;
 }
 
-function normalizeBarangList(barangInput) {
+function barangRowLocation(rowIndex, namaBarang) {
+  return namaBarang ? `Baris ${rowIndex + 1} (${namaBarang})` : `Baris ${rowIndex + 1}`;
+}
+
+function fieldValue(value) {
+  const normalized = String(value ?? "").trim();
+  return normalized || "kosong";
+}
+
+function parseBarangList(barangInput) {
   if (!Array.isArray(barangInput) || barangInput.length === 0) {
-    return null;
+    return {
+      barang: null,
+      error: "Isi minimal satu barang Invoice sebelum menyimpan.",
+    };
   }
 
   const normalized = [];
+  const usedOrderNumbers = new Map();
 
-  for (const item of barangInput) {
+  for (const [rowIndex, item] of barangInput.entries()) {
     const namaBarang = String(item?.namaBarang || "").trim();
     const spesifikasi = String(item?.spesifikasi || "").trim();
     const kuantitas = parseNumber(item?.kuantitas);
@@ -98,24 +111,30 @@ function normalizeBarangList(barangInput) {
       ? roundCurrency(kuantitas * hargasatuan) : null;
     const noPoManual = String(item?.noPoManual || "").trim();
     const sources = normalizeBarangSources(item?.sources);
+    const urutanText = String(item?.urutan ?? "").trim();
+    const urutan = urutanText ? parseNumber(urutanText) : rowIndex + 1;
+    const location = barangRowLocation(rowIndex, namaBarang);
 
-    if (
-      !namaBarang ||
-      kuantitas === null ||
-      kuantitas <= 0 ||
-      !unit ||
-      hargasatuan === null ||
-      hargasatuan < 0 ||
-      jumlah === null ||
-      !Number.isFinite(jumlah) ||
-      jumlah < 0 ||
-      noPoManual.length > 100 ||
-      sources === null
-    ) {
-      return null;
+    if (urutan === null || !Number.isInteger(urutan) || urutan <= 0) {
+      return { barang: null, error: `${location}: nomor urutan harus berupa bilangan bulat lebih besar dari 0 (nilai: ${fieldValue(item?.urutan)}).` };
     }
+    if (usedOrderNumbers.has(urutan)) {
+      return { barang: null, error: `${location}: nomor urutan ${urutan} sudah digunakan pada baris ${usedOrderNumbers.get(urutan)}.` };
+    }
+    if (!namaBarang) return { barang: null, error: `${location}: nama barang wajib diisi.` };
+    if (kuantitas === null) return { barang: null, error: `${location}: kuantitas tidak valid (nilai: ${fieldValue(item?.kuantitas)}).` };
+    if (kuantitas <= 0) return { barang: null, error: `${location}: kuantitas harus lebih besar dari 0 (nilai: ${kuantitas}).` };
+    if (!unit) return { barang: null, error: `${location}: unit wajib diisi.` };
+    if (hargasatuan === null) return { barang: null, error: `${location}: harga satuan tidak valid (nilai: ${fieldValue(item?.hargaSatuan)}).` };
+    if (hargasatuan < 0) return { barang: null, error: `${location}: harga satuan tidak boleh negatif (nilai: ${hargasatuan}).` };
+    if (jumlah === null || !Number.isFinite(jumlah)) return { barang: null, error: `${location}: harga total tidak dapat dihitung.` };
+    if (jumlah < 0) return { barang: null, error: `${location}: harga total tidak boleh negatif (nilai: ${jumlah}).` };
+    if (noPoManual.length > 100) return { barang: null, error: `${location}: No. SO barang maksimal 100 karakter.` };
+    if (sources === null) return { barang: null, error: `${location}: sumber Surat Jalan tidak valid.` };
 
+    usedOrderNumbers.set(urutan, rowIndex + 1);
     normalized.push({
+      urutan,
       namaBarang: namaBarang,
       spesifikasi: spesifikasi,
       kuantitas: kuantitas,
@@ -127,7 +146,16 @@ function normalizeBarangList(barangInput) {
     });
   }
 
-  return normalized;
+  return {
+    barang: normalized
+      .sort((left, right) => left.urutan - right.urutan)
+      .map((item, index) => ({ ...item, urutan: index + 1 })),
+    error: null,
+  };
+}
+
+function normalizeBarangList(barangInput) {
+  return parseBarangList(barangInput).barang;
 }
 
 function normalizeStringList(value, options = {}) {
@@ -182,6 +210,7 @@ module.exports = {
   isValidId,
   normalizeBarangList,
   normalizeStringList,
+  parseBarangList,
   parseBoolean,
   parseDate,
   parseNumber,

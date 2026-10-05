@@ -455,14 +455,14 @@ export default function RekapTagihanPembayaranPabrikPage() {
                     ))}
                   </tbody>
                   <tfoot>
-                    <tr>
-                      <td className="border border-black px-2 py-2 text-[15px] font-medium">
+                    <tr className="text-slate-900 dark:text-white print:text-black">
+                      <td className="border border-black px-2 py-2 text-[15px] font-medium text-slate-900 dark:text-white print:text-black">
                         {t("rekapTagihanPembayaranPabrik.totalLabel")}
                       </td>
-                      <td className="border border-black px-2 py-2 text-[15px] font-semibold">
+                      <td className="border border-black px-2 py-2 text-[15px] font-semibold text-slate-900 dark:text-white print:text-black">
                         <ExportCurrencyValue value={totalPembayaran} locale={locale} />
                       </td>
-                      <td className="border border-black px-2 py-2 text-[15px] font-semibold">
+                      <td className="border border-black px-2 py-2 text-[15px] font-semibold text-slate-900 dark:text-white print:text-black">
                         <ExportCurrencyValue value={totalOutstandingTagihan} locale={locale} />
                       </td>
                     </tr>

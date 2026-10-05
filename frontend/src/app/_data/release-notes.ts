@@ -15,6 +15,169 @@ export type ReleaseNote = {
 // Urutkan dari rilis terbaru. Tambahkan satu entry pada setiap commit perubahan aplikasi.
 export const releaseNotes: ReleaseNote[] = [
   {
+    id: "2026-10-02-customer-receivables-export",
+    version: "2026.10.02",
+    date: "2026-10-02",
+    title: "Export Piutang Customer per Tahun",
+    summary: "Piutang Customer kini dapat diekspor berdasarkan tahun dan customer dengan pengelompokan bulanan yang lebih mudah dibaca.",
+    sections: [
+      {
+        title: "Export Piutang Customer",
+        changes: [
+          "Modal export menyediakan pilihan tahun, satu customer, atau semua customer sebelum laporan dibuka.",
+          "Laporan menampilkan tanggal invoice, nomor invoice, jumlah, total bulanan, total customer, dan total tahunan.",
+          "Pilihan semua customer mengelompokkan laporan berdasarkan customer terlebih dahulu, kemudian berdasarkan bulan.",
+          "Toolbar print dan tutup tetap terlihat di atas saat halaman export digulir serta tidak ikut tercetak.",
+        ],
+      },
+      {
+        title: "Tampilan Export",
+        changes: [
+          "Ketebalan font export mengikuti penekanan masing-masing elemen agar judul dan total lebih jelas dibanding isi tabel.",
+        ],
+      },
+    ],
+  },
+  {
+    id: "2026-09-28-sales-order-manual-status",
+    version: "2026.09.28",
+    date: "2026-09-28",
+    title: "Pengaturan Manual Status Sales Order",
+    summary: "Status Sales Order kini dapat disesuaikan manual dengan peringatan konfirmasi tanpa menonaktifkan pembaruan status otomatis.",
+    sections: [
+      {
+        title: "Status Sales Order",
+        changes: [
+          "Form Sales Order menyediakan enam pilihan status proses dari To Deliver hingga Paid.",
+          "Perubahan status manual menampilkan peringatan yang menjelaskan status lama, status baru, dan kelanjutan perhitungan otomatis.",
+          "Status manual otomatis kembali mengikuti perhitungan sistem ketika data Sales Order, Surat Jalan, Invoice, atau pembayaran berubah.",
+        ],
+      },
+    ],
+  },
+  {
+    id: "2026-09-25-purchase-payment-status-sync",
+    version: "2026.09.25",
+    date: "2026-09-25",
+    title: "Sinkronisasi Status Pembayaran Pembelian",
+    summary: "Status Lunas dan Belum Lunas pada laporan keuangan kini selalu mengikuti tanggal bayar yang tercatat pada Pembelian.",
+    sections: [
+      {
+        title: "Pembelian dan Laporan Keuangan",
+        changes: [
+          "Status pembayaran pada Pembelian, laporan keuangan, dan export menggunakan aturan yang sama berdasarkan jenis transaksi dan tanggal bayar.",
+          "Pembelian hutang yang sudah memiliki tanggal bayar tidak lagi ditampilkan atau dihitung sebagai hutang supplier yang belum lunas.",
+        ],
+      },
+    ],
+  },
+  {
+    id: "2026-09-21-financial-report-supplier-payments",
+    version: "2026.09.21",
+    date: "2026-09-21",
+    title: "Pembayaran dan Hutang Supplier pada Laporan Keuangan",
+    summary: "Laporan keuangan kini membedakan jenis pembelian dan status pelunasan serta menampilkan pembayaran supplier dan saldo hutang pada akhir periode.",
+    sections: [
+      {
+        title: "Laporan Keuangan",
+        changes: [
+          "Ringkasan bulanan dan tahunan menampilkan total pembayaran supplier pada periode berjalan serta saldo hutang supplier pada akhir periode.",
+          "Pembelian tunai dihitung sebagai pembayaran pada tanggal nota, sedangkan pembayaran hutang mengikuti tanggal bayar yang tercatat.",
+          "Perhitungan laba tetap menggunakan seluruh pembelian yang terhubung agar nilai gross profit tidak berubah karena status pembayaran.",
+        ],
+      },
+      {
+        title: "Tampilan dan Export",
+        changes: [
+          "Tabel stock barang membedakan jenis pembelian Tunai atau Hutang dari status pembayaran Lunas atau Belum Lunas.",
+          "Print dan Excel laporan keuangan menyertakan ringkasan pembayaran, saldo hutang, jenis pembelian, dan status pembayaran.",
+        ],
+      },
+    ],
+  },
+  {
+    id: "2026-09-21-supplier-debt-and-correction-warning",
+    version: "2026.09.21",
+    date: "2026-09-21",
+    title: "Hutang Supplier dan Peringatan Pembetulan Dokumen",
+    summary: "Hutang supplier kini dapat dipantau dari data Pembelian, status pelunasan lebih jelas, dan mode pembetulan dokumen tetap menampilkan peringatan sebelum perubahan dilanjutkan.",
+    sections: [
+      {
+        title: "Hutang Supplier dan Pembelian",
+        changes: [
+          "Halaman Hutang Supplier menampilkan total hutang, tingkat keterlambatan, filter supplier dan jatuh tempo, serta pengelompokan data berdasarkan supplier atau bulan.",
+          "Status pembayaran Pembelian dipisahkan dari jenis transaksi hutang dan otomatis menampilkan Lunas atau Belum Lunas berdasarkan tanggal bayar.",
+          "Daftar Pembelian dilengkapi kolom serta filter Status Pembayaran pada tampilan desktop dan mobile.",
+        ],
+      },
+      {
+        title: "Pembetulan Dokumen",
+        changes: [
+          "Sales Order, Surat Jalan, dan Invoice tetap menjalankan validasi relasi saat mode pembetulan data aktif.",
+          "Pelanggaran validasi ditampilkan sebagai peringatan dengan pilihan Tetap Lanjutkan, sedangkan mode normal tetap memblokir perubahan yang tidak valid.",
+        ],
+      },
+      {
+        title: "Navigasi",
+        changes: [
+          "Piutang Customer dan Hutang Supplier ditempatkan pada kategori Keuangan, sementara rekap pembayaran dan laporan keuangan dikelompokkan dalam kategori Laporan.",
+        ],
+      },
+    ],
+  },
+  {
+    id: "2026-09-17-mobile-print-purchase-update",
+    version: "2026.09.17",
+    date: "2026-09-17",
+    title: "Penyempurnaan Daftar Mobile, Print, dan Invoice Pembelian",
+    summary: "Daftar data lebih ringkas di perangkat mobile, hasil print tidak lagi terpengaruh ukuran layar, dan pilihan Invoice pada Pembelian tetap akurat saat data dimuat.",
+    sections: [
+      {
+        title: "Daftar dan Filter Mobile",
+        changes: [
+          "Filter pada halaman daftar kini dapat dibuka atau ditutup dan ditampilkan dalam dua kolom pada perangkat mobile.",
+          "Teks kartu daftar yang terlalu panjang dipotong dengan tanda elipsis agar tampilan tetap rapi.",
+          "Kolom kartu mobile mengikuti kolom desktop, termasuk pengaturan kolom tampil atau tersembunyi dan kelengkapan tanggal dokumen Sales Order.",
+        ],
+      },
+      {
+        title: "Print",
+        changes: [
+          "Navbar, sidebar, dan ruang sidebar tidak lagi ikut tercetak sehingga hasil print konsisten tanpa dipengaruhi breakpoint atau ukuran layar komputer.",
+        ],
+      },
+      {
+        title: "Pembelian",
+        changes: [
+          "Invoice yang sudah tersimpan pada Pembelian tetap dipertahankan ketika daftar pilihan Invoice masih dimuat dan tidak lagi berubah menjadi Stock karena keterlambatan data.",
+        ],
+      },
+    ],
+  },
+  {
+    id: "2026-09-15-document-correction-mode",
+    version: "2026.09.15",
+    date: "2026-09-15",
+    title: "Mode Pembetulan Dokumen dan Tampilan Total Rekap",
+    summary: "Pembetulan data Sales Order, Surat Jalan, dan Invoice kini dapat dilakukan sementara tanpa terhalang validasi relasi, serta baris total rekap tagihan lebih mudah dibaca.",
+    sections: [
+      {
+        title: "Pembetulan Data Dokumen",
+        changes: [
+          "Mode koreksi sementara memungkinkan Sales Order diperbarui meskipun sudah terhubung ke Surat Jalan atau Invoice.",
+          "Surat Jalan dan Invoice dapat diperbaiki tanpa terhalang pemeriksaan relasi antar dokumen selama mode koreksi aktif.",
+          "Validasi dasar seperti format data, identitas dokumen, dan nomor dokumen ganda tetap dipertahankan.",
+        ],
+      },
+      {
+        title: "Rekap Tagihan Pabrik",
+        changes: [
+          "Warna teks pada baris total pembayaran dan outstanding kini menyesuaikan tema terang, tema gelap, dan hasil print.",
+        ],
+      },
+    ],
+  },
+  {
     id: "2026-09-04-light-erp-finance-supplier-revision",
     version: "2026.09.04",
     date: "2026-09-04",

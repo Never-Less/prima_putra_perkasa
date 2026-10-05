@@ -42,14 +42,10 @@ type PembelianEditFormProps = {
   onDelete?: (selectedItem: PembelianItem) => Promise<void> | void;
 };
 
-function ensureValidIdInvoice(value: string, options: PembelianInvoiceOption[]) {
+function resolveInitialIdInvoice(value: string, options: PembelianInvoiceOption[]) {
   const idInvoice = String(value || "").trim();
 
-  if (idInvoice === pembelianStockInvoiceId) {
-    return pembelianStockInvoiceId;
-  }
-
-  if (idInvoice && options.some((option) => option.id === idInvoice)) {
+  if (idInvoice) {
     return idInvoice;
   }
 
@@ -107,7 +103,7 @@ function createEmptyPembelianFormState(invoiceOptions: PembelianInvoiceOption[])
     idSupplier: "",
     noNota: "",
     note: "",
-    idInvoice: ensureValidIdInvoice("", invoiceOptions),
+    idInvoice: resolveInitialIdInvoice("", invoiceOptions),
     hutang: false,
     ppn: false,
     lamaHutang: "0",
@@ -131,14 +127,14 @@ function createInitialPembelianFormState({
 
     return withCalculatedTanggalJatuhTempo({
       ...mappedForm,
-      idInvoice: ensureValidIdInvoice(mappedForm.idInvoice, invoiceOptions),
+      idInvoice: resolveInitialIdInvoice(mappedForm.idInvoice, invoiceOptions),
     });
   }
 
   if (initialForm) {
     return withCalculatedTanggalJatuhTempo({
       ...initialForm,
-      idInvoice: ensureValidIdInvoice(initialForm.idInvoice, invoiceOptions),
+      idInvoice: resolveInitialIdInvoice(initialForm.idInvoice, invoiceOptions),
     });
   }
 
@@ -690,6 +686,12 @@ export function PembelianEditForm({
             <p>
               <span className="text-slate-500 dark:text-slate-400">{t("field.hutang")}:</span>{" "}
               {form.hutang ? t("common.true") : t("common.false")}
+            </p>
+            <p>
+              <span className="text-slate-500 dark:text-slate-400">{t("field.statusPembayaran")}:</span>{" "}
+              <span className={`font-medium ${!form.hutang || form.tanggalBayar ? "text-emerald-700 dark:text-emerald-300" : "text-amber-700 dark:text-amber-300"}`}>
+                {t(!form.hutang || form.tanggalBayar ? "pembelian.status.paid" : "pembelian.status.unpaid")}
+              </span>
             </p>
             <p>
               <span className="text-slate-500 dark:text-slate-400">{t("field.ppn")}:</span>{" "}

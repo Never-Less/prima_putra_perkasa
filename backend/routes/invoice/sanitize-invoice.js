@@ -43,7 +43,8 @@ function sanitizeBarangList(barangInput) {
     return [];
   }
 
-  return barangInput.map((barang) => ({
+  return barangInput.map((barang, index) => ({
+    urutan: Number.isInteger(Number(barang?.urutan)) && Number(barang.urutan) > 0 ? Number(barang.urutan) : index + 1,
     namaBarang: barang?.namaBarang,
     spesifikasi: barang?.spesifikasi || "",
     kuantitas: barang?.kuantitas,
@@ -60,7 +61,7 @@ function sanitizeBarangList(barangInput) {
           kuantitas: source?.kuantitas,
         }))
       : [],
-  }));
+  })).sort((left, right) => left.urutan - right.urutan);
 }
 
 function sanitizeInvoice(invoice) {

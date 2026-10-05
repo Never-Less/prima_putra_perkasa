@@ -7,6 +7,7 @@ import { ExportCurrencyValue } from "../../../_components/export-currency-value"
 import { formatAppUppercaseDate } from "../../../_lib/date";
 import { ApiRequestError } from "../../../_lib/api-client";
 import { decodeHtmlEntities } from "../../../_lib/html-entities";
+import { exportFontFamily } from "../../../_lib/export-font";
 import {
   downloadJspreadsheetXlsxFile,
   sanitizeExcelFileName,
@@ -19,6 +20,7 @@ import { fetchCustomerById, type CustomerItem } from "../../../customer/_lib/cus
 import {
   fetchInvoiceById,
   invoiceBarangNoPoLabel,
+  sortInvoiceBarangByUrutan,
   type InvoiceItem,
 } from "../../_lib/invoice";
 
@@ -50,7 +52,7 @@ const meiloonInvoiceProfile = {
   attnFallback: "Mr. Pangzi Wang / Bu. Marchia",
 };
 
-const invoiceExportFontFamily = 'var(--font-geist-sans), "Segoe UI", sans-serif';
+const invoiceExportFontFamily = exportFontFamily;
 const invoiceBaseRowHeight = 21;
 const invoiceFooterPageCapacityBuffer = 2;
 const defaultInvoiceSinglePageCapacity = 28;
@@ -518,8 +520,8 @@ function createEmptyMeiloonInvoiceRow(): MeiloonInvoiceTemplateRow {
 }
 
 function buildDefaultTemplateRows(invoice: InvoiceItem | null) {
-  return (invoice?.barang || []).map((barang, index) => ({
-    no: String(index + 1),
+  return sortInvoiceBarangByUrutan(invoice?.barang || []).map((barang) => ({
+    no: String(barang.urutan),
     namaBarang: formatInvoiceBarangLabel(barang.namaBarang, barang.spesifikasi),
     qty: formatQuantity(Number(barang.kuantitas || 0)),
     unit: toUpperText(barang.unit),
@@ -529,14 +531,14 @@ function buildDefaultTemplateRows(invoice: InvoiceItem | null) {
 }
 
 function buildMeiloonTemplateRows(invoice: InvoiceItem | null) {
-  return (invoice?.barang || []).map((barang, index) => {
+  return sortInvoiceBarangByUrutan(invoice?.barang || []).map((barang) => {
     const { namaBarang, spesifikasi } = resolveInvoiceBarangColumns(
       barang.namaBarang,
       barang.spesifikasi
     );
 
     return {
-      no: String(index + 1),
+      no: String(barang.urutan),
       namaBarang,
       spesifikasi,
       unit: toUpperText(barang.unit),
@@ -1475,7 +1477,7 @@ export default function InvoiceExportPage() {
             t("invoice.excel.column.hargaSatuan"),
             t("invoice.excel.column.hargaTotal"),
           ],
-          ...invoice.barang.map((barang) => [
+          ...sortInvoiceBarangByUrutan(invoice.barang).map((barang) => [
             barang.namaBarang || "-",
             barang.spesifikasi || "-",
             barang.kuantitas,
