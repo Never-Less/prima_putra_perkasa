@@ -10,6 +10,7 @@ import {
   type InvoiceBarangFormRow,
   type InvoiceBarangSource,
 } from "../_lib/invoice";
+import { createSpreadsheetController, type SpreadsheetController } from "../../_lib/spreadsheet-controller";
 import { SpreadsheetFrame } from "../../_components/spreadsheet-frame";
 import { useI18n } from "../../_i18n/provider";
 import { decodeHtmlEntities } from "../../_lib/html-entities";
@@ -172,10 +173,6 @@ function spreadsheetDataToRows(data: SpreadsheetData, previousRows: InvoiceBaran
   return ensureTrailingEmptyInvoiceBarangRow(nextRows.length > 0 ? nextRows : [createEmptyInvoiceBarangRow()]);
 }
 
-function serializeData(data: SpreadsheetData) {
-  return JSON.stringify(data.map(normalizeSpreadsheetRow));
-}
-
 export function InvoiceBarangSpreadsheet({
   rows,
   disabled = false,
@@ -183,11 +180,9 @@ export function InvoiceBarangSpreadsheet({
 }: InvoiceBarangSpreadsheetProps) {
   const { locale, t } = useI18n();
   const rootRef = useRef<HTMLDivElement | null>(null);
-  const worksheetRef = useRef<jspreadsheet.WorksheetInstance | null>(null);
-  const isApplyingDataRef = useRef(false);
+  const controllerRef = useRef<SpreadsheetController<InvoiceBarangFormRow> | null>(null);
   const onRowsChangeRef = useRef(onRowsChange);
   const rowsRef = useRef(rows);
-  const currentDataRef = useRef("");
 
   useEffect(() => {
     onRowsChangeRef.current = onRowsChange;
@@ -265,31 +260,20 @@ export function InvoiceBarangSpreadsheet({
         (module as unknown as jspreadsheet.JSpreadsheet);
       const initialData = rowsToSpreadsheetData(rowsRef.current, locale);
 
-      const applyRowsFromWorksheet = (
-        instance: jspreadsheet.WorksheetInstance,
-        previousRows: InvoiceBarangFormRow[]
-      ) => {
-        if (isApplyingDataRef.current) {
-          return;
-        }
+      const controller = createSpreadsheetController({
+        root: rootElement,
+        rows: rowsRef.current,
+        toData: (nextRows: InvoiceBarangFormRow[]) => rowsToSpreadsheetData(nextRows, locale),
+        fromData: spreadsheetDataToRows,
+        onRowsChange: (nextRows) => { rowsRef.current = nextRows; onRowsChangeRef.current(nextRows); },
+        t,
+      });
 
-        const nextData = instance.getData(false, true);
-        const nextRows = spreadsheetDataToRows(nextData, previousRows);
-        currentDataRef.current = serializeData(nextData);
-        rowsRef.current = nextRows;
-        onRowsChangeRef.current(nextRows);
-      };
-
-      const syncRowsFromWorksheet = (instance: jspreadsheet.WorksheetInstance) => {
-        applyRowsFromWorksheet(instance, rowsRef.current);
-      };
-
-      currentDataRef.current = serializeData(initialData);
-      isApplyingDataRef.current = true;
       const instances = jspreadsheetFactory(rootRef.current, {
-        onafterchanges: syncRowsFromWorksheet,
-        oninsertrow: syncRowsFromWorksheet,
-        ondeleterow: syncRowsFromWorksheet,
+        onafterchanges: controller.capture,
+        oninsertrow: controller.capture,
+        ondeleterow: controller.capture,
+        contextMenu: controller.contextMenu,
         worksheets: [
           {
             worksheetName: t("invoice.form.items.title"),
@@ -298,9 +282,10 @@ export function InvoiceBarangSpreadsheet({
             editable: !disabled,
             allowDeleteColumn: false,
             allowInsertColumn: false,
-            allowInsertRow: false,
+            allowInsertRow: !disabled,
+            allowDeleteRow: !disabled,
             allowManualInsertColumn: false,
-            allowManualInsertRow: false,
+            allowManualInsertRow: !disabled,
             allowRenameColumn: false,
             columnDrag: false,
             columnSorting: false,
@@ -312,51 +297,32 @@ export function InvoiceBarangSpreadsheet({
         ],
       });
 
-      worksheetRef.current = instances[0] || null;
-      destroySpreadsheet = () =>
+      controllerRef.current = controller;
+      if (instances[0]) controller.attach(instances[0]);
+      destroySpreadsheet = () => {
+        controller.destroy();
         jspreadsheetFactory.destroy(rootElement as jspreadsheet.JspreadsheetInstanceElement, true);
-      window.requestAnimationFrame(() => {
-        isApplyingDataRef.current = false;
-      });
+      };
     });
 
     return () => {
       isMounted = false;
-      isApplyingDataRef.current = false;
       destroySpreadsheet?.();
 
       if (rootElement) {
         rootElement.innerHTML = "";
       }
 
-      worksheetRef.current = null;
+      controllerRef.current = null;
     };
   }, [columns, disabled, locale, t]);
 
   useEffect(() => {
-    const worksheet = worksheetRef.current;
-
-    if (!worksheet) {
-      return;
-    }
-
-    const nextData = rowsToSpreadsheetData(rows, locale);
-    const serializedNextData = serializeData(nextData);
-
-    if (serializedNextData === currentDataRef.current) {
-      return;
-    }
-
-    isApplyingDataRef.current = true;
-    currentDataRef.current = serializedNextData;
-    worksheet.setData(nextData);
-    window.requestAnimationFrame(() => {
-      isApplyingDataRef.current = false;
-    });
+    controllerRef.current?.replaceRows(rows);
   }, [locale, rows]);
 
   return (
-    <SpreadsheetFrame disabled={disabled}>
+    <SpreadsheetFrame disabled={disabled} actionsRef={controllerRef}>
       <div className="app-spreadsheet" ref={rootRef} />
     </SpreadsheetFrame>
   );

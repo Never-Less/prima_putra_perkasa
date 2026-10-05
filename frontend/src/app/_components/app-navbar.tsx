@@ -24,7 +24,7 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { useIsAdminAccess } from "../_hooks/use-current-user";
+import { useIsAdminAccess, useBreakGlassRole } from "../_hooks/use-current-user";
 import { requestUnsavedChangesConfirmation } from "../_hooks/use-unsaved-changes-warning";
 import { useI18n } from "../_i18n/provider";
 import { type Locale } from "../_i18n/messages";
@@ -108,6 +108,7 @@ export function AppNavbar() {
   const router = useRouter();
   const { locale, setLocale, t } = useI18n();
   const isAdminAccess = useIsAdminAccess();
+  const breakGlassRole = useBreakGlassRole();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -167,10 +168,11 @@ export function AppNavbar() {
           { href: "/customer", label: t("nav.customer"), icon: UsersRound },
           { href: "/supplier", label: t("nav.supplier"), icon: Building2 },
           ...(isAdminAccess ? [{ href: "/user", label: t("nav.user"), icon: UserCog }] : []),
+          ...(breakGlassRole ? [{ href: "/breakGlass", label: t("breakGlass.title"), icon: UserCog }] : []),
         ],
       },
     ],
-    [isAdminAccess, t]
+    [isAdminAccess, breakGlassRole, t]
   );
 
   const activeNavItem = useMemo(

@@ -41,6 +41,12 @@ const supplierSchema = new mongoose.Schema(
       default: [],
     },
     notes: { type: String, trim: true, maxlength: 1000, default: "" },
+    documents: { type: [{
+      _id: false,
+      id: { type: String, required: true },
+      name: { type: String, required: true, maxlength: 200 },
+      size: { type: Number, required: true },
+    }], default: [] },
     documentLinks: {
       type: [{
         label: { type: String, trim: true, maxlength: 100, required: true },

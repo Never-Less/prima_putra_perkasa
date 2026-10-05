@@ -239,7 +239,7 @@ export function PembelianEditForm({
         lamaHutang: form.hutang ? Number(form.lamaHutang || 0) : null,
         alamat: "", npwp: "", picName: "", phone: "", whatsapp: "", email: "",
         productBrands: [], onboarding: { status: "notGenerated" },
-        productCategories: [], notes: "", documentLinks: [], isActive: true,
+        productCategories: [], notes: "", documentLinks: [], documents: [], isActive: true,
         createdAt: "",
         updatedAt: "",
       });

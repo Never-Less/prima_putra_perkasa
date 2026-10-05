@@ -22,6 +22,7 @@ function sanitizeSupplier(supplier) {
     email: String(supplier.email || ""),
     productCategories: Array.isArray(supplier.productCategories) ? supplier.productCategories.map(String) : [],
     notes: String(supplier.notes || ""),
+    documents: (supplier.documents || []).map((row) => ({ id: String(row.id), name: String(row.name), size: Number(row.size) })),
     documentLinks: Array.isArray(supplier.documentLinks)
       ? supplier.documentLinks.map((row) => ({ label: String(row.label || ""), url: String(row.url || "") }))
       : [],

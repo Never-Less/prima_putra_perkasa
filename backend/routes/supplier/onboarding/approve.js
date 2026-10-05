@@ -18,10 +18,12 @@ router.post("/:id/onboarding/approve", async (req, res) => {
   const profile = validateProfile(existing.onboarding.pendingData || {});
   if (!profile.valid) return res.status(400).json({ code: "supplierOnboarding.error.validation", errors: profile.errors });
   const supplier = await Supplier.findOneAndUpdate(condition, { $set: {
-    ...profile.data, hutang, lamaHutang: hutang ? lamaHutang : null,
+    ...profile.data,
+    documentLinks: [...new Map([...(existing.documentLinks || []), ...profile.data.documentLinks].map((link) => [`${link.label}\n${link.url}`, { label: link.label, url: link.url }])).values()],
+    hutang, lamaHutang: hutang ? lamaHutang : null,
     "onboarding.status": "completed", "onboarding.completedAt": new Date(),
     "onboarding.reviewedBy": req.user._id, "onboarding.pendingData": null,
-  }, $unset: { "onboarding.tokenHash": 1 } }, { new: true, runValidators: true });
+  }, $push: { documents: { $each: existing.onboarding.pendingData?.documents || [] } }, $unset: { "onboarding.tokenHash": 1 } }, { new: true, runValidators: true });
   if (!supplier) return res.status(409).json({ code: "supplierOnboarding.error.conflict" });
   return res.json({ status: "completed" });
 });

@@ -1,0 +1,11 @@
+const router = require("express").Router();
+const { requireAuth } = require("../../middlewares/auth");
+const { requireBreakGlassAccess } = require("../../utils/break-glass-access");
+router.use(requireAuth, requireBreakGlassAccess);
+router.use((_req, res, next) => { res.set("Cache-Control", "no-store"); next(); });
+router.use(require("./activate"));
+router.use(require("./execute"));
+router.use(require("./revoke"));
+router.use(require("./history"));
+router.use(require("./invoice-options"));
+module.exports = router;

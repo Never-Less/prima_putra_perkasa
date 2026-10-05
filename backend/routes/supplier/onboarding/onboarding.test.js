@@ -6,6 +6,7 @@ const { ROLE_ADMIN } = require("../../../models/User");
 const { createCsrfProtection } = require("../../../middlewares/csrf");
 const { validateProfile, hashToken } = require("./validation");
 const { sanitizeSupplier } = require("../sanitize-supplier");
+const { SupplierDocument } = require("../../../models/SupplierDocument");
 
 const supplierId = "507f1f77bcf86cd799439011";
 const profile = {
@@ -61,15 +62,25 @@ function setPath(document, path, value, remove = false) {
 async function fixture(t) {
   const state = { document: { _id: supplierId, namaSupplier: "Senjaya Elektronik", hutang: false, lamaHutang: null,
     alamat: "Profil lama", notes: "Catatan internal", onboarding: { status: "notGenerated" } } };
-  t.mock.method(Supplier, "findByIdAndUpdate", async (id, update) => {
+  const files = new Map();
+  t.mock.method(SupplierDocument, "insertMany", async (rows) => {
+    rows.forEach((row) => files.set(String(row._id), row));
+    return rows;
+  });
+  t.mock.method(SupplierDocument, "deleteMany", async (condition) => {
+    for (const id of condition._id?.$in || []) files.delete(String(id));
+  });
+  t.mock.method(Supplier, "findByIdAndUpdate", async (id, update, options) => {
     if (id !== state.document._id) return null;
+    const previous = structuredClone(state.document);
     for (const [path, value] of Object.entries(update.$set)) setPath(state.document, path, value);
-    return structuredClone(state.document);
+    return options?.new === false ? previous : structuredClone(state.document);
   });
   t.mock.method(Supplier, "findOneAndUpdate", async (condition, update) => {
     if (!matches(state.document, condition)) return null;
     for (const [path, value] of Object.entries(update.$set || {})) setPath(state.document, path, value);
     for (const path of Object.keys(update.$unset || {})) setPath(state.document, path, null, true);
+    if (update.$push?.documents) state.document.documents = [...(state.document.documents || []), ...structuredClone(update.$push.documents.$each)];
     return structuredClone(state.document);
   });
   t.mock.method(Supplier, "findOne", (condition) => {
@@ -102,7 +113,14 @@ async function fixture(t) {
     assert.equal(response.status, 200);
     return response.body.token;
   }
-  return { state, request, generate };
+  async function multipart(token, documents, payload = profile) {
+    const body = new FormData();
+    body.append("payload", JSON.stringify(payload));
+    documents.forEach((document) => body.append("documents", new Blob([document.data], { type: document.type || "application/pdf" }), document.name || "catalog.pdf"));
+    const response = await fetch(`${base}/api/supplier-forms/${token}`, { method: "POST", body });
+    return { status: response.status, body: await response.json() };
+  }
+  return { state, request, generate, multipart, files };
 }
 
 test("generation stores a hash, public GET exposes only company name/status, and internal endpoints require auth", async (t) => {
@@ -181,4 +199,84 @@ test("invalid public profile leaves the invitation open and returns field errors
   assert.ok(response.body.errors.email);
   assert.ok(response.body.errors.whatsapp);
   assert.equal(state.document.onboarding.status, "generated");
+});
+
+const pdf = Buffer.from("%PDF-1.7\n1 0 obj\n<<>>\nendobj\n%%EOF\n");
+
+test("document links stay pending with PDFs, survive approval, and preserve existing links", async (t) => {
+  const { state, generate, multipart, request } = await fixture(t);
+  const old = { label: "Old catalog", url: "https://example.com/old.pdf" };
+  const incoming = { label: " New catalog ", url: " https://drive.google.com/file/d/catalog/view " };
+  state.document.documentLinks = [old];
+  const token = await generate();
+  assert.equal((await multipart(token, [{ data: pdf }], { ...profile, documentLinks: [incoming] })).status, 200);
+  assert.deepEqual(state.document.documentLinks, [old]);
+  assert.deepEqual(state.document.onboarding.pendingData.documentLinks, [{ label: incoming.label.trim(), url: incoming.url.trim() }]);
+  assert.equal((await request(`/internal/${supplierId}/onboarding/approve`, { submittedAt: state.document.onboarding.submittedAt, hutang: false })).status, 200);
+  assert.deepEqual(state.document.documentLinks, [old, { label: incoming.label.trim(), url: incoming.url.trim() }]);
+  assert.equal(state.document.documents.length, 1);
+});
+
+test("link-only submissions work and invalid links leave the invitation open", async (t) => {
+  const { state, generate, request } = await fixture(t);
+  const token = await generate();
+  const link = { label: "Catalog", url: "https://example.com/catalog.pdf" };
+  for (const documentLinks of [null, "invalid", [{ ...link, url: "javascript:alert(1)" }], [{ ...link, url: "https://" }], [{ ...link, url: "https://user:pass@example.com/file" }], [{ ...link, label: "" }], [{ ...link, label: "x".repeat(101) }], [{ ...link, url: `https://example.com/${"x".repeat(1000)}` }], Array(11).fill(link)]) {
+    const response = await request(`/api/supplier-forms/${token}`, { ...profile, documentLinks });
+    assert.equal(response.status, 400);
+    assert.equal(response.body.errors.documentLinks, "supplierOnboarding.error.documentLinks");
+    assert.equal(state.document.onboarding.status, "generated");
+  }
+  assert.equal((await request(`/api/supplier-forms/${token}`, { ...profile, documentLinks: [link] })).status, 200);
+  assert.deepEqual(state.document.onboarding.pendingData.documents, []);
+  assert.deepEqual(state.document.onboarding.pendingData.documentLinks, [link]);
+});
+
+test("PDF uploads stay pending until approval, append to existing documents, and never accept injected metadata", async (t) => {
+  const { state, generate, multipart, files, request } = await fixture(t);
+  state.document.documents = [{ id: "old-document", name: "Old.pdf", size: 1 }];
+  const token = await generate();
+  assert.equal((await multipart(token, [{ data: pdf }, { data: pdf, name: "prices.pdf" }], { ...profile, documents: [{ id: "injected" }] })).status, 200);
+  assert.equal(files.size, 2);
+  assert.equal(state.document.documents.length, 1);
+  const pending = state.document.onboarding.pendingData.documents;
+  assert.equal(pending.length, 2);
+  assert.equal(pending[0].name, "catalog.pdf");
+  assert.equal(pending[0].size, pdf.length);
+  assert.equal("data" in pending[0], false);
+  assert.equal(String(files.get(pending[0].id).supplierId), supplierId);
+  assert.equal((await request(`/internal/${supplierId}/onboarding/approve`, { submittedAt: state.document.onboarding.submittedAt, hutang: false })).status, 200);
+  assert.deepEqual(state.document.documents.slice(1), pending);
+  await generate();
+  assert.equal(files.size, 2, "approved documents survive replacement links");
+});
+
+test("upload validation rejects fake PDFs, wrong extensions, too many files, and oversized files", async (t) => {
+  const { generate, multipart, files, state } = await fixture(t);
+  const token = await generate();
+  for (const input of [
+    [{ data: "not a PDF" }], [{ data: pdf, type: "text/plain" }], [{ data: pdf, name: "catalog.exe" }],
+    Array.from({ length: 6 }, () => ({ data: pdf })), [{ data: Buffer.alloc(5 * 1024 * 1024 + 1) }],
+  ]) {
+    const result = await multipart(token, input);
+    assert.equal(result.status, 400);
+    assert.equal(result.body.code, "supplierOnboarding.error.documents");
+    assert.equal(files.size, 0);
+    assert.equal(state.document.onboarding.status, "generated");
+  }
+  assert.equal((await multipart(token, [{ data: pdf }], { ...profile, email: "bad" })).status, 400);
+  assert.equal(files.size, 0);
+});
+
+test("replacement links discard pending PDFs and simultaneous submissions clean up losing uploads", async (t) => {
+  const { generate, multipart, files, state } = await fixture(t);
+  const token = await generate();
+  const responses = await Promise.all([multipart(token, [{ data: pdf }]), multipart(token, [{ data: pdf }])]);
+  assert.deepEqual(responses.map((result) => result.status).sort(), [200, 409]);
+  assert.equal(files.size, 1);
+  assert.equal(state.document.onboarding.pendingData.documents.length, 1);
+  await generate();
+  assert.equal(files.size, 0);
+  assert.equal((await multipart(token, [{ data: pdf }])).status, 409);
+  assert.equal(files.size, 0);
 });

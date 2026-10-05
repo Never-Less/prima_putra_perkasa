@@ -337,7 +337,8 @@ export function SupplierPageContent({ mode = "list", itemId = "" }: SupplierPage
         showToast(t("supplier.toast.createSuccess"), "success");
       } catch (error) {
         if (error instanceof ApiRequestError) {
-          const message = error.message || t("supplier.mutationError");
+          const code = (error.details as { code?: string } | null)?.code;
+          const message = code?.startsWith("supplierOnboarding.") ? t(code) : error.message || t("supplier.mutationError");
           setActionErrorMessage(message);
           showToast(message, "error");
           return;

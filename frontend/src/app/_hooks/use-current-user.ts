@@ -3,6 +3,7 @@
 import { useSyncExternalStore } from "react";
 import {
   getStoredUserId,
+  getStoredBreakGlassRole,
   getStoredUserRole,
   subscribeAuthSession,
 } from "../_lib/auth-session";
@@ -17,4 +18,8 @@ export function useCurrentUserId() {
 
 export function useIsAdminAccess() {
   return useCurrentUserRole() === "admin";
+}
+
+export function useBreakGlassRole() {
+  return useSyncExternalStore(subscribeAuthSession, getStoredBreakGlassRole, () => "");
 }

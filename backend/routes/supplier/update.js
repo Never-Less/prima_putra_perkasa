@@ -7,6 +7,10 @@ const { sanitizeSupplier } = require("./sanitize-supplier");
 const { isValidId } = require("./validate-id");
 
 const router = express.Router();
+const { receiveDocuments, storeDocuments, discardDocuments } = require("./document-storage");
+const { validateTags } = require("./validate-tags");
+const { validateDocumentLinks } = require("./document-links");
+const { validateContact } = require("./validate-contact");
 
 function parseBoolean(value) {
   if (typeof value === "boolean") {
@@ -36,13 +40,15 @@ function parseNumber(value) {
 
 const textProfileFields = ["alamat", "npwp", "picName", "phone", "whatsapp", "email", "notes"];
 
-router.put("/:id", requireRole(ROLE_ADMIN, ROLE_STAFF), async (req, res) => {
+router.put("/:id", requireRole(ROLE_ADMIN, ROLE_STAFF), receiveDocuments, validateTags, validateDocumentLinks, validateContact, async (req, res) => {
   const id = String(req.params.id || "");
 
   if (!isValidId(id)) {
     return res.status(400).json({ message: "Data supplier yang dipilih tidak dapat dibuka." });
   }
 
+  let documents = [];
+  let linked = false;
   try {
     const existingSupplier = await Supplier.findById(id);
 
@@ -105,7 +111,7 @@ router.put("/:id", requireRole(ROLE_ADMIN, ROLE_STAFF), async (req, res) => {
       }
     }
 
-    if (Object.keys(updates).length === 0) {
+    if (Object.keys(updates).length === 0 && !req.files?.length) {
       return res.status(400).json({
         message: "Tidak ada perubahan yang bisa disimpan. Ubah minimal satu data terlebih dahulu.",
       });
@@ -129,7 +135,8 @@ router.put("/:id", requireRole(ROLE_ADMIN, ROLE_STAFF), async (req, res) => {
       updates.lamaHutang = null;
     }
 
-    const supplier = await Supplier.findByIdAndUpdate(id, updates, {
+    documents = await storeDocuments(id, req.files);
+    const supplier = await Supplier.findByIdAndUpdate(id, { $set: updates, $push: { documents: { $each: documents } } }, {
       new: true,
       runValidators: true,
     });
@@ -138,12 +145,15 @@ router.put("/:id", requireRole(ROLE_ADMIN, ROLE_STAFF), async (req, res) => {
       return res.status(404).json({ message: "Data supplier tidak ditemukan." });
     }
 
+    linked = true;
     return res.json({
       message: "supplier updated",
       supplier: sanitizeSupplier(supplier),
     });
   } catch (_error) {
     return res.status(500).json({ message: "Data supplier belum bisa disimpan. Coba lagi." });
+  } finally {
+    if (!linked) await discardDocuments(documents);
   }
 });
 

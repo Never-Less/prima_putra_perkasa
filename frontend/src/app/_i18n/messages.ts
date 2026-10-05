@@ -1,4 +1,5 @@
 import { supplierOnboardingMessages } from "./supplier-onboarding-messages";
+import { breakGlassMessages } from "./break-glass-messages";
 
 export const supportedLocales = ["id", "en"] as const;
 
@@ -12,11 +13,25 @@ type MessageDictionary = Record<string, string>;
 export const messages: Record<Locale, MessageDictionary> = {
   id: {
     ...supplierOnboardingMessages.id,
+    ...breakGlassMessages.id,
     "suratJalan.postCreateModal.title": "Surat Jalan tersimpan",
     "suratJalan.postCreateModal.description": "Surat Jalan {{noSuratJalan}} untuk SO {{noPo}} tersimpan. Anda dapat mengekspor dokumen atau melanjutkan ke Invoice. Status dihitung otomatis berdasarkan qty.",
     "suratJalan.postUpdateModal.title": "Surat Jalan diperbarui",
     "suratJalan.postUpdateModal.description": "Surat Jalan {{noSuratJalan}} untuk SO {{noPo}} diperbarui. Status dihitung otomatis berdasarkan qty.",
     "spreadsheet.hint": "Tempel dari Excel: Ctrl / Command + V · Tab: sel berikutnya · Klik dua kali: edit",
+    "spreadsheet.actions": "Aksi tabel",
+    "spreadsheet.undo": "Undo",
+    "spreadsheet.redo": "Redo",
+    "spreadsheet.insertAbove": "Sisipkan baris di atas",
+    "spreadsheet.insertBelow": "Sisipkan baris di bawah",
+    "spreadsheet.deleteRows": "Hapus baris",
+    "spreadsheet.fillDown": "Isi ke bawah",
+    "spreadsheet.fillRight": "Isi ke kanan",
+    "spreadsheet.copy": "Salin",
+    "spreadsheet.paste": "Tempel",
+    "spreadsheet.selectAll": "Pilih semua",
+    "spreadsheet.shortcuts": "Pintasan keyboard",
+    "spreadsheet.shortcutHelp": "Ctrl/Cmd+Z: undo ? Ctrl+Y / Cmd+Shift+Z: redo ? Ctrl/Cmd+C/X/V: salin/potong/tempel ? Ctrl/Cmd+A: pilih semua ? Ctrl/Cmd+D/R: isi ke bawah/kanan ? Ctrl/Cmd+Plus: sisipkan baris di atas ? Ctrl/Cmd+Minus: hapus baris ? Shift+Spasi: pilih baris ? Ctrl+Spasi: pilih kolom ? Delete/Backspace: hapus isi sel ? Panah/Tab/Enter: navigasi ? Shift+Panah: perluas pilihan ? F2/klik dua kali: edit ? Escape: batalkan edit. Pintasan tabel berlaku saat sel dipilih; saat mengetik, pintasan mengikuti editor.",
     "spreadsheet.readOnly": "Hanya baca",
     "brand.name": "PRIMA PUTRA PERKASA",
     "nav.home": "Beranda",
@@ -1017,11 +1032,25 @@ export const messages: Record<Locale, MessageDictionary> = {
   },
   en: {
     ...supplierOnboardingMessages.en,
+    ...breakGlassMessages.en,
     "suratJalan.postCreateModal.title": "Delivery note saved",
     "suratJalan.postCreateModal.description": "Delivery note {{noSuratJalan}} for SO {{noPo}} was saved. Export the document or continue to Invoice. Status is calculated automatically from quantities.",
     "suratJalan.postUpdateModal.title": "Delivery note updated",
     "suratJalan.postUpdateModal.description": "Delivery note {{noSuratJalan}} for SO {{noPo}} was updated. Status is calculated automatically from quantities.",
     "spreadsheet.hint": "Paste from Excel: Ctrl / Command + V · Tab: next cell · Double-click: edit",
+    "spreadsheet.actions": "Table actions",
+    "spreadsheet.undo": "Undo",
+    "spreadsheet.redo": "Redo",
+    "spreadsheet.insertAbove": "Insert row above",
+    "spreadsheet.insertBelow": "Insert row below",
+    "spreadsheet.deleteRows": "Delete rows",
+    "spreadsheet.fillDown": "Fill down",
+    "spreadsheet.fillRight": "Fill right",
+    "spreadsheet.copy": "Copy",
+    "spreadsheet.paste": "Paste",
+    "spreadsheet.selectAll": "Select all",
+    "spreadsheet.shortcuts": "Keyboard shortcuts",
+    "spreadsheet.shortcutHelp": "Ctrl/Cmd+Z: undo ? Ctrl+Y / Cmd+Shift+Z: redo ? Ctrl/Cmd+C/X/V: copy/cut/paste ? Ctrl/Cmd+A: select all ? Ctrl/Cmd+D/R: fill down/right ? Ctrl/Cmd+Plus: insert row above ? Ctrl/Cmd+Minus: delete rows ? Shift+Space: select rows ? Ctrl+Space: select columns ? Delete/Backspace: clear cells ? Arrows/Tab/Enter: navigate ? Shift+Arrows: extend selection ? F2/double-click: edit ? Escape: cancel editing. Table shortcuts apply to selected cells; while typing, shortcuts follow the editor.",
     "spreadsheet.readOnly": "Read only",
     "brand.name": "PRIMA PUTRA PERKASA",
     "nav.home": "Home",

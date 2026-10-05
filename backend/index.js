@@ -54,6 +54,7 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/break-glass", require("./routes/break-glass"));
 app.use("/api/audit-logs", auditLogRoutes);
 app.use("/api/customers", customerRoutes);
 app.use("/api/dashboards", dashboardRoutes);
