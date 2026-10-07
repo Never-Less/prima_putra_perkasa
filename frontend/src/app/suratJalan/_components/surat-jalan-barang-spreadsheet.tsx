@@ -144,20 +144,6 @@ export function SuratJalanBarangSpreadsheet({
         t,
       });
 
-      const syncRowsFromWorksheet = (instance: jspreadsheet.WorksheetInstance) => {
-        if (isApplyingDataRef.current) {
-          return;
-        }
-
-        const nextData = instance.getData(false, true);
-        const nextRows = spreadsheetDataToRows(nextData);
-        currentDataRef.current = serializeData(nextData);
-        rowsRef.current = nextRows;
-        onRowsChangeRef.current(nextRows);
-      };
-
-      currentDataRef.current = serializeData(initialData);
-      isApplyingDataRef.current = true;
       const instances = jspreadsheetFactory(rootRef.current, {
         onafterchanges: controller.capture,
         oninsertrow: controller.capture,
