@@ -1,5 +1,7 @@
 "use client";
 
+import { usePageTitle } from "../../_hooks/use-page-title";
+
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ApiLoadingState } from "../../_components/api-loading-state";
@@ -851,15 +853,7 @@ export default function LaporanKeuanganExportPage() {
     totalBiayaOperasional,
   ]);
 
-  useEffect(() => {
-    const previousTitle = document.title;
-    document.title =
-      reportMode === "yearly" ? `laporan-keuangan-${tahun}` : `laporan-keuangan-${bulan}`;
-
-    return () => {
-      document.title = previousTitle;
-    };
-  }, [bulan, reportMode, tahun]);
+  usePageTitle("laporanKeuangan.exportPage.title", reportMode === "yearly" ? tahun : bulan);
 
   useEffect(() => {
     let isCancelled = false;

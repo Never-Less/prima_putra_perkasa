@@ -1,3 +1,4 @@
+const { normalizeCompanyFields } = require("../validate-company");
 const crypto = require("node:crypto");
 const { normalizeDocumentLinks } = require("../document-links");
 
@@ -38,6 +39,9 @@ function validateProfile(body = {}) {
     if (!value || value.length > max) errors[field] = `supplierOnboarding.error.${field}`;
     data[field] = value;
   }
+  const company = normalizeCompanyFields(body);
+  Object.assign(data, company.data);
+  Object.assign(errors, company.errors);
   const contact = validateContactFields(data);
   Object.assign(data, contact.data);
   Object.assign(errors, contact.errors);

@@ -10,6 +10,7 @@ const router = express.Router();
 const { receiveDocuments, storeDocuments, discardDocuments } = require("./document-storage");
 const { validateTags } = require("./validate-tags");
 const { validateDocumentLinks } = require("./document-links");
+const { normalizeCompanyFields } = require("./validate-company");
 const { validateContact } = require("./validate-contact");
 
 function parseBoolean(value) {
@@ -38,7 +39,7 @@ function parseNumber(value) {
   return Number.isFinite(number) ? number : null;
 }
 
-const textProfileFields = ["alamat", "npwp", "picName", "phone", "whatsapp", "email", "notes"];
+const textProfileFields = ["legalCompanyName", "supplierType", "supplierTypeOther", "alamat", "npwp", "picName", "phone", "whatsapp", "email", "notes"];
 
 router.put("/:id", requireRole(ROLE_ADMIN, ROLE_STAFF), receiveDocuments, validateTags, validateDocumentLinks, validateContact, async (req, res) => {
   const id = String(req.params.id || "");
@@ -57,6 +58,16 @@ router.put("/:id", requireRole(ROLE_ADMIN, ROLE_STAFF), receiveDocuments, valida
     }
 
     const updates = {};
+
+    const companyFields = ["legalCompanyName", "supplierType", "supplierTypeOther"];
+    if (companyFields.some((field) => req.body[field] !== undefined)) {
+      const effectiveCompany = Object.fromEntries(companyFields.map((field) => [field, req.body[field] !== undefined ? req.body[field] : existingSupplier[field]]));
+      const { data, errors } = normalizeCompanyFields(effectiveCompany);
+      if (Object.keys(errors).length) return res.status(400).json({ code: "supplierOnboarding.error.validation", errors });
+      for (const field of companyFields) {
+        if (req.body[field] !== undefined || (field === "supplierTypeOther" && req.body.supplierType !== undefined)) req.body[field] = data[field];
+      }
+    }
 
     textProfileFields.forEach((field) => {
       if (req.body[field] !== undefined) updates[field] = String(req.body[field] || "").trim();

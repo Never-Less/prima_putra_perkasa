@@ -1,5 +1,7 @@
 "use client";
 
+import { usePageTitle } from "../../../_hooks/use-page-title";
+
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ApiLoadingState } from "../../../_components/api-loading-state";
@@ -108,21 +110,7 @@ export default function SuratJalanNoPoExportPage() {
     };
   }, [noPo, t]);
 
-  useEffect(() => {
-    if (typeof document === "undefined") {
-      return;
-    }
-
-    const previousTitle = document.title;
-
-    if (noPo) {
-      document.title = `surat-jalan-${noPo}`;
-    }
-
-    return () => {
-      document.title = previousTitle;
-    };
-  }, [noPo]);
+  usePageTitle("nav.suratJalan", noPo);
 
   function handleClosePage() {
     window.close();

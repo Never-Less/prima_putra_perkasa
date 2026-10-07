@@ -10,6 +10,7 @@ const { SupplierDocument } = require("../../../models/SupplierDocument");
 
 const supplierId = "507f1f77bcf86cd799439011";
 const profile = {
+  legalCompanyName: " PT Contoh Resmi ", supplierType: "distributor", supplierTypeOther: "",
   alamat: "Jl. Contoh No. 1, Jakarta", npwp: "01.234.567.8-901.000", picName: "PIC Supplier",
   phone: "0211234567", whatsapp: "6281234567890", email: "sales@example.com",
   productCategories: "Kabel, Lampu LED, Kabel", productBrands: "Philips, Panasonic",
@@ -18,6 +19,8 @@ const profile = {
 test("normalizes legacy NPWP and comma lists while keeping phone and WhatsApp separate", () => {
   const result = validateProfile(profile);
   assert.equal(result.valid, true);
+  assert.equal(result.data.legalCompanyName, "PT Contoh Resmi");
+  assert.equal(result.data.supplierType, "distributor");
   assert.equal(result.data.npwp, "0012345678901000");
   assert.deepEqual(result.data.productCategories, ["Kabel", "Lampu LED"]);
   assert.deepEqual(result.data.productBrands, ["Philips", "Panasonic"]);
@@ -27,6 +30,8 @@ test("normalizes legacy NPWP and comma lists while keeping phone and WhatsApp se
 
 test("rejects invalid, missing, oversized, and non-string profile inputs", () => {
   for (const [field, invalid] of [
+    ["legalCompanyName", "x".repeat(151)], ["legalCompanyName", {}],
+    ["supplierType", "invalid"], ["supplierTypeOther", "x".repeat(101)],
     ["npwp", "0000000000000000"], ["npwp", "123"], ["npwp", "abc012345678901234"],
     ["phone", "+628123456789"], ["whatsapp", "0812 3456"], ["email", "not-an-email"],
     ["email", "a@b"], ["email", "a..b@example.com"], ["email", "a@-invalid.com"], ["picName", ""], ["alamat", "x".repeat(501)],
@@ -38,6 +43,17 @@ test("rejects invalid, missing, oversized, and non-string profile inputs", () =>
   }
   assert.equal(validateProfile().valid, false);
   assert.equal(validateProfile(null).valid, false);
+});
+
+test("optional company fields support old invitations and require details for other supplier types", () => {
+  const legacy = { ...profile };
+  delete legacy.legalCompanyName; delete legacy.supplierType; delete legacy.supplierTypeOther;
+  assert.equal(validateProfile(legacy).valid, true);
+  assert.equal(validateProfile({ ...profile, supplierType: "other" }).valid, false);
+  const other = validateProfile({ ...profile, supplierType: "other", supplierTypeOther: " Jasa instalasi " });
+  assert.equal(other.valid, true);
+  assert.equal(other.data.supplierTypeOther, "Jasa instalasi");
+  assert.equal(validateProfile({ ...profile, supplierTypeOther: "Unused" }).data.supplierTypeOther, "");
 });
 
 function matches(document, condition) {
@@ -158,6 +174,8 @@ test("manual sent, public submit, internal review, and completion preserve the a
   assert.equal((await request(`/internal/${supplierId}/onboarding/approve`, { submittedAt, hutang: true, lamaHutang: 30 })).status, 200);
   assert.equal(state.document.onboarding.status, "completed");
   assert.equal(state.document.alamat, profile.alamat);
+  assert.equal(state.document.legalCompanyName, "PT Contoh Resmi");
+  assert.equal(state.document.supplierType, "distributor");
   assert.equal(state.document.hutang, true);
   assert.equal(state.document.lamaHutang, 30);
   assert.equal(state.document.onboarding.pendingData, null);

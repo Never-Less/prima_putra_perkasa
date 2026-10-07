@@ -10,6 +10,7 @@ const mongoose = require("mongoose");
 const { receiveDocuments, storeDocuments, discardDocuments } = require("./document-storage");
 const { validateTags } = require("./validate-tags");
 const { validateDocumentLinks } = require("./document-links");
+const { validateCompany } = require("./validate-company");
 const { validateContact } = require("./validate-contact");
 
 function parseBoolean(value) {
@@ -46,6 +47,7 @@ function profileFields(body) {
     ? body.documentLinks.map((row) => ({ label: String(row?.label || "").trim(), url: String(row?.url || "").trim() })).filter((row) => row.label && /^https?:\/\//i.test(row.url))
     : [];
   return {
+    legalCompanyName: body.legalCompanyName || "", supplierType: body.supplierType || "", supplierTypeOther: body.supplierTypeOther || "",
     alamat: String(body.alamat || "").trim(), npwp: String(body.npwp || "").trim(),
     picName: String(body.picName || "").trim(), phone: String(body.phone || "").trim(),
     whatsapp: String(body.whatsapp || "").trim(),
@@ -56,7 +58,7 @@ function profileFields(body) {
   };
 }
 
-router.post("/", requireRole(ROLE_ADMIN, ROLE_STAFF), receiveDocuments, validateTags, validateDocumentLinks, validateContact, async (req, res) => {
+router.post("/", requireRole(ROLE_ADMIN, ROLE_STAFF), receiveDocuments, validateTags, validateDocumentLinks, validateContact, validateCompany, async (req, res) => {
   const namaSupplier = String(req.body.namaSupplier || "").trim();
   const hutang = req.body.hutang !== undefined ? parseBoolean(req.body.hutang) : false;
   const lamaHutang = hutang ? parseNumber(req.body.lamaHutang) : null;

@@ -1,5 +1,7 @@
 "use client";
 
+import { usePageTitle } from "../../_hooks/use-page-title";
+
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ApiLoadingState } from "../../_components/api-loading-state";
@@ -76,14 +78,7 @@ export default function InvoiceExportPage() {
   }, [filter, paidLabel, t, unpaidLabel]);
   const hasTanggalFilter = Boolean(filter.tanggalDari || filter.tanggalSampai);
 
-  useEffect(() => {
-    const previousTitle = document.title;
-    document.title = activeFilterEntries.length > 0 ? "invoice-export-filtered" : "invoice-export";
-
-    return () => {
-      document.title = previousTitle;
-    };
-  }, [activeFilterEntries.length]);
+  usePageTitle("invoice.exportPage.title");
 
   useEffect(() => {
     let isCancelled = false;

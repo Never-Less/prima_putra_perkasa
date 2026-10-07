@@ -12,6 +12,7 @@ type MessageDictionary = Record<string, string>;
 
 export const messages: Record<Locale, MessageDictionary> = {
   id: {
+    "pageTitle.brand": "Prima Putra Perkasa",
     ...supplierOnboardingMessages.id,
     ...breakGlassMessages.id,
     "suratJalan.postCreateModal.title": "Surat Jalan tersimpan",
@@ -1031,6 +1032,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "field.netProfit": "Net Profit",
   },
   en: {
+    "pageTitle.brand": "Prima Putra Perkasa",
     ...supplierOnboardingMessages.en,
     ...breakGlassMessages.en,
     "suratJalan.postCreateModal.title": "Delivery note saved",
