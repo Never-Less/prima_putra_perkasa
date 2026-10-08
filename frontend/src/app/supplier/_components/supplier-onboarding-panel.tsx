@@ -30,6 +30,17 @@ export function SupplierOnboardingPanel({ item, onChanged, onCompleted }: {
   const pending = onboarding.pendingData;
   const expired = Boolean(onboarding.expiresAt && new Date(onboarding.expiresAt).getTime() < Date.now());
   const formatDate = (value: string) => new Date(value).toLocaleString(locale === "en" ? "en-GB" : "id-ID");
+  const invitationMessage = t("supplierOnboarding.invitationMessage", { link });
+
+  async function copyText(value: string, successKey: string, failureKey: string) {
+    setError(""); setNotice("");
+    try {
+      await navigator.clipboard.writeText(value);
+      setNotice(t(successKey));
+    } catch {
+      setError(t(failureKey));
+    }
+  }
 
   async function run(action: () => Promise<void>) {
     if (!await requestUnsavedChangesConfirmation(t("common.unsavedChangesWarning"))) return;
@@ -66,8 +77,10 @@ export function SupplierOnboardingPanel({ item, onChanged, onCompleted }: {
       {link && linkExpiresAt === onboarding.expiresAt && !expired && (status === "generated" || status === "sent") ? <div className="space-y-2 rounded-xl bg-sky-50 p-4 dark:bg-sky-950/40">
         <label className="block text-sm font-medium">{t("supplierOnboarding.link")}<input readOnly value={link} onFocus={(event) => event.target.select()} className="erp-field mt-1 w-full" /></label>
         <p className="text-sm text-slate-600 dark:text-slate-300">{t("supplierOnboarding.shareHint")}</p>
-        <button type="button" className={buttonClass} onClick={() => { void navigator.clipboard.writeText(link).then(() => setNotice(t("supplierOnboarding.copied"))).catch(() => setError(t("supplierOnboarding.copyFailed"))); }}>{t("supplierOnboarding.copy")}</button>
+        <button type="button" className={buttonClass} onClick={() => void copyText(link, "supplierOnboarding.copied", "supplierOnboarding.copyFailed")}>{t("supplierOnboarding.copy")}</button>
         <a href={link} target="_blank" rel="noreferrer" className={`${buttonClass} ml-2 inline-block`}>{t("supplierOnboarding.open")}</a>
+        <label className="block pt-2 text-sm font-medium">{t("supplierOnboarding.message")}<textarea readOnly value={invitationMessage} rows={10} onFocus={(event) => event.target.select()} className="erp-field mt-1 w-full" /></label>
+        <button type="button" className={buttonClass} onClick={() => void copyText(invitationMessage, "supplierOnboarding.messageCopied", "supplierOnboarding.messageCopyFailed")}>{t("supplierOnboarding.copyMessage")}</button>
       </div> : null}
       {status === "submitted" && pending ? <form className="space-y-4 border-t border-slate-200 pt-4 dark:border-slate-800" onSubmit={(event) => { event.preventDefault(); void run(async () => {
         await supplierOnboardingAction(item.id, "approve", { submittedAt: onboarding.submittedAt, hutang, lamaHutang: hutang ? Number(lamaHutang) : null });

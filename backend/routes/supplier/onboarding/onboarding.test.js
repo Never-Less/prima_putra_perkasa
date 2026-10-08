@@ -145,6 +145,7 @@ test("generation stores a hash, public GET exposes only company name/status, and
   assert.match(token, /^[a-f0-9]{64}$/);
   assert.equal(state.document.onboarding.tokenHash, hashToken(token));
   assert.ok(new Date(state.document.onboarding.expiresAt) > new Date());
+  assert.equal(new Date(state.document.onboarding.expiresAt) - new Date(state.document.onboarding.generatedAt), 7 * 24 * 60 * 60 * 1000);
   const response = await request(`/api/supplier-forms/${token}`);
   assert.equal(response.status, 200);
   assert.deepEqual(Object.keys(response.body).sort(), ["namaSupplier", "status"]);

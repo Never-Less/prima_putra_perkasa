@@ -10,7 +10,7 @@ router.post("/:id/onboarding/generate", async (req, res) => {
   if (!isValidId(req.params.id)) return res.status(400).json({ code: "supplierOnboarding.error.invalidLink" });
   const token = crypto.randomBytes(32).toString("hex");
   const generatedAt = new Date();
-  const expiresAt = new Date(generatedAt.getTime() + 30 * 24 * 60 * 60 * 1000);
+  const expiresAt = new Date(generatedAt.getTime() + 7 * 24 * 60 * 60 * 1000);
   // Replace the whole invitation atomically: older links can no longer submit.
   const supplier = await Supplier.findByIdAndUpdate(req.params.id, { $set: { onboarding: {
     status: "generated", tokenHash: hashToken(token), generatedAt, expiresAt, pendingData: null,
