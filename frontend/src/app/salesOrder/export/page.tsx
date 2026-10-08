@@ -1,5 +1,7 @@
 "use client";
 
+import { usePageTitle } from "../../_hooks/use-page-title";
+
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ApiLoadingState } from "../../_components/api-loading-state";
@@ -69,14 +71,7 @@ export default function PurchaseOrderExportPage() {
     ].filter((entry) => Boolean(String(entry[1] || "").trim()));
   }, [filter, t]);
 
-  useEffect(() => {
-    const previousTitle = document.title;
-    document.title = activeFilterEntries.length > 0 ? "purchase-order-export-filtered" : "purchase-order-export";
-
-    return () => {
-      document.title = previousTitle;
-    };
-  }, [activeFilterEntries.length]);
+  usePageTitle("purchaseOrder.exportPage.title");
 
   useEffect(() => {
     let isCancelled = false;

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Building2, ContactRound, Tags, Files, CheckCircle2, ArrowRight } from "lucide-react";
+import { SupplierCompanyFields } from "../supplier/_components/supplier-company-fields";
 import { SupplierTagInput } from "../supplier/_components/supplier-tag-input";
 import { normalizeSupplierNumberInput, supplierNpwpPattern } from "../supplier/_lib/supplier-contact";
 import { SupplierDocumentLinksEditor } from "../supplier/_components/supplier-document-links";
@@ -13,7 +14,7 @@ import { ApiRequestError } from "../_lib/api-client";
 import { useUnsavedChangesWarning } from "../_hooks/use-unsaved-changes-warning";
 import { onboardingError, profileFields, requestSupplierForm, type OnboardingStatus } from "../supplier/_lib/supplier-onboarding";
 
-const emptyForm = { alamat: "", npwp: "", picName: "", phone: "", whatsapp: "", email: "", productCategories: "", productBrands: "" };
+const emptyForm = { legalCompanyName: "", supplierType: "", supplierTypeOther: "", alamat: "", npwp: "", picName: "", phone: "", whatsapp: "", email: "", productCategories: "", productBrands: "" };
 
 export function SupplierRegistrationForm() {
   const { t, locale, setLocale } = useI18n();
@@ -83,7 +84,7 @@ export function SupplierRegistrationForm() {
             ]).map((group) => <fieldset key={group.title} disabled={saving} className="rounded-xl border border-slate-200 p-4 sm:p-5 dark:border-slate-800">
               <legend className="flex items-center gap-2 px-2 text-base font-semibold"><group.icon size={18} className="text-sky-600 dark:text-sky-300" aria-hidden="true" />{t(`supplierOnboarding.${group.title}`)}</legend>
               <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">{t(`supplierOnboarding.${group.description}`)}</p>
-              <div className="grid gap-5 sm:grid-cols-2">{profileFields.filter((field) => group.fields.includes(field.name)).map((field) => {
+              <div className="grid gap-5 sm:grid-cols-2">{group.title === "companySection" ? <SupplierCompanyFields value={form} disabled={saving} errors={fieldErrors} onChange={(fields) => { setForm((prev) => ({ ...prev, ...fields })); setFieldErrors((prev) => ({ ...prev, legalCompanyName: "", supplierType: "", supplierTypeOther: "" })); }} /> : null}{profileFields.filter((field) => group.fields.includes(field.name)).map((field) => {
                 const { name, label, max } = field;
                 const hint = "hint" in field ? field.hint : undefined;
                 const number = name === "phone" || name === "whatsapp";

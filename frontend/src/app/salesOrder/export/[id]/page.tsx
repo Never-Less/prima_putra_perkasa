@@ -1,5 +1,7 @@
 "use client";
 
+import { usePageTitle } from "../../../_hooks/use-page-title";
+
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { ApiLoadingState } from "../../../_components/api-loading-state";
@@ -59,12 +61,7 @@ export default function PurchaseOrderPrintPage() {
     return () => { mounted = false; };
   }, [purchaseOrderId, t]);
 
-  useEffect(() => {
-    if (!purchaseOrder?.noPo) return;
-    const previousTitle = document.title;
-    document.title = purchaseOrder.noPo;
-    return () => { document.title = previousTitle; };
-  }, [purchaseOrder?.noPo]);
+  usePageTitle("nav.purchaseOrder", purchaseOrder?.noPo);
 
   const paymentTermLabel = useMemo(() => formatPaymentTermLabel(
     purchaseOrder?.paymentTerm || { type: "net", netDays: 30, downPaymentPercent: 0, remainingPaymentPercent: 100 },

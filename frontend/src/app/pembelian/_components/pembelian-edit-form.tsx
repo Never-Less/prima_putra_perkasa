@@ -235,6 +235,7 @@ export function PembelianEditForm({
       supplierMap.set(form.idSupplier, {
         id: form.idSupplier,
         namaSupplier: form.namaSupplier,
+        legalCompanyName: "", supplierType: "", supplierTypeOther: "",
         hutang: form.hutang,
         lamaHutang: form.hutang ? Number(form.lamaHutang || 0) : null,
         alamat: "", npwp: "", picName: "", phone: "", whatsapp: "", email: "",

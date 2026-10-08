@@ -9,6 +9,7 @@ import {
 } from "../../_hooks/use-unsaved-changes-warning";
 import { toSupplierFormState, type SupplierFormState, type SupplierItem } from "../_lib/supplier";
 import { useI18n } from "../../_i18n/provider";
+import { SupplierCompanyFields } from "./supplier-company-fields";
 import { SupplierTagInput } from "./supplier-tag-input";
 import { SupplierDocumentLinksEditor, SupplierDocumentLinksList } from "./supplier-document-links";
 import { isSupplierDocumentUrl } from "../_lib/supplier-documents";
@@ -27,7 +28,7 @@ type SupplierEditFormProps = {
 
 function createEmptySupplierFormState(): SupplierFormState {
   return {
-    namaSupplier: "",
+    namaSupplier: "", legalCompanyName: "", supplierType: "", supplierTypeOther: "",
     hutang: false,
     lamaHutang: "",
     alamat: "", npwp: "", picName: "", phone: "", whatsapp: "", email: "", productCategories: "", productBrands: "",
@@ -93,6 +94,7 @@ export function SupplierEditForm({
               />
             </label>
 
+            <SupplierCompanyFields value={form} disabled={!canManageSupplier || isSaving || isDeleting} onChange={(fields) => setForm((prev) => ({ ...prev, ...fields }))} />
             <label className="text-sm text-slate-700 dark:text-slate-200 sm:col-span-2">{t("supplier.field.alamat")}<textarea value={form.alamat} onChange={(event) => setForm((prev) => ({ ...prev, alamat: event.target.value }))} className="erp-field mt-1 min-h-20 w-full" /></label>
             <label className="text-sm text-slate-700 dark:text-slate-200">{t("supplier.field.npwp")}<input inputMode="numeric" maxLength={20} pattern={supplierNpwpPattern} value={form.npwp} onChange={(event) => setForm((prev) => ({ ...prev, npwp: normalizeSupplierNumberInput(event.target.value, "npwp") }))} className="erp-field mt-1 w-full" /></label>
             <label className="text-sm text-slate-700 dark:text-slate-200">{t("supplier.field.pic")}<input value={form.picName} onChange={(event) => setForm((prev) => ({ ...prev, picName: event.target.value }))} className="erp-field mt-1 w-full" /></label>

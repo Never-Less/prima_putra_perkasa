@@ -8,6 +8,9 @@ const supplierSchema = new mongoose.Schema(
       trim: true,
       maxlength: 150,
     },
+    legalCompanyName: { type: String, trim: true, maxlength: 150, default: "" },
+    supplierType: { type: String, enum: ["", "importer", "distributor", "supplier", "retail", "manufacturer", "agent", "other"], default: "" },
+    supplierTypeOther: { type: String, trim: true, maxlength: 100, default: "" },
     hutang: {
       type: Boolean,
       required: true,

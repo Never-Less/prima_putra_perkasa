@@ -1,8 +1,8 @@
-import type { Metadata } from "next";
+import { createPageMetadata } from "../_lib/page-title";
 import type { ReactNode } from "react";
 
-export const metadata: Metadata = {
-  title: "Sales Order",
+export const metadata = {
+  ...createPageMetadata("/salesOrder"),
   description: "Kelola dokumen dan status Sales Order.",
 };
 

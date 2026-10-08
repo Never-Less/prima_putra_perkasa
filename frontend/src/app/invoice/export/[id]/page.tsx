@@ -1,5 +1,7 @@
 "use client";
 
+import { usePageTitle } from "../../../_hooks/use-page-title";
+
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ApiLoadingState } from "../../../_components/api-loading-state";
@@ -1294,22 +1296,7 @@ export default function InvoiceExportPage() {
     };
   }, [invoiceId, t]);
 
-  useEffect(() => {
-    if (typeof document === "undefined") {
-      return;
-    }
-
-    const previousTitle = document.title;
-    const noInvoice = String(invoice?.noInvoice || "").trim();
-
-    if (noInvoice) {
-      document.title = noInvoice;
-    }
-
-    return () => {
-      document.title = previousTitle;
-    };
-  }, [invoice?.noInvoice]);
+  usePageTitle("nav.invoice", invoice?.noInvoice);
 
   const isMeiloonCustomer = useMemo(
     () => normalizeCustomerName(customer?.nama || "") === meiloonCustomerName,

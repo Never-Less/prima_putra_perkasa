@@ -1,5 +1,7 @@
 "use client";
 
+import { usePageTitle } from "../../_hooks/use-page-title";
+
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ApiLoadingState } from "../../_components/api-loading-state";
@@ -82,13 +84,7 @@ export default function OutstandingExportPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 
-  useEffect(() => {
-    const previousTitle = document.title;
-    document.title = `piutang-customer-${year || "export"}`;
-    return () => {
-      document.title = previousTitle;
-    };
-  }, [year]);
+  usePageTitle("outstanding.exportPage.title", year);
 
   useEffect(() => {
     let isCancelled = false;

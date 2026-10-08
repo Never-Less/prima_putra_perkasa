@@ -51,6 +51,25 @@ test("internal contact validation rejects non-numeric numbers and invalid emails
   assert.equal((await send("PUT", { npwp: "", phone: "", whatsapp: "", email: "" })).status, 200);
 });
 
+test("company fields persist through internal create/update and other types require details", async (t) => {
+  const base = await fixture(t);
+  let saved = { _id: supplierId, hutang: false };
+  t.mock.method(Supplier, "create", async (row) => (saved = row));
+  t.mock.method(Supplier, "findById", async () => saved);
+  t.mock.method(Supplier, "findByIdAndUpdate", async (_id, update) => (saved = { ...saved, ...update.$set }));
+  const send = (method, body) => fetch(base + (method === "POST" ? "/internal" : `/internal/${supplierId}`), { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  const created = await send("POST", { namaSupplier: "Supplier", legalCompanyName: " PT Resmi ", supplierType: "other", supplierTypeOther: " Jasa " });
+  assert.equal(created.status, 201);
+  assert.equal((await created.json()).supplier.legalCompanyName, "PT Resmi");
+  assert.equal((await send("PUT", { supplierTypeOther: "Instalasi" })).status, 200);
+  assert.equal(saved.supplierTypeOther, "Instalasi");
+  assert.equal((await send("PUT", { supplierTypeOther: "" })).status, 400);
+  assert.equal((await send("PUT", { supplierType: "distributor" })).status, 200);
+  assert.equal(saved.supplierTypeOther, "");
+  assert.equal((await send("PUT", { supplierType: "invalid" })).status, 400);
+  assert.equal((await send("POST", { namaSupplier: "Supplier", legalCompanyName: "x".repeat(151) })).status, 400);
+});
+
 test("internal document links validate before persistence and can be cleared", async (t) => {
   const base = await fixture(t);
   let persisted = 0;

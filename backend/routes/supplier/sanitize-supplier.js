@@ -2,6 +2,9 @@ function sanitizeSupplier(supplier) {
   return {
     id: supplier._id,
     namaSupplier: String(supplier.namaSupplier || ""),
+    legalCompanyName: String(supplier.legalCompanyName || ""),
+    supplierType: String(supplier.supplierType || ""),
+    supplierTypeOther: String(supplier.supplierTypeOther || ""),
     hutang: Boolean(supplier.hutang),
     lamaHutang: supplier.hutang ? Number(supplier.lamaHutang || 0) : null,
     alamat: String(supplier.alamat || ""),

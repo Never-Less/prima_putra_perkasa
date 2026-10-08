@@ -4,6 +4,9 @@ import { type SupplierDocument, type SupplierDocumentLink } from "./supplier-doc
 export const onboardingStatuses = ["notGenerated", "generated", "sent", "submitted", "completed"] as const;
 export type OnboardingStatus = typeof onboardingStatuses[number];
 export type SupplierProfile = {
+  legalCompanyName: string;
+  supplierType: string;
+  supplierTypeOther: string;
   alamat: string;
   npwp: string;
   picName: string;
@@ -24,7 +27,11 @@ export type SupplierOnboarding = {
   completedAt?: string | null;
   pendingData?: SupplierProfile | null;
 };
+export const supplierTypes = ["importer", "distributor", "supplier", "retail", "manufacturer", "agent", "other"] as const;
 export const profileFields = [
+  { name: "legalCompanyName", label: "supplierOnboarding.legalCompanyName", max: 150 },
+  { name: "supplierType", label: "supplierOnboarding.supplierType", max: 30 },
+  { name: "supplierTypeOther", label: "supplierOnboarding.supplierTypeOther", max: 100 },
   { name: "alamat", label: "supplier.field.alamat", max: 500 },
   { name: "npwp", label: "supplier.field.npwp", max: 30, hint: "supplierOnboarding.npwpHint" },
   { name: "picName", label: "supplier.field.pic", max: 120 },

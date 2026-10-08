@@ -191,15 +191,6 @@ export default function RekapTagihanPembayaranPabrikPage() {
   usePersistentQueryValues({ basePath: "/rekapTagihanPembayaranPabrik", values: { month: selectedMonth, search: pabrikSearch }, defaults: queryDefaults, onRestore: restoreQuery });
 
   useEffect(() => {
-    const previousTitle = document.title;
-    document.title = t("rekapTagihanPembayaranPabrik.reportTitle");
-
-    return () => {
-      document.title = previousTitle;
-    };
-  }, [t]);
-
-  useEffect(() => {
     let isCancelled = false;
     const { tanggalDari, tanggalSampai } = getMonthDateRange(selectedMonth);
 

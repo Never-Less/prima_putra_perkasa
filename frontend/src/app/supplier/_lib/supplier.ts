@@ -13,6 +13,9 @@ export type SupplierItem = {
   namaSupplier: string;
   hutang: boolean;
   lamaHutang: number | null;
+  legalCompanyName: string;
+  supplierType: string;
+  supplierTypeOther: string;
   alamat: string;
   npwp: string;
   picName: string;
@@ -42,6 +45,9 @@ export type SupplierFormState = {
   namaSupplier: string;
   hutang: boolean;
   lamaHutang: string;
+  legalCompanyName: string;
+  supplierType: string;
+  supplierTypeOther: string;
   alamat: string;
   npwp: string;
   picName: string;
@@ -124,6 +130,7 @@ function toSupplierItem(value: unknown): SupplierItem | null {
     namaSupplier: toText(row.namaSupplier).trim(),
     hutang,
     lamaHutang: hutang ? toNullableNumber(row.lamaHutang) : null,
+    legalCompanyName: toText(row.legalCompanyName).trim(), supplierType: toText(row.supplierType).trim(), supplierTypeOther: toText(row.supplierTypeOther).trim(),
     alamat: toText(row.alamat).trim(), npwp: toText(row.npwp).trim(),
     picName: toText(row.picName).trim(), phone: toText(row.phone).trim(), email: toText(row.email).trim(),
     productCategories: Array.isArray(row.productCategories) ? row.productCategories.map(toText).filter(Boolean) : [],
@@ -147,6 +154,7 @@ function toNormalizedSupplierPayload(form: SupplierFormState) {
     namaSupplier: toText(form.namaSupplier).trim(),
     hutang,
     lamaHutang: hutang && Number.isFinite(lamaHutang) ? lamaHutang : null,
+    legalCompanyName: form.legalCompanyName.trim(), supplierType: form.supplierType, supplierTypeOther: form.supplierType === "other" ? form.supplierTypeOther.trim() : "",
     alamat: form.alamat.trim(), npwp: form.npwp.trim(), picName: form.picName.trim(),
     whatsapp: form.whatsapp.trim(),
     productBrands: splitSupplierTags(form.productBrands),
@@ -245,6 +253,7 @@ export function toSupplierFormState(item: SupplierItem): SupplierFormState {
     namaSupplier: item.namaSupplier,
     hutang: item.hutang,
     lamaHutang: item.hutang && item.lamaHutang ? String(item.lamaHutang) : "",
+    legalCompanyName: item.legalCompanyName, supplierType: item.supplierType, supplierTypeOther: item.supplierTypeOther,
     alamat: item.alamat, npwp: item.npwp, picName: item.picName, phone: item.phone,
     whatsapp: item.whatsapp, productBrands: item.productBrands.length ? `${item.productBrands.join(",")},` : "",
     email: item.email, productCategories: item.productCategories.length ? `${item.productCategories.join(",")},` : "", notes: item.notes,

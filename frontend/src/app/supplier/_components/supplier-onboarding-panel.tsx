@@ -30,6 +30,17 @@ export function SupplierOnboardingPanel({ item, onChanged, onCompleted }: {
   const pending = onboarding.pendingData;
   const expired = Boolean(onboarding.expiresAt && new Date(onboarding.expiresAt).getTime() < Date.now());
   const formatDate = (value: string) => new Date(value).toLocaleString(locale === "en" ? "en-GB" : "id-ID");
+  const invitationMessage = t("supplierOnboarding.invitationMessage", { link });
+
+  async function copyText(value: string, successKey: string, failureKey: string) {
+    setError(""); setNotice("");
+    try {
+      await navigator.clipboard.writeText(value);
+      setNotice(t(successKey));
+    } catch {
+      setError(t(failureKey));
+    }
+  }
 
   async function run(action: () => Promise<void>) {
     if (!await requestUnsavedChangesConfirmation(t("common.unsavedChangesWarning"))) return;
@@ -66,8 +77,10 @@ export function SupplierOnboardingPanel({ item, onChanged, onCompleted }: {
       {link && linkExpiresAt === onboarding.expiresAt && !expired && (status === "generated" || status === "sent") ? <div className="space-y-2 rounded-xl bg-sky-50 p-4 dark:bg-sky-950/40">
         <label className="block text-sm font-medium">{t("supplierOnboarding.link")}<input readOnly value={link} onFocus={(event) => event.target.select()} className="erp-field mt-1 w-full" /></label>
         <p className="text-sm text-slate-600 dark:text-slate-300">{t("supplierOnboarding.shareHint")}</p>
-        <button type="button" className={buttonClass} onClick={() => { void navigator.clipboard.writeText(link).then(() => setNotice(t("supplierOnboarding.copied"))).catch(() => setError(t("supplierOnboarding.copyFailed"))); }}>{t("supplierOnboarding.copy")}</button>
+        <button type="button" className={buttonClass} onClick={() => void copyText(link, "supplierOnboarding.copied", "supplierOnboarding.copyFailed")}>{t("supplierOnboarding.copy")}</button>
         <a href={link} target="_blank" rel="noreferrer" className={`${buttonClass} ml-2 inline-block`}>{t("supplierOnboarding.open")}</a>
+        <label className="block pt-2 text-sm font-medium">{t("supplierOnboarding.message")}<textarea readOnly value={invitationMessage} rows={10} onFocus={(event) => event.target.select()} className="erp-field mt-1 w-full" /></label>
+        <button type="button" className={buttonClass} onClick={() => void copyText(invitationMessage, "supplierOnboarding.messageCopied", "supplierOnboarding.messageCopyFailed")}>{t("supplierOnboarding.copyMessage")}</button>
       </div> : null}
       {status === "submitted" && pending ? <form className="space-y-4 border-t border-slate-200 pt-4 dark:border-slate-800" onSubmit={(event) => { event.preventDefault(); void run(async () => {
         await supplierOnboardingAction(item.id, "approve", { submittedAt: onboarding.submittedAt, hutang, lamaHutang: hutang ? Number(lamaHutang) : null });
@@ -76,7 +89,7 @@ export function SupplierOnboardingPanel({ item, onChanged, onCompleted }: {
         <h3 className="font-semibold">{t("supplierOnboarding.reviewTitle")}</h3>
         <p className="text-sm text-slate-600 dark:text-slate-300">{t("supplierOnboarding.reviewHint")}</p>
         <dl className="grid gap-4 rounded-xl bg-slate-50 p-4 sm:grid-cols-2 dark:bg-slate-900">
-          {profileFields.map(({ name, label }) => <div key={name} className="min-w-0"><dt className="text-sm text-slate-500">{t(label)}</dt><dd className="mt-1 whitespace-pre-wrap break-words text-sm">{Array.isArray(pending[name]) ? <div className="flex flex-wrap gap-1.5">{pending[name].map((tag) => <span key={tag} className="rounded-lg bg-sky-100 px-2 py-1 text-sky-800 dark:bg-sky-950 dark:text-sky-200">{tag}</span>)}</div> : pending[name]}</dd></div>)}
+          {profileFields.map(({ name, label }) => <div key={name} className="min-w-0"><dt className="text-sm text-slate-500">{t(label)}</dt><dd className="mt-1 whitespace-pre-wrap break-words text-sm">{Array.isArray(pending[name]) ? <div className="flex flex-wrap gap-1.5">{pending[name].map((tag) => <span key={tag} className="rounded-lg bg-sky-100 px-2 py-1 text-sky-800 dark:bg-sky-950 dark:text-sky-200">{tag}</span>)}</div> : name === "supplierType" && pending[name] ? t(`supplierOnboarding.type.${pending[name]}`) : pending[name] || "-"}</dd></div>)}
         </dl>
         {pending.documents?.length ? <section className="space-y-3"><h3 className="text-sm font-semibold">{t("supplierOnboarding.documentsTitle")}</h3><SupplierDocumentList supplierId={item.id} documents={pending.documents} /></section> : null}
         <SupplierDocumentLinksList links={pending.documentLinks || []} />
