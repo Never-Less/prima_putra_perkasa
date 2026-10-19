@@ -435,6 +435,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "supplier.page.description":
       "Kelola data supplier melalui tabel, filter, serta form dan preview pada halaman yang sama.",
     "supplier.table.title": "Tabel Supplier",
+    "supplier.table.addressFilled": "Alamat Terisi",
     "supplier.form.title": "Form dan Preview Supplier",
     "supplier.form.description":
       "Tambahkan atau perbarui data supplier. Lama hutang dikosongkan otomatis saat hutang tidak aktif.",
@@ -1440,6 +1441,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "supplier.page.description":
       "Manage supplier data using a table, filters, and form plus preview on the same page.",
     "supplier.table.title": "Supplier Table",
+    "supplier.table.addressFilled": "Address Filled",
     "supplier.form.title": "Supplier Form and Preview",
     "supplier.form.description":
       "Add or update supplier data. Debt term is cleared automatically when debt is inactive.",
