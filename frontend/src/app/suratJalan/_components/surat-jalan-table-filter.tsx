@@ -31,6 +31,11 @@ type SuratJalanTableFilterProps = {
   filteredCount: number;
   pagination: ServerPaginationMeta;
   selectedId?: string;
+  selection?: {
+    ids: readonly string[];
+    onToggle: (id: string) => void;
+    onTogglePage: () => void;
+  };
   canExport?: boolean;
   sortValue?: string;
   sortOptions?: Array<{ value: string; label: string }>;
@@ -42,6 +47,7 @@ type SuratJalanTableFilterProps = {
   resolveCustomerLabel?: (customerId: string) => string;
   onFilterChange: <K extends keyof SuratJalanFilter>(key: K, value: SuratJalanFilter[K]) => void;
   onResetFilter: () => void;
+  onApplyFilter?: (filter: SuratJalanFilter) => void;
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
   colorTone?: ColorTone;
@@ -122,6 +128,7 @@ export function SuratJalanTableFilter({
   filteredCount,
   pagination,
   selectedId,
+  selection,
   canExport = false,
   sortValue,
   sortOptions = [],
@@ -133,6 +140,7 @@ export function SuratJalanTableFilter({
   resolveCustomerLabel,
   onFilterChange,
   onResetFilter,
+  onApplyFilter,
   onPageChange,
   onPageSizeChange,
   colorTone = "slate",
@@ -147,7 +155,7 @@ export function SuratJalanTableFilter({
   const tableText = tableStyle === "compact" ? "text-xs" : "text-sm";
   const columns = useMemo(
     () => [
-      { key: "action", label: t("common.action"), index: 1, locked: true },
+      { key: "action", label: t(selection ? "packingList.select" : "common.action"), index: 1, locked: true },
       { key: "noPo", label: t("field.noPo"), index: 2 },
       { key: "noSuratJalan", label: t("field.noSuratJalan"), index: 3 },
       { key: "tanggal", label: t("field.tanggal"), index: 4 },
@@ -157,18 +165,17 @@ export function SuratJalanTableFilter({
       { key: "kendaraan", label: t("field.kendaraan"), index: 8 },
       { key: "statusInvoice", label: t("field.statusInvoice"), index: 9 },
       { key: "deliveryStatus", label: t("field.deliveryStatus"), index: 10 },
-    ],
-    [t]
+    ].filter((column) => !selection || !["statusInvoice", "deliveryStatus"].includes(column.key)),
+    [t, selection]
   );
   const [hiddenColumns, setHiddenColumns] = useState<string[]>([
     "kodeDepartemen",
-    "barang",
-    "kendaraan",
+    ...(!selection ? ["barang", "kendaraan"] : []),
   ]);
   const hiddenColumnIndexes = columns
     .filter((column) => hiddenColumns.includes(column.key))
-    .map((column) => column.index);
-  const isColumnVisible = (key: string) => !hiddenColumns.includes(key);
+    .map((column) => column.index).concat(selection ? [9, 10] : []);
+  const isColumnVisible = (key: string) => !hiddenColumns.includes(key) && (!selection || !["statusInvoice", "deliveryStatus"].includes(key));
   const getInvoiceStatus = (row: SuratJalanItem) => {
 
     if (isSuratJalanInvoiced(row, invoicedSuratJalanNumbers)) {
@@ -198,7 +205,12 @@ export function SuratJalanTableFilter({
         </div>
       </div>
 
-      <form onSubmit={applyDraftFilter}>
+      <form onSubmit={(event) => {
+        if (onApplyFilter) {
+          event.preventDefault();
+          onApplyFilter(draftFilter);
+        } else applyDraftFilter(event);
+      }}>
         <MobileFilterPanel label={t("common.filterByField")} labelClassName={tone.subtitle}>
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <label className="text-sm text-slate-700 dark:text-slate-200">
@@ -302,7 +314,7 @@ export function SuratJalanTableFilter({
           <>
             <div className="space-y-3 md:hidden">
               {rows.map((row) => {
-                const isSelected = selectedId === row.id;
+                const isSelected = selection ? selection.ids.includes(row.id) : selectedId === row.id;
                 const customerLabel = resolveCustomerLabel?.(row.idCustomer) || row.idCustomer || "-";
                 const barangText = barangLabel(row.barang);
                 const invoiceStatus = getInvoiceStatus(row);
@@ -359,6 +371,12 @@ export function SuratJalanTableFilter({
                     </dl>
 
                     <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                      {selection ? (
+                        <label className="flex cursor-pointer items-center gap-2 text-sm">
+                          <input type="checkbox" checked={isSelected} onChange={() => selection.onToggle(row.id)} className="h-4 w-4 accent-sky-700" />
+                          {t("packingList.selectRow", { number: row.noSuratJalan })}
+                        </label>
+                      ) : (
                       <button
                         type="button"
                         onClick={() => onSelectRow?.(row)}
@@ -366,6 +384,7 @@ export function SuratJalanTableFilter({
                       >
                         {t("common.openDetails")}
                       </button>
+                      )}
                       {canExport ? (
                         <button
                           type="button"
@@ -394,7 +413,7 @@ export function SuratJalanTableFilter({
               <div className="overflow-x-auto">
                 <table className={`w-full min-w-[1080px] table-fixed ${tableText}`}>
                   <colgroup>
-                    <col style={{ width: "190px" }} />
+                    <col style={{ width: selection ? "70px" : "190px" }} />
                     <col style={{ width: "140px" }} />
                     <col style={{ width: "150px" }} />
                     <col style={{ width: "110px" }} />
@@ -407,7 +426,9 @@ export function SuratJalanTableFilter({
                   </colgroup>
                   <thead className={`${tone.header} text-left`}>
                     <tr>
-                      <th className={`${cellPadding} font-medium`}>{t("common.action")}</th>
+                      <th className={`${cellPadding} font-medium`}>
+                        {selection ? <input type="checkbox" aria-label={t("packingList.selectPage")} checked={rows.length > 0 && rows.every((row) => selection.ids.includes(row.id))} onChange={selection.onTogglePage} className="h-4 w-4 accent-sky-700" /> : t("common.action")}
+                      </th>
                       <th className={`${cellPadding} font-medium`}>{t("field.noPo")}</th>
                       <th className={`${cellPadding} font-medium`}>{t("field.noSuratJalan")}</th>
                       <th className={`${cellPadding} font-medium`}>
@@ -437,7 +458,7 @@ export function SuratJalanTableFilter({
                   </thead>
                   <tbody className="divide-y divide-slate-200 bg-white dark:divide-slate-800 dark:bg-slate-900">
                     {rows.map((row, index) => {
-                      const isSelected = selectedId === row.id;
+                      const isSelected = selection ? selection.ids.includes(row.id) : selectedId === row.id;
                       const useStripedRow = tableStyle === "striped" && index % 2 === 1;
                       const customerLabel = resolveCustomerLabel?.(row.idCustomer) || row.idCustomer || "-";
                       const barangText = barangLabel(row.barang);
@@ -452,6 +473,7 @@ export function SuratJalanTableFilter({
                         <tr key={row.id} className={rowClassName}>
                           <td className={`whitespace-nowrap ${cellPadding}`}>
                             <div className="flex flex-nowrap items-center gap-1.5">
+                              {selection ? <input type="checkbox" aria-label={t("packingList.selectRow", { number: row.noSuratJalan })} checked={isSelected} onChange={() => selection.onToggle(row.id)} className="h-4 w-4 accent-sky-700" /> : null}
                               {canExport ? (
                                 <button
                                   type="button"

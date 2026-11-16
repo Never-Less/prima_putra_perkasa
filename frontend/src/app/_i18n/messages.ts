@@ -1,5 +1,6 @@
 import { supplierOnboardingMessages } from "./supplier-onboarding-messages";
 import { breakGlassMessages } from "./break-glass-messages";
+import { packingListMessages } from "./packing-list-messages";
 
 export const supportedLocales = ["id", "en"] as const;
 
@@ -15,6 +16,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "pageTitle.brand": "Prima Putra Perkasa",
     ...supplierOnboardingMessages.id,
     ...breakGlassMessages.id,
+    ...packingListMessages.id,
     "suratJalan.postCreateModal.title": "Surat Jalan tersimpan",
     "suratJalan.postCreateModal.description": "Surat Jalan {{noSuratJalan}} untuk SO {{noPo}} tersimpan. Anda dapat mengekspor dokumen atau melanjutkan ke Invoice. Status dihitung otomatis berdasarkan qty.",
     "suratJalan.postUpdateModal.title": "Surat Jalan diperbarui",
@@ -1035,6 +1037,7 @@ export const messages: Record<Locale, MessageDictionary> = {
     "pageTitle.brand": "Prima Putra Perkasa",
     ...supplierOnboardingMessages.en,
     ...breakGlassMessages.en,
+    ...packingListMessages.en,
     "suratJalan.postCreateModal.title": "Delivery note saved",
     "suratJalan.postCreateModal.description": "Delivery note {{noSuratJalan}} for SO {{noPo}} was saved. Export the document or continue to Invoice. Status is calculated automatically from quantities.",
     "suratJalan.postUpdateModal.title": "Delivery note updated",
