@@ -5,12 +5,14 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ListViewHeader } from "../_components/list-view-header";
 import { FormPreviewStylePage } from "./_components/form-preview-style-page";
 import { useI18n } from "../_i18n/provider";
+import { useExportAccess } from "../_hooks/use-export-access";
 import { buildFormRouteWithReturnPagination, normalizePaginationQueryState } from "../_lib/pagination";
 
 export default function SuratJalanPage() {
   const { t } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const canExport = useExportAccess();
   const [sortValue, setSortValue] = useState(() => String(searchParams.get("sort") || "updatedDesc"));
   const pagination = normalizePaginationQueryState({ page: searchParams.get("page"), limit: searchParams.get("limit") }, { page: 1, limit: 10 });
   const listState = Object.fromEntries(Array.from(searchParams.entries()).filter(([key]) => !["page", "limit", "returnPage", "returnLimit", "id"].includes(key)));
@@ -22,6 +24,18 @@ export default function SuratJalanPage() {
         addLabel={t("common.addPageData", { page: t("nav.suratJalan") })}
         onAdd={() => router.push(buildFormRouteWithReturnPagination("/suratJalan/form", "", pagination, listState))}
       />
+
+      {canExport ? (
+        <div className="mb-3 flex justify-end">
+          <button
+            type="button"
+            className="erp-button"
+            onClick={() => router.push(buildFormRouteWithReturnPagination("/suratJalan/export/packing-list", "", pagination, listState))}
+          >
+            {t("packingList.title")}
+          </button>
+        </div>
+      ) : null}
 
       <div className="mt-3 space-y-3">
         <FormPreviewStylePage

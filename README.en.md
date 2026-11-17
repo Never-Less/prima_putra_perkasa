@@ -50,6 +50,7 @@ Cash & Bank + Invoice + Purchase + Expenses -> Dashboards and Financial Reports
    - A Delivery Note is created from a Sales Order and may deliver part or all of the ordered quantity.
    - The system prevents total deliveries from exceeding the Sales Order quantity.
    - Documents can be printed individually or combined by SO number.
+   - Packing List combines multiple Delivery Notes sent together into an item checking sheet for operations.
 
 5. **Invoice**
    - An Invoice can be created from Delivery Notes that are not fully billed or directly from a Sales Order.
@@ -76,6 +77,16 @@ Cash & Bank + Invoice + Purchase + Expenses -> Dashboards and Financial Reports
    - The SO Dashboard displays document stages as a Kanban board.
    - The Finance Dashboard summarizes actual cash flow, VAT, receivables, debt, and due dates.
    - Monthly/yearly Financial Reports combine Invoices, stock purchases, supplier payments, closing supplier debt, and operating expenses.
+
+## Packing List
+
+1. Open **Delivery Notes**, then click **Packing List**. The button is available to users with export access.
+2. Use filters and pagination to find Delivery Notes, then select the documents being shipped together. You can select all documents on the current page or clear all selections; selections persist when changing pages.
+3. Review the preview, which summarizes the number of Delivery Notes, customers, and item rows. Each Delivery Note shows its note/PO number, date, customer, address, vehicle, and item names, specifications, department codes, quantities, and units.
+4. Click **Print / Save PDF** to print on **A4 portrait** paper or save a PDF through the browser print dialog. Printing becomes available after at least one Delivery Note is selected and all related data has loaded successfully.
+5. On the printed sheet, fill in the dispatch date, actual quantities, check marks, notes/differences, and names and signatures for the administrator, operations checker, and driver/dispatcher.
+
+Delivery Note selections, filters, and Packing List pagination are stored in the URL. **Back to delivery notes** restores the original list state. The interface is available in Indonesian and English.
 
 ## Sales Order Statuses
 
@@ -125,6 +136,7 @@ Users can manually select one of these six statuses after confirming a warning. 
 - Item spreadsheets with copy/paste, row operations, fill, undo/redo, and domain validation.
 - Quantity and source-allocation validation across Sales Orders, Delivery Notes, and Invoices.
 - Print/PDF export and Excel export for supported reports.
+- Packing Lists from multiple Delivery Notes with physical item checks and signature fields, available for A4 print/PDF.
 - Light/dark themes and Indonesian/English interfaces.
 - Document change auditing and additional safeguards for high-risk operations.
 
