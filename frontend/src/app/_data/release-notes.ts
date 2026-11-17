@@ -15,6 +15,22 @@ export type ReleaseNote = {
 // Urutkan dari rilis terbaru. Tambahkan satu entry pada setiap commit perubahan aplikasi.
 export const releaseNotes: ReleaseNote[] = [
   {
+    id: "2026-10-19-supplier-address-status",
+    version: "2026.10.19",
+    date: "2026-10-19",
+    title: "Status Kelengkapan Alamat Supplier",
+    summary: "Daftar Supplier kini menunjukkan apakah alamat setiap supplier sudah terisi sehingga data yang belum lengkap lebih mudah dikenali.",
+    sections: [
+      {
+        title: "Supplier",
+        changes: [
+          "Tabel Supplier menampilkan kolom Alamat Terisi dengan indikator Ya atau Tidak berdasarkan alamat yang sudah tersimpan.",
+          "Indikator kelengkapan alamat tersedia pada tampilan desktop, kartu mobile, dan pengaturan visibilitas kolom.",
+        ],
+      },
+    ],
+  },
+  {
     id: "2026-10-02-customer-receivables-export",
     version: "2026.10.02",
     date: "2026-10-02",

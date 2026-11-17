@@ -59,7 +59,8 @@ export function SupplierTableFilter({
       { key: "namaSupplier", label: t("field.namaSupplier"), index: 2 },
       { key: "hutang", label: t("field.hutang"), index: 3 },
       { key: "lamaHutang", label: t("field.lamaHutang"), index: 4 },
-      { key: "onboardingStatus", label: t("supplierOnboarding.statusLabel"), index: 5 },
+      { key: "alamatTerisi", label: t("supplier.table.addressFilled"), index: 5 },
+      { key: "onboardingStatus", label: t("supplierOnboarding.statusLabel"), index: 6 },
     ],
     [t]
   );
@@ -187,6 +188,12 @@ export function SupplierTableFilter({
                     <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("field.lamaHutang")}</dt>
                     <dd className="mt-1 text-slate-700 dark:text-slate-200">{row.hutang ? row.lamaHutang || "-" : "-"}</dd>
                   </div> : null}
+                  {isColumnVisible("alamatTerisi") ? <div>
+                    <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("supplier.table.addressFilled")}</dt>
+                    <dd className={`mt-1 font-medium ${row.alamat.trim() ? "text-emerald-700 dark:text-emerald-300" : "text-red-700 dark:text-red-300"}`}>
+                      {t(row.alamat.trim() ? "common.true" : "common.false")}
+                    </dd>
+                  </div> : null}
                   {isColumnVisible("onboardingStatus") ? <div>
                     <dt className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">{t("supplierOnboarding.statusLabel")}</dt>
                     <dd className="mt-1 text-sky-700 dark:text-sky-200">{t(`supplierOnboarding.status.${row.onboarding.status}`)}</dd>
@@ -213,12 +220,13 @@ export function SupplierTableFilter({
       <div className="hidden md:block">
         <div className="overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[760px] table-fixed text-sm">
+            <table className="w-full min-w-[900px] table-fixed text-sm">
               <colgroup>
                 <col style={{ width: "120px" }} />
                 <col style={{ width: "360px" }} />
                 <col style={{ width: "120px" }} />
                 <col style={{ width: "160px" }} />
+                <col style={{ width: "150px" }} />
                 <col style={{ width: "230px" }} />
               </colgroup>
               <thead className="bg-slate-100 text-left text-slate-600 dark:bg-slate-900 dark:text-slate-300">
@@ -235,13 +243,14 @@ export function SupplierTableFilter({
                   </th>
                   <th className="px-3 py-2 font-medium">{t("field.hutang")}</th>
                   <th className="px-3 py-2 font-medium">{t("field.lamaHutang")}</th>
+                  <th className="px-3 py-2 font-medium">{t("supplier.table.addressFilled")}</th>
                   <th className="px-3 py-2 font-medium">{t("supplierOnboarding.statusLabel")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 bg-white dark:divide-slate-800 dark:bg-slate-900">
                 {rows.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-3 py-4 text-center text-slate-500 dark:text-slate-400">
+                    <td colSpan={6} className="px-3 py-4 text-center text-slate-500 dark:text-slate-400">
                       {t("common.noData")}
                     </td>
                   </tr>
@@ -272,6 +281,9 @@ export function SupplierTableFilter({
                         </td>
                         <td className="truncate px-3 py-2 text-slate-600 dark:text-slate-300">
                           {row.hutang ? row.lamaHutang || "-" : "-"}
+                        </td>
+                        <td className={`px-3 py-2 font-medium ${row.alamat.trim() ? "text-emerald-700 dark:text-emerald-300" : "text-red-700 dark:text-red-300"}`}>
+                          {t(row.alamat.trim() ? "common.true" : "common.false")}
                         </td>
                         <td className="px-3 py-2 text-sky-700 dark:text-sky-200">{t(`supplierOnboarding.status.${row.onboarding.status}`)}</td>
                       </tr>
