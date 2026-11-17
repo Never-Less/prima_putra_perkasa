@@ -50,6 +50,7 @@ Kas & Bank + Invoice + Pembelian + Biaya -> Dashboard dan Laporan Keuangan
    - Surat Jalan dibuat dari Sales Order dan dapat mengirim sebagian atau seluruh kuantitas.
    - Sistem memeriksa agar total pengiriman tidak melebihi kuantitas Sales Order.
    - Dokumen dapat dicetak per Surat Jalan atau digabung berdasarkan nomor SO.
+   - Packing List menggabungkan beberapa Surat Jalan yang dikirim bersama menjadi lembar pengecekan barang untuk operasional.
 
 5. **Invoice**
    - Invoice dapat dibuat dari Surat Jalan yang belum selesai ditagihkan atau langsung dari Sales Order.
@@ -76,6 +77,16 @@ Kas & Bank + Invoice + Pembelian + Biaya -> Dashboard dan Laporan Keuangan
    - Dashboard SO menampilkan tahapan proses dokumen dalam bentuk Kanban.
    - Dashboard Finance merangkum arus kas aktual, PPN, piutang, hutang, dan jatuh tempo.
    - Laporan Keuangan tersedia bulanan/tahunan dan menggabungkan Invoice, pembelian stok, pembayaran supplier, saldo hutang, serta biaya operasional.
+
+## Packing List
+
+1. Buka halaman **Surat Jalan**, lalu klik **Packing List**. Tombol tersedia bagi user yang memiliki hak akses export.
+2. Gunakan filter dan pagination untuk mencari Surat Jalan, lalu centang dokumen yang dikirim bersama. Tersedia pilihan semua dokumen pada halaman aktif dan hapus semua pilihan; pilihan tetap tersimpan saat berpindah halaman.
+3. Periksa preview yang memuat ringkasan jumlah Surat Jalan, customer, dan baris barang. Setiap Surat Jalan menampilkan nomor SJ/PO, tanggal, customer, alamat, kendaraan, serta rincian nama, spesifikasi, kode departemen, jumlah, dan unit barang.
+4. Klik **Cetak / Simpan PDF** untuk mencetak lembar dalam ukuran **A4 portrait** atau menyimpan PDF melalui dialog cetak browser. Pencetakan tersedia setelah minimal satu Surat Jalan dipilih dan seluruh data terkait berhasil dimuat.
+5. Pada lembar hasil cetak, isi tanggal kirim, jumlah fisik, tanda cek, catatan/selisih, serta nama dan tanda tangan admin, operasional, dan pengemudi/pengirim.
+
+Pilihan Surat Jalan, filter, dan pagination Packing List disimpan di URL. Tombol **Kembali ke Surat Jalan** memulihkan state daftar asal. Antarmuka tersedia dalam Bahasa Indonesia dan English.
 
 ## Status Sales Order
 
@@ -125,6 +136,7 @@ Status dapat dipilih manual dari enam pilihan tersebut setelah konfirmasi. Perhi
 - Spreadsheet barang dengan copy/paste, operasi baris, fill, undo/redo, dan validasi domain.
 - Validasi kuantitas serta alokasi sumber antar SO, Surat Jalan, dan Invoice.
 - Export print/PDF dan export Excel untuk laporan yang didukung.
+- Packing List dari beberapa Surat Jalan dengan kolom pengecekan fisik barang dan tanda tangan, tersedia untuk cetak/PDF A4.
 - Tema terang/gelap dan antarmuka Bahasa Indonesia/English.
 - Audit perubahan dokumen serta proteksi khusus untuk operasi berisiko.
 
